@@ -79,7 +79,7 @@ import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sq
 export class V1WebAwbCodController {
   @Post('awb/summary')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbCodSummaryResponseVm })
   public async awbSummary(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.awbSummary(payload);

@@ -65,9 +65,13 @@ export class V1WebAwbCodService {
   static async awbSummary(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodSummaryResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
     // mapping field
     payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
-    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['transactionStatusId'] =
+      't1.transaction_status_id';
     payload.fieldResolverMap['branchIdFinal'] = 'cp.branch_id';
     payload.fieldResolverMap['codPaymentMethod'] = 'cp.cod_payment_method';
     payload.fieldResolverMap['representativeId'] = 'branch.representative_id';
@@ -97,6 +101,26 @@ export class V1WebAwbCodService {
     q.leftJoin(e => e.codPayment.branchFinal.representative, 'rep', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    //#region Cod Merger
+    if (
+      permissonPayload.roleName === 'Admin COD - Merger' &&
+      !permissonPayload.isHeadOffice
+    ) {
+      q.innerJoin(e => e.codPayment.codUserToBranch, 'codmerger', j =>
+        j
+          .andWhere(e => e.isDeleted, w => w.isFalse())
+          .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+      );
+    }
+    //#endregion
+
+    if (permissonPayload.roleName === 'Ops - Admin COD') {
+      q.andWhere(
+        e => e.codPayment.branchId,
+        w => w.equals(permissonPayload.branchId),
+      );
+    }
 
     q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
