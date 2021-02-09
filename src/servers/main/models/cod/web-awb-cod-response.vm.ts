@@ -738,3 +738,25 @@ export class WebMonitoringSettlementVm {
   @ApiModelProperty()
   transactionStatus: string;
 }
+
+export class WebAwbCodSummaryResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebItemAwbCodSummaryResponseVm] })
+  data: WebItemAwbCodSummaryResponseVm[];
+}
+
+export class WebItemAwbCodSummaryResponseVm {
+  @ApiModelProperty()
+  perwakilan: string;
+
+  @ApiModelProperty()
+  branchIdFinal: number;
+
+  @ApiModelProperty()
+  branchNameFinal: string;
+
+  @ApiModelProperty()
+  priceCod: number;
+
+  @ApiModelProperty()
+  countAwb: number;
+}
