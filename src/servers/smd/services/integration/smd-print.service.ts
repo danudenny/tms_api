@@ -419,6 +419,8 @@ export class SmdPrintService {
   ) {
     const q = RepositoryService.doSmd.findOne();
     q.leftJoin(e => e.doSmdDetails);
+    q.leftJoin(e => e.doSmdDetails.branchTo);
+    q.leftJoin(e => e.doSmdDetails.branchTo.representative);
     q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
     q.leftJoin(e => e.doSmdVehicle);
 
@@ -467,6 +469,10 @@ export class SmdPrintService {
     if (!doSmd) {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
+      });
+    } else if (!doSmd.doSmdDetails[0].branchTo || !doSmd.doSmdDetails[0].branchTo.representative) {
+      RequestErrorService.throwObj({
+        message: 'Gerai tujuan atau perwakilan gerai tujuan surat jalan tidak valid',
       });
     }
 
