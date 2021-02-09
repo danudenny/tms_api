@@ -90,6 +90,10 @@ export class V1WebAwbCodService {
       ['COUNT(t1.awb_item_id)', 'countAwb'],
     );
 
+    q.innerJoin(e => e.pickupRequestDetail, 'pickupdetail', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.innerJoin(e => e.codPayment, 'cp', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
