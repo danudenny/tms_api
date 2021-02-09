@@ -418,7 +418,9 @@ export class SmdPrintService {
     queryParams: PrintDoSmdPayloadQueryVm,
   ) {
     const q = RepositoryService.doSmd.findOne();
-    q.leftJoin(e => e.doSmdDetails);
+    q.leftJoin(e => e.doSmdDetails, 'doSmdDetails', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.leftJoin(e => e.doSmdDetails.branchTo);
     q.leftJoin(e => e.doSmdDetails.branchTo.representative);
     q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
@@ -463,8 +465,7 @@ export class SmdPrintService {
           },
         },
       })
-      .where(e => e.doSmdId, w => w.equals(queryParams.id))
-      .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
+      .where(e => e.doSmdId, w => w.equals(queryParams.id));
 
     if (!doSmd) {
       RequestErrorService.throwObj({
