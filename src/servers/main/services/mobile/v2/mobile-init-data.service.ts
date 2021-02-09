@@ -218,7 +218,10 @@ export class V2MobileInitDataService {
     );
     qb.addSelect('pickup_request_detail.do_return', 'isDoReturn');
     qb.addSelect('pickup_request_detail.do_return_number', 'doReturnNumber');
-    qb.addSelect('COALESCE(awb_item_attr.is_high_value, false)', 'isHighValue');
+    qb.addSelect(
+      'COALESCE(awb_item_attr.is_high_value, pickup_request_detail.is_high_value, false)',
+      'isHighValue',
+    );
 
     qb.from('do_pod_deliver_detail', 'do_pod_deliver_detail');
     qb.innerJoin(
