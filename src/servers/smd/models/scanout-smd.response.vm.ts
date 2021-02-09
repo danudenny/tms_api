@@ -553,6 +553,9 @@ export class ScanOutEditVm {
   @ApiModelProperty()
   seal_number: string;
 
+  @ApiModelProperty()
+  user_id_driver: number;
+
 }
 
 export class ScanOutSmdEditDetailResponseVm {
