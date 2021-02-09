@@ -423,6 +423,8 @@ export class SmdPrintService {
     );
     q.leftJoin(e => e.doSmdDetails.branchTo);
     q.leftJoin(e => e.doSmdDetails.branchTo.representative);
+    q.leftJoin(e => e.doSmdDetails.branchTo.district);
+    q.leftJoin(e => e.doSmdDetails.branchTo.district.city);
     q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
     q.leftJoin(e => e.doSmdVehicle);
 
@@ -471,9 +473,13 @@ export class SmdPrintService {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
-    } else if (!doSmd.doSmdDetails[0].branchTo || !doSmd.doSmdDetails[0].branchTo.representative) {
+    } else if (!doSmd.doSmdDetails[0] || !doSmd.doSmdDetails[0].branchTo) {
       RequestErrorService.throwObj({
-        message: 'Gerai tujuan atau perwakilan gerai tujuan surat jalan tidak valid',
+        message: 'Gerai tujuan surat jalan tidak valid',
+      });
+    } else if (!doSmd.doSmdDetails[0].branchTo.representative || !doSmd.doSmdDetails[0].branchTo.district) {
+      RequestErrorService.throwObj({
+        message: 'Tujuan perwakilan atau kecamatan surat jalan tidak valid',
       });
     }
 
