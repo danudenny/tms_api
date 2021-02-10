@@ -418,7 +418,13 @@ export class SmdPrintService {
     queryParams: PrintDoSmdPayloadQueryVm,
   ) {
     const q = RepositoryService.doSmd.findOne();
-    q.leftJoin(e => e.doSmdDetails);
+    q.leftJoin(e => e.doSmdDetails, 'doSmdDetails', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doSmdDetails.branchTo);
+    q.leftJoin(e => e.doSmdDetails.branchTo.representative);
+    q.leftJoin(e => e.doSmdDetails.branchTo.district);
+    q.leftJoin(e => e.doSmdDetails.branchTo.district.city);
     q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
     q.leftJoin(e => e.doSmdVehicle);
 
@@ -461,12 +467,19 @@ export class SmdPrintService {
           },
         },
       })
-      .where(e => e.doSmdId, w => w.equals(queryParams.id))
-      .andWhere(e => e.doSmdDetails.isDeleted, w => w.isFalse());
+      .where(e => e.doSmdId, w => w.equals(queryParams.id));
 
     if (!doSmd) {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
+      });
+    } else if (!doSmd.doSmdDetails[0] || !doSmd.doSmdDetails[0].branchTo) {
+      RequestErrorService.throwObj({
+        message: 'Gerai tujuan surat jalan tidak valid',
+      });
+    } else if (!doSmd.doSmdDetails[0].branchTo.representative || !doSmd.doSmdDetails[0].branchTo.district) {
+      RequestErrorService.throwObj({
+        message: 'Tujuan perwakilan atau kecamatan surat jalan tidak valid',
       });
     }
 
