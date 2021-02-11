@@ -66,6 +66,9 @@ export class ScanOutSmdSealPayloadVm {
   @ApiModelProperty()
   seal_seq: string;
 
+  @ApiModelProperty()
+  employee_id_driver: number;
+
 }
 
 export class ScanOutSmdHandoverPayloadVm {
