@@ -54,6 +54,7 @@ export class PartnerOneidService {
       ['asg.awb_status_grp_id', 'awbStatusGrpId'],
       ['asg.awb_status_grp_name', 'awbStatusGrpName'],
       ['prd.delivery_type', 'packageTypeName'],
+      ['pr.pickup_request_email', 'email'],
     );
     
 
