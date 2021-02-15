@@ -98,68 +98,62 @@ export class V2WebAwbCodService {
     userId: number,
   ): Promise<boolean> {
     try {
-      const dataAwb = await this.dataTransaction(item.awbItemId);
-      if (dataAwb) {
-        // update awb_item_attr transaction status 31000
-        await getManager().transaction(async transactionManager => {
-          await transactionManager.update(
-            AwbItemAttr,
-            {
-              awbItemId: item.awbItemId,
-            },
-            {
-              transactionStatusId: TRANSACTION_STATUS.TRM,
-            },
-          );
-
-          await transactionManager.insert(CodTransactionDetail, {
+      // update awb_item_attr transaction status 31000
+      await getManager().transaction(async transactionManager => {
+        await transactionManager.update(
+          AwbItemAttr,
+          {
+            awbItemId: item.awbItemId,
+          },
+          {
             transactionStatusId: TRANSACTION_STATUS.TRM,
-            awbItemId: item.awbItemId,
-            awbNumber: item.awbNumber,
-            podDate: dataAwb.podDate,
-            paymentMethod: item.paymentMethod,
-            branchId: Number(branchId),
-            userIdDriver: Number(item.userIdDriver),
-            currentPositionId: dataAwb.currentPositionId,
-            consigneeName: dataAwb.consigneeName,
-            partnerId: dataAwb.partnerId,
-            userIdCreated: Number(userId),
-            createdTime: moment().toDate(),
-            userIdUpdated: Number(userId),
-            updatedTime: moment().toDate(),
-          });
+          },
+        );
 
-          // create transaction history
-          await transactionManager.insert(CodTransactionHistory, {
-            awbItemId: item.awbItemId,
-            awbNumber: item.awbNumber,
-            transactionDate: moment()
-              .add(-1, 'minute')
-              .toDate(),
-            transactionStatusId: TRANSACTION_STATUS.SIGESIT,
-            branchId,
-            userIdCreated: userId,
-            userIdUpdated: userId,
-            createdTime: moment().toDate(),
-            updatedTime: moment().toDate(),
-          });
-
-          await transactionManager.insert(CodTransactionHistory, {
-            awbItemId: item.awbItemId,
-            awbNumber: item.awbNumber,
-            transactionDate: moment().toDate(),
-            transactionStatusId: TRANSACTION_STATUS.TRM,
-            branchId,
-            userIdCreated: userId,
-            userIdUpdated: userId,
-            createdTime: moment().toDate(),
-            updatedTime: moment().toDate(),
-          });
+        await transactionManager.insert(CodTransactionDetail, {
+          transactionStatusId: TRANSACTION_STATUS.TRM,
+          awbItemId: item.awbItemId,
+          awbNumber: item.awbNumber,
+          podDate: moment().toDate(),
+          paymentMethod: item.paymentMethod,
+          branchId: Number(branchId),
+          userIdDriver: Number(item.userIdDriver),
+          currentPositionId: Number(branchId),
+          consigneeName: 'Admin',
+          partnerId: 1,
+          userIdCreated: Number(userId),
+          createdTime: moment().toDate(),
+          userIdUpdated: Number(userId),
+          updatedTime: moment().toDate(),
         });
-      } else {
-        console.error('## Data COD Transaction :: Not Found !!! :: ', item);
-        throw new Error('## Data COD Transaction :: Not Found !!! :: ');
-      }
+
+        // create transaction history
+        await transactionManager.insert(CodTransactionHistory, {
+          awbItemId: item.awbItemId,
+          awbNumber: item.awbNumber,
+          transactionDate: moment()
+            .add(-1, 'minute')
+            .toDate(),
+          transactionStatusId: TRANSACTION_STATUS.SIGESIT,
+          branchId,
+          userIdCreated: userId,
+          userIdUpdated: userId,
+          createdTime: moment().toDate(),
+          updatedTime: moment().toDate(),
+        });
+
+        await transactionManager.insert(CodTransactionHistory, {
+          awbItemId: item.awbItemId,
+          awbNumber: item.awbNumber,
+          transactionDate: moment().toDate(),
+          transactionStatusId: TRANSACTION_STATUS.TRM,
+          branchId,
+          userIdCreated: userId,
+          userIdUpdated: userId,
+          createdTime: moment().toDate(),
+          updatedTime: moment().toDate(),
+        });
+      });
 
       // #region send to background process with bull
       const firstTransaction = new WebCodFirstTransactionPayloadVm();

@@ -57,7 +57,10 @@ export class CodTransferTransactionQueueService {
         const codDetail = await this.dataTransaction(data.awbItemId);
         if (codDetail) {
           // manipulation data
-          const weightRounded = codDetail.weightRealRounded > 0 ? codDetail.weightRealRounded : codDetail.weightFinalRounded;
+          const weightRounded =
+            codDetail.weightRealRounded > 0
+              ? codDetail.weightRealRounded
+              : codDetail.weightFinalRounded;
           const percentFee = 1; // set on config COD
           const codFee = (Number(codDetail.codValue) * percentFee) / 100;
 
@@ -78,17 +81,21 @@ export class CodTransferTransactionQueueService {
               noReference: data.noReference,
 
               awbDate: codDetail.awbDate,
+              podDate: codDetail.podDate,
               codValue: codDetail.codValue,
               parcelValue: codDetail.parcelValue,
               weightRounded,
               codFee,
               pickupSourceId: codDetail.pickupSourceId,
               pickupSource: codDetail.pickupSource,
+              currentPositionId: codDetail.currentPositionId,
               currentPosition: codDetail.currentPosition,
               destinationCode: codDetail.destinationCode,
               destinationId: codDetail.destinationId,
               destination: codDetail.destination,
 
+              consigneeName: codDetail.consigneeName,
+              partnerId: codDetail.partnerId,
               partnerName: codDetail.partnerName,
               custPackage: codDetail.custPackage,
               packageTypeId: Number(codDetail.packageTypeId),
