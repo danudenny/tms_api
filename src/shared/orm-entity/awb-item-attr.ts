@@ -12,6 +12,7 @@ import { PickupRequestDetail } from './pickup-request-detail';
 import { CodUserToBranch } from './cod-user-to-branch';
 import { CodPayment } from './cod-payment';
 import { CodTransactionDetail } from './cod-transaction-detail';
+import { AwbStatusGrpDetail } from './awb-status-grp-detail';
 import { AwbHighValueUpload } from './awb-high-value-upload';
 
 @Entity('awb_item_attr', { schema: 'public' })
@@ -262,6 +263,10 @@ export class AwbItemAttr extends BaseEntity {
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   codTransactionDetail: CodTransactionDetail;
 
+  @OneToOne(() => AwbStatusGrpDetail)
+  @JoinColumn({ name: 'awb_status_id_last', referencedColumnName: 'awbStatusId' })
+  awbStatusGrpDetail: AwbStatusGrpDetail;
+  
   @OneToOne(() => AwbHighValueUpload)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbHighValueUpload: AwbHighValueUpload;
