@@ -99,14 +99,14 @@ export class LastMileDeliveryOutService {
         // TODO: validation need improvement
         // handle if awb status is null
         let notDeliver = true;
-        if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
-          notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
+        if (awb.awbLastStatus && awb.awbLastStatus != 0) {
+          notDeliver = awb.awbLastStatus != AWB_STATUS.ANT ? true : false;
         }
 
         // NOTE: first must scan in branch
         if (notDeliver) {
           const statusCode = await AwbService.awbStatusGroup(
-            awb.awbStatusIdLast,
+            awb.awbLastStatus,
           );
           // save data to awb_troubleß
           if (statusCode != 'IN') {
@@ -114,7 +114,7 @@ export class LastMileDeliveryOutService {
             await AwbTroubleService.fromScanOut(
               awbNumber,
               branchName,
-              awb.awbStatusIdLast,
+              awb.awbLastStatus,
             );
           }
 
