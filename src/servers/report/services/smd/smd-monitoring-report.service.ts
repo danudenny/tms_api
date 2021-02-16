@@ -237,6 +237,7 @@ export class SmdMonitoringReportService {
     q.select('ds.do_smd_code', 'Nomor SMD')
       // .addSelect('ds.do_smd_time', 'do_smd_time')
       // .addSelect('ds.branch_id', 'branch_id')
+      .addSelect('ds.do_smd_intercity', 'Tujuan SJ')
       .addSelect('TO_CHAR(ds.departure_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Berangkat')
       .addSelect('TO_CHAR(ds.transit_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Transit')
       .addSelect('TO_CHAR(ds.arrival_date_time, \'DD Mon YYYY HH24:MI\')', 'Tanggal Tiba')
@@ -246,7 +247,7 @@ export class SmdMonitoringReportService {
       .addSelect(`ds.smd_trip`, 'Trip')
       .addSelect(`
         CASE
-          WHEN ds.smd_trip = '1' THEN
+          WHEN ds.trip = '1' THEN
             'DIRECT HUB'
           ELSE
             'TRANSIT'
@@ -288,6 +289,8 @@ export class SmdMonitoringReportService {
           .addSelect(`ds.trip`, 'trip')
           .addSelect(`'T' || ds.counter_trip`, 'smd_trip')
           .addSelect(`e.fullname`, 'employee_driver_name')
+          .addSelect(`ds.is_intercity`, 'is_intercity')
+          .addSelect(`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'do_smd_intercity')
           .addSelect(`(
                       select
                         sum(bi.weight)

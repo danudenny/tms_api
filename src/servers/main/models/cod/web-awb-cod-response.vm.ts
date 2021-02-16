@@ -1,4 +1,7 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/external/nestjs-swagger';
+import {
+  ApiModelProperty,
+  ApiModelPropertyOptional,
+} from '../../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../../shared/models/base-meta-response.vm';
 
 export class WebCodSuccessResponseVm {
@@ -363,6 +366,34 @@ export class WebCodTransferBranchResponseVm {
   dataError: string[];
 }
 
+export class WebCodTransferBranchCashResponseVm {
+  // @ApiModelProperty()
+  // transactionCode: string;
+
+  // @ApiModelProperty({ format: 'date-time' })
+  // transactionDate: string;
+
+  @ApiModelProperty()
+  printIdCash: string;
+
+  @ApiModelProperty()
+  dataError: string[];
+}
+
+export class WebCodTransferBranchCashlessResponseVm {
+  // @ApiModelProperty()
+  // transactionCode: string;
+
+  // @ApiModelProperty({ format: 'date-time' })
+  // transactionDate: string;
+
+  @ApiModelPropertyOptional()
+  printIdCashless: string;
+
+  @ApiModelProperty()
+  dataError: string[];
+}
+
 export class WebCodAwbValidVm {
   @ApiModelProperty()
   awbItemId: number;
@@ -657,7 +688,6 @@ export class WebCodPrintMetaVm {
 }
 
 export class PrintCodTransferBranchVm {
-
   @ApiModelProperty({ type: () => WebCodPrintMetaVm })
   meta: WebCodPrintMetaVm;
 
@@ -683,3 +713,50 @@ export class WebCodCountResponseVm {
 }
 
 export class WebInsertCodPaymentResponseVm extends WebCodSuccessResponseVm {}
+
+export class WebMonitoringSettlementResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebMonitoringSettlementVm] })
+  data: WebMonitoringSettlementVm[];
+}
+
+export class WebMonitoringSettlementVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  codVoucherNo: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  codVoucherDate: string;
+
+  @ApiModelProperty()
+  codValue: number;
+
+  @ApiModelProperty()
+  statusPayment: string;
+
+  @ApiModelProperty()
+  transactionStatus: string;
+}
+
+export class WebAwbCodSummaryResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebItemAwbCodSummaryResponseVm] })
+  data: WebItemAwbCodSummaryResponseVm[];
+}
+
+export class WebItemAwbCodSummaryResponseVm {
+  @ApiModelProperty()
+  perwakilan: string;
+
+  @ApiModelProperty()
+  branchIdFinal: number;
+
+  @ApiModelProperty()
+  branchNameFinal: string;
+
+  @ApiModelProperty()
+  priceCod: number;
+
+  @ApiModelProperty()
+  countAwb: number;
+}

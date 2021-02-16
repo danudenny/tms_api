@@ -32,6 +32,9 @@ export class ScanOutCityVehicleVm {
   @ApiModelProperty()
   branch_code: string;
 
+  @ApiModelProperty()
+  employee_id_driver: number;
+
 }
 
 

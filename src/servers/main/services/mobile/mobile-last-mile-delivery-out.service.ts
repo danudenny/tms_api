@@ -44,71 +44,69 @@ export class LastMileDeliveryOutService {
 
     // check if awb_number belongs to user
     const qb = createQueryBuilder();
-
     qb.addSelect('awb.awb_number', 'awbNumber');
     qb.addSelect('awb.consignee_name', 'consigneeName');
     qb.addSelect('awb.consignee_address', 'consigneeAddress');
     qb.addSelect('awb.consignee_phone', 'consigneePhone');
     qb.addSelect('awb.total_cod_value', 'totalCodValue');
     qb.addSelect('pt.package_type_code', 'service');
+    qb.addSelect('aia.awb_item_id', 'awbItemId');
+    qb.addSelect('aia.awb_id', 'awbId');
     qb.addSelect('aia.awb_status_id_last', 'awbLastStatus');
-
-    qb.from('awb', 'awb');
+    qb.from('awb_item_attr', 'aia');
+    qb.innerJoin(
+      'awb',
+      'awb',
+      'aia.awb_id = awb.awb_id AND awb.is_deleted = false',
+    );
     qb.innerJoin(
       'package_type',
       'pt',
       'pt.package_type_id = awb.package_type_id AND pt.is_deleted = false',
     );
-    qb.innerJoin(
-      'awb_item_attr',
-      'aia',
-      'aia.awb_id = awb.awb_id AND aia.is_deleted = false',
-    );
-    qb.andWhere('awb.is_deleted = false');
-    qb.andWhere('awb.awb_number = :awbNumber', {
-      awbNumber: payload.scanValue,
+    qb.andWhere('aia.is_deleted = false');
+    qb.andWhere('aia.awb_number = :awbNumber', {
+      awbNumber,
     });
-    const resultQuery = await qb.getRawOne();
-
+    const awb = await qb.getRawOne();
     const response = new ScanAwbVm();
 
-    if (resultQuery) {
+    if (awb) {
       response.status = 'error';
       response.awbNumber = payload.scanValue;
       response.trouble = true;
 
       // validation
-      if (resultQuery.awbLastStatus == AWB_STATUS.ANT) {
+      if (awb.awbLastStatus == AWB_STATUS.ANT) {
         response.message = `Resi ${awbNumber} sudah di proses.`;
         result.data = response;
         return result;
-      } else if (resultQuery.awbLastStatus != AWB_STATUS.IN_BRANCH) {
+      } else if (awb.awbLastStatus != AWB_STATUS.IN_BRANCH) {
         response.message = `Resi ${awbNumber} belum di Scan In`;
         result.data = response;
         return result;
-      } else if (resultQuery.awbLastStatus == AWB_STATUS.CANCEL) {
-        response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
-        result.data = response;
-        return result;
-      }
+      } else {
+        // check resi cancel delivery
+        const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
+        if (isCancel == true) {
+          response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
+          result.data = response;
+          return result;
+        }
 
-      // Create Delivery Do POD (surat jalan antar)
-      const res = await this.createDeliveryDoPod();
-
-      response.status = 'ok';
-      const awb = await AwbService.validAwbNumber(awbNumber);
-      if (awb) {
+        // Create Delivery Do POD (surat jalan antar)
+        const res = await this.createDeliveryDoPod();
         // TODO: validation need improvement
         // handle if awb status is null
         let notDeliver = true;
-        if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
-          notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
+        if (awb.awbLastStatus && awb.awbLastStatus != 0) {
+          notDeliver = awb.awbLastStatus != AWB_STATUS.ANT ? true : false;
         }
 
         // NOTE: first must scan in branch
         if (notDeliver) {
           const statusCode = await AwbService.awbStatusGroup(
-            awb.awbStatusIdLast,
+            awb.awbLastStatus,
           );
           // save data to awb_troubleß
           if (statusCode != 'IN') {
@@ -116,7 +114,7 @@ export class LastMileDeliveryOutService {
             await AwbTroubleService.fromScanOut(
               awbNumber,
               branchName,
-              awb.awbStatusIdLast,
+              awb.awbLastStatus,
             );
           }
 
@@ -161,6 +159,9 @@ export class LastMileDeliveryOutService {
                 doPodDeliver.userDriver.employeeId,
                 doPodDeliver.userDriver.employee.employeeName,
               );
+
+              response.status = 'ok';
+              response.trouble = false;
             }
             // #endregion after scanout
 
@@ -174,28 +175,23 @@ export class LastMileDeliveryOutService {
           response.status = 'error';
           response.message = `Resi ${awbNumber} sudah di proses.`;
         }
-      } else {
-        response.status = 'error';
-        response.message = `Resi ${awbNumber} Tidak di Temukan`;
-      }
 
-      if (response.status != 'error') {
-        result.service = resultQuery.service;
-        result.awbNumber = resultQuery.awbNumber;
-        result.consigneeName = resultQuery.consigneeName;
-        result.consigneeAddress = resultQuery.consigneeAddress;
-        result.consigneePhone = resultQuery.consigneePhone;
-        result.totalCodValue = resultQuery.totalCodValue;
-        result.dateTime = moment().format('YYYY-MM-DD HH:mm:ss');
+        if (response.trouble == false) {
+          result.service = awb.service;
+          result.awbNumber = awb.awbNumber;
+          result.consigneeName = awb.consigneeName;
+          result.consigneeAddress = awb.consigneeAddress;
+          result.consigneePhone = awb.consigneePhone;
+          result.totalCodValue = awb.totalCodValue;
+          result.dateTime = moment().format('YYYY-MM-DD HH:mm:ss');
 
-        result.doPodId = res.doPodDeliverId;
-      }
+          result.doPodId = res.doPodDeliverId;
+        }
 
-      response.trouble = false;
-      response.awbNumber = payload.scanValue;
-      result.data = response;
+        result.data = response;
+      } // end of validate
     } else {
-      response.awbNumber = payload.scanValue;
+      response.awbNumber = awbNumber;
       response.status = 'error';
       response.message = 'Nomor tidak valid atau tidak ditemukan';
       response.trouble = true;
@@ -215,68 +211,66 @@ export class LastMileDeliveryOutService {
 
     // check if awb_number belongs to user
     const qb = createQueryBuilder();
-
     qb.addSelect('awb.awb_number', 'awbNumber');
     qb.addSelect('awb.consignee_name', 'consigneeName');
     qb.addSelect('awb.consignee_address', 'consigneeAddress');
     qb.addSelect('awb.consignee_phone', 'consigneePhone');
     qb.addSelect('awb.total_cod_value', 'totalCodValue');
     qb.addSelect('pt.package_type_code', 'service');
+    qb.addSelect('aia.awb_item_id', 'awbItemId');
+    qb.addSelect('aia.awb_id', 'awbId');
     qb.addSelect('aia.awb_status_id_last', 'awbLastStatus');
-    // qb.addSelect('aia.awb_item_id', 'awbItemId');
-    // qb.addSelect('ah.awb_status_id', 'awbLastStatus');
-    qb.from('awb', 'awb');
+    qb.from('awb_item_attr', 'aia');
+    qb.innerJoin(
+      'awb',
+      'awb',
+      'aia.awb_id = awb.awb_id AND awb.is_deleted = false',
+    );
     qb.innerJoin(
       'package_type',
       'pt',
       'pt.package_type_id = awb.package_type_id AND pt.is_deleted = false',
     );
-    qb.innerJoin(
-      'awb_item_attr',
-      'aia',
-      'aia.awb_id = awb.awb_id AND aia.is_deleted = false',
-    );
-    qb.andWhere('awb.is_deleted = false');
+    qb.andWhere('aia.is_deleted = false');
     qb.andWhere('aia.awb_number = :awbNumber', {
-      awbNumber: payload.scanValue,
+      awbNumber,
     });
-    const resultQuery = await qb.getRawOne();
-
+    const awb = await qb.getRawOne();
     const response = new ScanAwbVm();
 
-    if (resultQuery) {
+    if (awb) {
       response.status = 'error';
       response.awbNumber = payload.scanValue;
       response.trouble = true;
 
-      if (resultQuery.awbLastStatus == AWB_STATUS.ANT) {
+      if (awb.awbLastStatus == AWB_STATUS.ANT) {
         response.message = `Resi ${awbNumber} sudah di proses.`;
         result.data = response;
         return result;
-      } else if (resultQuery.awbLastStatus != AWB_STATUS.IN_BRANCH) {
+      } else if (awb.awbLastStatus != AWB_STATUS.IN_BRANCH) {
         response.message = `Resi ${awbNumber} belum di Scan In`;
         result.data = response;
         return result;
-      } else if (resultQuery.awbLastStatus == AWB_STATUS.CANCEL) {
-        response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
-        result.data = response;
-        return result;
-      }
+      } else {
+        // check resi cancel delivery
+        const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
+        if (isCancel == true) {
+          response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
+          result.data = response;
+          return result;
+        }
 
-      response.status = 'ok';
-      const awb = await AwbService.validAwbNumber(awbNumber);
-      if (awb) {
         // TODO: validation need improvement
         // handle if awb status is null
         let notDeliver = true;
-        if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
-          notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
+        if (awb.awbLastStatus && awb.awbLastStatus != 0) {
+          notDeliver = awb.awbLastStatus != AWB_STATUS.ANT ? true : false;
         }
 
         // NOTE: first must scan in branch
         if (notDeliver) {
           const statusCode = await AwbService.awbStatusGroup(
-            awb.awbStatusIdLast,
+            awb.awbLastStatus,
           );
           // save data to awb_troubleß
           if (statusCode != 'IN') {
@@ -284,7 +278,7 @@ export class LastMileDeliveryOutService {
             await AwbTroubleService.fromScanOut(
               awbNumber,
               branchName,
-              awb.awbStatusIdLast,
+              awb.awbLastStatus,
             );
           }
 
@@ -329,6 +323,9 @@ export class LastMileDeliveryOutService {
                 doPodDeliver.userDriver.employeeId,
                 doPodDeliver.userDriver.employee.employeeName,
               );
+
+              response.status = 'ok';
+              response.trouble = false;
             }
             // #endregion after scanout
 
@@ -342,35 +339,27 @@ export class LastMileDeliveryOutService {
           response.status = 'error';
           response.message = `Resi ${awbNumber} sudah di proses.`;
         }
-      } else {
-        response.status = 'error';
-        response.message = `Resi ${awbNumber} Tidak di Temukan`;
-      }
 
-      if (response.status != 'error') {
-        result.service = resultQuery.service;
-        result.awbNumber = resultQuery.awbNumber;
-        result.consigneeName = resultQuery.consigneeName;
-        result.consigneeAddress = resultQuery.consigneeAddress;
-        result.consigneePhone = resultQuery.consigneePhone;
-        result.totalCodValue = resultQuery.totalCodValue;
-        result.dateTime = moment().format('YYYY-MM-DD HH:mm:ss');
+        if (response.trouble == false) {
+          result.service = awb.service;
+          result.awbNumber = awb.awbNumber;
+          result.consigneeName = awb.consigneeName;
+          result.consigneeAddress = awb.consigneeAddress;
+          result.consigneePhone = awb.consigneePhone;
+          result.totalCodValue = awb.totalCodValue;
+          result.dateTime = moment().format('YYYY-MM-DD HH:mm:ss');
 
-        result.doPodId = payload.doPodDeliverId;
-      }
-
-      response.trouble = false;
+          result.doPodId = payload.doPodDeliverId;
+        }
+        result.data = response;
+      } // end of validate
+    } else {
       response.awbNumber = payload.scanValue;
+      response.status = 'error';
+      response.message = 'Nomor tidak valid atau tidak ditemukan';
+      response.trouble = true;
       result.data = response;
-
-      return result;
     }
-
-    response.awbNumber = payload.scanValue;
-    response.status = 'error';
-    response.message = 'Nomor tidak valid atau tidak ditemukan';
-    response.trouble = true;
-    result.data = response;
     return result;
   }
 

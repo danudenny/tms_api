@@ -76,4 +76,17 @@ export class V2WebCodReportController {
   ) {
     return await V2WebCodReportService.exportSupplierInvoice(supplierInvoiceId, outgoingHTTP);
   }
+
+  @Post('finance/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async awbCodFinanceTransferred(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await V2WebCodReportService.printCodFinance(
+      payload,
+      outgoingHTTP,
+    );
+  }
 }
