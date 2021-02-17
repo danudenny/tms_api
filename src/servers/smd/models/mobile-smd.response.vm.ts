@@ -114,3 +114,27 @@ export class ScanOutHandOverVm {
   handover_date: Date;
 
 }
+
+export class ScanOutSmdEndManualResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutEndManualVm]})
+  data: ScanOutEndManualVm[];
+}
+
+export class ScanOutEndManualVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  departure_date_time: Date;
+
+}

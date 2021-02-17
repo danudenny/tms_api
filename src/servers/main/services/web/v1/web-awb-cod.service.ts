@@ -133,8 +133,10 @@ export class V1WebAwbCodService {
       branch.branch_id, rep.representative_id
     `);
 
+    q.orderByRaw('SUM(cp.cod_value)', 'DESC');
+
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const total = 0;
 
     const result = new WebAwbCodSummaryResponseVm();
 

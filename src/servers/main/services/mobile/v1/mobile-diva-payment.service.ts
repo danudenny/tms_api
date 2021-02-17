@@ -342,16 +342,6 @@ export class V1MobileDivaPaymentService {
       { caption: ' ', alignment: 'left', font: 'regular' },
       { caption: ' ', alignment: 'center', font: 'regular' },
       {
-        caption: 'Syarat dan ketentuan',
-        alignment: 'center',
-        font: 'regular',
-      },
-      {
-        caption: 'Lorem ipsum sit dolor amet',
-        alignment: 'center',
-        font: 'regular',
-      },
-      {
         caption: '(simpan struk ini sebagai bukti)',
         alignment: 'center',
         font: 'bold',
