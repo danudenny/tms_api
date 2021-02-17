@@ -110,22 +110,30 @@ export class V2WebAwbCodService {
           },
         );
 
-        await transactionManager.insert(CodTransactionDetail, {
-          transactionStatusId: TRANSACTION_STATUS.TRM,
+        // Validasi in cod_transaction_detail before insert
+        const transactionDetail = await CodTransactionDetail.findOne({
           awbItemId: item.awbItemId,
-          awbNumber: item.awbNumber,
-          podDate: moment().toDate(),
-          paymentMethod: item.paymentMethod,
-          branchId: Number(branchId),
-          userIdDriver: Number(item.userIdDriver),
-          currentPositionId: Number(branchId),
-          consigneeName: 'Admin',
-          partnerId: 1,
-          userIdCreated: Number(userId),
-          createdTime: moment().toDate(),
-          userIdUpdated: Number(userId),
-          updatedTime: moment().toDate(),
+          isDeleted: false,
         });
+
+        if (!transactionDetail) {
+          await transactionManager.insert(CodTransactionDetail, {
+            transactionStatusId: TRANSACTION_STATUS.TRM,
+            awbItemId: item.awbItemId,
+            awbNumber: item.awbNumber,
+            podDate: moment().toDate(),
+            paymentMethod: item.paymentMethod,
+            branchId: Number(branchId),
+            userIdDriver: Number(item.userIdDriver),
+            currentPositionId: Number(branchId),
+            consigneeName: 'Admin',
+            partnerId: 1,
+            userIdCreated: Number(userId),
+            createdTime: moment().toDate(),
+            userIdUpdated: Number(userId),
+            updatedTime: moment().toDate(),
+          });
+        }
 
         // create transaction history
         await transactionManager.insert(CodTransactionHistory, {
