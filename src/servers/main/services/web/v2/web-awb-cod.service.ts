@@ -111,12 +111,21 @@ export class V2WebAwbCodService {
         );
 
         // Validasi in cod_transaction_detail before insert
-        const transactionDetail = await CodTransactionDetail.findOne({
-          awbItemId: item.awbItemId,
-          isDeleted: false,
-        });
+        let dataTransactionDetail: CodTransactionDetail;
+        const masterQueryRunner = getConnection().createQueryRunner('master');
+        try {
+          dataTransactionDetail = await getConnection()
+            .createQueryBuilder(CodTransactionDetail, 'ctd')
+            .setQueryRunner(masterQueryRunner)
+            .where('ctd.awbItemId = :awbItemId AND ctd.isDeleted = false', {
+              awbItemId: item.awbItemId,
+            })
+            .getOne();
+        } finally {
+          await masterQueryRunner.release();
+        }
 
-        if (!transactionDetail) {
+        if (!dataTransactionDetail) {
           await transactionManager.insert(CodTransactionDetail, {
             transactionStatusId: TRANSACTION_STATUS.TRM,
             awbItemId: item.awbItemId,
@@ -300,7 +309,6 @@ export class V2WebAwbCodService {
     uuidString: string,
   ): Promise<WebCodTransferBranchCashResponseVm> {
     const timestamp = moment().toDate();
-    let totalAwbCash = 0;
     let totalCodValueCash = 0;
     let printIdCash: string;
 
@@ -327,9 +335,6 @@ export class V2WebAwbCodService {
       if (redlock) {
         const awbValid = await this.validStatusAwb(item.awbItemId, 'cash');
         if (awbValid) {
-          totalCodValueCash += Number(item.codValue);
-          totalAwbCash += 1;
-
           // send to background process
           const handleData = await this.handleAwbCod(
             item,
@@ -338,6 +343,7 @@ export class V2WebAwbCodService {
             authMeta.userId,
           );
           if (handleData) {
+            totalCodValueCash += Number(item.codValue);
             dataPrintCash.push({
               awbNumber: item.awbNumber,
               codValue: item.codValue,
@@ -353,7 +359,7 @@ export class V2WebAwbCodService {
           dataError.push(errorMessage);
         }
       } else {
-        dataError.push(`resi ${item.awbNumber} sedang d proses!!`);
+        dataError.push(`resi ${item.awbNumber} sedang di proses!!`);
       }
     } // end of loop data cash
 
@@ -366,7 +372,7 @@ export class V2WebAwbCodService {
       codBranchCash.transactionStatusId = 31000;
       codBranchCash.transactionType = 'CASH';
       codBranchCash.totalCodValue = totalCodValueCash;
-      codBranchCash.totalAwb = totalAwbCash;
+      codBranchCash.totalAwb = dataPrintCash.length;
       codBranchCash.branchId = permissonPayload.branchId;
       codBranchCash.userIdDriver = payload.userIdDriver;
       await CodTransaction.save(codBranchCash);
@@ -395,7 +401,6 @@ export class V2WebAwbCodService {
     uuidString: string,
   ): Promise<WebCodTransferBranchCashlessResponseVm> {
     const timestamp = moment().toDate();
-    let totalAwbCashless = 0;
     let totalCodValueCashless = 0;
     let printIdCashless: string;
 
@@ -422,9 +427,6 @@ export class V2WebAwbCodService {
       if (redlock) {
         const awbValid = await this.validStatusAwb(item.awbItemId, 'cashless');
         if (awbValid) {
-          totalCodValueCashless += Number(item.codValue);
-          totalAwbCashless += 1;
-
           const handleData = await this.handleAwbCod(
             item,
             uuidString,
@@ -433,6 +435,7 @@ export class V2WebAwbCodService {
           );
 
           if (handleData) {
+            totalCodValueCashless += Number(item.codValue);
             dataPrintCashless.push({
               awbNumber: item.awbNumber,
               codValue: item.codValue,
@@ -462,7 +465,7 @@ export class V2WebAwbCodService {
       codBranchCashless.transactionStatusId = 35000;
       codBranchCashless.transactionType = 'CASHLESS';
       codBranchCashless.totalCodValue = totalCodValueCashless;
-      codBranchCashless.totalAwb = totalAwbCashless;
+      codBranchCashless.totalAwb = dataPrintCashless.length;
       codBranchCashless.branchId = permissonPayload.branchId;
       codBranchCashless.userIdDriver = payload.userIdDriver;
       await CodTransaction.save(codBranchCashless);

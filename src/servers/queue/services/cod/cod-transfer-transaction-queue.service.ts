@@ -1,4 +1,4 @@
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, getConnection } from 'typeorm';
 import { QueueBullBoard } from '../queue-bull-board';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { AwbTransactionDetailVm } from '../../../main/models/cod/web-awb-cod-response.vm';
@@ -46,10 +46,19 @@ export class CodTransferTransactionQueueService {
         data.awbNumber,
       );
 
-      const transactionDetail = await CodTransactionDetail.findOne({
-        awbItemId: data.awbItemId,
-        isDeleted: false,
-      });
+      let transactionDetail: CodTransactionDetail;
+      const masterQueryRunner = getConnection().createQueryRunner('master');
+      try {
+        transactionDetail = await getConnection()
+          .createQueryBuilder(CodTransactionDetail, 'ctd')
+          .setQueryRunner(masterQueryRunner)
+          .where('ctd.awbItemId = :awbItemId AND ctd.isDeleted = false', {
+            awbItemId: data.awbItemId,
+          })
+          .getOne();
+      } finally {
+        await masterQueryRunner.release();
+      }
 
       // Handle first awb scan
       // only transaction
