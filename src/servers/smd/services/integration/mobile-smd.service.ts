@@ -30,8 +30,8 @@ import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
-import { createQueryBuilder, In } from 'typeorm';
-import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm } from '../../models/mobile-smd.response.vm';
+import { createQueryBuilder, In, Not } from 'typeorm';
+import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm, ScanOutSmdEndManualResponseVm } from '../../models/mobile-smd.response.vm';
 import { MobileUploadImagePayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
@@ -101,8 +101,7 @@ export class MobileSmdService {
           null,
           null,
           resultDoSmd.departureScheduleDateTime,
-          // permissonPayload.branchId,
-          null,
+          resultDoSmd.branchId,
           3000,
           null,
           null,
@@ -114,7 +113,8 @@ export class MobileSmdService {
         // BACKGROUND PROCESS
         BagScanOutBranchSmdQueueService.perform(
           payload.do_smd_id,
-          permissonPayload.branchId,
+          // permissonPayload.branchId
+          resultDoSmd.branchId,
           authMeta.userId,
         );
       }
@@ -1131,6 +1131,70 @@ export class MobileSmdService {
     result.url = url;
     result.attachmentId = attachmentId;
     return result;
+  }
+
+  static async scanInEndManualMobile(payload: any): Promise<any> {
+    const result = new ScanOutSmdEndManualResponseVm();
+    const timeNow = moment().toDate();
+
+    const resultDoSmd = await DoSmd.findOne({
+      where: {
+        doSmdCode: payload.do_smd_code,
+        doSmdStatusIdLast: Not(6000),
+        isDeleted: false,
+      },
+    });
+
+    if(resultDoSmd) {
+      await DoSmd.update(
+        { doSmdId : resultDoSmd.doSmdId },
+        {
+          doSmdStatusIdLast: 6000,
+          userIdUpdated: 1,
+          updatedTime: timeNow,
+        },
+      );
+
+      await DoSmdDetail.update(
+        { doSmdId : resultDoSmd.doSmdId },
+        {
+          doSmdStatusIdLast: 6000,
+          departureTime: moment().toDate(),
+          // latitudeArrival: payload.latitude,
+          // longitudeArrival: payload.longitude,
+          userIdUpdated: 1,
+          updatedTime: timeNow,
+        },
+      );
+
+      await this.createDoSmdHistory(
+        resultDoSmd.doSmdId,
+        null,
+        null,
+        null,
+        null,
+        moment().toDate(),
+        resultDoSmd.branchId,
+        6000,
+        null,
+        null,
+        null,
+        1,
+      );
+      const data = [];
+      data.push({
+        do_smd_id: resultDoSmd.doSmdId,
+        do_smd_code: resultDoSmd.doSmdCode,
+        departure_date_time: moment().toDate(),
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'SMD Success End Manual';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`Can't Find  DO SMD CODE : ` + payload.do_smd_code);
+    }
+
   }
 
   private static async createDoSmdHistory(
