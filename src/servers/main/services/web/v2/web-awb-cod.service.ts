@@ -176,6 +176,7 @@ export class V2WebAwbCodService {
       const firstTransaction = new WebCodFirstTransactionPayloadVm();
       firstTransaction.awbItemId = item.awbItemId;
       firstTransaction.awbNumber = item.awbNumber;
+      firstTransaction.transactionStatusId = TRANSACTION_STATUS.TRM,
       firstTransaction.codTransactionId = transactiontId;
       firstTransaction.supplierInvoiceStatusId = null;
       firstTransaction.codSupplierInvoiceId = null;

@@ -85,6 +85,7 @@ export class CodTransferTransactionQueueService {
               codTransactionId: data.codTransactionId,
               supplierInvoiceStatusId,
               codSupplierInvoiceId: data.codSupplierInvoiceId,
+              transactionStatusId: Number(data.transactionStatusId),
 
               paymentService: data.paymentService,
               noReference: data.noReference,
@@ -146,6 +147,7 @@ export class CodTransferTransactionQueueService {
     const obj = {
       awbItemId: params.awbItemId,
       awbNumber: params.awbNumber,
+      transactionStatusId: params.transactionStatusId,
       codTransactionId: params.codTransactionId,
       supplierInvoiceStatusId: params.supplierInvoiceStatusId,
       codSupplierInvoiceId: params.codSupplierInvoiceId,
