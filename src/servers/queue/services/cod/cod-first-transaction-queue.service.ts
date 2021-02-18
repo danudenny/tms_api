@@ -9,6 +9,7 @@ import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-aw
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import moment = require('moment');
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -74,7 +75,7 @@ export class CodFirstTransactionQueueService {
           const percentFee = 1; // set on config COD
           const codFee = (Number(codDetail.codValue) * percentFee) / 100;
           // Create data Cod Transaction Detail
-          const transactionStatusId = data.transactionStatusId ? Number(data.transactionStatusId) : 31000;
+          const transactionStatusId = data.transactionStatusId ? Number(data.transactionStatusId) : TRANSACTION_STATUS.TRM;
           const supplierInvoiceStatusId = data.supplierInvoiceStatusId ? Number(data.supplierInvoiceStatusId) : null;
           const newTransactionDetail = CodTransactionDetail.create({
             codTransactionId: data.codTransactionId,
@@ -153,7 +154,7 @@ export class CodFirstTransactionQueueService {
             awbItemId: data.awbItemId,
             awbNumber: data.awbNumber,
             transactionDate: moment(data.timestamp).add(-1, 'minute').toDate(),
-            transactionStatusId: 30000,
+            transactionStatusId: TRANSACTION_STATUS.SIGESIT,
             branchId: data.branchId,
             userIdCreated: data.userId,
             userIdUpdated: data.userId,
@@ -166,7 +167,7 @@ export class CodFirstTransactionQueueService {
             awbItemId: data.awbItemId,
             awbNumber: data.awbNumber,
             transactionDate: data.timestamp,
-            transactionStatusId: 31000,
+            transactionStatusId: TRANSACTION_STATUS.TRM,
             branchId: data.branchId,
             userIdCreated: data.userId,
             userIdUpdated: data.userId,

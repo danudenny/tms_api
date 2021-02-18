@@ -118,7 +118,7 @@ export class V1WebCodBankStatementService {
               },
               {
                 codBankStatementId: bankStatement.codBankStatementId,
-                transactionStatusId: 35000,
+                transactionStatusId: TRANSACTION_STATUS.TRF,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timestamp,
               },
@@ -130,7 +130,7 @@ export class V1WebCodBankStatementService {
                 codTransactionId: codBranch.codTransactionId,
               },
               {
-                transactionStatusId: 35000,
+                transactionStatusId: TRANSACTION_STATUS.TRF,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timestamp,
               },
@@ -138,7 +138,7 @@ export class V1WebCodBankStatementService {
             // send background process to insert history
             CodUpdateTransactionQueueService.perform(
               codBranch.codTransactionId,
-              35000,
+              TRANSACTION_STATUS.TRF,
               permissonPayload.branchId,
               authMeta.userId,
               timestamp,
@@ -344,7 +344,7 @@ export class V1WebCodBankStatementService {
       select: ['codBankStatementId'],
       where: {
         codBankStatementId: payload.bankStatementId,
-        transactionStatusId: 35000,
+        transactionStatusId: TRANSACTION_STATUS.TRF,
         isDeleted: false,
       },
     });
@@ -366,7 +366,7 @@ export class V1WebCodBankStatementService {
             codBankStatementId: payload.bankStatementId,
           },
           {
-            transactionStatusId: 40000,
+            transactionStatusId: TRANSACTION_STATUS.TRMHO,
             transferDatetime: moment(payload.transferDatetime).toDate(),
             validateDatetime: timestamp,
             updatedTime: timestamp,
@@ -381,7 +381,7 @@ export class V1WebCodBankStatementService {
             codBankStatementId: payload.bankStatementId,
           },
           {
-            transactionStatusId: 40000,
+            transactionStatusId: TRANSACTION_STATUS.TRMHO,
             transactionNote,
             updatedTime: timestamp,
             userIdUpdated: authMeta.userId,
@@ -407,7 +407,7 @@ export class V1WebCodBankStatementService {
                 isDeleted: false,
               },
               {
-                transactionStatusId: 40000,
+                transactionStatusId: TRANSACTION_STATUS.TRMHO,
                 updatedTime: timestamp,
                 userIdUpdated: authMeta.userId,
               },
@@ -417,7 +417,7 @@ export class V1WebCodBankStatementService {
             // send background process to insert history
             CodUpdateTransactionQueueService.perform(
               item.codTransactionId,
-              40000,
+              TRANSACTION_STATUS.TRMHO,
               permissonPayload.branchId,
               authMeta.userId,
               timestamp,
@@ -451,7 +451,7 @@ export class V1WebCodBankStatementService {
       select: ['codBankStatementId'],
       where: {
         codBankStatementId: payload.bankStatementId,
-        transactionStatusId: 35000,
+        transactionStatusId: TRANSACTION_STATUS.TRF,
         isDeleted: false,
       },
     });
@@ -476,7 +476,7 @@ export class V1WebCodBankStatementService {
             codBankStatementId: payload.bankStatementId,
           },
           {
-            transactionStatusId: 32500,
+            transactionStatusId: TRANSACTION_STATUS.CANHO,
             cancelDatetime: timestamp,
             updatedTime: timestamp,
             userIdUpdated: authMeta.userId,
@@ -502,7 +502,7 @@ export class V1WebCodBankStatementService {
                 isDeleted: false,
               },
               {
-                transactionStatusId: 32500,
+                transactionStatusId: TRANSACTION_STATUS.CANHO,
                 updatedTime: timestamp,
                 userIdUpdated: authMeta.userId,
               },
@@ -512,7 +512,7 @@ export class V1WebCodBankStatementService {
             // send background process to insert history
             CodUpdateTransactionQueueService.perform(
               item.codTransactionId,
-              32500,
+              TRANSACTION_STATUS.CANHO,
               permissonPayload.branchId,
               authMeta.userId,
               timestamp,
@@ -526,7 +526,7 @@ export class V1WebCodBankStatementService {
               codBankStatementId: payload.bankStatementId,
             },
             {
-              transactionStatusId: 32500,
+              transactionStatusId: TRANSACTION_STATUS.CANHO,
               codBankStatementId: null,
               transactionNote,
               updatedTime: timestamp,

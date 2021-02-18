@@ -466,7 +466,7 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awbItemAttr, 't2', j => {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
       j.andWhere(e => e.transactionStatusId, w => w.isNull());
-      j.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+      j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     });
 
     q.innerJoin(e => e.userDriver, 't3', j =>
@@ -607,7 +607,7 @@ export class V1WebAwbCodService {
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
 
     const data = await q.exec();
     const total = 0;
@@ -727,7 +727,7 @@ export class V1WebAwbCodService {
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
 
     const total = await q.countWithoutTakeAndSkip();
 
@@ -1032,7 +1032,7 @@ export class V1WebAwbCodService {
             },
             {
               codTransactionId: null,
-              transactionStatusId: 30000,
+              transactionStatusId: TRANSACTION_STATUS.SIGESIT,
               updatedTime: timestamp,
               userIdUpdated: authMeta.userId,
             },
@@ -1246,7 +1246,7 @@ export class V1WebAwbCodService {
       where: {
         codTransactionId: payload.transactionId,
         isDeleted: false,
-        transactionStatusId: In(['31000', '32500']),
+        transactionStatusId: In([TRANSACTION_STATUS.TRM, TRANSACTION_STATUS.CANHO]),
       },
     });
 
@@ -1292,7 +1292,7 @@ export class V1WebAwbCodService {
               },
               {
                 codTransactionId: null,
-                transactionStatusId: 30000,
+                transactionStatusId: TRANSACTION_STATUS.SIGESIT,
                 updatedTime: timestamp,
                 userIdUpdated: authMeta.userId,
               },
@@ -1367,7 +1367,7 @@ export class V1WebAwbCodService {
       where: {
         codTransactionId: payload.transactionId,
         isDeleted: false,
-        transactionStatusId: In(['31000', '32500']),
+        transactionStatusId: In([TRANSACTION_STATUS.TRM, TRANSACTION_STATUS.CANHO]),
       },
     });
 
@@ -1522,7 +1522,7 @@ export class V1WebAwbCodService {
       firstTransaction.awbItemId = item.awbItemId;
       firstTransaction.awbNumber = item.awbNumber;
       firstTransaction.codTransactionId = transctiontId;
-      firstTransaction.transactionStatusId = 31000;
+      firstTransaction.transactionStatusId = TRANSACTION_STATUS.TRM;
       firstTransaction.supplierInvoiceStatusId = null;
       firstTransaction.codSupplierInvoiceId = null;
       firstTransaction.paymentMethod = item.paymentMethod;
@@ -1735,7 +1735,7 @@ export class V1WebAwbCodService {
       codBranchCash.codTransactionId = uuidString;
       codBranchCash.transactionCode = randomCode;
       codBranchCash.transactionDate = timestamp;
-      codBranchCash.transactionStatusId = 31000;
+      codBranchCash.transactionStatusId = TRANSACTION_STATUS.TRM;
       codBranchCash.transactionType = 'CASH';
       codBranchCash.totalCodValue = totalCodValueCash;
       codBranchCash.totalAwb = totalAwbCash;
@@ -1831,7 +1831,7 @@ export class V1WebAwbCodService {
       codBranchCashless.codTransactionId = uuidString;
       codBranchCashless.transactionCode = randomCode;
       codBranchCashless.transactionDate = timestamp;
-      codBranchCashless.transactionStatusId = 35000;
+      codBranchCashless.transactionStatusId = TRANSACTION_STATUS.TRF;
       codBranchCashless.transactionType = 'CASHLESS';
       codBranchCashless.totalCodValue = totalCodValueCashless;
       codBranchCashless.totalAwb = totalAwbCashless;

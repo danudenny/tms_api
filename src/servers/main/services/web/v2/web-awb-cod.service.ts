@@ -22,7 +22,6 @@ import {
   WebCodTransferBranchResponseVm,
   WebCodTransferBranchCashResponseVm,
   WebCodTransferBranchCashlessResponseVm,
-  AwbTransactionDetailVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -370,7 +369,7 @@ export class V2WebAwbCodService {
       codBranchCash.codTransactionId = uuidString;
       codBranchCash.transactionCode = randomCode;
       codBranchCash.transactionDate = timestamp;
-      codBranchCash.transactionStatusId = 31000;
+      codBranchCash.transactionStatusId = TRANSACTION_STATUS.TRM;
       codBranchCash.transactionType = 'CASH';
       codBranchCash.totalCodValue = totalCodValueCash;
       codBranchCash.totalAwb = dataPrintCash.length;
@@ -463,7 +462,7 @@ export class V2WebAwbCodService {
       codBranchCashless.codTransactionId = uuidString;
       codBranchCashless.transactionCode = randomCode;
       codBranchCashless.transactionDate = timestamp;
-      codBranchCashless.transactionStatusId = 35000;
+      codBranchCashless.transactionStatusId = TRANSACTION_STATUS.TRF;
       codBranchCashless.transactionType = 'CASHLESS';
       codBranchCashless.totalCodValue = totalCodValueCashless;
       codBranchCashless.totalAwb = dataPrintCashless.length;
