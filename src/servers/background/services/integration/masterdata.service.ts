@@ -4,7 +4,6 @@ import { UserRole } from '../../../../shared/orm-entity/user-role';
 import { MappingRoleResponseVm } from '../../models/mapping-role.response.vm';
 import { MappingRolePayloadVm } from '../../models/mapping-role.payload.vm';
 import { MappingRoleUserPayloadVm } from '../../models/mapping-role-user.payload.vm';
-import { SunfishEmployeeResponseVm } from '../../models/sunfish-employee.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { MappingRoleQueueService } from '../../../queue/services/mapping-role-queue.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
@@ -13,10 +12,10 @@ import { PinoLoggerService } from '../../../../shared/services/pino-logger.servi
 import { RoleTmsResponseVm } from '../../models/role-tms.response.vm';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { ConfigService } from '../../../../shared/services/config.service';
+import { UserPasswordPayloadVm } from '../../models/user-password.payload.vm';
+import { UserPasswordResponseVm } from '../../models/user-password.response.vm';
 
 import moment = require('moment');
-import axios from 'axios';
 import { Role } from '../../../../shared/orm-entity/role';
 
 @Injectable()
@@ -121,6 +120,85 @@ export class MasterDataService {
 
     return result;
   }
+
+  static async userPassword(payload: UserPasswordPayloadVm){
+    const result = new UserPasswordResponseVm();
+    result.code = HttpStatus.OK;
+    result.message = 'Success';
+
+    var upperCaseLetter = /[A-Z]/;
+    var lowerCaseLetter = /[a-z]/;
+    var numeric = /[0-9]/;
+
+    if (payload.password.length >=8 && payload.password.match(upperCaseLetter) && payload.password.match(lowerCaseLetter) && payload.password.match(numeric)){
+      //#region Process For Master Data
+      const pool: any = DatabaseConfig.getMasterDataDbPool();
+      const client = await pool.connect();
+      try {
+        const crypto = require('crypto');
+        const password = crypto.createHash('md5').update(payload.password).digest('hex');
+
+        const timeNow = moment().toDate();
+
+        let employeeName = '';
+        let roleName = '';
+        const res = await client.query(`
+          SELECT e.fullname, er.employee_role_name, u.password
+          FROM users u
+          LEFT JOIN employee e on u.employee_id = e.employee_id
+          LEFT JOIN employee_role er on er.employee_role_id = e.employee_role_id
+          WHERE u.username = $1 and u.is_deleted=false
+        `, [payload.username]);
+
+        if (res && res.rows && res.rows.length && res.rows.length > 0) {
+          for (const r of res.rows) {
+            employeeName = r.fullname;
+            roleName = r.employee_role_name;
+          }
+        }
+
+        const query = `
+          UPDATE users
+          SET password = $1, updated_time = $2, user_id_updated = $3
+          WHERE username = $4 and is_deleted=false
+        `;
+      
+        await client.query(query, [password, timeNow, 1, payload.username], async function(err) {
+          PinoLoggerService.debug(this.logTitle, this.sql);
+          if (err) {
+            result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+            result.message = 'Error update user pass';
+            PinoLoggerService.error(this.logTitle, err.message);
+          }
+        });
+
+        const query2 = `
+          insert into user_reset_log (username, employee_name, password, role_name, created_time, user_id_created)
+          values($1, $2, $3, $4, $5, $6);
+        `;
+
+        await client.query(query2, [ payload.username, employeeName, payload.password, roleName, timeNow, 1], async function(err) {
+          PinoLoggerService.debug(this.logTitle, this.sql);
+          if (err) {
+            result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+            result.message = 'Error user reset log';
+            PinoLoggerService.error(this.logTitle, err.message);
+          }
+        });
+
+      } finally {
+        client.release();
+      }
+      //#endregion
+    } else {
+      result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+      result.message = 'Password Must Contains Upper Case, Lower Case, Number, and minimum 8 characters';
+    }
+
+    return result;
+  }
+
+  // PRIVATE METHOD
 
   private static async getUsers(id: number, mode: number = 0, branchIdLast: number = 0, branchIdNew: number = 0): Promise<any> {
     let where = ' e.employee_role_id = :id ';
@@ -353,586 +431,4 @@ export class MasterDataService {
     });
   }
 
-  static async sunfishEmployee(payload: any): Promise<SunfishEmployeeResponseVm> {
-    const result = new SunfishEmployeeResponseVm();
-    const res_data = [];
-    const resSuccess = [];
-    const resUnsuccess = [];
-    const updated_time = moment().toDate();
-    const timeNow = moment().toDate();
-    let url = `${ConfigService.get('sunfish.baseUrl')}sicepat_FULL_getEmployeeData`;
-
-    const obj = await this.getCronSunfishUpdateDate();
-
-    if (obj !== null || obj != null) {
-      url += `&modified_date=` + moment(obj).format('YYYY-MM-DD HH:mm:ss');
-    }
-
-    const headers = {
-      'X-SFAPI-Account': ConfigService.get('sunfish.accountName'),
-      'X-SFAPI-AppName': ConfigService.get('sunfish.appName'),
-      'X-SFAPI-RSAKey': ConfigService.get('sunfish.rsaAKey'),
-    };
-
-    const config = {
-      headers,
-    };
-    // try {
-    let retry = 1;
-    let success = false;
-    let resData = [];
-    const result_data = [];
-
-    while (success == false && retry <= 5) {
-      const response = await axios.get(url, config);
-      resData = response.data;
-
-      console.log('### START POST GET SUNFISH EMPLOYEE ###');
-      if (response.status == 200 && response.data != undefined && response.data != '' && resData['MESSAGE'] != '') {
-        success = true;
-        console.log('### Succeed in-' + retry + ' ###');
-      } else {
-        console.log('### Failed in-' + retry + ' ###');
-        retry++;
-      }
-    }
-
-    if (success && resData['CODE'] == 200) {
-      if (resData['RECORDCNT'] > 0) {
-        const ots = resData['RESULT'];
-
-        let err_code = 0;
-        let err_message = '';
-
-        const pool: any = DatabaseConfig.getMasterDataDbPool();
-        const client = await pool.connect();
-
-        try {
-            await client.query('BEGIN');
-
-            const queryUpdateEmployee = `UPDATE employee SET fullname=$2, gender=$3, place_of_birth=$4, birthdate=$5, religion=$6, marital_status=$7, district_id_home=$8, home_address=$9, zip_code_home=$10, phone1=$11, email1=$12, employee_type_id=$13, date_of_entry=$14, employee_role_id=$15, branch_id=$16, department_id=$17, employee_id_coach=$18, npwp_number=$19, division_id=$20, nickname=$21, district_id_id_card=$22, id_card_address=$23, zip_code_id_card=$24, number_of_child=$25, cod_position=$26, passport_number=$27, driver_license_a=$28, driver_license_c=$29, bank_id_account=$30, bank_account_number=$31, bank_account_name=$32, is_outsource=$33, country_id_nationality=$34, date_of_resign=$35, status_employee=$36, updated_time=$37 WHERE employee_id=$1 AND is_deleted = false`;
-
-            const queryUpdateUser = `UPDATE users SET first_name=$2, username=$3, email=$4, updated_time=$5, user_id_updated=$6 WHERE employee_id=$1 AND is_deleted = false`;
-
-            const queryDeleteEmployeeFamily = `UPDATE employee_family SET updated_time=$2, user_id_updated=$3, is_deleted=$4 WHERE employee_id=$1 AND is_deleted = false`;
-
-            const queryInsertEmployeeFamily = `INSERT INTO employee_family (employee_id,full_name,status,gender,last_education,user_id_created,created_time,user_id_updated,updated_time,is_deleted) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`;
-
-            const queryDeleteEmployeeExperience = `UPDATE employee_experience SET updated_time=$2, user_id_updated=$3, is_deleted=$4 WHERE employee_id=$1 AND is_deleted = false`;
-
-            const queryInsertEmployeeExperience = `INSERT INTO employee_experience (employee_id,company,company_description,position,experience_start,experience_end,last_salary,user_id_created,created_time,user_id_updated,updated_time,is_deleted) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`;
-
-            const queryDeleteEmployeeEducation = `UPDATE employee_education SET updated_time=$2, user_id_updated=$3, is_deleted=$4 WHERE employee_id=$1 AND is_deleted = false`;
-
-            const queryInsertEmployeeEducation = `INSERT INTO employee_education (employee_id, education, education_name, majors, education_start, education_end,user_id_created, created_time, user_id_updated, updated_time, is_deleted) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`;
-
-            for (const item of ots) {
-              // console.log(item);
-              let religion = '';
-              const item_religion = item.agama.toLowerCase();
-              if (item_religion == 'katolik') {
-                religion = 'catholic';
-              } else if (item_religion == 'buddha') {
-                religion = 'buddha';
-              } else if (item_religion == 'kristen') {
-                religion = 'christian';
-              } else if (item_religion == 'islam') {
-                religion = 'islam';
-              } else if (item_religion == 'hindu') {
-                religion = 'hindu';
-              } else if (item_religion == 'konghucu') {
-                religion = 'konghucu';
-              }
-
-              let district_id_home = 0;
-              if (item.kecamatan_tinggal !== '') {
-                district_id_home = await this.getDistrictId(item.kecamatan_tinggal);
-              }
-
-              let marital_status = '';
-              if (item.status == '0') {
-                marital_status = 'single';
-              } else if (item.status == '1') {
-                marital_status = 'married';
-              } else if (item.status == '2') {
-                marital_status = 'widow';
-              } else if (item.status == '3') {
-                marital_status = 'widower';
-              }
-
-              let district_id_id_card = 0;
-              if (item.kecamatan_sesuai !== '') {
-                district_id_id_card = await this.getDistrictId(item.kecamatan_sesuai);
-              }
-
-              const employee_type = item.tipe.toLowerCase();
-              let employee_type_id = 0;
-              let is_outsource = false;
-              if (employee_type == 'probation') {
-                employee_type_id = 1;
-              } else if (employee_type == 'kontrak 1') {
-                employee_type_id = 2;
-              } else if (employee_type == 'kontrak 2') {
-                employee_type_id = 3;
-              } else if (employee_type == 'karyawan tetap') {
-                employee_type_id = 4;
-              } else if (employee_type == 'pjs promosi jabatan sementara') {
-                employee_type_id = 5;
-              } else if (employee_type == 'outsource') {
-                is_outsource = true;
-              }
-              // else if (employee_type == 'internship') {
-              //   employee_type_id = 6;
-              // } else if (employee_type == 'probation2') {
-              //   employee_type_id = 7;
-              // }
-
-              let employee_role_id = 0;
-              if (item.pangkat !== '') {
-                employee_role_id = await this.getEmployeeRoleId(item.pangkat);
-              }
-
-              let branch_id = 0;
-              if (item.kantor !== '') {
-                branch_id = await this.getBranchId(item.kantor);
-              }
-
-              let department_id = 0;
-              if (item.department !== '') {
-                department_id = await this.getDepartmentId(item.department);
-              }
-
-              let division_id = 0;
-              if (item.divisi !== '') {
-                division_id = await this.getDivisionId(item.divisi);
-              }
-
-              let bank_id = 0;
-              if (item.cabang_bank !== '') {
-                bank_id = await this.getBankId(item.cabang_bank);
-              }
-
-              let number_of_child = 0;
-              if (item.jumlah_anak !== '') {
-                number_of_child = parseInt(item.jumlah_anak);
-              }
-
-              let coach = 0;
-              if (item.coach !== '') {
-                coach = parseInt(item.coach);
-              }
-
-              let gender = 'male';
-              if (item.gender == 0) {
-                gender = 'female';
-              } else if (item.gender == 1) {
-                gender = 'male';
-              }
-
-              let country_id_nationality = 0;
-              if (item.kewarganegaraan !== '') {
-                country_id_nationality = await this.getCountryId(item.kewarganegaraan);
-              }
-
-              let status_employee = 10;
-              let resign_date;
-              if (item.resign_date !== '') {
-                resign_date = new Date(item.resign_date);
-                status_employee = 20;
-              } else {
-                resign_date = null;
-                status_employee = 10;
-              }
-
-              const r_employee_id = await client.query(`
-                SELECT employee_id FROM employee
-                WHERE nik = $1 AND is_deleted=false
-              `, [item.nik]);
-              // console.log(item.nik);
-
-              if (r_employee_id && r_employee_id.rows && r_employee_id.rows.length && r_employee_id.rows.length > 0) {
-                const employee_id = r_employee_id.rows[0].employee_id;
-
-                if (err_code == 0) {
-                // Update Employee
-                await client.query(queryUpdateEmployee, [employee_id, item.nama_lengkap, gender, item.tempat_lahir, moment(item.tanggal_lahir).format('YYYY-MM-DD'), religion, marital_status, district_id_home, item.alamat_tinggal, item.kode_pos_tinggal, item.telepon, item.email, employee_type_id, moment(item.tanggal_masuk).format('YYYY-MM-DD'), employee_role_id, branch_id, department_id, coach, item.no_npwp, division_id, item.nama_panggilan, district_id_id_card, item.alamat_sesuai, item.kode_pos_sesuai, number_of_child, item.cod_posisi, item.no_passport, item.sim_a, item.sim_c, bank_id, item.no_rekening, item.atas_nama, is_outsource, country_id_nationality, resign_date, status_employee, moment().format('YYYY-MM-DD HH:mm:ss')], async function(err) {
-                  PinoLoggerService.debug(this.logTitle, this.sql);
-                  if (err) {
-                    err_code++;
-                    err_message = err.message;
-                    PinoLoggerService.error(this.logTitle, err.message);
-                  }
-                });
-              }
-
-                if (err_code == 0) {
-                // Update User
-                await client.query(queryUpdateUser, [employee_id, item.nama_lengkap, item.username, item.email, moment().format('YYYY-MM-DD HH:mm:ss'), 1], async function(err) {
-                  PinoLoggerService.debug(this.logTitle, this.sql);
-                  if (err) {
-                    err_code++;
-                    err_message = err.message;
-                    PinoLoggerService.error(this.logTitle, err.message);
-                  }
-                });
-              }
-
-                if (err_code == 0) {
-                // Update Employee Family
-                await client.query(queryDeleteEmployeeFamily, [employee_id, moment().format('YYYY-MM-DD HH:mm:ss'), 1, true], async function(err) {
-                  PinoLoggerService.debug(this.logTitle, this.sql);
-                  if (err) {
-                    err_code++;
-                    err_message = err.message;
-                    PinoLoggerService.error(this.logTitle, err.message);
-                  } else {
-                    if (item.keluarga.length > 0) {
-                      for (const family of item.keluarga) {
-                        let family_gender = '';
-                        if (item.gender == 0) {
-                          family_gender = 'female';
-                        } else if (item.gender == 1) {
-                          family_gender = 'male';
-                        }
-
-                        // Insert new employee family
-                        await client.query(queryInsertEmployeeFamily, [employee_id, family.nama_keluarga, family.status_keluarga.toLowerCase(), family_gender, family.pendidikan_terakhir_keluarga, 1, moment().format('YYYY-MM-DD HH:mm:ss'), 1, moment().format('YYYY-MM-DD HH:mm:ss'), false], async function(err) {
-                          PinoLoggerService.debug(this.logTitle, this.sql);
-                          if (err) {
-                            err_code++;
-                            err_message = err.message;
-                            PinoLoggerService.error(this.logTitle, err.message);
-                          }
-                        });
-                      }
-                    }
-                  }
-                });
-              }
-
-                if (err_code == 0) {
-                // Update Employee Experience
-                await client.query(queryDeleteEmployeeExperience, [employee_id, moment().format('YYYY-MM-DD HH:mm:ss'), 1, true], async function(err) {
-                      PinoLoggerService.debug(this.logTitle, this.sql);
-                      if (err) {
-                        err_code++;
-                        err_message = err.message;
-                        PinoLoggerService.error(this.logTitle, err.message);
-                      } else {
-                        if (item.pengalaman.length > 0) {
-                          for (const experience of item.pengalaman) {
-                                // Insert new employee experience
-                            await client.query(queryInsertEmployeeExperience, [employee_id, experience.perusahaan_pengalaman, experience.bidang_perusahaan, experience.jabatan_perusahaan, experience.masa_kerja_perusahaan_from, experience.masa_kerja_perusahaan_to, experience.gaji_perusahaan, 1, moment().format('YYYY-MM-DD HH:mm:ss'), 1, moment().format('YYYY-MM-DD HH:mm:ss'), false], async function(err) {
-                              PinoLoggerService.debug(this.logTitle, this.sql);
-                              if (err) {
-                                err_code++;
-                                err_message = err.message;
-                                PinoLoggerService.error(this.logTitle, err.message);
-                              }
-                            });
-                          }
-                        }
-                      }
-                    });
-                  }
-
-                if (err_code == 0) {
-                  // Update Employee Experience
-                  await client.query(queryDeleteEmployeeEducation, [employee_id, moment().format('YYYY-MM-DD HH:mm:ss'), 1, true], async function(err) {
-                    PinoLoggerService.debug(this.logTitle, this.sql);
-                    if (err) {
-                        err_code++;
-                        err_message = err.message;
-                        PinoLoggerService.error(this.logTitle, err.message);
-                      } else {
-                        if (item.pendidikan.length > 0) {
-                          for (const education of item.pendidikan) {
-                              // Insert new employee education
-                            await client.query(queryInsertEmployeeEducation, [employee_id, education.pendidikan_pendidikan, education.nama_instansi_pendidikan, education.jurusan_pendidikan, education.masa_dari_pendidikan, education.masa_sampai_pendidikan, 1, moment().format('YYYY-MM-DD HH:mm:ss'), 1, moment().format('YYYY-MM-DD HH:mm:ss'), false], async function(err) {
-                              PinoLoggerService.debug(this.logTitle, this.sql);
-                              if (err) {
-                                err_code++;
-                                err_message = err.message;
-                                PinoLoggerService.error(this.logTitle, err.message);
-                              }
-                            });
-                          }
-                        }
-                      }
-                    });
-                  }
-                result_data.push({NIK: item.nik, status: 'Successfully updated'});
-              } else {
-                result_data.push({NIK: item.nik, status: 'Not found in masterdata'});
-              }
-            }
-            if (err_code == 0) {
-              const queryUpdateCron = `UPDATE cron_config SET updated_time=$1 WHERE cron_config_name = 'CRON_EMPLOYEE_SUNFISH'`;
-              await client.query(queryUpdateCron, [moment().format('YYYY-MM-DD HH:mm:ss')], async function(err) {
-                PinoLoggerService.debug(this.logTitle, this.sql);
-                if (err) {
-                  PinoLoggerService.error(this.logTitle, err.message);
-                } else {
-                  result.data = result_data;
-                  result.code = HttpStatus.OK;
-                  result.message = 'Success';
-                }
-              });
-              await client.query('COMMIT');
-            } else {
-              result.code = HttpStatus.CONFLICT;
-              result.message = 'Error';
-              result.data = [];
-              console.log('\nclient.query():', err_message);
-              await client.query('ROLLBACK');
-              console.log('Transaction ROLLBACK called [0]');
-            }
-          } catch (e) {
-            result.code = HttpStatus.CONFLICT;
-            result.message = 'Error';
-            result.data = [];
-            console.log('\nclient.query():', err_message);
-            await client.query('ROLLBACK');
-            console.log('Transaction ROLLBACK called [1]');
-          } finally {
-            client.release();
-          }
-      }
-    } else if (success && resData['CODE'] != 200 && resData['RECORDCNT'] == 0) {
-      result.code = HttpStatus.CONFLICT;
-      result.message = resData['MESSAGE'];
-      result.data = [];
-      console.log(resData['MESSAGE']);
-    } else {
-      result.code = HttpStatus.CONFLICT;
-      result.message = 'Can\'t get any response from Sunfish';
-      result.data = [];
-      console.log('Can\'t get any response from Sunfish');
-    }
-    return result;
-  }
-
-  public static async getCronSunfishUpdateDate() {
-    let updatedTime;
-    try {
-      const pool: any = DatabaseConfig.getMasterDataDbPool();
-      const client = await pool.connect();
-      try {
-        const res = await client.query(`
-          SELECT cron_config_id,updated_time
-          FROM cron_config
-          WHERE cron_config_name = 'CRON_EMPLOYEE_SUNFISH'
-          LIMIT 1
-        `);
-
-        if (res && res.rows && res.rows.length && res.rows.length > 0) {
-          // console.log(res.rows);
-          for (const r of res.rows) {
-            updatedTime = r.updated_time;
-          }
-        } else {
-            const queryInsert = `
-              INSERT INTO cron_config (
-                cron_config_name
-              ) VALUES ($1)
-            `;
-
-          // Insert new role
-            await client.query(queryInsert, ['CRON_EMPLOYEE_SUNFISH'], async function(err) {
-            PinoLoggerService.debug(this.logTitle, this.sql);
-            if (err) {
-              PinoLoggerService.error(this.logTitle, err.message);
-            }
-          });
-        }
-        return updatedTime;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return updatedTime;
-    }
-  }
-
-  public static async getDistrictId(district: string): Promise<any> {
-    let district_id = 0;
-    try {
-      const pool: any = DatabaseConfig.getMasterDataDbPool();
-      const client = await pool.connect();
-      try {
-        const res = await client.query(`
-          SELECT district_id
-          FROM district
-          WHERE district_name = $1 AND is_deleted = FALSE
-        `, [district]);
-
-        if (res && res.rows && res.rows.length && res.rows.length > 0) {
-            for (const r of res.rows) {
-              district_id = r.district_id;
-            }
-          }
-        return district_id;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return district_id;
-    }
-  }
-
-  public static async getEmployeeRoleId(employee_role: string): Promise<any> {
-    let employee_role_id = 0;
-    try {
-      const pool: any = DatabaseConfig.getMasterDataDbPool();
-      const client = await pool.connect();
-      try {
-        const res = await client.query(`
-          SELECT employee_role_id
-          FROM employee_role
-          WHERE employee_role_name = $1 AND is_deleted = FALSE
-        `, [employee_role]);
-
-        if (res && res.rows && res.rows.length && res.rows.length > 0) {
-            for (const r of res.rows) {
-              employee_role_id = r.employee_role_id;
-            }
-          }
-        return employee_role_id;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return employee_role_id;
-    }
-  }
-
-  public static async getBranchId(branch: string): Promise<any> {
-    let branch_id = 0;
-    try {
-      const pool: any = DatabaseConfig.getMasterDataDbPool();
-      const client = await pool.connect();
-      try {
-        const res = await client.query(`
-          SELECT branch_id
-          FROM branch
-          WHERE branch_name = $1 AND is_deleted = FALSE
-        `, [branch]);
-
-        if (res && res.rows && res.rows.length && res.rows.length > 0) {
-            for (const r of res.rows) {
-              branch_id = r.branch_id;
-            }
-          }
-        return branch_id;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return branch_id;
-    }
-  }
-
-  public static async getDepartmentId(department: string): Promise<any> {
-    let department_id = 0;
-    try {
-      const pool: any = DatabaseConfig.getMasterDataDbPool();
-      const client = await pool.connect();
-      try {
-        const res = await client.query(`
-          SELECT department_id
-          FROM department
-          WHERE department_name = $1 AND is_deleted = FALSE
-        `, [department]);
-
-        if (res && res.rows && res.rows.length && res.rows.length > 0) {
-            for (const r of res.rows) {
-              department_id = r.department_id;
-            }
-          }
-        return department_id;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return department_id;
-    }
-  }
-
-  public static async getDivisionId(division: string): Promise<any> {
-    let division_id = 0;
-    try {
-      const pool: any = DatabaseConfig.getMasterDataDbPool();
-      const client = await pool.connect();
-      try {
-        const res = await client.query(`
-          SELECT division_id
-          FROM division
-          WHERE division_name = $1 AND is_deleted = FALSE
-        `, [division]);
-
-        if (res && res.rows && res.rows.length && res.rows.length > 0) {
-            for (const r of res.rows) {
-              division_id = r.division_id;
-            }
-          }
-        return division_id;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return division_id;
-    }
-  }
-
-  public static async getBankId(bank: string): Promise<any> {
-    let bank_id = 0;
-    try {
-      const pool: any = DatabaseConfig.getMasterDataDbPool();
-      const client = await pool.connect();
-      try {
-        const res = await client.query(`
-          SELECT bank_id
-          FROM bank
-          WHERE bank_code = $1 AND is_deleted = FALSE
-        `, [bank]);
-
-        if (res && res.rows && res.rows.length && res.rows.length > 0) {
-            for (const r of res.rows) {
-              bank_id = r.bank_id;
-            }
-          }
-        return bank_id;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return bank_id;
-    }
-  }
-
-  public static async getCountryId(country: string): Promise<any> {
-    let country_id = 0;
-    try {
-      const pool: any = DatabaseConfig.getMasterDataDbPool();
-      const client = await pool.connect();
-      try {
-        const res = await client.query(`
-          SELECT country_id
-          FROM country
-          WHERE country_name = $1 AND is_deleted=false
-        `, [country]);
-
-        if (res && res.rows && res.rows.length && res.rows.length > 0) {
-            for (const r of res.rows) {
-              country_id = r.country_id;
-            }
-          }
-        return country_id;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      return country_id;
-    }
-  }
 }

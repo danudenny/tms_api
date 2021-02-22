@@ -3,16 +3,17 @@ import { ScanoutSmdService } from '../../services/integration/scanout-smd.servic
 // import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { ScanOutSmdVehiclePayloadVm, ScanOutSmdRoutePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdSealPayloadVm, ScanOutSmdHandoverPayloadVm, ScanOutSmdDetailPayloadVm } from '../../models/scanout-smd.payload.vm';
-import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
+import { ApiUseTags, ApiBearerAuth, ApiOkResponse, ApiImplicitHeader } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm } from '../../models/mobile-smd-list.response.vm';
-import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm, MobileUploadImagePayloadVm, MobileSmdProblemPayloadVm, MobileSmdContinuePayloadVm, MobileSmdHandOverPayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
+import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm, MobileUploadImagePayloadVm, MobileSmdProblemPayloadVm, MobileSmdContinuePayloadVm, MobileSmdHandOverPayloadVm, HandoverImagePayloadVm, MobileSmdEndManuallPayloadVm } from '../../models/mobile-smd.payload.vm';
 import { MobileSmdService } from '../../services/integration/mobile-smd.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileUploadImageResponseVm } from '../../models/mobile-smd.response.vm';
+import { AuthXAPIKeyGuard } from '../../../../shared/guards/auth-x-api-key.guard';
 
 @ApiUseTags('Mobile SMD')
 @Controller('mobile')
@@ -96,6 +97,15 @@ export class MobileSmdController {
     @UploadedFile() file,
   ) {
     return MobileSmdService.handOverMobileImage(payload, file);
+  }
+
+  @Post('smd/end-manual')
+  @Transactional()
+  // @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  @ApiImplicitHeader({ name: 'x-api-key' })
+  @UseGuards(AuthXAPIKeyGuard)
+  public async scanInEndManualMobile(@Req() request: any, @Body() payload: MobileSmdEndManuallPayloadVm) {
+    return MobileSmdService.scanInEndManualMobile(payload);
   }
 
 }

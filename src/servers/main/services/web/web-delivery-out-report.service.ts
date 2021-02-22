@@ -60,7 +60,7 @@ export class WebDeliveryOutReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.sortBy = payload.sortBy;
     p.sortDir = payload.sortDir;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvDeliveryOut(p, isHub, isHubTransit);
 
@@ -89,7 +89,7 @@ export class WebDeliveryOutReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.sortBy = payload.sortBy;
     p.sortDir = payload.sortDir;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvScanOutTransit(p);
 
@@ -118,7 +118,7 @@ export class WebDeliveryOutReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.sortBy = payload.sortBy;
     p.sortDir = payload.sortDir;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvScanOutDeliver(p);
 
@@ -134,11 +134,23 @@ export class WebDeliveryOutReportService {
   ): Promise<any> {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['branchTo'] = 't1.branch_id_to';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
+    payload.fieldResolverMap['nikDriver'] = 't2.nik';
+    payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['lastDateScanIn'] = 't1.last_date_scan_in';
+    payload.fieldResolverMap['lastDateScanOut'] = 't1.last_date_scan_out';
+    payload.fieldResolverMap['employeeIdDriver'] = 't2.employee_id';
+    payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
+    payload.fieldResolverMap['doPodMethod'] = 't1.do_pod_method';
+    payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
+    payload.fieldResolverMap['branchIdTo'] = 't1.branch_id_to';
+    payload.fieldResolverMap['PhotoId'] = 't1.photo_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
@@ -162,7 +174,7 @@ export class WebDeliveryOutReportService {
     const repo = new OrionRepositoryService(DoPod, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t1.do_pod_code', 'No Surat Jalan'],
@@ -223,6 +235,10 @@ export class WebDeliveryOutReportService {
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
     payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
+    payload.fieldResolverMap['nikDriver'] = 't2.nik';
+    payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
@@ -246,7 +262,7 @@ export class WebDeliveryOutReportService {
     const repo = new OrionRepositoryService(DoPod, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t1.do_pod_code', 'Nomor Surat Jalan'],
@@ -317,7 +333,7 @@ export class WebDeliveryOutReportService {
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t2.fullname', 'Sigesit/Driver'],

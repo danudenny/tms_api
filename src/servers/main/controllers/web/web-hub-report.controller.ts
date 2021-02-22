@@ -26,10 +26,18 @@ export class WebHubReportController {
   }
 
   @Get('monitoring/bag-execute')
-  public async exportExcelMonitoringKorwil(
+  public async generateHubMonitoringCSV(
     @Query() queryParams: HubMonitoringExcelExecutePayloadVm,
     @Response() serverResponse: express.Response,
   ) {
     return HubMonitoringReportService.generateHubMonitoringCSV(serverResponse, queryParams);
+  }
+
+  @Get('monitoring/sortir-execute')
+  public async generateHubMonitoringSortirCSV(
+    @Query() queryParams: HubMonitoringExcelExecutePayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return HubMonitoringReportService.generateHubMonitoringSortirCSV(serverResponse, queryParams);
   }
 }

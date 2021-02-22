@@ -1290,6 +1290,7 @@ export class ScanoutSmdVendorService {
       vendorId: paramVendorId,
       vendorName: paramVendorName,
       isVendor: true,
+      isIntercity: 0,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,

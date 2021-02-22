@@ -99,7 +99,7 @@ export class WebMonitoringCoordinatorReportService {
     }
     const p = new BaseMetaPayloadVm();
     p.filters = payload.filters ? payload.filters : payload;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvMonitoringKorwil(p);
 
@@ -122,7 +122,7 @@ export class WebMonitoringCoordinatorReportService {
     const repo = new OrionRepositoryService(KorwilTransaction, 'a');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       [`CONCAT(c.first_name, ' ', c.last_name)`, 'Nama Karyawan'],
@@ -172,7 +172,7 @@ export class WebMonitoringCoordinatorReportService {
     }
     const p = new BaseMetaPayloadVm();
     p.filters = payload.filters ? payload.filters : payload;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvMonitoringBranch(p);
 
@@ -195,7 +195,7 @@ export class WebMonitoringCoordinatorReportService {
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t2.branch_name', 'Gerai'],

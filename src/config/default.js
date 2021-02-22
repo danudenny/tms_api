@@ -79,6 +79,8 @@ module.exports = {
     codToken: 'f66046c79e4047c299fbf8abdf6cb3b2',
     codMid: '5b4e9699dd603e1aa6687f1d2fe4db95',
     codTid: 'sicepat-001',
+    urlEReceipt: 'http://erg.elebox.id/ereceipt/create',
+    waContact: '6281319200030',
   },
   sunfish: {
     postDlvUrl:

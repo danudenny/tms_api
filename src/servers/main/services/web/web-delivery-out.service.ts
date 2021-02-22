@@ -211,12 +211,6 @@ export class WebDeliveryOutService {
             DoPodDetail.update({ doPodDetailId: doPodDetail.doPodDetailId }, {
               isDeleted: true,
             });
-            // NOTE: update awb_item_attr and awb_history
-            await AwbService.updateAwbAttr(
-              awb.awbItemId,
-              AWB_STATUS.IN_BRANCH,
-              null,
-            );
             // NOTE: queue by Bull
             DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
               awb.awbItemId,
@@ -242,13 +236,6 @@ export class WebDeliveryOutService {
             doPodDetail.isScanOut = true;
             doPodDetail.scanOutType = 'awb';
             await DoPodDetail.save(doPodDetail);
-
-            // awb_item_attr and awb_history ??
-            await AwbService.updateAwbAttr(
-              awb.awbItemId,
-              AWB_STATUS.OUT_BRANCH,
-              doPod.branchIdTo,
-            );
 
             // NOTE: queue by Bull
             DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
@@ -543,11 +530,6 @@ export class WebDeliveryOutService {
                   doPod.lastDateScanOut = timeNow;
                 }
                 await DoPod.save(doPod);
-                await AwbService.updateAwbAttr(
-                  awb.awbItemId,
-                  AWB_STATUS.OUT_BRANCH,
-                  doPod.branchIdTo,
-                );
 
                 // NOTE: queue by Bull
                 DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
@@ -824,6 +806,16 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
     payload.fieldResolverMap['nikDriver'] = 't2.nik';
+    payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['lastDateScanIn'] = 't1.last_date_scan_in';
+    payload.fieldResolverMap['lastDateScanOut'] = 't1.last_date_scan_out';
+    payload.fieldResolverMap['employeeIdDriver'] = 't2.employee_id';
+    payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
+    payload.fieldResolverMap['doPodMethod'] = 't1.do_pod_method';
+    payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
+    payload.fieldResolverMap['branchIdTo'] = 't1.branch_id_to';
+    payload.fieldResolverMap['PhotoId'] = 't1.photo_id';
     payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
 
     if (payload.sortBy === '') {
@@ -931,6 +923,10 @@ export class WebDeliveryOutService {
     payload.fieldResolverMap['nikDriver'] = 't2.nik';
     payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
     payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
+    payload.fieldResolverMap['nikDriver'] = 't2.nik';
+    payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
