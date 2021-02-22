@@ -43,6 +43,8 @@ export class ScanOutSmdCitySealPayloadVm {
   @ApiModelProperty()
   seal_seq: string;
 
+  @ApiModelProperty()
+  employee_id_driver: number;
 }
 
 

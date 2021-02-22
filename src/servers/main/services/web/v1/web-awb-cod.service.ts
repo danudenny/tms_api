@@ -136,7 +136,7 @@ export class V1WebAwbCodService {
     q.orderByRaw('SUM(cp.cod_value)', 'DESC');
 
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const total = 0;
 
     const result = new WebAwbCodSummaryResponseVm();
 

@@ -7,6 +7,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { CustomerMembershipDetail } from './customer-membership-detail';
 import { Partner } from './partner';
 import { TmsBaseEntity } from './tms-base';
 
@@ -19,9 +20,7 @@ import { TmsBaseEntity } from './tms-base';
 ])
 @Index('pickup_request_partner_id', ['partnerId'])
 @Index('pickup_request_pickup_request_status_id', ['pickupRequestStatusId'])
-@Index('pickup_request_pickup_schedule_date_time', [
-  'pickupScheduleDateTime',
-])
+@Index('pickup_request_pickup_schedule_date_time', ['pickupScheduleDateTime'])
 export class PickupRequest extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
@@ -181,6 +180,11 @@ export class PickupRequest extends TmsBaseEntity {
   encryptMerchantName: string | null;
 
   @OneToOne(() => Partner)
-  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partner_id' })
+  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partnerId' })
   partner: Partner;
+
+  @OneToOne(() => CustomerMembershipDetail)
+  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partnerId' })
+  @JoinColumn({ name: 'pickup_request_email', referencedColumnName: 'email' })
+  customerMembershipDetail: CustomerMembershipDetail;
 }
