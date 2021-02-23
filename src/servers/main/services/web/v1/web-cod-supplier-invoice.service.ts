@@ -66,7 +66,7 @@ export class V1WebCodSupplierInvoiceService {
     );
 
     // NOTE: set filter
-    q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
+    q.andWhere(e => e.transactionStatusId, w => w.equals(TRANSACTION_STATUS.TRMHO));
     q.andWhere(e => e.codSupplierInvoiceId, w => w.isNull());
     q.andWhere(e => e.isVoid, w => w.isFalse());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -104,7 +104,7 @@ export class V1WebCodSupplierInvoiceService {
     );
 
     // NOTE: set filter
-    q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
+    q.andWhere(e => e.transactionStatusId, w => w.equals(TRANSACTION_STATUS.TRMHO));
     q.andWhere(e => e.codSupplierInvoiceId, w => w.isNull());
     q.andWhere(e => e.isVoid, w => w.isFalse());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -142,7 +142,7 @@ export class V1WebCodSupplierInvoiceService {
       const randomCode = await CustomCounterCode.supplierInvoiceCod(timestamp);
       supplierInvoice.supplierInvoiceCode = randomCode;
       supplierInvoice.supplierInvoiceDate = timestamp;
-      supplierInvoice.supplierInvoiceStatusId = 41000; // status DRAFT
+      supplierInvoice.supplierInvoiceStatusId = TRANSACTION_STATUS.DRAFT_INV; // status DRAFT
       supplierInvoice.branchId = permissonPayload.branchId;
       supplierInvoice.partnerId = payload.partnerId;
       await CodSupplierInvoice.save(supplierInvoice);
@@ -153,13 +153,13 @@ export class V1WebCodSupplierInvoiceService {
           CodTransactionDetail,
           {
             partnerId: payload.partnerId,
-            transactionStatusId: 40000,
+            transactionStatusId: TRANSACTION_STATUS.TRMHO,
             codSupplierInvoiceId: IsNull(),
             isVoid: false,
           },
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
-            supplierInvoiceStatusId: 41000,
+            supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
           },
@@ -169,7 +169,7 @@ export class V1WebCodSupplierInvoiceService {
       CodUpdateSupplierInvoiceQueueService.perform(
         payload.partnerId,
         supplierInvoice.codSupplierInvoiceId,
-        41000,
+        TRANSACTION_STATUS.DRAFT_INV,
         permissonPayload.branchId,
         authMeta.userId,
         timestamp,
@@ -249,7 +249,7 @@ export class V1WebCodSupplierInvoiceService {
     const supplierInvoice = await CodSupplierInvoice.findOne({
       where: {
         codSupplierInvoiceId: payload.supplierInvoiceId,
-        supplierInvoiceStatusId: 41000,
+        supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
         isDeleted: false,
       },
     });
@@ -266,7 +266,7 @@ export class V1WebCodSupplierInvoiceService {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
           },
           {
-            supplierInvoiceStatusId: 45000,
+            supplierInvoiceStatusId: TRANSACTION_STATUS.PAIDHO,
             userIdUpdated: authMeta.userId,
             paidDatetime: timestamp,
             updatedTime: timestamp,
@@ -278,10 +278,10 @@ export class V1WebCodSupplierInvoiceService {
           CodTransactionDetail,
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
-            supplierInvoiceStatusId: 41000,
+            supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
           },
           {
-            supplierInvoiceStatusId: 45000,
+            supplierInvoiceStatusId: TRANSACTION_STATUS.PAIDHO,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
           },
@@ -291,7 +291,7 @@ export class V1WebCodSupplierInvoiceService {
         CodUpdateSupplierInvoiceQueueService.perform(
           supplierInvoice.partnerId,
           supplierInvoice.codSupplierInvoiceId,
-          45000,
+          TRANSACTION_STATUS.PAIDHO,
           permissonPayload.branchId,
           authMeta.userId,
           timestamp,
@@ -674,7 +674,7 @@ export class V1WebCodSupplierInvoiceService {
     firstTransaction.awbItemId = item.awbItemId;
     firstTransaction.awbNumber = item.awbNumber;
     firstTransaction.codTransactionId = null;
-    firstTransaction.transactionStatusId = 30000;
+    firstTransaction.transactionStatusId = TRANSACTION_STATUS.SIGESIT;
     firstTransaction.supplierInvoiceStatusId = TRANSACTION_STATUS.DRAFT_INV;
     firstTransaction.codSupplierInvoiceId = codSupplierInvoiceId;
     firstTransaction.paymentMethod = item.paymentMethod;

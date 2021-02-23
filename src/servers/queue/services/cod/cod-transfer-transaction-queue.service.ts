@@ -1,21 +1,18 @@
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, getConnection } from 'typeorm';
 import { QueueBullBoard } from '../queue-bull-board';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { AwbTransactionDetailVm } from '../../../main/models/cod/web-awb-cod-response.vm';
 import { CodTransactionDetail } from '../../../../shared/orm-entity/cod-transaction-detail';
 import { User } from '../../../../shared/orm-entity/user';
-import { CodTransactionHistory } from '../../../../shared/orm-entity/cod-transaction-history';
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
-import moment = require('moment');
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
 
 // DOC: https://optimalbits.github.io/bull/
 
-export class CodFirstTransactionQueueService {
+export class CodTransferTransactionQueueService {
   public static queue = QueueBullBoard.createQueue.add(
-    'cod-first-transaction-queue',
+    'cod-transfer-transaction-queue',
     {
       defaultJobOptions: {
         timeout: 0,
@@ -42,152 +39,93 @@ export class CodFirstTransactionQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(async job => {
       const data = job.data;
-      let isValidData = true;
-      // let isNewData = false;
 
       console.log('#### JOB ID  ::: ', job.id);
-      console.log('##################### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
+      console.log(
+        '##################### SYNC DATA AWB NUMBER - cod transaction detail ::: ',
+        data.awbNumber,
+      );
 
-      let transactionDetail = await CodTransactionDetail.findOne({
-        awbItemId: data.awbItemId,
-        isDeleted: false,
-      });
+      let transactionDetail: CodTransactionDetail;
+      const masterQueryRunner = getConnection().createQueryRunner('master');
+      try {
+        transactionDetail = await getConnection()
+          .createQueryBuilder(CodTransactionDetail, 'ctd')
+          .setQueryRunner(masterQueryRunner)
+          .where('ctd.awbItemId = :awbItemId AND ctd.isDeleted = false', {
+            awbItemId: data.awbItemId,
+          })
+          .getOne();
+      } finally {
+        await masterQueryRunner.release();
+      }
 
       // Handle first awb scan
       // only transaction
       if (transactionDetail && data.codTransactionId) {
-        await CodTransactionDetail.update(
-          {
-            awbItemId: data.awbItemId,
-          },
-          {
-            codTransactionId: data.codTransactionId,
-            transactionStatusId: data.transactionStatusId,
-            updatedTime: data.timestamp,
-          },
-        );
-
-      } else {
         const codDetail = await this.dataTransaction(data.awbItemId);
         if (codDetail) {
           // manipulation data
-          const weightRounded = codDetail.weightRealRounded > 0 ? codDetail.weightRealRounded : codDetail.weightFinalRounded;
+          const weightRounded =
+            codDetail.weightRealRounded > 0
+              ? codDetail.weightRealRounded
+              : codDetail.weightFinalRounded;
           const percentFee = 1; // set on config COD
           const codFee = (Number(codDetail.codValue) * percentFee) / 100;
-          // Create data Cod Transaction Detail
-          const transactionStatusId = data.transactionStatusId ? Number(data.transactionStatusId) : TRANSACTION_STATUS.TRM;
-          const supplierInvoiceStatusId = data.supplierInvoiceStatusId ? Number(data.supplierInvoiceStatusId) : null;
-          const newTransactionDetail = CodTransactionDetail.create({
-            codTransactionId: data.codTransactionId,
-            transactionStatusId,
-            supplierInvoiceStatusId,
-            codSupplierInvoiceId: data.codSupplierInvoiceId,
-            branchId: Number(data.branchId),
-            userIdDriver: Number(data.userIdDriver),
 
-            paymentMethod: data.paymentMethod,
-            paymentService: data.paymentService,
-            noReference: data.noReference,
+          const supplierInvoiceStatusId = data.supplierInvoiceStatusId
+            ? Number(data.supplierInvoiceStatusId)
+            : null;
 
-            awbItemId: Number(codDetail.awbItemId),
-            awbNumber: codDetail.awbNumber,
-            awbDate: codDetail.awbDate,
-            podDate: codDetail.podDate,
-            codValue: codDetail.codValue,
-            parcelValue: codDetail.parcelValue,
-            weightRounded,
-            codFee,
-            pickupSourceId: codDetail.pickupSourceId,
-            pickupSource: codDetail.pickupSource,
-            currentPositionId: codDetail.currentPositionId,
-            currentPosition: codDetail.currentPosition,
-            destinationCode: codDetail.destinationCode,
-            destinationId: codDetail.destinationId,
-            destination: codDetail.destination,
+          await CodTransactionDetail.update(
+            {
+              awbItemId: data.awbItemId,
+            },
+            {
+              codTransactionId: data.codTransactionId,
+              supplierInvoiceStatusId,
+              codSupplierInvoiceId: data.codSupplierInvoiceId,
+              transactionStatusId: Number(data.transactionStatusId),
 
-            consigneeName: codDetail.consigneeName,
-            partnerId: codDetail.partnerId,
-            partnerName: codDetail.partnerName,
-            custPackage: codDetail.custPackage,
-            packageTypeId: Number(codDetail.packageTypeId),
-            packageTypeCode: codDetail.packageTypeCode,
-            packageType: codDetail.packageTypeName,
-            parcelContent: codDetail.parcelContent,
-            parcelNote: codDetail.parcelNote,
-            userIdCreated: Number(data.userId),
-            userIdUpdated: Number(data.userId),
-            createdTime: moment(data.timestamp).toDate(),
-            updatedTime: moment(data.timestamp).toDate(),
-          });
-          transactionDetail = await CodTransactionDetail.save(
-            newTransactionDetail,
+              paymentService: data.paymentService,
+              noReference: data.noReference,
+
+              awbDate: codDetail.awbDate,
+              podDate: codDetail.podDate,
+              codValue: codDetail.codValue,
+              parcelValue: codDetail.parcelValue,
+              weightRounded,
+              codFee,
+              pickupSourceId: codDetail.pickupSourceId,
+              pickupSource: codDetail.pickupSource,
+              currentPositionId: codDetail.currentPositionId,
+              currentPosition: codDetail.currentPosition,
+              destinationCode: codDetail.destinationCode,
+              destinationId: codDetail.destinationId,
+              destination: codDetail.destination,
+
+              consigneeName: codDetail.consigneeName,
+              partnerId: codDetail.partnerId,
+              partnerName: codDetail.partnerName,
+              custPackage: codDetail.custPackage,
+              packageTypeId: Number(codDetail.packageTypeId),
+              packageTypeCode: codDetail.packageTypeCode,
+              packageType: codDetail.packageTypeName,
+              parcelContent: codDetail.parcelContent,
+              parcelNote: codDetail.parcelNote,
+              userIdUpdated: Number(data.userId),
+              updatedTime: data.timestamp,
+            },
           );
-          // isNewData = true; // flag for insert data mongo
+
           // sync first data to mongo
           const newMongo = await this.insertMongo(transactionDetail);
           console.log(' ############ NEW DATA MONGO :: ', newMongo);
         } else {
-          isValidData = false;
           console.error('## Data COD Transaction :: Not Found !!! :: ', data);
         }
       }
 
-      // transaction history
-      if (isValidData) {
-        if (data.supplierInvoiceStatusId) {
-          // supplier invoice status
-          const historyInvoice = CodTransactionHistory.create({
-            awbItemId: data.awbItemId,
-            awbNumber: data.awbNumber,
-            transactionDate: data.timestamp,
-            transactionStatusId: data.supplierInvoiceStatusId,
-            branchId: data.branchId,
-            userIdCreated: data.userId,
-            userIdUpdated: data.userId,
-            createdTime: data.timestamp,
-            updatedTime: data.timestamp,
-          });
-          await CodTransactionHistory.insert(historyInvoice);
-        } else {
-          // create transaction history
-          const historyDriver = CodTransactionHistory.create({
-            awbItemId: data.awbItemId,
-            awbNumber: data.awbNumber,
-            transactionDate: moment(data.timestamp).add(-1, 'minute').toDate(),
-            transactionStatusId: TRANSACTION_STATUS.SIGESIT,
-            branchId: data.branchId,
-            userIdCreated: data.userId,
-            userIdUpdated: data.userId,
-            createdTime: data.timestamp,
-            updatedTime: data.timestamp,
-          });
-          await CodTransactionHistory.insert(historyDriver);
-
-          const historyBranch = CodTransactionHistory.create({
-            awbItemId: data.awbItemId,
-            awbNumber: data.awbNumber,
-            transactionDate: data.timestamp,
-            transactionStatusId: TRANSACTION_STATUS.TRM,
-            branchId: data.branchId,
-            userIdCreated: data.userId,
-            userIdUpdated: data.userId,
-            createdTime: data.timestamp,
-            updatedTime: data.timestamp,
-          });
-          await CodTransactionHistory.insert(historyBranch);
-
-        }
-      }
-
-      // console.log(' ### SYNC DATA MONGO :: NEW DATA ', isNewData);
-      // if (isNewData) {
-      //   // sync first data to mongo
-      //   // const newMongo = await this.insertMongo(transactionDetail);
-      //   CodSyncTransactionQueueService.perform(
-      //     data.awbNumber,
-      //     data.timestamp,
-      //   );
-      // }
       return true;
     });
 
@@ -209,26 +147,22 @@ export class CodFirstTransactionQueueService {
     const obj = {
       awbItemId: params.awbItemId,
       awbNumber: params.awbNumber,
-      codTransactionId: params.codTransactionId,
       transactionStatusId: params.transactionStatusId,
+      codTransactionId: params.codTransactionId,
       supplierInvoiceStatusId: params.supplierInvoiceStatusId,
       codSupplierInvoiceId: params.codSupplierInvoiceId,
-      paymentMethod: params.paymentMethod,
       paymentService: params.paymentService,
       noReference: params.noReference,
-      branchId: params.branchId,
       userId: params.userId,
-      userIdDriver: params.userIdDriver,
       timestamp,
     };
 
-    return CodFirstTransactionQueueService.queue.add(obj);
+    return CodTransferTransactionQueueService.queue.add(obj);
   }
 
   private static async dataTransaction(
     awbItemId: number,
   ): Promise<AwbTransactionDetailVm> {
-
     const qb = createQueryBuilder();
     qb.addSelect('t1.awb_item_id', 'awbItemId');
     qb.addSelect('t1.awb_number', 'awbNumber');
@@ -302,15 +236,21 @@ export class CodFirstTransactionQueueService {
       't2.to_id = t9.district_id AND t8.is_deleted = false',
     );
     qb.where('t1.awb_item_id = :awbItemId', { awbItemId });
-    qb.andWhere('t1.awb_status_id_final = :statusDLV', { statusDLV: AWB_STATUS.DLV });
+    qb.andWhere('t1.awb_status_id_final = :statusDLV', {
+      statusDLV: AWB_STATUS.DLV,
+    });
     qb.andWhere('t1.is_deleted = false');
 
     return await qb.getRawOne();
   }
 
-  private static async insertMongo(transaction: CodTransactionDetail): Promise<boolean> {
+  private static async insertMongo(
+    transaction: CodTransactionDetail,
+  ): Promise<boolean> {
     // get config mongodb
-    const collection = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+    const collection = await MongoDbConfig.getDbSicepatCod(
+      'transaction_detail',
+    );
     delete transaction['changedValues'];
     transaction.userIdCreated = Number(transaction.userIdCreated);
     transaction.userIdUpdated = Number(transaction.userIdUpdated);
@@ -370,7 +310,6 @@ export class CodFirstTransactionQueueService {
         console.log(' #### Success first insert data mongo');
       }
       return true;
-
     } catch (error) {
       console.error(error);
       return false;
