@@ -179,85 +179,77 @@ export class LastMileTransitOutService {
 
         if (notDeliver && holdRedis) {
           if (doPod) {
-            // NOTE: check resi cancel delivery
-            const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
-            if (isCancel == true) {
-              totalError += 1;
-              response.status = 'error';
-              response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner !`;
-            } else {
-              const statusCode = await AwbService.awbStatusGroup(
+            const statusCode = await AwbService.awbStatusGroup(
+              awb.awbStatusIdLast,
+            );
+            // save data to awb_trouble
+            if (statusCode != 'IN') {
+              const branchName = awb.branchLast
+                ? awb.branchLast.branchName
+                : '';
+              await AwbTroubleService.fromScanOut(
+                awbNumber,
+                branchName,
                 awb.awbStatusIdLast,
               );
-              // save data to awb_trouble
-              if (statusCode != 'IN') {
-                const branchName = awb.branchLast
-                  ? awb.branchLast.branchName
-                  : '';
-                await AwbTroubleService.fromScanOut(
-                  awbNumber,
-                  branchName,
-                  awb.awbStatusIdLast,
-                );
-              }
-
-              // NOTE: create data do pod detail per awb number
-              const doPodDetail = DoPodDetail.create();
-              doPodDetail.doPodId = payload.doPodId;
-              doPodDetail.awbId = awb.awbId;
-              doPodDetail.awbNumber = awbNumber;
-              doPodDetail.awbItemId = awb.awbItemId;
-              doPodDetail.transactionStatusIdLast = 800; // OUT_BRANCH
-              doPodDetail.isScanOut = true;
-              doPodDetail.scanOutType = 'awb';
-              await DoPodDetail.save(doPodDetail);
-
-              // Assign print metadata - Scan Out & Deliver
-              response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
-              response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
-              response.printDoPodDetailMetadata.awbItem.awb.consigneeName =
-                awb.awbItem.awb.consigneeName;
-
-              // Assign print metadata - Deliver
-              response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress =
-                awb.awbItem.awb.consigneeAddress;
-              response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber =
-                awb.awbItem.awb.consigneeNumber;
-              response.printDoPodDetailMetadata.awbItem.awb.consigneeZip =
-                awb.awbItem.awb.consigneeZip;
-              response.printDoPodDetailMetadata.awbItem.awb.isCod =
-                awb.awbItem.awb.isCod;
-              response.printDoPodDetailMetadata.awbItem.awb.totalCodValue =
-                awb.awbItem.awb.totalCodValue;
-              response.printDoPodDetailMetadata.awbItem.awb.totalWeight =
-                awb.awbItem.weightReal;
-
-              // AFTER Scan OUT ===============================================
-              // #region after scanout
-
-              let partnerLogisticName = '';
-              if (doPod.partnerLogisticName) {
-                partnerLogisticName = doPod.partnerLogisticName;
-              } else if (doPod.partnerLogisticId) {
-                const partnerLogistic = await PartnerLogistic.findOne({
-                  partnerLogisticId: doPod.partnerLogisticId,
-                });
-                partnerLogisticName = partnerLogistic.partnerLogisticName;
-              }
-              // NOTE: queue by Bull
-              // handle status out branch transit
-              DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
-                awb.awbItemId,
-                AWB_STATUS.OUT_BRANCH,
-                permissonPayload.branchId,
-                authMeta.userId,
-                doPod.userIdDriver,
-                doPod.branchIdTo,
-                partnerLogisticName,
-              );
-              totalSuccess += 1;
-              // #endregion after scanout
             }
+
+            // NOTE: create data do pod detail per awb number
+            const doPodDetail = DoPodDetail.create();
+            doPodDetail.doPodId = payload.doPodId;
+            doPodDetail.awbId = awb.awbId;
+            doPodDetail.awbNumber = awbNumber;
+            doPodDetail.awbItemId = awb.awbItemId;
+            doPodDetail.transactionStatusIdLast = 800; // OUT_BRANCH
+            doPodDetail.isScanOut = true;
+            doPodDetail.scanOutType = 'awb';
+            await DoPodDetail.save(doPodDetail);
+
+            // Assign print metadata - Scan Out & Deliver
+            response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
+            response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeName =
+              awb.awbItem.awb.consigneeName;
+
+            // Assign print metadata - Deliver
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress =
+              awb.awbItem.awb.consigneeAddress;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber =
+              awb.awbItem.awb.consigneeNumber;
+            response.printDoPodDetailMetadata.awbItem.awb.consigneeZip =
+              awb.awbItem.awb.consigneeZip;
+            response.printDoPodDetailMetadata.awbItem.awb.isCod =
+              awb.awbItem.awb.isCod;
+            response.printDoPodDetailMetadata.awbItem.awb.totalCodValue =
+              awb.awbItem.awb.totalCodValue;
+            response.printDoPodDetailMetadata.awbItem.awb.totalWeight =
+              awb.awbItem.weightReal;
+
+            // AFTER Scan OUT ===============================================
+            // #region after scanout
+
+            let partnerLogisticName = '';
+            if (doPod.partnerLogisticName) {
+              partnerLogisticName = doPod.partnerLogisticName;
+            } else if (doPod.partnerLogisticId) {
+              const partnerLogistic = await PartnerLogistic.findOne({
+                partnerLogisticId: doPod.partnerLogisticId,
+              });
+              partnerLogisticName = partnerLogistic.partnerLogisticName;
+            }
+            // NOTE: queue by Bull
+            // handle status out branch transit
+            DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
+              awb.awbItemId,
+              AWB_STATUS.OUT_BRANCH,
+              permissonPayload.branchId,
+              authMeta.userId,
+              doPod.userIdDriver,
+              doPod.branchIdTo,
+              partnerLogisticName,
+            );
+            totalSuccess += 1;
+            // #endregion after scanout
           } else {
             totalError += 1;
             response.status = 'error';

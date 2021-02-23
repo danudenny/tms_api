@@ -469,6 +469,10 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     });
 
+    q.innerJoin(e => e.awbItemAttr.pickupRequestDetail, 'prd', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
+    });
+
     q.innerJoin(e => e.userDriver, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
