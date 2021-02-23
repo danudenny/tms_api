@@ -136,7 +136,7 @@ export class V1WebAwbCodService {
     q.orderByRaw('SUM(cp.cod_value)', 'DESC');
 
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const total = 0;
 
     const result = new WebAwbCodSummaryResponseVm();
 
@@ -466,7 +466,11 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awbItemAttr, 't2', j => {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
       j.andWhere(e => e.transactionStatusId, w => w.isNull());
-      j.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+      j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
+    });
+
+    q.innerJoin(e => e.awbItemAttr.pickupRequestDetail, 'prd', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
     });
 
     q.innerJoin(e => e.userDriver, 't3', j =>
