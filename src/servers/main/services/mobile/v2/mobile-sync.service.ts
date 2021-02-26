@@ -134,6 +134,7 @@ export class V2MobileSyncService {
                 syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
                 descLast: lastDoPodDeliverHistory.desc,
                 consigneeName: delivery.consigneeNameNote,
+                userIdUpdated: authMeta.userId,
                 updatedTime: moment().toDate(),
               },
             );
@@ -189,7 +190,8 @@ export class V2MobileSyncService {
                   updatedTime: moment().toDate(),
                 });
               }
-              // CodPaymentQueueService.perform(delivery.awbNumber, delivery.noReference);
+              // TODO: update transaction_status_id = TRANSACTION_STATUS.SIGESIT
+
             }
 
             const doPodDeliver = await DoPodDeliver.findOne({
