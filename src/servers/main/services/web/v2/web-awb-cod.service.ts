@@ -126,6 +126,7 @@ export class V2WebAwbCodService {
 
         if (!dataTransactionDetail) {
           await transactionManager.insert(CodTransactionDetail, {
+            codTransactionId: transactiontId,
             transactionStatusId: TRANSACTION_STATUS.TRM,
             awbItemId: item.awbItemId,
             awbNumber: item.awbNumber,
