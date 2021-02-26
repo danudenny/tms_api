@@ -71,12 +71,9 @@ export class V1WebAwbHandoverService {
     return result;
   }
   static async AwbHandoverListCount(payload: BaseMetaPayloadVm): Promise<AwbHandoverListResponseVm> {
-    // mapping field
-    // payload.fieldResolverMap['isUpload'] = 't1.is_high_value';
-    payload.fieldResolverMap['partnerId'] = 't3.partner_id';
-    payload.fieldResolverMap['uploadedDate'] = 't1.uploaded_time';
-    payload.fieldResolverMap['displayName'] = 't1.display_name';
-    payload.fieldResolverMap['partnerName'] = 't4.partner_name';
+    payload.fieldResolverMap['partnerId'] = 't4.partner_id';
+    payload.fieldResolverMap['awbDeliveryDate'] = 't1.awb_status_date_time_last';
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -84,23 +81,27 @@ export class V1WebAwbHandoverService {
         field: 'awbNumber',
       },
     ];
-
-    const repo = new OrionRepositoryService(AwbHighValueUpload, 't1');
+    const repo = new OrionRepositoryService(DoPodDeliverDetail, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
+
     q.selectRaw(
+      ['t1.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t1.awb_status_date_time_last', 'awbDeliverDate'],
       ['t1.awb_number', 'awbNumber'],
-      ['t4.partner_name', 'partnerName'],
+      ['t2.shipper_name', 'shipperName'],
       ['t2.recipient_name', 'recipientName'],
-      ['t2.recipient_phone', 'recipientPhone'],
-      ['t2.parcel_content', 'parcelContent'],
-      ['true', 'isUpload'],
-      ['t1.display_name', 'displayName'],
-      ['t1.uploaded_time', 'uploadedDate'],
+      ['t4.partner_id', 'partnerId'],
+      ['t4.partner_name', 'partnerName'],
+      ['t5.first_name', 'username'],
+      ['t6.nik', 'nik'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      [
+        j.andWhere(e => e.handoverDelivery, w => w.isTrue()),
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      ],
     );
 
     q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 't3', j =>
@@ -110,9 +111,16 @@ export class V1WebAwbHandoverService {
     q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.userUpdated, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.userUpdated.employee, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     //
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.userIdUploaded, w => w.equals(1));
+    q.andWhere(e => e.awbStatusIdLast, w => w.equals(AWB_STATUS.DLV));
 
     const total = await q.countWithoutTakeAndSkip();
 
