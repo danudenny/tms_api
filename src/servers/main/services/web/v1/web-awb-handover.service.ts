@@ -1,7 +1,6 @@
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
-import { AwbHighValueUpload } from '../../../../../shared/orm-entity/awb-high-value-upload';
 import { AwbHandoverListResponseVm } from '../../../models/last-mile/awb-handover.vm';
 import { DoPodDeliverDetail } from '../../../../../shared/orm-entity/do-pod-deliver-detail';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
@@ -11,7 +10,7 @@ export class V1WebAwbHandoverService {
     // mapping field
     // payload.fieldResolverMap['isUpload'] = 't1.is_high_value';
     payload.fieldResolverMap['partnerId'] = 't4.partner_id';
-    payload.fieldResolverMap['awbDeliveryDate'] = 't1.awb_status_date_time_last';
+    payload.fieldResolverMap['awbDeliverDate'] = 't1.awb_status_date_time_last';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
 
     // mapping search field and operator default ilike
@@ -72,7 +71,7 @@ export class V1WebAwbHandoverService {
   }
   static async AwbHandoverListCount(payload: BaseMetaPayloadVm): Promise<AwbHandoverListResponseVm> {
     payload.fieldResolverMap['partnerId'] = 't4.partner_id';
-    payload.fieldResolverMap['awbDeliveryDate'] = 't1.awb_status_date_time_last';
+    payload.fieldResolverMap['awbDeliverDate'] = 't1.awb_status_date_time_last';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
 
     // mapping search field and operator default ilike
