@@ -82,6 +82,7 @@ export class CodTransferTransactionQueueService {
               awbItemId: data.awbItemId,
             },
             {
+              codTransactionId: data.codTransactionId,
               supplierInvoiceStatusId,
               codSupplierInvoiceId: data.codSupplierInvoiceId,
               transactionStatusId: Number(data.transactionStatusId),
