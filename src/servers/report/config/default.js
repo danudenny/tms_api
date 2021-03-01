@@ -1,5 +1,5 @@
 module.exports = {
-  enabled: false,
+  enabled: true,
   port: 5100,
   swagger: {
     enabled: true,
