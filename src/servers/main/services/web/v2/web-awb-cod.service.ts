@@ -136,11 +136,14 @@ export class V2WebAwbCodService {
             userIdDriver: Number(item.userIdDriver),
             currentPositionId: Number(branchId),
             consigneeName: 'Admin',
-            partnerId: 1,
+            partnerId: 0,
             userIdCreated: Number(userId),
             createdTime: moment().toDate(),
             userIdUpdated: Number(userId),
             updatedTime: moment().toDate(),
+            paymentService: item.paymentService,
+            noReference: item.noReference,
+
           });
         }
 

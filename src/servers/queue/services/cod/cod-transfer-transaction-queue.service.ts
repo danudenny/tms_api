@@ -162,85 +162,93 @@ export class CodTransferTransactionQueueService {
   private static async dataTransaction(
     awbItemId: number,
   ): Promise<AwbTransactionDetailVm> {
-    const qb = createQueryBuilder();
-    qb.addSelect('t1.awb_item_id', 'awbItemId');
-    qb.addSelect('t1.awb_number', 'awbNumber');
-    qb.addSelect('t10.branch_id', 'currentPositionId');
-    qb.addSelect('t7.branch_name', 'currentPosition');
-    qb.addSelect('t1.awb_history_date_last', 'podDate');
-    qb.addSelect('t2.awb_date', 'awbDate');
-    qb.addSelect('t2.ref_destination_code', 'destinationCode');
-    qb.addSelect('t2.to_id', 'destinationId');
-    qb.addSelect('t9.district_name', 'destination');
-    qb.addSelect('t2.package_type_id', 'packageTypeId');
-    qb.addSelect('t5.package_type_code', 'packageTypeCode');
-    qb.addSelect('t5.package_type_name', 'packageTypeName');
-    qb.addSelect('t2.branch_id_last', 'pickupSourceId');
-    qb.addSelect('t8.branch_name', 'pickupSource');
-    qb.addSelect('t2.total_weight_real_rounded', 'weightRealRounded');
-    qb.addSelect('t2.total_weight_final_rounded', 'weightFinalRounded');
-    qb.addSelect('t2.consignee_name', 'consigneeName');
-    qb.addSelect('t3.parcel_value', 'parcelValue');
-    qb.addSelect('t3.cod_value', 'codValue');
-    qb.addSelect('t3.parcel_content', 'parcelContent');
-    qb.addSelect('t3.notes', 'parcelNote');
-    qb.addSelect('t4.partner_id', 'partnerId');
-    qb.addSelect('t6.partner_name', 'partnerName');
-    qb.addSelect('t4.reference_no', 'custPackage');
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      const qb = await getConnection()
+        .createQueryBuilder()
+        .setQueryRunner(masterQueryRunner);
 
-    qb.from('awb_item_attr', 't1');
-    qb.innerJoin(
-      'awb',
-      't2',
-      't1.awb_id = t2.awb_id AND t2.is_deleted = false',
-    );
-    qb.innerJoin(
-      'pickup_request_detail',
-      't3',
-      't1.awb_item_id = t3.awb_item_id AND t3.is_deleted = false',
-    );
-    qb.innerJoin(
-      'pickup_request',
-      't4',
-      't3.pickup_request_id = t4.pickup_request_id AND t4.is_deleted = false',
-    );
-    qb.innerJoin(
-      'package_type',
-      't5',
-      't2.package_type_id = t5.package_type_id',
-    );
-    qb.innerJoin(
-      'partner',
-      't6',
-      't4.partner_id = t6.partner_id AND t6.is_deleted = false',
-    );
-    qb.innerJoin(
-      'cod_payment',
-      't10',
-      't10.awb_item_id = t1.awb_item_id AND t10.is_deleted = false',
-    );
-    qb.innerJoin(
-      'branch',
-      't7',
-      't10.branch_id = t7.branch_id AND t7.is_deleted = false',
-    );
-    qb.leftJoin(
-      'branch',
-      't8',
-      't2.branch_id_last = t8.branch_id AND t8.is_deleted = false',
-    );
-    qb.leftJoin(
-      'district',
-      't9',
-      't2.to_id = t9.district_id AND t8.is_deleted = false',
-    );
-    qb.where('t1.awb_item_id = :awbItemId', { awbItemId });
-    qb.andWhere('t1.awb_status_id_final = :statusDLV', {
-      statusDLV: AWB_STATUS.DLV,
-    });
-    qb.andWhere('t1.is_deleted = false');
+      qb.addSelect('t1.awb_item_id', 'awbItemId');
+      qb.addSelect('t1.awb_number', 'awbNumber');
+      qb.addSelect('t10.branch_id', 'currentPositionId');
+      qb.addSelect('t7.branch_name', 'currentPosition');
+      qb.addSelect('t1.awb_history_date_last', 'podDate');
+      qb.addSelect('t2.awb_date', 'awbDate');
+      qb.addSelect('t2.ref_destination_code', 'destinationCode');
+      qb.addSelect('t2.to_id', 'destinationId');
+      qb.addSelect('t9.district_name', 'destination');
+      qb.addSelect('t2.package_type_id', 'packageTypeId');
+      qb.addSelect('t5.package_type_code', 'packageTypeCode');
+      qb.addSelect('t5.package_type_name', 'packageTypeName');
+      qb.addSelect('t2.branch_id_last', 'pickupSourceId');
+      qb.addSelect('t8.branch_name', 'pickupSource');
+      qb.addSelect('t2.total_weight_real_rounded', 'weightRealRounded');
+      qb.addSelect('t2.total_weight_final_rounded', 'weightFinalRounded');
+      qb.addSelect('t2.consignee_name', 'consigneeName');
+      qb.addSelect('t3.parcel_value', 'parcelValue');
+      qb.addSelect('t3.cod_value', 'codValue');
+      qb.addSelect('t3.parcel_content', 'parcelContent');
+      qb.addSelect('t3.notes', 'parcelNote');
+      qb.addSelect('t4.partner_id', 'partnerId');
+      qb.addSelect('t6.partner_name', 'partnerName');
+      qb.addSelect('t4.reference_no', 'custPackage');
 
-    return await qb.getRawOne();
+      qb.from('awb_item_attr', 't1');
+      qb.innerJoin(
+        'awb',
+        't2',
+        't1.awb_id = t2.awb_id AND t2.is_deleted = false',
+      );
+      qb.innerJoin(
+        'pickup_request_detail',
+        't3',
+        't1.awb_item_id = t3.awb_item_id AND t3.is_deleted = false',
+      );
+      qb.innerJoin(
+        'pickup_request',
+        't4',
+        't3.pickup_request_id = t4.pickup_request_id AND t4.is_deleted = false',
+      );
+      qb.innerJoin(
+        'package_type',
+        't5',
+        't2.package_type_id = t5.package_type_id',
+      );
+      qb.innerJoin(
+        'partner',
+        't6',
+        't4.partner_id = t6.partner_id AND t6.is_deleted = false',
+      );
+      qb.innerJoin(
+        'cod_payment',
+        't10',
+        't10.awb_item_id = t1.awb_item_id AND t10.is_deleted = false',
+      );
+      qb.innerJoin(
+        'branch',
+        't7',
+        't10.branch_id = t7.branch_id AND t7.is_deleted = false',
+      );
+      qb.leftJoin(
+        'branch',
+        't8',
+        't2.branch_id_last = t8.branch_id AND t8.is_deleted = false',
+      );
+      qb.leftJoin(
+        'district',
+        't9',
+        't2.to_id = t9.district_id AND t8.is_deleted = false',
+      );
+      qb.where('t1.awb_item_id = :awbItemId', { awbItemId });
+      qb.andWhere('t1.awb_status_id_final = :statusDLV', {
+        statusDLV: AWB_STATUS.DLV,
+      });
+      qb.andWhere('t1.is_deleted = false');
+
+      return await qb.getRawOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
   }
 
   private static async insertMongo(
