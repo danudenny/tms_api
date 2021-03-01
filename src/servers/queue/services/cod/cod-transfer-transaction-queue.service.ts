@@ -122,6 +122,7 @@ export class CodTransferTransactionQueueService {
           console.log(' ############ NEW DATA MONGO :: ', newMongo);
         } else {
           console.error('## Data COD Transaction :: Not Found !!! :: ', data);
+          // TODO: insert awb trouble
         }
       }
 
@@ -162,6 +163,7 @@ export class CodTransferTransactionQueueService {
   private static async dataTransaction(
     awbItemId: number,
   ): Promise<AwbTransactionDetailVm> {
+    let result;
     const masterQueryRunner = getConnection().createQueryRunner('master');
     try {
       const qb = await getConnection()
@@ -245,10 +247,11 @@ export class CodTransferTransactionQueueService {
       });
       qb.andWhere('t1.is_deleted = false');
 
-      return await qb.getRawOne();
+      result = await qb.getRawOne();
     } finally {
       await masterQueryRunner.release();
     }
+    return result;
   }
 
   private static async insertMongo(

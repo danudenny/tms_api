@@ -143,11 +143,11 @@ export class V2WebAwbCodService {
             updatedTime: moment().toDate(),
             paymentService: item.paymentService,
             noReference: item.noReference,
-
+            codValue: item.codValue,
           });
         }
 
-        // create transaction history
+        // #region create transaction history
         await transactionManager.insert(CodTransactionHistory, {
           awbItemId: item.awbItemId,
           awbNumber: item.awbNumber,
@@ -173,7 +173,8 @@ export class V2WebAwbCodService {
           createdTime: moment().toDate(),
           updatedTime: moment().toDate(),
         });
-      });
+        // #endregion transaction history
+      }); // end transaction
 
       // #region send to background process with bull
       const firstTransaction = new WebCodFirstTransactionPayloadVm();
@@ -186,6 +187,7 @@ export class V2WebAwbCodService {
       firstTransaction.paymentService = item.paymentService;
       firstTransaction.noReference = item.noReference;
       firstTransaction.userId = userId;
+
       CodTransferTransactionQueueService.perform(
         firstTransaction,
         moment().toDate(),
