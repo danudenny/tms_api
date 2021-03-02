@@ -20,7 +20,10 @@ export class HubMonitoringReportService {
     payload: any,
   ): Promise<HubMonitoringExcelStoreResponseVm> {
     const result = new HubMonitoringExcelStoreResponseVm();
-    result.id = await CsvHelper.storePayload(payload, 'hub-monitoring');
+    result.id = await CsvHelper.storePayload(
+      payload,
+      'hub-monitoring',
+    );
     return result;
   }
 

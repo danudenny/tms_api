@@ -496,11 +496,11 @@ export class HubMonitoringService {
 				WHEN s.code = 'SORT' THEN "bag_number_sort"
 				WHEN s.code = 'OUT' THEN "bag_number_out"
 			END AS "Nomor Gabungan",
-      CASE
-        WHEN s.code = 'IN' THEN "User"
-        WHEN s.code = 'SORT' THEN "User Bag Sortir"
-        WHEN s.code = 'OUT' THEN "User Scanout"
-      END AS "User",
+			CASE
+				WHEN s.code = 'IN' THEN "User"
+				WHEN s.code = 'SORT' THEN "User Bag Sortir"
+				WHEN s.code = 'OUT' THEN "User Scanout"
+			END AS "User",
       s.code as "Status",
       CASE WHEN s.code = 'IN' THEN "Tanggal Transaksi IN"
         WHEN s.code = 'SORT' THEN "Tanggal Transaksi SORT"
@@ -522,7 +522,7 @@ export class HubMonitoringService {
           scan_out.do_pod_code AS do_pod_code_scan_out,
           fm.do_pod_code AS do_pod_code_fm,
           CONCAT(bag_sortir.first_name, ' ', bag_sortir.last_name) AS "User Bag Sortir",
-          CONCAT(scan_out.first_name, ' ', scan_out.last_name) AS "User Scanout"
+					CONCAT(scan_out.first_name, ' ', scan_out.last_name) AS "User Scanout"
         FROM
           dropoff_hub doh
         INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
@@ -546,8 +546,8 @@ export class HubMonitoringService {
             ai1.awb_id,
             b1.bag_number,
             bi1.created_time,
-            u1.first_name,
-            u1.last_name
+						u1.first_name,
+						u1.last_name
           FROM bag_item_awb bia1
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
@@ -562,8 +562,8 @@ export class HubMonitoringService {
             br2.branch_id,
             dpdb2.created_time,
             dp2.do_pod_code,
-            u2.first_name,
-            u2.last_name
+						u2.first_name,
+						u2.last_name
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
@@ -592,14 +592,14 @@ export class HubMonitoringService {
           dohd.created_time,
           bag_sortir.created_time,
           scan_out.created_time,
-          bag.bag_number,
+					bag.bag_number,
           bi.bag_seq,
           scan_out.do_pod_code,
           fm.do_pod_code,
-          bag_sortir.first_name,
-          bag_sortir.last_name,
-          scan_out.first_name,
-          scan_out.last_name
+					bag_sortir.first_name,
+					bag_sortir.last_name,
+					scan_out.first_name,
+					scan_out.last_name
       ) t1, unnest(string_to_array("Status" , ','))  s(code);
     `;
     return query;

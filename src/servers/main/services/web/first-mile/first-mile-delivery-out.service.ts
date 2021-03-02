@@ -473,17 +473,12 @@ export class FirstMileDeliveryOutService {
 
         if (notDeliver && holdRedis) {
           if (doPod) {
-            // NOTE: handle status cancel delivery
-            const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.CANCEL];
-            if (statusFinal.includes(awb.awbStatusIdLast)) {
+            // NOTE: check resi cancel delivery
+            const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
+            if (isCancel == true) {
               totalError += 1;
               response.status = 'error';
-              // handle message
-              const desc =
-                awb.awbStatusIdLast == AWB_STATUS.CANCEL
-                  ? 'telah di CANCEL oleh Partner !'
-                  : 'sudah Final Status !';
-              response.message = `Resi ${awbNumber} ${desc}`;
+              response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner !`;
             } else {
               const statusCode = await AwbService.awbStatusGroup(
                 awb.awbStatusIdLast,
