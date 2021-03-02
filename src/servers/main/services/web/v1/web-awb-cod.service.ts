@@ -55,7 +55,6 @@ import { PrintByStoreService } from '../../print-by-store.service';
 import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
-import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { AuthLoginMetadata } from '../../../../../shared/models/auth-login-metadata.model';
