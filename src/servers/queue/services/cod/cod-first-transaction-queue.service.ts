@@ -1,4 +1,4 @@
-import { createQueryBuilder } from 'typeorm';
+import { getConnection } from 'typeorm';
 import { QueueBullBoard } from '../queue-bull-board';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { AwbTransactionDetailVm } from '../../../main/models/cod/web-awb-cod-response.vm';
@@ -46,12 +46,26 @@ export class CodFirstTransactionQueueService {
       // let isNewData = false;
 
       console.log('#### JOB ID  ::: ', job.id);
-      console.log('##################### SYNC DATA AWB NUMBER ::: ', data.awbNumber);
+      console.log(
+        '##################### SYNC DATA AWB NUMBER ::: ',
+        data.awbNumber,
+      );
 
-      let transactionDetail = await CodTransactionDetail.findOne({
-        awbItemId: data.awbItemId,
-        isDeleted: false,
-      });
+      let transactionDetail: CodTransactionDetail;
+      const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+        'master',
+      );
+      try {
+        transactionDetail = await getConnection()
+          .createQueryBuilder(CodTransactionDetail, 'ctd')
+          .setQueryRunner(masterTransactionDetailQueryRunner)
+          .where('ctd.awbItemId = :awbItemId AND ctd.isDeleted = false', {
+            awbItemId: data.awbItemId,
+          })
+          .getOne();
+      } finally {
+        await masterTransactionDetailQueryRunner.release();
+      }
 
       // Handle first awb scan
       // only transaction
@@ -66,17 +80,23 @@ export class CodFirstTransactionQueueService {
             updatedTime: data.timestamp,
           },
         );
-
       } else {
         const codDetail = await this.dataTransaction(data.awbItemId);
         if (codDetail) {
           // manipulation data
-          const weightRounded = codDetail.weightRealRounded > 0 ? codDetail.weightRealRounded : codDetail.weightFinalRounded;
+          const weightRounded =
+            codDetail.weightRealRounded > 0
+              ? codDetail.weightRealRounded
+              : codDetail.weightFinalRounded;
           const percentFee = 1; // set on config COD
           const codFee = (Number(codDetail.codValue) * percentFee) / 100;
           // Create data Cod Transaction Detail
-          const transactionStatusId = data.transactionStatusId ? Number(data.transactionStatusId) : TRANSACTION_STATUS.TRM;
-          const supplierInvoiceStatusId = data.supplierInvoiceStatusId ? Number(data.supplierInvoiceStatusId) : null;
+          const transactionStatusId = data.transactionStatusId
+            ? Number(data.transactionStatusId)
+            : TRANSACTION_STATUS.TRM;
+          const supplierInvoiceStatusId = data.supplierInvoiceStatusId
+            ? Number(data.supplierInvoiceStatusId)
+            : null;
           const newTransactionDetail = CodTransactionDetail.create({
             codTransactionId: data.codTransactionId,
             transactionStatusId,
@@ -153,7 +173,9 @@ export class CodFirstTransactionQueueService {
           const historyDriver = CodTransactionHistory.create({
             awbItemId: data.awbItemId,
             awbNumber: data.awbNumber,
-            transactionDate: moment(data.timestamp).add(-1, 'minute').toDate(),
+            transactionDate: moment(data.timestamp)
+              .add(-1, 'minute')
+              .toDate(),
             transactionStatusId: TRANSACTION_STATUS.SIGESIT,
             branchId: data.branchId,
             userIdCreated: data.userId,
@@ -175,7 +197,6 @@ export class CodFirstTransactionQueueService {
             updatedTime: data.timestamp,
           });
           await CodTransactionHistory.insert(historyBranch);
-
         }
       }
 
@@ -228,89 +249,104 @@ export class CodFirstTransactionQueueService {
   private static async dataTransaction(
     awbItemId: number,
   ): Promise<AwbTransactionDetailVm> {
+    let results: AwbTransactionDetailVm;
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      const qb = await getConnection()
+        .createQueryBuilder()
+        .setQueryRunner(masterQueryRunner);
 
-    const qb = createQueryBuilder();
-    qb.addSelect('t1.awb_item_id', 'awbItemId');
-    qb.addSelect('t1.awb_number', 'awbNumber');
-    qb.addSelect('t10.branch_id', 'currentPositionId');
-    qb.addSelect('t7.branch_name', 'currentPosition');
-    qb.addSelect('t1.awb_history_date_last', 'podDate');
-    qb.addSelect('t2.awb_date', 'awbDate');
-    qb.addSelect('t2.ref_destination_code', 'destinationCode');
-    qb.addSelect('t2.to_id', 'destinationId');
-    qb.addSelect('t9.district_name', 'destination');
-    qb.addSelect('t2.package_type_id', 'packageTypeId');
-    qb.addSelect('t5.package_type_code', 'packageTypeCode');
-    qb.addSelect('t5.package_type_name', 'packageTypeName');
-    qb.addSelect('t2.branch_id_last', 'pickupSourceId');
-    qb.addSelect('t8.branch_name', 'pickupSource');
-    qb.addSelect('t2.total_weight_real_rounded', 'weightRealRounded');
-    qb.addSelect('t2.total_weight_final_rounded', 'weightFinalRounded');
-    qb.addSelect('t2.consignee_name', 'consigneeName');
-    qb.addSelect('t3.parcel_value', 'parcelValue');
-    qb.addSelect('t3.cod_value', 'codValue');
-    qb.addSelect('t3.parcel_content', 'parcelContent');
-    qb.addSelect('t3.notes', 'parcelNote');
-    qb.addSelect('t4.partner_id', 'partnerId');
-    qb.addSelect('t6.partner_name', 'partnerName');
-    qb.addSelect('t4.reference_no', 'custPackage');
+      qb.addSelect('t1.awb_item_id', 'awbItemId');
+      qb.addSelect('t1.awb_number', 'awbNumber');
+      qb.addSelect('t10.branch_id', 'currentPositionId');
+      qb.addSelect('t7.branch_name', 'currentPosition');
+      qb.addSelect('t1.awb_history_date_last', 'podDate');
+      qb.addSelect('t2.awb_date', 'awbDate');
+      qb.addSelect('t2.ref_destination_code', 'destinationCode');
+      qb.addSelect('t2.to_id', 'destinationId');
+      qb.addSelect('t9.district_name', 'destination');
+      qb.addSelect('t2.package_type_id', 'packageTypeId');
+      qb.addSelect('t5.package_type_code', 'packageTypeCode');
+      qb.addSelect('t5.package_type_name', 'packageTypeName');
+      qb.addSelect('t2.branch_id_last', 'pickupSourceId');
+      qb.addSelect('t8.branch_name', 'pickupSource');
+      qb.addSelect('t2.total_weight_real_rounded', 'weightRealRounded');
+      qb.addSelect('t2.total_weight_final_rounded', 'weightFinalRounded');
+      qb.addSelect('t2.consignee_name', 'consigneeName');
+      qb.addSelect('t3.parcel_value', 'parcelValue');
+      qb.addSelect('t3.cod_value', 'codValue');
+      qb.addSelect('t3.parcel_content', 'parcelContent');
+      qb.addSelect('t3.notes', 'parcelNote');
+      qb.addSelect('t4.partner_id', 'partnerId');
+      qb.addSelect('t6.partner_name', 'partnerName');
+      qb.addSelect('t4.reference_no', 'custPackage');
 
-    qb.from('awb_item_attr', 't1');
-    qb.innerJoin(
-      'awb',
-      't2',
-      't1.awb_id = t2.awb_id AND t2.is_deleted = false',
-    );
-    qb.innerJoin(
-      'pickup_request_detail',
-      't3',
-      't1.awb_item_id = t3.awb_item_id AND t3.is_deleted = false',
-    );
-    qb.innerJoin(
-      'pickup_request',
-      't4',
-      't3.pickup_request_id = t4.pickup_request_id AND t4.is_deleted = false',
-    );
-    qb.innerJoin(
-      'package_type',
-      't5',
-      't2.package_type_id = t5.package_type_id',
-    );
-    qb.innerJoin(
-      'partner',
-      't6',
-      't4.partner_id = t6.partner_id AND t6.is_deleted = false',
-    );
-    qb.innerJoin(
-      'cod_payment',
-      't10',
-      't10.awb_item_id = t1.awb_item_id AND t10.is_deleted = false',
-    );
-    qb.innerJoin(
-      'branch',
-      't7',
-      't10.branch_id = t7.branch_id AND t7.is_deleted = false',
-    );
-    qb.leftJoin(
-      'branch',
-      't8',
-      't2.branch_id_last = t8.branch_id AND t8.is_deleted = false',
-    );
-    qb.leftJoin(
-      'district',
-      't9',
-      't2.to_id = t9.district_id AND t8.is_deleted = false',
-    );
-    qb.where('t1.awb_item_id = :awbItemId', { awbItemId });
-    qb.andWhere('t1.awb_status_id_final = :statusDLV', { statusDLV: AWB_STATUS.DLV });
-    qb.andWhere('t1.is_deleted = false');
+      qb.from('awb_item_attr', 't1');
+      qb.innerJoin(
+        'awb',
+        't2',
+        't1.awb_id = t2.awb_id AND t2.is_deleted = false',
+      );
+      qb.innerJoin(
+        'pickup_request_detail',
+        't3',
+        't1.awb_item_id = t3.awb_item_id AND t3.is_deleted = false',
+      );
+      qb.innerJoin(
+        'pickup_request',
+        't4',
+        't3.pickup_request_id = t4.pickup_request_id AND t4.is_deleted = false',
+      );
+      qb.innerJoin(
+        'package_type',
+        't5',
+        't2.package_type_id = t5.package_type_id',
+      );
+      qb.innerJoin(
+        'partner',
+        't6',
+        't4.partner_id = t6.partner_id AND t6.is_deleted = false',
+      );
+      qb.innerJoin(
+        'cod_payment',
+        't10',
+        't10.awb_item_id = t1.awb_item_id AND t10.is_deleted = false',
+      );
+      qb.innerJoin(
+        'branch',
+        't7',
+        't10.branch_id = t7.branch_id AND t7.is_deleted = false',
+      );
+      qb.leftJoin(
+        'branch',
+        't8',
+        't2.branch_id_last = t8.branch_id AND t8.is_deleted = false',
+      );
+      qb.leftJoin(
+        'district',
+        't9',
+        't2.to_id = t9.district_id AND t8.is_deleted = false',
+      );
+      qb.where('t1.awb_item_id = :awbItemId', { awbItemId });
+      qb.andWhere('t1.awb_status_id_final = :statusDLV', {
+        statusDLV: AWB_STATUS.DLV,
+      });
+      qb.andWhere('t1.is_deleted = false');
 
-    return await qb.getRawOne();
+      results = await qb.getRawOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
+    return results;
   }
 
-  private static async insertMongo(transaction: CodTransactionDetail): Promise<boolean> {
+  private static async insertMongo(
+    transaction: CodTransactionDetail,
+  ): Promise<boolean> {
     // get config mongodb
-    const collection = await MongoDbConfig.getDbSicepatCod('transaction_detail');
+    const collection = await MongoDbConfig.getDbSicepatCod(
+      'transaction_detail',
+    );
     delete transaction['changedValues'];
     transaction.userIdCreated = Number(transaction.userIdCreated);
     transaction.userIdUpdated = Number(transaction.userIdUpdated);
@@ -370,7 +406,6 @@ export class CodFirstTransactionQueueService {
         console.log(' #### Success first insert data mongo');
       }
       return true;
-
     } catch (error) {
       console.error(error);
       return false;

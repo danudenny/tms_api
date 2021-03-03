@@ -365,14 +365,26 @@ export class V1WebCodBankStatementService {
       throw new BadRequestException('Data tidak ditemukan !');
     }
 
-    const bankStatement = await CodBankStatement.findOne({
-      select: ['codBankStatementId'],
-      where: {
-        codBankStatementId: payload.bankStatementId,
-        transactionStatusId: TRANSACTION_STATUS.TRF,
-        isDeleted: false,
-      },
-    });
+    let bankStatement: CodBankStatement;
+    const masterBankStatementDetailQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      bankStatement = await getConnection()
+        .createQueryBuilder(CodBankStatement, 'bs')
+        .setQueryRunner(masterBankStatementDetailQueryRunner)
+        .select(['bs.codBankStatementId'])
+        .where(
+          'bs.codBankStatementId = :codBankStatementId AND bs.transactionStatusId = :transactionStatusId AND bs.isDeleted = false',
+          {
+            codBankStatementId: payload.bankStatementId,
+            transactionStatusId: TRANSACTION_STATUS.TRF,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterBankStatementDetailQueryRunner.release();
+    }
 
     if (!bankStatement) {
       throw new BadRequestException('Data tidak ditemukan/sudah di proses!');
@@ -416,15 +428,25 @@ export class V1WebCodBankStatementService {
         );
 
         // looping data transaction branch
-        const transactionsBranch = await transactionManager.find(
-          CodTransaction,
-          {
-            where: {
-              codBankStatementId: payload.bankStatementId,
-              isDeleted: false,
-            },
-          },
+        let transactionsBranch: CodTransaction[];
+        const masterTransactionBranchQueryRunner = getConnection().createQueryRunner(
+          'master',
         );
+        try {
+          transactionsBranch = await getConnection()
+            .createQueryBuilder(CodTransaction, 'ct')
+            .setQueryRunner(masterTransactionBranchQueryRunner)
+            .where(
+              'ct.codBankStatementId = :codBankStatementId AND ct.isDeleted = false',
+              {
+                codBankStatementId: payload.bankStatementId,
+              },
+            )
+            .getMany();
+        } finally {
+          await masterTransactionBranchQueryRunner.release();
+        }
+
         if (transactionsBranch.length) {
           for (const item of transactionsBranch) {
             await transactionManager.update(
@@ -473,14 +495,26 @@ export class V1WebCodBankStatementService {
       throw new BadRequestException('Data tidak ditemukan !');
     }
 
-    const bankStatement = await CodBankStatement.findOne({
-      select: ['codBankStatementId'],
-      where: {
-        codBankStatementId: payload.bankStatementId,
-        transactionStatusId: TRANSACTION_STATUS.TRF,
-        isDeleted: false,
-      },
-    });
+    let bankStatement: CodBankStatement;
+    const masterBankStatementQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      bankStatement = await getConnection()
+        .createQueryBuilder(CodBankStatement, 'bs')
+        .setQueryRunner(masterBankStatementQueryRunner)
+        .select(['bs.codBankStatementId'])
+        .where(
+          'bs.codBankStatementId = :codBankStatementId AND bs.transactionStatusId = :transactionStatusId AND bs.isDeleted = false',
+          {
+            codBankStatementId: payload.bankStatementId,
+            transactionStatusId: TRANSACTION_STATUS.TRF,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterBankStatementQueryRunner.release();
+    }
 
     if (!bankStatement) {
       throw new BadRequestException('Data tidak ditemukan/sudah di proses!');
@@ -512,15 +546,25 @@ export class V1WebCodBankStatementService {
         );
 
         // looping data transaction branch
-        const transactionsBranch = await transactionManager.find(
-          CodTransaction,
-          {
-            where: {
-              codBankStatementId: payload.bankStatementId,
-              isDeleted: false,
-            },
-          },
+        let transactionsBranch: CodTransaction[];
+        const masterTransactionBranchQueryRunner = getConnection().createQueryRunner(
+          'master',
         );
+        try {
+          transactionsBranch = await getConnection()
+            .createQueryBuilder(CodTransaction, 'ct')
+            .setQueryRunner(masterTransactionBranchQueryRunner)
+            .where(
+              'ct.codBankStatementId = :codBankStatementId AND ct.isDeleted = false',
+              {
+                codBankStatementId: payload.bankStatementId,
+              },
+            )
+            .getMany();
+        } finally {
+          await masterTransactionBranchQueryRunner.release();
+        }
+
         if (transactionsBranch.length) {
           for (const item of transactionsBranch) {
             await transactionManager.update(
