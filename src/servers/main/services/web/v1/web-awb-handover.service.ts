@@ -12,6 +12,7 @@ export class V1WebAwbHandoverService {
     payload.fieldResolverMap['partnerId'] = 't4.partner_id';
     payload.fieldResolverMap['awbDeliverDate'] = 't1.awb_status_date_time_last';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['nik'] = 't5.username';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -33,7 +34,7 @@ export class V1WebAwbHandoverService {
       ['t4.partner_id', 'partnerId'],
       ['t4.partner_name', 'partnerName'],
       ['t5.first_name', 'username'],
-      ['t6.nik', 'nik'],
+      ['t5.username', 'nik'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       [
@@ -49,16 +50,13 @@ export class V1WebAwbHandoverService {
     q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.userUpdated, 't5', j =>
+
+    q.innerJoin(e => e.doPodDeliver.userDriver, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.userUpdated.employee, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    //
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awbStatusIdLast, w => w.equals(AWB_STATUS.DLV));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
     const total = 0; // await q.countWithoutTakeAndSkip();
@@ -73,6 +71,7 @@ export class V1WebAwbHandoverService {
     payload.fieldResolverMap['partnerId'] = 't4.partner_id';
     payload.fieldResolverMap['awbDeliverDate'] = 't1.awb_status_date_time_last';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['nik'] = 't5.username';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -94,7 +93,7 @@ export class V1WebAwbHandoverService {
       ['t4.partner_id', 'partnerId'],
       ['t4.partner_name', 'partnerName'],
       ['t5.first_name', 'username'],
-      ['t6.nik', 'nik'],
+      ['t5.username', 'nik'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       [
@@ -110,16 +109,13 @@ export class V1WebAwbHandoverService {
     q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.userUpdated, 't5', j =>
+
+    q.innerJoin(e => e.doPodDeliver.userDriver, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.userUpdated.employee, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    //
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awbStatusIdLast, w => w.equals(AWB_STATUS.DLV));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const total = await q.countWithoutTakeAndSkip();
 
