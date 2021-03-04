@@ -9,7 +9,7 @@ import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-reques
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
 import { In } from 'typeorm';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { AwbHistory } from 'src/shared/orm-entity/awb-history';
+import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 
 export class PartnerFastpayService {
 
