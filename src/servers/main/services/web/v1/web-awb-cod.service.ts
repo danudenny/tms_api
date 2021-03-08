@@ -118,7 +118,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -270,7 +270,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -417,7 +417,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -599,7 +599,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -719,7 +719,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -931,7 +931,7 @@ export class V1WebAwbCodService {
       );
     }
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(e => e.branchId, w => w.equals(permissonPayload.branchId));
     }
     //#endregion
