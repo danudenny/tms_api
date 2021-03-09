@@ -69,6 +69,7 @@ import { V1WebAwbHighValueController } from './web/v1/web-awb-high-value.control
 import { V2MobileInitController } from './mobile/v2/mobile-init.controller';
 import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
+import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -143,6 +144,7 @@ import { MobileDeviceInfoController } from './mobile/mobile-device-info.controll
     V1WebAwbHighValueController,
     EmployeePenalty,
     MobileDeviceInfoController,
+    V1WebAwbHandoverController,
   ],
 })
 export class MainServerControllersModule {}
