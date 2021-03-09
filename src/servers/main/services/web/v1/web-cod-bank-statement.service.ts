@@ -1,7 +1,10 @@
 // #region import
-import { createQueryBuilder, getManager } from 'typeorm';
+import { createQueryBuilder, getManager, getConnection } from 'typeorm';
 
-import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { CodBankStatement } from '../../../../../shared/orm-entity/cod-bank-statement';
@@ -13,12 +16,16 @@ import { CustomCounterCode } from '../../../../../shared/services/custom-counter
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import {
-    WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
-    WebCodTransferHeadOfficePayloadVm,
+  WebCodBankStatementCancelPayloadVm,
+  WebCodBankStatementValidatePayloadVm,
+  WebCodTransferHeadOfficePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-    WebAwbCodBankStatementResponseVm, WebAwbCodListTransactionResponseVm, WebCodBankStatementResponseVm,
-    WebCodTransactionDetailResponseVm, WebCodTransferHeadOfficeResponseVm,
+  WebAwbCodBankStatementResponseVm,
+  WebAwbCodListTransactionResponseVm,
+  WebCodBankStatementResponseVm,
+  WebCodTransactionDetailResponseVm,
+  WebCodTransferHeadOfficeResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
@@ -28,7 +35,6 @@ import { RedisService } from '../../../../../shared/services/redis.service';
 import { v1 as uuidv1 } from 'uuid';
 // #endregion
 export class V1WebCodBankStatementService {
-
   static async transferHeadOffice(
     payload: WebCodTransferHeadOfficePayloadVm,
     file,
@@ -43,8 +49,13 @@ export class V1WebCodBankStatementService {
     let redlock = true;
     for (const transactionId of payload.dataTransactionId) {
       // handle race condition
-      redlock = await RedisService.redlock(`redlock:transferHeadOffice:${transactionId}`, 5);
-      if (redlock == false) { break; }
+      redlock = await RedisService.redlock(
+        `redlock:transferHeadOffice:${transactionId}`,
+        5,
+      );
+      if (redlock == false) {
+        break;
+      }
     }
     if (!redlock) {
       throw new BadRequestException('Data Transaksi sedang di proses!!');
@@ -62,17 +73,19 @@ export class V1WebCodBankStatementService {
       if (attachment) {
         attachmentId = attachment.attachmentTmsId;
       } else {
-        throw new BadRequestException('Gagal upload bukti transfer, coba ulangi lagi!');
+        throw new BadRequestException(
+          'Gagal upload bukti transfer, coba ulangi lagi!',
+        );
       }
     } else {
       throw new BadRequestException('Harap inputkan bukti transfer!');
     }
 
-    const randomCode = await CustomCounterCode.bankStatement(
-      timestamp,
-    );
+    const randomCode = await CustomCounterCode.bankStatement(timestamp);
     const bankAccount = await this.getBankAccount(payload.bankBranchId);
-    const bankStatementNote = payload.bankStatementNote ? payload.bankStatementNote : null;
+    const bankStatementNote = payload.bankStatementNote
+      ? payload.bankStatementNote
+      : null;
     let totalValue = 0;
     let totalData = 0;
     let totalAwb = 0;
@@ -99,13 +112,23 @@ export class V1WebCodBankStatementService {
 
         // looping data transaction and update status and bank statement id [create new table] ??
         for (const transactionId of payload.dataTransactionId) {
-          const codBranch = await CodTransaction.findOne({
-            where: {
-              codTransactionId: transactionId,
-              codBankStatementId: null,
-              isDeleted: false,
-            },
-          });
+          let codBranch: CodTransaction;
+          const masterCodBranchQueryRunner = getConnection().createQueryRunner(
+            'master',
+          );
+          try {
+            codBranch = await getConnection()
+              .createQueryBuilder(CodTransaction, 'ct')
+              .setQueryRunner(masterCodBranchQueryRunner)
+              .where(
+                'ct.codTransactionId = :codTransactionId AND ct.codBankStatementId IS NULL AND ct.isDeleted = false',
+                { codTransactionId: transactionId },
+              )
+              .getOne();
+          } finally {
+            await masterCodBranchQueryRunner.release();
+          }
+
           if (codBranch) {
             totalData += 1;
             totalValue += Number(codBranch.totalCodValue);
@@ -144,11 +167,13 @@ export class V1WebCodBankStatementService {
               timestamp,
             );
           } else {
-            dataError.push(`Transaction Id ${transactionId}, tidak valid! / sudah di proses`);
+            dataError.push(
+              `Transaction Id ${transactionId}, tidak valid! / sudah di proses`,
+            );
           }
         } // endof loop
 
-        if (totalData > 0) {
+        if (totalData) {
           // update data bank statment
           await transactionManager.update(
             CodBankStatement,
@@ -174,7 +199,6 @@ export class V1WebCodBankStatementService {
       result.message = 'success';
       result.dataError = dataError;
       return result;
-
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -260,7 +284,8 @@ export class V1WebCodBankStatementService {
     payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
     payload.fieldResolverMap['adminName'] = 't4.first_name';
     payload.fieldResolverMap['transferName'] = 't6.first_name';
-    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['transactionStatusId'] =
+      't1.transaction_status_id';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id';
     payload.fieldResolverMap['districtId'] = 't3.district_id';
     payload.fieldResolverMap['representativeId'] = 't3.representative_id';
@@ -340,20 +365,34 @@ export class V1WebCodBankStatementService {
       throw new BadRequestException('Data tidak ditemukan !');
     }
 
-    const bankStatement = await CodBankStatement.findOne({
-      select: ['codBankStatementId'],
-      where: {
-        codBankStatementId: payload.bankStatementId,
-        transactionStatusId: TRANSACTION_STATUS.TRF,
-        isDeleted: false,
-      },
-    });
+    let bankStatement: CodBankStatement;
+    const masterBankStatementDetailQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      bankStatement = await getConnection()
+        .createQueryBuilder(CodBankStatement, 'bs')
+        .setQueryRunner(masterBankStatementDetailQueryRunner)
+        .select(['bs.codBankStatementId'])
+        .where(
+          'bs.codBankStatementId = :codBankStatementId AND bs.transactionStatusId = :transactionStatusId AND bs.isDeleted = false',
+          {
+            codBankStatementId: payload.bankStatementId,
+            transactionStatusId: TRANSACTION_STATUS.TRF,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterBankStatementDetailQueryRunner.release();
+    }
 
     if (!bankStatement) {
       throw new BadRequestException('Data tidak ditemukan/sudah di proses!');
     }
 
-    const transactionNote = payload.transactionNote ? payload.transactionNote : null;
+    const transactionNote = payload.transactionNote
+      ? payload.transactionNote
+      : null;
 
     try {
       // TODO: process validate bank statement
@@ -389,15 +428,25 @@ export class V1WebCodBankStatementService {
         );
 
         // looping data transaction branch
-        const transactionsBranch = await transactionManager.find(
-          CodTransaction,
-          {
-            where: {
-              codBankStatementId: payload.bankStatementId,
-              isDeleted: false,
-            },
-          },
+        let transactionsBranch: CodTransaction[];
+        const masterTransactionBranchQueryRunner = getConnection().createQueryRunner(
+          'master',
         );
+        try {
+          transactionsBranch = await getConnection()
+            .createQueryBuilder(CodTransaction, 'ct')
+            .setQueryRunner(masterTransactionBranchQueryRunner)
+            .where(
+              'ct.codBankStatementId = :codBankStatementId AND ct.isDeleted = false',
+              {
+                codBankStatementId: payload.bankStatementId,
+              },
+            )
+            .getMany();
+        } finally {
+          await masterTransactionBranchQueryRunner.release();
+        }
+
         if (transactionsBranch.length) {
           for (const item of transactionsBranch) {
             await transactionManager.update(
@@ -424,7 +473,6 @@ export class V1WebCodBankStatementService {
             );
           }
         }
-
       });
       // #endregion of transaction
       const result = new WebCodBankStatementResponseVm();
@@ -447,20 +495,34 @@ export class V1WebCodBankStatementService {
       throw new BadRequestException('Data tidak ditemukan !');
     }
 
-    const bankStatement = await CodBankStatement.findOne({
-      select: ['codBankStatementId'],
-      where: {
-        codBankStatementId: payload.bankStatementId,
-        transactionStatusId: TRANSACTION_STATUS.TRF,
-        isDeleted: false,
-      },
-    });
+    let bankStatement: CodBankStatement;
+    const masterBankStatementQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      bankStatement = await getConnection()
+        .createQueryBuilder(CodBankStatement, 'bs')
+        .setQueryRunner(masterBankStatementQueryRunner)
+        .select(['bs.codBankStatementId'])
+        .where(
+          'bs.codBankStatementId = :codBankStatementId AND bs.transactionStatusId = :transactionStatusId AND bs.isDeleted = false',
+          {
+            codBankStatementId: payload.bankStatementId,
+            transactionStatusId: TRANSACTION_STATUS.TRF,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterBankStatementQueryRunner.release();
+    }
 
     if (!bankStatement) {
       throw new BadRequestException('Data tidak ditemukan/sudah di proses!');
     }
 
-    const transactionNote = payload.transactionNote ? payload.transactionNote : null;
+    const transactionNote = payload.transactionNote
+      ? payload.transactionNote
+      : null;
     if (!transactionNote) {
       throw new BadRequestException('transactionNote tidak disediakan!');
     }
@@ -484,15 +546,25 @@ export class V1WebCodBankStatementService {
         );
 
         // looping data transaction branch
-        const transactionsBranch = await transactionManager.find(
-          CodTransaction,
-          {
-            where: {
-              codBankStatementId: payload.bankStatementId,
-              isDeleted: false,
-            },
-          },
+        let transactionsBranch: CodTransaction[];
+        const masterTransactionBranchQueryRunner = getConnection().createQueryRunner(
+          'master',
         );
+        try {
+          transactionsBranch = await getConnection()
+            .createQueryBuilder(CodTransaction, 'ct')
+            .setQueryRunner(masterTransactionBranchQueryRunner)
+            .where(
+              'ct.codBankStatementId = :codBankStatementId AND ct.isDeleted = false',
+              {
+                codBankStatementId: payload.bankStatementId,
+              },
+            )
+            .getMany();
+        } finally {
+          await masterTransactionBranchQueryRunner.release();
+        }
+
         if (transactionsBranch.length) {
           for (const item of transactionsBranch) {
             await transactionManager.update(
@@ -541,26 +613,35 @@ export class V1WebCodBankStatementService {
       result.status = 'ok';
       result.message = 'success';
       return result;
-
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
   }
 
   private static async getBankAccount(bankBranchId: number): Promise<string> {
-    const qb = createQueryBuilder();
-    qb.addSelect('t1.account_number', 'accountNumber');
-    qb.addSelect('t2.bank_code', 'bankCode');
-    qb.from('bank_branch', 't1');
-    qb.innerJoin(
-      'bank',
-      't2',
-      't1.bank_id = t2.bank_id AND t2.is_deleted = false',
-    );
-    qb.where('t1.bank_branch_id = :bankBranchId', { bankBranchId });
-    qb.andWhere('t1.is_deleted = false');
+    let bankBranch;
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      const qb = await getConnection()
+        .createQueryBuilder()
+        .setQueryRunner(masterQueryRunner);
 
-    const bankBranch = await qb.getRawOne();
+      qb.addSelect('t1.account_number', 'accountNumber');
+      qb.addSelect('t2.bank_code', 'bankCode');
+      qb.from('bank_branch', 't1');
+      qb.innerJoin(
+        'bank',
+        't2',
+        't1.bank_id = t2.bank_id AND t2.is_deleted = false',
+      );
+      qb.where('t1.bank_branch_id = :bankBranchId', { bankBranchId });
+      qb.andWhere('t1.is_deleted = false');
+
+      bankBranch = await qb.getRawOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
+
     if (bankBranch) {
       return `${bankBranch.bankCode}/${bankBranch.accountNumber}`;
     } else {
