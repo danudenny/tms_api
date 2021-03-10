@@ -26,6 +26,9 @@ module.exports = {
   },
   printerHelper: {
     url: 'http://jsreport.sicepat.com/wcpp',
+    urlApiJsReport: 'http://jsreport.sicepat.com/api/report',
+    username: 'admin',
+    password: '@S1cepat!',
   },
   queue: {
     doPodDetailPostMeta: {
