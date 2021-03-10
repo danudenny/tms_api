@@ -7,9 +7,11 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { MonitoringCoordinatorExcelExecuteResponseVm } from '../../../main/models/web-monitoring-coordinator.response.vm';
-import { MonitoringCoordinatorExcelExecutePayloadVm } from '../../../main/models/web-monitoring-coordinator-payload.vm';
+import { MonitoringCoordinatorExcelExecuteResponseVm, WebMonitoringCoordinatorTaskReportResponse, WebMonitoringCoordinatorPhotoResponse } from '../../../main/models/web-monitoring-coordinator.response.vm';
+import { MonitoringCoordinatorExcelExecutePayloadVm, WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload } from '../../../main/models/web-monitoring-coordinator-payload.vm';
 import { CsvHelper } from '../../../../shared/helpers/csv-helpers';
+import { createQueryBuilder } from 'typeorm';
+import {PdfHelper} from '../../../../shared/helpers/pdf-helpers';
 
 @Injectable()
 export class KorwilMonitoringCoordinatorReportService {
@@ -178,5 +180,133 @@ export class KorwilMonitoringCoordinatorReportService {
     const data = await q.exec();
 
     return data;
+  }
+
+  static async generateMonitoringBranchPDF(
+    payload: WebMonitoringCoordinatorTaskPayload,
+    res: express.Response,
+  ) {
+    const dataPDF = await this.taskReport(payload);
+    const fileName = 'korwil_' + moment().format('YYMMDD_HHmmss') + '.pdf';
+
+    return PdfHelper.responseForJsReportPDF(
+      res,
+      {
+        template: {
+          shortid: 'rJl2awCzmI', // template-jsreport: korwil-report
+        },
+        data: dataPDF,
+      },
+      fileName,
+    );
+  }
+
+  static async taskReport(
+    payload: WebMonitoringCoordinatorTaskPayload,
+  ): Promise<WebMonitoringCoordinatorTaskReportResponse> {
+    const result = new WebMonitoringCoordinatorTaskReportResponse();
+    const qb = createQueryBuilder();
+    qb.addSelect('d.representative_name', 'representative');
+    qb.addSelect('d.representative_code', 'representativeCode');
+    qb.addSelect('a.date', 'date');
+    qb.addSelect('c.branch_name', 'branchName');
+    qb.addSelect('e.check_in_date', 'checkInDatetime');
+    qb.addSelect('e.check_out_date', 'checkOutDatetime');
+    qb.addSelect(`COUNT(f.is_done = true OR NULL)`, 'countChecklist');
+    qb.addFrom('korwil_transaction', 'a');
+    qb.innerJoin(
+      'user_to_branch',
+      'b',
+      'b.user_to_branch_id = a.user_to_branch_id AND b.is_deleted = false',
+    );
+    qb.innerJoin(
+      'branch',
+      'c',
+      'c.branch_id = b.ref_branch_id AND c.is_deleted = false',
+    );
+    qb.innerJoin(
+      'representative',
+      'd',
+      'd.representative_id = c.representative_id AND d.is_deleted = false',
+    );
+    qb.innerJoin(
+      'employee_journey',
+      'e',
+      'e.employee_journey_id = a.employee_journey_id AND e.is_deleted = false',
+    );
+    qb.innerJoin(
+      'korwil_transaction_detail',
+      'f',
+      'f.korwil_transaction_id = a.korwil_transaction_id AND f.is_deleted = false',
+    );
+    qb.where('a.is_deleted = false');
+    qb.andWhere('a.korwil_transaction_id = :korwilTransactionId', {
+      korwilTransactionId: payload.korwilTransactionId,
+    });
+    qb.groupBy(
+      ' a.korwil_transaction_id, d.representative_name, a.date, c.branch_name, e.check_in_date, e.check_out_date, d.representative_code',
+    );
+
+    const taskHeader = await qb.getRawOne();
+    if (taskHeader) {
+      result.transactionHeader = taskHeader;
+      const qbDetail = createQueryBuilder();
+      qbDetail.addSelect(
+        'a.korwil_transaction_detail_id',
+        'korwilTransactionDetailId',
+      );
+      qbDetail.addSelect('b.korwil_item_name', 'task');
+      qbDetail.addSelect('a.note', 'note');
+      qbDetail.addSelect('null', 'photo');
+      qbDetail.addFrom('korwil_transaction_detail', 'a');
+      qbDetail.innerJoin(
+        'korwil_item',
+        'b',
+        'b.korwil_item_id = a.korwil_item_id AND b.is_deleted = false',
+      );
+      qbDetail.where('a.is_deleted = false');
+      qbDetail.andWhere('a.is_done = true');
+      qbDetail.andWhere('a.korwil_transaction_id = :korwilTransactioId', {
+        korwilTransactioId: payload.korwilTransactionId,
+      });
+      const taskDetail = await qbDetail.getRawMany();
+
+      if (taskDetail) {
+        for (const task of taskDetail) {
+          const params = {
+            korwilTransactionDetailId: task.korwilTransactionDetailId,
+          };
+          const photoUrl = await this.taskPhoto(params);
+          task.photo = photoUrl.url;
+        }
+        result.transactionDetail = taskDetail;
+      }
+    }
+    return result;
+  }
+
+  static async taskPhoto(
+    payload: WebMonitoringCoordinatorPhotoPayload,
+  ): Promise<WebMonitoringCoordinatorPhotoResponse> {
+    const result = new WebMonitoringCoordinatorPhotoResponse();
+    const url = [];
+    const qb = createQueryBuilder();
+    qb.addSelect('url');
+    qb.addFrom('korwil_transaction_detail_photo', 'a');
+    qb.innerJoin(
+      'attachment_tms',
+      'b',
+      'a.photo_id = b.attachment_tms_id AND b.is_deleted = false',
+    );
+    qb.where('a.is_deleted = false');
+    qb.andWhere('a.korwil_transaction_detail_id = :korwilTransactionDetailId', {
+      korwilTransactionDetailId: payload.korwilTransactionDetailId,
+    });
+    const data = await qb.getRawMany();
+    for (const dataDetail of data) {
+      url.push({ url: dataDetail.url });
+    }
+    result.url = url;
+    return result;
   }
 }
