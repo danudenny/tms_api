@@ -44,4 +44,11 @@ export class ResponseMaintenanceService {
       return true;
     }
   }
+
+  public static async userIdNotNull(userId: number): Promise<boolean> {
+    if (!userId) {
+      throw new BadRequestException('user cannot be null');
+    }
+    return true;
+  }
 }
