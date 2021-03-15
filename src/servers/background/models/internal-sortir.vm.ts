@@ -3,6 +3,9 @@ import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 export class CheckAwbPayloadVm {
   @ApiModelProperty()
   tracking_number: string;
+
+  @ApiModelProperty()
+  sorting_branch_id: number;
 }
 
 export class CheckAwbResponseVM {

@@ -45,6 +45,10 @@ export class InternalSortirService {
         is_cod = false;
       }
 
+      if((zip_code == null) || (zip_code.trim() == '')) {
+        throw new BadRequestException(`Zip Code not found”`);
+      }
+
       const rawQuery = `
         SELECT bs.*
         FROM branch_sortir bs
@@ -54,7 +58,8 @@ export class InternalSortirService {
         WHERE
           bs.is_deleted = FALSE AND
           sd.zip_code = '${escape(zip_code)}' AND
-          bs.is_cod = ${escape(is_cod)}
+          bs.is_cod = ${escape(is_cod)} AND
+          bs.branch_id = ${payload.sorting_branch_id} 
         ;
       `;
       const resultData = await RawQueryService.query(rawQuery);
