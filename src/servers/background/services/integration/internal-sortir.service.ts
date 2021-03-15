@@ -36,7 +36,7 @@ export class InternalSortirService {
     if (resultDataAwb.length > 0 ) {
       for (let a = 0; a < resultDataAwb.length; a++) {
         zip_code = resultDataAwb[a].consignee_zip,
-        is_cod = resultDataAwb[a].is_cod,
+        is_cod = resultDataAwb[a].is_cod
       }
 
       if ((is_cod) || (is_cod == true)) {
