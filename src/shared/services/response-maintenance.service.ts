@@ -46,8 +46,8 @@ export class ResponseMaintenanceService {
   }
 
   public static async userIdNotNull(userId: number): Promise<boolean> {
-    if (!userId) {
-      throw new BadRequestException('user cannot be null');
+    if (isNaN(userId) || !userId) {
+      throw new BadRequestException('user cannot be string, null or empty');
     }
     return true;
   }
