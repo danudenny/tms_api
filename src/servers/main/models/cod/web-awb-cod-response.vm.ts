@@ -760,3 +760,31 @@ export class WebItemAwbCodSummaryResponseVm {
   @ApiModelProperty()
   countAwb: number;
 }
+
+export class WebItemCodNominalUploadResponseVm {
+  @ApiModelProperty()
+  attachmentId: number;
+
+  @ApiModelProperty()
+  fileName: string;
+
+  @ApiModelProperty()
+  fileMime: string;
+
+  @ApiModelProperty()
+  attachmentName: string;
+
+  @ApiModelProperty()
+  attachmentPath: string;
+
+  @ApiModelProperty()
+  url: string;
+}
+
+export class WebCodNominalUploadResponseVm {
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({ type: () => WebItemCodNominalUploadResponseVm })
+  data: WebItemCodNominalUploadResponseVm;
+}

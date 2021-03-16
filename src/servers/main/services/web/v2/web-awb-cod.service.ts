@@ -22,6 +22,8 @@ import {
   WebCodTransferBranchResponseVm,
   WebCodTransferBranchCashResponseVm,
   WebCodTransferBranchCashlessResponseVm,
+  WebCodNominalUploadResponseVm,
+  WebItemCodNominalUploadResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -34,6 +36,8 @@ import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-trans
 import { CodTransactionHistory } from '../../../../../shared/orm-entity/cod-transaction-history';
 import { CodTransferTransactionQueueService } from '../../../../queue/services/cod/cod-transfer-transaction-queue.service';
 // #endregion
+import { v1 as uuidv1 } from 'uuid';
+import { AttachmentService } from '../../../../../shared/services/attachment.service';
 
 export class V2WebAwbCodService {
   static async transferBranch(
@@ -87,6 +91,41 @@ export class V2WebAwbCodService {
     result.printIdCashless = printIdCashless;
     result.dataError = dataError;
     return result;
+  }
+
+  static async nominalUpload(file): Promise<WebCodNominalUploadResponseVm> {
+    // upload file to aws s3
+    if (file) {
+      const uuidString = uuidv1();
+      const attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        uuidString,
+        file.mimetype,
+        'update-nominal-cod',
+      );
+      if (attachment) {
+        const itemResult: WebItemCodNominalUploadResponseVm = {
+          attachmentId: attachment.attachmentTmsId,
+          fileName: attachment.fileName,
+          fileMime: attachment.fileMime,
+          attachmentName: attachment.attachmentName,
+          attachmentPath: attachment.attachmentPath,
+          url: attachment.url,
+        };
+        const result: WebCodNominalUploadResponseVm = {
+          message: 'Upload form attachment berhasil',
+          data: itemResult,
+        };
+
+        return result;
+      } else {
+        throw new BadRequestException(
+          'Gagal upload form attachment, coba ulangi lagi!',
+        );
+      }
+    } else {
+      throw new BadRequestException('Harap upload form attachment!');
+    }
   }
 
   // func private ==============================================================
@@ -180,8 +219,8 @@ export class V2WebAwbCodService {
       const firstTransaction = new WebCodFirstTransactionPayloadVm();
       firstTransaction.awbItemId = item.awbItemId;
       firstTransaction.awbNumber = item.awbNumber;
-      firstTransaction.transactionStatusId = TRANSACTION_STATUS.TRM,
-      firstTransaction.codTransactionId = transactiontId;
+      (firstTransaction.transactionStatusId = TRANSACTION_STATUS.TRM),
+        (firstTransaction.codTransactionId = transactiontId);
       firstTransaction.supplierInvoiceStatusId = null;
       firstTransaction.codSupplierInvoiceId = null;
       firstTransaction.paymentService = item.paymentService;

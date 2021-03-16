@@ -6,6 +6,8 @@ import {
   HttpStatus,
   Post,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -14,13 +16,10 @@ import {
 } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import {
-  WebCodTransferPayloadVm,
-} from '../../../models/cod/web-awb-cod-payload.vm';
-import {
-  WebCodTransferBranchResponseVm,
-} from '../../../models/cod/web-awb-cod-response.vm';
+import { WebCodTransferPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodTransferBranchResponseVm, WebCodNominalUploadResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
 import { V2WebAwbCodService } from '../../../services/web/v2/web-awb-cod.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 // #endregion import
 
 @ApiUseTags('Web Awb COD Mark II')
@@ -33,5 +32,17 @@ export class V2WebAwbCodController {
   @ApiOkResponse({ type: WebCodTransferBranchResponseVm })
   public async transferBranch(@Body() payload: WebCodTransferPayloadVm) {
     return V2WebAwbCodService.transferBranch(payload);
+  }
+
+  // form multipart
+  @Post('nominal/upload')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodNominalUploadResponseVm })
+  public async nominalUpload(
+    @UploadedFile() file,
+  ) {
+    return V2WebAwbCodService.nominalUpload(file);
   }
 }
