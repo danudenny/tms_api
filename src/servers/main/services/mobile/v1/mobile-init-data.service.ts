@@ -154,6 +154,7 @@ export class V1MobileInitDataService {
       ['is_deleted', 'isDeleted'],
     );
     q.andWhere(e => e.isProblem, w => w.isTrue());
+    q.andWhere(e => e.isMobile, w => w.isTrue());
     if (fromDate) {
       q.andWhereIsolated(qw => {
         qw.where(

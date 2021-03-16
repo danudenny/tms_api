@@ -14,10 +14,13 @@ import { PrintDoPodDeliverService } from '../services/print-do-pod-deliver.servi
 import { PrintDoPodReturnPayloadQueryVm } from '../models/print-do-pod-return.vm';
 import { PrintBagItemPaperService } from '../services/print-bag-item-paper.service';
 import { PrintBagItemStickerService } from '../services/print-bag-item-sticker.service';
+import { ResponseMaintenanceService } from '../../../shared/services/response-maintenance.service';
 
 @ApiUseTags('Print')
 @Controller('print')
 export class PrintController {
+
+  // reprint surat jalan transit
   @Get('do-pod')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
@@ -25,6 +28,7 @@ export class PrintController {
     @Query() queryParams: PrintDoPodPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintDoPodService.printDoPodByRequest(serverResponse, queryParams);
   }
 
@@ -35,6 +39,7 @@ export class PrintController {
     @Query() queryParams: PrintDoPodBagPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintDoPodBagService.printDoPodBagByRequest(serverResponse, queryParams);
   }
 
@@ -45,6 +50,7 @@ export class PrintController {
     @Query() queryParams: PrintDoPodDeliverPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintDoPodDeliverService.printDoPodDeliverByRequest(serverResponse, queryParams);
   }
 
@@ -55,6 +61,7 @@ export class PrintController {
     @Query() queryParams: PrintDoPodDeliverPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintService.printDoPodReturnByRequest(serverResponse, queryParams);
   }
 
@@ -65,6 +72,7 @@ export class PrintController {
     @Query() queryParams: PrintDoPodDeliverPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintService.printDoPodReturnTransitByRequest(serverResponse, queryParams);
   }
 
@@ -85,6 +93,7 @@ export class PrintController {
     @Query() queryParams: PrintBagItemPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintBagItemPaperService.printBagItemPaperByRequest(serverResponse, queryParams);
   }
 
@@ -95,6 +104,7 @@ export class PrintController {
     @Query() queryParams: PrintBagItemPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintService.printBagItemStickerAndPaperByRequest(serverResponse, queryParams);
   }
 
@@ -105,6 +115,7 @@ export class PrintController {
     @Query() queryParams: PrintAwbPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintService.printAwbForStickerByRequest(serverResponse, queryParams);
   }
 

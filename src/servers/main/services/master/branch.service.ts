@@ -43,8 +43,10 @@ export class BranchService {
 
   async findAllByRequestCod(
     payload: BaseMetaPayloadVm,
+    merger: boolean = false,
   ): Promise<BranchFindAllResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -66,8 +68,9 @@ export class BranchService {
 
     //#region CT Transit
     q.innerJoin(e => e.codUserToBranch, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
-      .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
     );
     //#endregion
 
@@ -76,8 +79,39 @@ export class BranchService {
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
+    const branchData = data.map(el => {
+      return {
+        branchId: el.branchId,
+        branchName: el.branchName,
+        branchCode: el.branchCode,
+        branchCodeLabel: el.branchCode,
+      };
+    });
+
+    let branchList = [];
+    if (permissionPayload.roleName === 'Admin COD - Merger' && merger) {
+      const branchIdAll = [];
+      const branchCodeAll = [];
+
+      data.forEach(el => {
+        branchIdAll.push(Number(el.branchId));
+        branchCodeAll.push(el.branchCode);
+      });
+
+      const branchDataAll = {
+        branchId: branchIdAll,
+        branchName: 'Semua Gerai',
+        branchCode: branchCodeAll,
+        branchCodeLabel: 'All',
+      };
+
+      branchList.push(branchDataAll, ...branchData);
+    } else {
+      branchList = branchData;
+    }
+
     const result = new BranchFindAllResponseVm();
-    result.data = data;
+    result.data = branchList;
 
     result.buildPaging(payload.page, payload.limit, total);
 

@@ -27,6 +27,7 @@ import { UploadImagePodQueueService } from '../../../../queue/services/upload-po
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
+import { AwbSunfishV2QueueService } from '../../../../queue/services/integration/awb-sunfish-v2-queue.service';
 import { AwbNotificationMailQueueService } from '../../../../queue/services/notification/awb-notification-mail-queue.service';
 // #endregion
 
@@ -133,6 +134,7 @@ export class V2MobileSyncService {
                 syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
                 descLast: lastDoPodDeliverHistory.desc,
                 consigneeName: delivery.consigneeNameNote,
+                userIdUpdated: authMeta.userId,
                 updatedTime: moment().toDate(),
               },
             );
@@ -188,7 +190,8 @@ export class V2MobileSyncService {
                   updatedTime: moment().toDate(),
                 });
               }
-              // CodPaymentQueueService.perform(delivery.awbNumber, delivery.noReference);
+              // TODO: update transaction_status_id = TRANSACTION_STATUS.SIGESIT
+
             }
 
             const doPodDeliver = await DoPodDeliver.findOne({
@@ -251,11 +254,22 @@ export class V2MobileSyncService {
             lastDoPodDeliverHistory.latitudeDelivery,
             lastDoPodDeliverHistory.longitudeDelivery,
           );
-          // NOTE: mail notification
-          AwbNotificationMailQueueService.perform(
-            awbdDelivery.awbItemId,
-            awbStatus.awbStatusId,
-          );
+
+          // NOTE: push data only DLV to Sunfish
+          if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
+            // TODO: add flag
+            // AwbSunfishV2QueueService.perform(
+            //   delivery.awbNumber,
+            //   delivery.employeeId,
+            //   historyDateTime,
+            // );
+          } else {
+            // NOTE: mail notification status problem
+            AwbNotificationMailQueueService.perform(
+              awbdDelivery.awbItemId,
+              awbStatus.awbStatusId,
+            );
+          }
           process = true;
         } else {
           PinoLoggerService.log('##### Data Not Valid', delivery);

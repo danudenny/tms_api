@@ -18,6 +18,7 @@ import { DropoffHubDetail } from '../../../../../shared/orm-entity/dropoff_hub_d
 import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from '../../../models/web-scanin-list.response.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { WebDeliveryListResponseVm } from '../../../models/web-delivery-list-response.vm';
+import { BagItemHistory } from '../../../../../shared/orm-entity/bag-item-history';
 
 export class HubTransitDeliveryInService {
 
@@ -51,7 +52,17 @@ export class HubTransitDeliveryInService {
       if (bagData) {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
-        const notScan =  bagData.bagItemStatusIdLast != BAG_STATUS.DO_HUB ? true : false;
+        const BAG_STATUS_DO_SELECTED = (payload.hubId === 0) ? BAG_STATUS.DO_HUB : BAG_STATUS.DO_LINE_HAUL;
+        // const notScan = bagData.bagItemStatusIdLast != BAG_STATUS_DO_SELECTED ? true : false;
+        const bagHistory = await BagItemHistory.findOne({
+          where: {
+            bagItemId: bagData.bagItemId,
+            isDeleted: false,
+            branchId: permissonPayload.branchId,
+            bagItemStatusId: BAG_STATUS_DO_SELECTED,
+          },
+        });
+        const notScan = bagHistory ? false : true;
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
           `hold:dropoff:${bagData.bagItemId}`,
@@ -83,7 +94,7 @@ export class HubTransitDeliveryInService {
           if (bagItem) {
             // update status bagItem
             await BagItem.update({ bagItemId: bagItem.bagItemId }, {
-              bagItemStatusIdLast: BAG_STATUS.DO_HUB,
+              bagItemStatusIdLast: BAG_STATUS_DO_SELECTED,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
               userIdUpdated: authMeta.userId,
@@ -95,12 +106,13 @@ export class HubTransitDeliveryInService {
             dropoffHub.bagId = bagData.bag.bagId;
             dropoffHub.bagItemId = bagData.bagItemId;
             dropoffHub.bagNumber = bagNumber;
+            dropoffHub.isSmd = payload.hubId;
             await DropoffHub.save(dropoffHub);
 
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
               bagData.bagItemId,
-              BAG_STATUS.DO_HUB,
+              BAG_STATUS_DO_SELECTED,
               permissonPayload.branchId,
               authMeta.userId,
             );
@@ -113,13 +125,14 @@ export class HubTransitDeliveryInService {
               bagData.bagItemId,
               authMeta.userId,
               permissonPayload.branchId,
+              payload.hubId,
             );
 
             // update first scan in do pod =====================================
             // TODO: need refactoring code
             const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
               bagData.bagItemId,
-              BAG_STATUS.DO_HUB,
+              BAG_STATUS_DO_SELECTED,
             );
             if (doPodDetailBag) {
               // counter total scan in
@@ -150,7 +163,7 @@ export class HubTransitDeliveryInService {
         } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Gabung paket ${bagNumber} Sudah di proses.`;
+          response.message = `Gabung paket ${bagNumber} Sudah discan di ${payload.hubId ? 'Line Haul' : 'Hub'}.`;
         }
       } else {
         totalError += 1;
@@ -181,8 +194,11 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
     payload.fieldResolverMap['branchScanName'] = 't6.branch_name';
+    payload.fieldResolverMap['isSmd'] = 't1.is_smd';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -310,6 +326,7 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['isSmd'] = 't1.is_smd';
 
     const repo = new OrionRepositoryService(DropoffHub, 't1');
     const q = repo.findAllRaw();

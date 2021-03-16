@@ -26,6 +26,9 @@ export class ScanOutVehicleVm {
   @ApiModelProperty()
   departure_schedule_date_time: Date;
 
+  @ApiModelProperty()
+  employee_id_driver: number;
+
 }
 
 export class ScanOutSmdRouteResponseVm {
@@ -172,6 +175,9 @@ export class ScanOutListVm {
 
   @ApiModelProperty()
   do_smd_code: string;
+
+  @ApiModelProperty()
+  do_smd_intercity: string;
 
   @ApiModelProperty()
   do_smd_time: Date;
@@ -546,6 +552,9 @@ export class ScanOutEditVm {
 
   @ApiModelProperty()
   seal_number: string;
+
+  @ApiModelProperty()
+  user_id_driver: number;
 
 }
 

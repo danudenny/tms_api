@@ -10,6 +10,7 @@ import { Awb } from './awb';
 import { DoPodDetail } from './do-pod-detail';
 import { PickupRequestDetail } from './pickup-request-detail';
 import { CodPayment } from './cod-payment';
+import { User } from './user';
 
 @Entity('do_pod_deliver_detail', { schema: 'public' })
 export class DoPodDeliverDetail extends TmsBaseEntity {
@@ -98,6 +99,10 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   @ManyToOne(() => DoPodDeliver)
   @JoinColumn({ name: 'do_pod_deliver_id' })
   doPodDeliver: DoPodDeliver;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_updated', referencedColumnName: 'userId' })
+  userUpdated: User;
 
   @OneToOne(() => AwbItem)
   @JoinColumn({ name: 'awb_item_id' })

@@ -6,4 +6,7 @@ export class MobileInitDataPayloadVm {
 
   @ApiModelPropertyOptional()
   doPodDeliverDetailId: string;
+
+  @ApiModelPropertyOptional()
+  doPodDeliverId: string;
 }

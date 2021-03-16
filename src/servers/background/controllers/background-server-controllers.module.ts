@@ -10,7 +10,12 @@ import { DoReturnController } from './integration/do-return.controller';
 import { PartnerMerchantController } from './integration/partner-merchant.controller';
 import { MasterDataController } from './integration/masterdata.controller';
 import { PartnerFastpayController } from './integration/partner-fastpay.controller';
+import { PartnerOrchestraController } from './integration/partner-orchestra.controller';
 import { PartnerDivaController } from './integration/partner-diva.controller';
+import { ApiPartnersController } from './api/partners.controller';
+import { InternalHelpdeskController } from './integration/internal-helpdesk.controller';
+import { InternalTmsController } from './integration/internal-tms.controller';
+import { PartnerOneidController } from './integration/partner-oneid.controller';
 
 @Module({
   imports: [SharedModule, BackgroundServerServicesModule],
@@ -18,12 +23,17 @@ import { PartnerDivaController } from './integration/partner-diva.controller';
     TrackingNoteController,
     CpsController,
     PartnerController,
-    PartnerGojekController,
+    // PartnerGojekController,
     PartnerFastpayController,
     DoReturnController,
     PartnerMerchantController,
     MasterDataController,
     PartnerDivaController,
+    ApiPartnersController,
+    InternalHelpdeskController,
+    PartnerOrchestraController,
+    InternalTmsController,
+    PartnerOneidController,
   ],
 })
 export class BackgroundServerControllersModule {}

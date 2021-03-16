@@ -60,7 +60,7 @@ export class WebDeliveryOutReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.sortBy = payload.sortBy;
     p.sortDir = payload.sortDir;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvDeliveryOut(p, isHub, isHubTransit);
 
@@ -89,7 +89,7 @@ export class WebDeliveryOutReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.sortBy = payload.sortBy;
     p.sortDir = payload.sortDir;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvScanOutTransit(p);
 
@@ -118,7 +118,7 @@ export class WebDeliveryOutReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.sortBy = payload.sortBy;
     p.sortDir = payload.sortDir;
-    p.limit = 100000000;
+    p.limit = null;
 
     const data = await this.getDataCsvScanOutDeliver(p);
 
@@ -134,11 +134,23 @@ export class WebDeliveryOutReportService {
   ): Promise<any> {
     // mapping field
     payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['doPodDeliverDateTime'] = 't1.do_pod_date_time';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['branchTo'] = 't1.branch_id_to';
     payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
     payload.fieldResolverMap['description'] = 't1.description';
     payload.fieldResolverMap['nickname'] = 't2.nickname';
+    payload.fieldResolverMap['nikDriver'] = 't2.nik';
+    payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['lastDateScanIn'] = 't1.last_date_scan_in';
+    payload.fieldResolverMap['lastDateScanOut'] = 't1.last_date_scan_out';
+    payload.fieldResolverMap['employeeIdDriver'] = 't2.employee_id';
+    payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
+    payload.fieldResolverMap['doPodMethod'] = 't1.do_pod_method';
+    payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
+    payload.fieldResolverMap['branchIdTo'] = 't1.branch_id_to';
+    payload.fieldResolverMap['PhotoId'] = 't1.photo_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
@@ -162,15 +174,18 @@ export class WebDeliveryOutReportService {
     const repo = new OrionRepositoryService(DoPod, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t1.do_pod_code', 'No Surat Jalan'],
       ['TO_CHAR(t1.do_pod_date_time, \'DD Mon YYYY HH24:MI\')', 'Tgl Pengiriman'],
+      ['t6.branch_name', 'Gerai Asal'],
       ['t3.branch_name', 'Gerai Tujuan'],
       ['t2.fullname', 'Sigesit/Driver'],
-      ['t1.last_date_scan_out', 'Terakhir Sc.Keluar'],
-      ['t1.last_date_scan_in', 'Terakhir Sc.Masuk'],
+      ['"t2"."nik"', 'NIK Driver'],
+      ['"t1"."vehicle_number"', 'NO Mobil'],
+      ['TO_CHAR(t1.last_date_scan_out, \'DD Mon YYYY HH24:MI\')', 'Terakhir Sc.Keluar'],
+      ['TO_CHAR(t1.last_date_scan_in, \'DD Mon YYYY HH24:MI\')', 'Terakhir Sc.Masuk'],
       ['COUNT(t5.bag_item_id)', 'Gabung Paket'],
       ['"t1"."description"', 'Keterangan'],
     );
@@ -187,6 +202,8 @@ export class WebDeliveryOutReportService {
     q.leftJoin(e => e.attachment, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()));
 
     if (isHub) {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB));
@@ -195,7 +212,7 @@ export class WebDeliveryOutReportService {
     } else {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
     }
-    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url');
+    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url, t6.branch_name, t6.branch_id');
 
     const data = await q.exec();
     return data;
@@ -218,6 +235,10 @@ export class WebDeliveryOutReportService {
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
     payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
+    payload.fieldResolverMap['vehicleNumber'] = 't1.vehicle_number';
+    payload.fieldResolverMap['nikDriver'] = 't2.nik';
+    payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'doPodDateTime';
     }
@@ -241,7 +262,7 @@ export class WebDeliveryOutReportService {
     const repo = new OrionRepositoryService(DoPod, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t1.do_pod_code', 'Nomor Surat Jalan'],
@@ -255,6 +276,9 @@ export class WebDeliveryOutReportService {
         END
       `, 'Jenis Surat Jalan'],
       ['t2.fullname', 'Sigesit/Driver'],
+      ['"t2"."nik"', 'NIK Driver'],
+      ['"t1"."vehicle_number"', 'NO Mobil'],
+      ['t6.branch_name', 'Gerai Asal'],
       ['t3.branch_name', 'Gerai Tujuan'],
       ['COUNT (t4.do_pod_id)', 'Total Resi'],
       ['"t1"."description"', 'Keterangan'],
@@ -264,6 +288,9 @@ export class WebDeliveryOutReportService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branchTo, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.userDriver.employee, 't2', j =>
@@ -276,7 +303,7 @@ export class WebDeliveryOutReportService {
     q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
-    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
+    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name, t2.nik, t6.branch_id, t6.branch_name');
     const data = await q.exec();
     return data;
   }
@@ -306,7 +333,7 @@ export class WebDeliveryOutReportService {
     const repo = new OrionRepositoryService(DoPodDeliver, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
       ['t2.fullname', 'Sigesit/Driver'],

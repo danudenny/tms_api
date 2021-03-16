@@ -49,6 +49,8 @@ import { BagRepresentativeScanOutHubQueueService } from './services/bag-represen
 import { BagScanVendorQueueService } from './services/bag-scan-vendor-queue.service';
 import { CodSqlExportMongoQueueService } from './services/cod/cod-sql-export-queue.service';
 import { AwbNotificationMailQueueService } from './services/notification/awb-notification-mail-queue.service';
+import { AwbSunfishV2QueueService } from './services/integration/awb-sunfish-v2-queue.service';
+import { CodTransferTransactionQueueService } from './services/cod/cod-transfer-transaction-queue.service';
 // #endregion import
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -150,9 +152,14 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       AwbNotificationMailQueueService.boot();
     }
 
+    if (serverConfig.bullPodMobile) {
+      AwbSunfishV2QueueService.boot();
+    }
+
     if (serverConfig.bullCod) {
       // CodPaymentQueueService.boot();
       CodFirstTransactionQueueService.boot();
+      CodTransferTransactionQueueService.boot();
       CodSyncTransactionQueueService.boot();
       CodUpdateTransactionQueueService.boot();
       CodTransactionHistoryQueueService.boot();
