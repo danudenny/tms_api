@@ -14,6 +14,7 @@ import {
   WebCodAwbPayloadVm,
   WebCodFirstTransactionPayloadVm,
   WebCodTransferPayloadVm,
+  WebCodNominalValidationPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   PrintCodTransferBranchVm,
@@ -24,6 +25,7 @@ import {
   WebCodTransferBranchCashlessResponseVm,
   WebCodNominalUploadResponseVm,
   WebItemCodNominalUploadResponseVm,
+  WebCodNominalValidationResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -38,6 +40,7 @@ import { CodTransferTransactionQueueService } from '../../../../queue/services/c
 // #endregion
 import { v1 as uuidv1 } from 'uuid';
 import { AttachmentService } from '../../../../../shared/services/attachment.service';
+import { Awb } from '../../../../../shared/orm-entity/awb';
 
 export class V2WebAwbCodService {
   static async transferBranch(
@@ -90,6 +93,39 @@ export class V2WebAwbCodService {
     result.printIdCash = printIdCash;
     result.printIdCashless = printIdCashless;
     result.dataError = dataError;
+    return result;
+  }
+
+  static async nominalValidation(
+    payload: WebCodNominalValidationPayloadVm,
+  ): Promise<WebCodNominalValidationResponseVm> {
+    let awb: Awb;
+    const masterQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      awb = await getConnection()
+        .createQueryBuilder(Awb, 'awb')
+        .setQueryRunner(masterQueryRunner)
+        .where(
+          'awb.awbNumber = :awbNumber AND awb.isCod = true AND awb.isDeleted = false',
+          {
+            awbNumber: payload.awbNumber,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
+    const totalCodValue = parseFloat(awb.totalCodValue.toString()).toFixed();
+    const result = new WebCodNominalValidationResponseVm();
+    if (totalCodValue !== payload.nominal) {
+      result.message = 'Nominal COD tidak sama';
+    } else {
+      throw new BadRequestException(
+        'Nominal COD sama, tidak dapat melakukan update!',
+      );
+    }
     return result;
   }
 

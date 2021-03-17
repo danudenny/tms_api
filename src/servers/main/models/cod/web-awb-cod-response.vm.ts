@@ -788,3 +788,8 @@ export class WebCodNominalUploadResponseVm {
   @ApiModelProperty({ type: () => WebItemCodNominalUploadResponseVm })
   data: WebItemCodNominalUploadResponseVm;
 }
+
+export class WebCodNominalValidationResponseVm {
+  @ApiModelProperty()
+  message: string;
+}
