@@ -22,6 +22,7 @@ export class InternalSortirService {
     const data = [];
     let zip_code;
     let is_cod;
+    let district_code;
     const rawQueryAwb = `
       SELECT
         consignee_zip,
@@ -46,7 +47,67 @@ export class InternalSortirService {
       }
 
       if((zip_code == null) || (zip_code.trim() == '')) {
-        throw new BadRequestException(`Zip Code not found”`);
+        //Jika ZIPCODE tidak ada, Search By District
+        const rawQueryStt = `
+          SELECT
+            ts.nostt,
+            ts.tujuan
+          FROM temp_stt ts
+          WHERE
+            ts.nostt = '${escape(payload.tracking_number)}'
+          ;
+        `;
+        const resultDataStt = await RawQueryService.query(rawQueryStt);
+        if (resultDataStt.length > 0 ) {
+          for (let a = 0; a < resultDataStt.length; a++) {
+            district_code = resultDataStt[a].tujuan
+          }
+          const rawQuery = `
+            SELECT bs.*
+            FROM branch_sortir bs
+            INNER JOIN branch b ON bs.branch_id_lastmile = b.branch_id AND b.is_deleted = FALSE
+            INNER JOIN district d ON b.district_id = d.district_id AND d.is_deleted = FALSE
+            WHERE
+              bs.is_deleted = FALSE AND
+              d.district_code = '${escape(district_code)}' AND
+              bs.is_cod = ${escape(is_cod)} AND
+              bs.branch_id = ${payload.sorting_branch_id} 
+            ;
+          `;
+          const resultData = await RawQueryService.query(rawQuery);
+          if (resultData.length > 0 ) {
+            for (let a = 0; a < resultData.length; a++) {
+              data.push({
+                state: 1,
+                tracking_number: payload.tracking_number,
+                chute_number: resultData[a].no_chute,
+                request_time: moment().format('DD/MM/YYYY, h:mm:ss a')
+              });
+            }
+            result.statusCode = HttpStatus.OK;
+            result.message = 'Check Spk Success';
+            result.data = data;
+            return result;
+          } else {
+            data.push({
+              state: 0,
+              tracking_number: payload.tracking_number,
+            });
+            result.statusCode = HttpStatus.OK;
+            result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
+            result.data = data;
+            return result;
+          }
+        } else {
+          data.push({
+            state: 0,
+            tracking_number: payload.tracking_number,
+          });
+          result.statusCode = HttpStatus.OK;
+          result.message = `Zip Code not found`;
+          result.data = data;
+          return result;
+        }
       }
 
       const rawQuery = `
@@ -77,10 +138,24 @@ export class InternalSortirService {
         return result;
 
       } else {
-        throw new BadRequestException(`Can't Find Chute For AWB: ` + payload.tracking_number);
+        data.push({
+          state: 0,
+          tracking_number: payload.tracking_number,
+        });
+        result.statusCode = HttpStatus.OK;
+        result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
+        result.data = data;
+        return result;
       }
     } else {
-      throw new BadRequestException(`Can't Find AWB: ` + payload.tracking_number);
+      data.push({
+        state: 0,
+        tracking_number: payload.tracking_number,
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = `Can't Find AWB: ` + payload.tracking_number;
+      result.data = data;
+      return result;
     }
 
   }

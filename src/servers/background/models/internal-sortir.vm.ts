@@ -22,6 +22,9 @@ export class CheckAwbResponseVM {
 export class CheckAwbVm {
 
   @ApiModelProperty()
+  state: number;
+
+  @ApiModelProperty()
   tracking_number: string;
 
   @ApiModelProperty()
