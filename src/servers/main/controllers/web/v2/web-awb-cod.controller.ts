@@ -16,8 +16,8 @@ import {
 } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import { WebCodTransferPayloadVm, WebCodNominalValidationPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
-import { WebCodTransferBranchResponseVm, WebCodNominalUploadResponseVm, WebCodNominalValidationResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
+import { WebCodTransferPayloadVm, WebCodNominalUpdatePayloadVm, WebCodNominalCheckPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
+import { WebCodTransferBranchResponseVm, WebCodNominalUpdateResponseVm, WebCodNominalCheckResponseVm } from '../../../models/cod/web-awb-cod-response.vm';
 import { V2WebAwbCodService } from '../../../services/web/v2/web-awb-cod.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 // #endregion import
@@ -34,23 +34,24 @@ export class V2WebAwbCodController {
     return V2WebAwbCodService.transferBranch(payload);
   }
 
-  @Post('nominal/validation')
+  @Post('nominal/check')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebCodNominalValidationResponseVm })
-  public async nominalValidation(@Body() payload: WebCodNominalValidationPayloadVm) {
-    return V2WebAwbCodService.nominalValidation(payload);
+  @ApiOkResponse({ type: WebCodNominalCheckResponseVm })
+  public async nominalCheck(@Body() payload: WebCodNominalCheckPayloadVm) {
+    return V2WebAwbCodService.nominalCheck(payload);
   }
 
   // form multipart
-  @Post('nominal/upload')
+  @Post('nominal/update')
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebCodNominalUploadResponseVm })
-  public async nominalUpload(
+  @ApiOkResponse({ type: WebCodNominalUpdateResponseVm })
+  public async nominalUpdate(
+    @Body() payload: WebCodNominalUpdatePayloadVm,
     @UploadedFile() file,
   ) {
-    return V2WebAwbCodService.nominalUpload(file);
+    return V2WebAwbCodService.nominalUpdate(payload, file);
   }
 }

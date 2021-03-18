@@ -1,7 +1,10 @@
 // #region import
 import { getConnection, getManager } from 'typeorm';
 
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
@@ -14,7 +17,8 @@ import {
   WebCodAwbPayloadVm,
   WebCodFirstTransactionPayloadVm,
   WebCodTransferPayloadVm,
-  WebCodNominalValidationPayloadVm,
+  WebCodNominalUpdatePayloadVm,
+  WebCodNominalCheckPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   PrintCodTransferBranchVm,
@@ -23,9 +27,8 @@ import {
   WebCodTransferBranchResponseVm,
   WebCodTransferBranchCashResponseVm,
   WebCodTransferBranchCashlessResponseVm,
-  WebCodNominalUploadResponseVm,
-  WebItemCodNominalUploadResponseVm,
-  WebCodNominalValidationResponseVm,
+  WebCodNominalUpdateResponseVm,
+  WebCodNominalCheckResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -38,9 +41,10 @@ import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-trans
 import { CodTransactionHistory } from '../../../../../shared/orm-entity/cod-transaction-history';
 import { CodTransferTransactionQueueService } from '../../../../queue/services/cod/cod-transfer-transaction-queue.service';
 // #endregion
-import { v1 as uuidv1 } from 'uuid';
 import { AttachmentService } from '../../../../../shared/services/attachment.service';
 import { Awb } from '../../../../../shared/orm-entity/awb';
+import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
+import { CodAwbRevision } from '../../../../../shared/orm-entity/cod-awb-revision';
 
 export class V2WebAwbCodService {
   static async transferBranch(
@@ -96,13 +100,11 @@ export class V2WebAwbCodService {
     return result;
   }
 
-  static async nominalValidation(
-    payload: WebCodNominalValidationPayloadVm,
-  ): Promise<WebCodNominalValidationResponseVm> {
+  static async nominalCheck(
+    payload: WebCodNominalCheckPayloadVm,
+  ): Promise<WebCodNominalCheckResponseVm> {
     let awb: Awb;
-    const masterQueryRunner = getConnection().createQueryRunner(
-      'master',
-    );
+    const masterQueryRunner = getConnection().createQueryRunner('master');
     try {
       awb = await getConnection()
         .createQueryBuilder(Awb, 'awb')
@@ -118,9 +120,10 @@ export class V2WebAwbCodService {
       await masterQueryRunner.release();
     }
     const totalCodValue = parseFloat(awb.totalCodValue.toString()).toFixed();
-    const result = new WebCodNominalValidationResponseVm();
-    if (totalCodValue !== payload.nominal) {
+    const result = new WebCodNominalCheckResponseVm();
+    if (Number(totalCodValue) !== payload.nominal) {
       result.message = 'Nominal COD tidak sama';
+      result.status = true;
     } else {
       throw new BadRequestException(
         'Nominal COD sama, tidak dapat melakukan update!',
@@ -129,38 +132,197 @@ export class V2WebAwbCodService {
     return result;
   }
 
-  static async nominalUpload(file): Promise<WebCodNominalUploadResponseVm> {
-    // upload file to aws s3
-    if (file) {
-      const uuidString = uuidv1();
-      const attachment = await AttachmentService.uploadFileBufferToS3(
-        file.buffer,
-        uuidString,
-        file.mimetype,
-        'update-nominal-cod',
-      );
-      if (attachment) {
-        const itemResult: WebItemCodNominalUploadResponseVm = {
-          attachmentId: attachment.attachmentTmsId,
-          fileName: attachment.fileName,
-          fileMime: attachment.fileMime,
-          attachmentName: attachment.attachmentName,
-          attachmentPath: attachment.attachmentPath,
-          url: attachment.url,
-        };
-        const result: WebCodNominalUploadResponseVm = {
-          message: 'Upload form attachment berhasil',
-          data: itemResult,
-        };
+  static async nominalUpdate(
+    payload: WebCodNominalUpdatePayloadVm,
+    file,
+  ): Promise<WebCodNominalUpdateResponseVm> {
+    const authMeta = AuthService.getAuthData();
 
-        return result;
-      } else {
-        throw new BadRequestException(
-          'Gagal upload form attachment, coba ulangi lagi!',
+    if (payload.nominal < 0 || payload.nominal.toString().length > 9) {
+      throw new BadRequestException('Nominal tidak sesuai!');
+    }
+
+    let awbItemAttr: AwbItemAttr;
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      awbItemAttr = await getConnection()
+        .createQueryBuilder(AwbItemAttr, 'aia')
+        .setQueryRunner(masterQueryRunner)
+        .where(
+          'aia.awbNumber = :awbNumber AND aia.awbStatusIdFinal = :awbStatusIdFinal AND aia.isDeleted = false',
+          {
+            awbNumber: payload.awbNumber,
+            awbStatusIdFinal: AWB_STATUS.DLV,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
+
+    if (!awbItemAttr) {
+      throw new BadRequestException('Resi tidak ditemukan!');
+    }
+
+    let codPayment: CodPayment;
+    const masterCodPaymentQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      codPayment = await getConnection()
+        .createQueryBuilder(CodPayment, 'cp')
+        .setQueryRunner(masterCodPaymentQueryRunner)
+        .where('cp.awbNumber = :awbNumber AND cp.isDeleted = false', {
+          awbNumber: payload.awbNumber,
+        })
+        .getOne();
+    } finally {
+      await masterCodPaymentQueryRunner.release();
+    }
+
+    if (!codPayment) {
+      throw new BadRequestException('Resi tidak ditemukan!');
+    }
+
+    try {
+      // update data table awb, total_cod_value set params new cod value where awb_number and is_deleted = false
+      await getManager().transaction(async transactionManager => {
+        await transactionManager.update(
+          Awb,
+          {
+            awbNumber: payload.awbNumber,
+            isDeleted: false,
+          },
+          {
+            totalCodValue: Number(payload.nominal),
+          },
         );
+
+        // update data table cod_payment, cod_value set params new cod value where awb_number and is_deleted = false
+        await transactionManager.update(
+          CodPayment,
+          {
+            awbNumber: payload.awbNumber,
+            isDeleted: false,
+          },
+          {
+            codValue: Number(payload.nominal),
+          },
+        );
+
+        if (awbItemAttr.transactionStatusId) {
+          // find one data table cod_transaction_detail, get data cod_value
+          let transactionDetail: CodTransactionDetail;
+          const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+            'master',
+          );
+          try {
+            transactionDetail = await getConnection()
+              .createQueryBuilder(CodTransactionDetail, 'ctd')
+              .setQueryRunner(masterTransactionDetailQueryRunner)
+              .where('ctd.awbNumber = :awbNumber AND ctd.isDeleted = false', {
+                awbNumber: payload.awbNumber,
+              })
+              .getOne();
+          } finally {
+            await masterTransactionDetailQueryRunner.release();
+          }
+
+          // find one data table cod_transaction, get data total_cod_value
+          let transaction: CodTransaction;
+          const masterTransactionQueryRunner = getConnection().createQueryRunner(
+            'master',
+          );
+          try {
+            transaction = await getConnection()
+              .createQueryBuilder(CodTransaction, 'ct')
+              .setQueryRunner(masterTransactionQueryRunner)
+              .where(
+                'ct.codTransactionId = :codTransactionId AND ct.isDeleted = false',
+                {
+                  codTransactionId: transactionDetail.codTransactionId,
+                },
+              )
+              .getOne();
+          } finally {
+            await masterTransactionQueryRunner.release();
+          }
+
+          // update data table cod_transaction, total_cod_value - cod_value + params cod_value where cod_transaction_id
+          await transactionManager.update(
+            CodTransaction,
+            {
+              codTransactionId: transactionDetail.codTransactionId,
+              isDeleted: false,
+            },
+            {
+              totalCodValue:
+                Number(transaction.totalCodValue) -
+                Number(transactionDetail.codValue) +
+                Number(payload.nominal),
+            },
+          );
+
+          // update data table cod_transaction_detail, cod_value where awb_number and is_deleted = false
+          await transactionManager.update(
+            CodTransactionDetail,
+            {
+              awbNumber: payload.awbNumber,
+              isDeleted: false,
+            },
+            {
+              codValue: Number(payload.nominal),
+            },
+          );
+        }
+      });
+
+      // upload file to aws s3
+      if (file) {
+        if (
+          file.mimetype !== 'application/pdf' ||
+          file.originalname.split('.')[0] !== payload.awbNumber
+        ) {
+          throw new BadRequestException(
+            'Format file tidak sesuai, upload file dengan format pdf dan sesuai dengan nomor resi!',
+          );
+        }
+
+        const uuidv1 = require('uuid/v1');
+        const uuidString = uuidv1();
+        const attachment = await AttachmentService.uploadFileBufferToS3(
+          file.buffer,
+          uuidString,
+          file.mimetype,
+          'update-nominal-cod',
+        );
+        if (attachment) {
+          const codAwbRevision = new CodAwbRevision();
+          codAwbRevision.awbId = awbItemAttr.awbId;
+          codAwbRevision.awbItemId = awbItemAttr.awbItemId;
+          codAwbRevision.awbNumber = payload.awbNumber;
+          codAwbRevision.codValueCurrent = payload.nominal;
+          codAwbRevision.codValue = codPayment.codValue;
+          codAwbRevision.attachmentId = attachment.attachmentTmsId;
+          codAwbRevision.userIdCreated = authMeta.userId;
+          codAwbRevision.createdTime = moment().toDate();
+          codAwbRevision.requestUserId = payload.requestUser;
+          await CodAwbRevision.save(codAwbRevision);
+
+          const result = new WebCodNominalUpdateResponseVm();
+          result.message = 'Nominal COD berhasil diupdate';
+          result.status = true;
+          return result;
+        } else {
+          throw new BadRequestException(
+            'Gagal upload form attachment, coba ulangi lagi!',
+          );
+        }
+      } else {
+        throw new BadRequestException('Harap upload form attachment!');
       }
-    } else {
-      throw new BadRequestException('Harap upload form attachment!');
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
     }
   }
 
