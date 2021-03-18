@@ -185,98 +185,6 @@ export class V2WebAwbCodService {
     }
 
     try {
-      // update data table awb, total_cod_value set params new cod value where awb_number and is_deleted = false
-      await getManager().transaction(async transactionManager => {
-        await transactionManager.update(
-          Awb,
-          {
-            awbNumber: payload.awbNumber,
-            isDeleted: false,
-          },
-          {
-            totalCodValue: Number(payload.nominal),
-          },
-        );
-
-        // update data table cod_payment, cod_value set params new cod value where awb_number and is_deleted = false
-        await transactionManager.update(
-          CodPayment,
-          {
-            awbNumber: payload.awbNumber,
-            isDeleted: false,
-          },
-          {
-            codValue: Number(payload.nominal),
-          },
-        );
-
-        if (awbItemAttr.transactionStatusId) {
-          // find one data table cod_transaction_detail, get data cod_value
-          let transactionDetail: CodTransactionDetail;
-          const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
-            'master',
-          );
-          try {
-            transactionDetail = await getConnection()
-              .createQueryBuilder(CodTransactionDetail, 'ctd')
-              .setQueryRunner(masterTransactionDetailQueryRunner)
-              .where('ctd.awbNumber = :awbNumber AND ctd.isDeleted = false', {
-                awbNumber: payload.awbNumber,
-              })
-              .getOne();
-          } finally {
-            await masterTransactionDetailQueryRunner.release();
-          }
-
-          // find one data table cod_transaction, get data total_cod_value
-          let transaction: CodTransaction;
-          const masterTransactionQueryRunner = getConnection().createQueryRunner(
-            'master',
-          );
-          try {
-            transaction = await getConnection()
-              .createQueryBuilder(CodTransaction, 'ct')
-              .setQueryRunner(masterTransactionQueryRunner)
-              .where(
-                'ct.codTransactionId = :codTransactionId AND ct.isDeleted = false',
-                {
-                  codTransactionId: transactionDetail.codTransactionId,
-                },
-              )
-              .getOne();
-          } finally {
-            await masterTransactionQueryRunner.release();
-          }
-
-          // update data table cod_transaction, total_cod_value - cod_value + params cod_value where cod_transaction_id
-          await transactionManager.update(
-            CodTransaction,
-            {
-              codTransactionId: transactionDetail.codTransactionId,
-              isDeleted: false,
-            },
-            {
-              totalCodValue:
-                Number(transaction.totalCodValue) -
-                Number(transactionDetail.codValue) +
-                Number(payload.nominal),
-            },
-          );
-
-          // update data table cod_transaction_detail, cod_value where awb_number and is_deleted = false
-          await transactionManager.update(
-            CodTransactionDetail,
-            {
-              awbNumber: payload.awbNumber,
-              isDeleted: false,
-            },
-            {
-              codValue: Number(payload.nominal),
-            },
-          );
-        }
-      });
-
       // upload file to aws s3
       if (file) {
         if (
@@ -297,17 +205,112 @@ export class V2WebAwbCodService {
           'update-nominal-cod',
         );
         if (attachment) {
-          const codAwbRevision = new CodAwbRevision();
-          codAwbRevision.awbId = awbItemAttr.awbId;
-          codAwbRevision.awbItemId = awbItemAttr.awbItemId;
-          codAwbRevision.awbNumber = payload.awbNumber;
-          codAwbRevision.codValueCurrent = payload.nominal;
-          codAwbRevision.codValue = codPayment.codValue;
-          codAwbRevision.attachmentId = attachment.attachmentTmsId;
-          codAwbRevision.userIdCreated = authMeta.userId;
-          codAwbRevision.createdTime = moment().toDate();
-          codAwbRevision.requestUserId = payload.requestUser;
-          await CodAwbRevision.save(codAwbRevision);
+          // update data table awb, total_cod_value set params new cod value where awb_number and is_deleted = false
+          await getManager().transaction(async transactionManager => {
+            await transactionManager.update(
+              Awb,
+              {
+                awbNumber: payload.awbNumber,
+                isDeleted: false,
+              },
+              {
+                totalCodValue: Number(payload.nominal),
+              },
+            );
+
+            // update data table cod_payment, cod_value set params new cod value where awb_number and is_deleted = false
+            await transactionManager.update(
+              CodPayment,
+              {
+                awbNumber: payload.awbNumber,
+                isDeleted: false,
+              },
+              {
+                codValue: Number(payload.nominal),
+              },
+            );
+
+            if (awbItemAttr.transactionStatusId) {
+              // find one data table cod_transaction_detail, get data cod_value
+              let transactionDetail: CodTransactionDetail;
+              const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+                'master',
+              );
+              try {
+                transactionDetail = await getConnection()
+                  .createQueryBuilder(CodTransactionDetail, 'ctd')
+                  .setQueryRunner(masterTransactionDetailQueryRunner)
+                  .where(
+                    'ctd.awbNumber = :awbNumber AND ctd.isDeleted = false',
+                    {
+                      awbNumber: payload.awbNumber,
+                    },
+                  )
+                  .getOne();
+              } finally {
+                await masterTransactionDetailQueryRunner.release();
+              }
+
+              // find one data table cod_transaction, get data total_cod_value
+              let transaction: CodTransaction;
+              const masterTransactionQueryRunner = getConnection().createQueryRunner(
+                'master',
+              );
+              try {
+                transaction = await getConnection()
+                  .createQueryBuilder(CodTransaction, 'ct')
+                  .setQueryRunner(masterTransactionQueryRunner)
+                  .where(
+                    'ct.codTransactionId = :codTransactionId AND ct.isDeleted = false',
+                    {
+                      codTransactionId: transactionDetail.codTransactionId,
+                    },
+                  )
+                  .getOne();
+              } finally {
+                await masterTransactionQueryRunner.release();
+              }
+
+              // update data table cod_transaction, total_cod_value - cod_value + params cod_value where cod_transaction_id
+              await transactionManager.update(
+                CodTransaction,
+                {
+                  codTransactionId: transactionDetail.codTransactionId,
+                  isDeleted: false,
+                },
+                {
+                  totalCodValue:
+                    Number(transaction.totalCodValue) -
+                    Number(transactionDetail.codValue) +
+                    Number(payload.nominal),
+                },
+              );
+
+              // update data table cod_transaction_detail, cod_value where awb_number and is_deleted = false
+              await transactionManager.update(
+                CodTransactionDetail,
+                {
+                  awbNumber: payload.awbNumber,
+                  isDeleted: false,
+                },
+                {
+                  codValue: Number(payload.nominal),
+                },
+              );
+            }
+
+            await transactionManager.insert(CodAwbRevision, {
+              awbId: awbItemAttr.awbId,
+              awbItemId: awbItemAttr.awbItemId,
+              awbNumber: payload.awbNumber,
+              codValueCurrent: payload.nominal,
+              codValue: codPayment.codValue,
+              attachmentId: attachment.attachmentTmsId,
+              userIdCreated: authMeta.userId,
+              createdTime: moment().toDate(),
+              requestUserId: payload.requestUser,
+            });
+          });
 
           const result = new WebCodNominalUpdateResponseVm();
           result.message = 'Nominal COD berhasil diupdate';
