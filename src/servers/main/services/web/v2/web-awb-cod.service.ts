@@ -175,7 +175,7 @@ export class V2WebAwbCodService {
     }
 
     if (!checkAwb) {
-      throw new BadRequestException('Resi tidak ditemukan atau status resi blm Deliver!');
+      throw new BadRequestException('Resi tidak ditemukan atau status resi belum Deliver!');
     }
 
     try {
