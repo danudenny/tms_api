@@ -127,6 +127,7 @@ export class InternalSortirService {
       if (resultData.length > 0 ) {
         for (let a = 0; a < resultData.length; a++) {
           data.push({
+            state: 1,
             tracking_number: payload.tracking_number,
             chute_number: resultData[a].no_chute,
             request_time: moment().format('DD/MM/YYYY, h:mm:ss a')
