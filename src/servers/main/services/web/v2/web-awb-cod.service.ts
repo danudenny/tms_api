@@ -119,14 +119,19 @@ export class V2WebAwbCodService {
     } finally {
       await masterQueryRunner.release();
     }
+
+    if (!awb) {
+      throw new BadRequestException('Tidak dapat diproses karena resi bukan resi COD');
+    }
+
     const totalCodValue = parseFloat(awb.totalCodValue.toString()).toFixed();
     const result = new WebCodNominalCheckResponseVm();
     if (Number(totalCodValue) !== payload.nominal) {
-      result.message = 'Nominal COD tidak sama';
+      result.message = 'Nominal COD sesuai';
       result.status = true;
     } else {
       throw new BadRequestException(
-        'Nominal COD sama, tidak dapat melakukan update!',
+        'Nominal COD tidak boleh sama!',
       );
     }
     return result;
@@ -182,16 +187,16 @@ export class V2WebAwbCodService {
       // upload file to aws s3
       if (file) {
         const formatFileName = file.originalname.split('.')[0];
-        const splitFileNameFirst = formatFileName.split('-')[0]
-          ? formatFileName.split('-')[0]
-          : '';
+        // const splitFileNameFirst = formatFileName.split('-')[0]
+        //   ? formatFileName.split('-')[0]
+        //   : '';
         const splitFileNameLast = formatFileName.split('-')[1]
           ? formatFileName.split('-')[1]
           : '';
         if (
           file.mimetype !== 'application/pdf' ||
           formatFileName.indexOf('-') < 0 ||
-          splitFileNameFirst.trim() !== 'FORM PERUBAHAN NOMINAL COD' ||
+          // splitFileNameFirst.trim() !== 'FORM PERUBAHAN NOMINAL COD' ||
           splitFileNameLast.trim() !== payload.awbNumber
         ) {
           throw new BadRequestException(
