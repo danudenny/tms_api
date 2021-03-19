@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 
-@Entity('attachment_tms', { schema: 'public' })
+@Entity('cod_awb_revision', { schema: 'public' })
 export class CodAwbRevision extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'cod_awb_revision_id',
@@ -43,19 +43,7 @@ export class CodAwbRevision extends TmsBaseEntity {
     nullable: false,
     name: 'attachment_id',
   })
-  attachmentId: number;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'created_time',
-  })
-  createdTime: Date;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'user_id_created',
-  })
-  userIdCreated: number;
+  attachmentId: number | null;
 
   @Column('bigint', {
     nullable: false,

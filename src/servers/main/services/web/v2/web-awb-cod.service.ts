@@ -137,59 +137,62 @@ export class V2WebAwbCodService {
     file,
   ): Promise<WebCodNominalUpdateResponseVm> {
     const authMeta = AuthService.getAuthData();
+    const uuidv1 = require('uuid/v1');
+    const uuidString = uuidv1();
 
     if (payload.nominal < 0 || payload.nominal.toString().length > 9) {
       throw new BadRequestException('Nominal tidak sesuai!');
     }
 
-    let awbItemAttr: AwbItemAttr;
+    let checkAwb;
     const masterQueryRunner = getConnection().createQueryRunner('master');
     try {
-      awbItemAttr = await getConnection()
-        .createQueryBuilder(AwbItemAttr, 'aia')
-        .setQueryRunner(masterQueryRunner)
-        .where(
-          'aia.awbNumber = :awbNumber AND aia.awbStatusIdFinal = :awbStatusIdFinal AND aia.isDeleted = false',
-          {
-            awbNumber: payload.awbNumber,
-            awbStatusIdFinal: AWB_STATUS.DLV,
-          },
-        )
-        .getOne();
+      const qb = await getConnection()
+        .createQueryBuilder()
+        .setQueryRunner(masterQueryRunner);
+
+      qb.addSelect('aia.awb_id', 'awbId');
+      qb.addSelect('aia.awb_item_id', 'awbItemId');
+      qb.addSelect('aia.transaction_status_id', 'transactionStatusId');
+      qb.addSelect('cp.cod_value', 'codValue');
+
+      qb.from('AwbItemAttr', 'aia');
+      qb.innerJoin(
+        'cod_payment',
+        'cp',
+        'aia.awb_item_id = cp.awb_item_id AND cp.is_deleted = false',
+      );
+      qb.where('aia.is_deleted = false');
+      qb.andWhere('aia.awb_status_id_final = :awbStatusIdFinal');
+      qb.andWhere('aia.awb_number = :awbNumber', {
+        awbStatusIdFinal: AWB_STATUS.DLV,
+        awbNumber: payload.awbNumber,
+      });
+
+      checkAwb = await qb.getRawOne();
     } finally {
       await masterQueryRunner.release();
     }
 
-    if (!awbItemAttr) {
-      throw new BadRequestException('Resi tidak ditemukan!');
-    }
-
-    let codPayment: CodPayment;
-    const masterCodPaymentQueryRunner = getConnection().createQueryRunner(
-      'master',
-    );
-    try {
-      codPayment = await getConnection()
-        .createQueryBuilder(CodPayment, 'cp')
-        .setQueryRunner(masterCodPaymentQueryRunner)
-        .where('cp.awbNumber = :awbNumber AND cp.isDeleted = false', {
-          awbNumber: payload.awbNumber,
-        })
-        .getOne();
-    } finally {
-      await masterCodPaymentQueryRunner.release();
-    }
-
-    if (!codPayment) {
-      throw new BadRequestException('Resi tidak ditemukan!');
+    if (!checkAwb) {
+      throw new BadRequestException('Resi tidak ditemukan atau status resi blm Deliver!');
     }
 
     try {
       // upload file to aws s3
       if (file) {
+        const formatFileName = file.originalname.split('.')[0];
+        const splitFileNameFirst = formatFileName.split('-')[0]
+          ? formatFileName.split('-')[0]
+          : '';
+        const splitFileNameLast = formatFileName.split('-')[1]
+          ? formatFileName.split('-')[1]
+          : '';
         if (
           file.mimetype !== 'application/pdf' ||
-          file.originalname.split('.')[0] !== payload.awbNumber
+          formatFileName.indexOf('-') < 0 ||
+          splitFileNameFirst.trim() !== 'FORM PERUBAHAN NOMINAL COD' ||
+          splitFileNameLast.trim() !== payload.awbNumber
         ) {
           throw new BadRequestException(
             'Format file tidak sesuai, upload file dengan format pdf dan sesuai dengan nomor resi!',
@@ -204,6 +207,7 @@ export class V2WebAwbCodService {
           file.mimetype,
           'update-nominal-cod',
         );
+
         if (attachment) {
           // update data table awb, total_cod_value set params new cod value where awb_number and is_deleted = false
           await getManager().transaction(async transactionManager => {
@@ -230,7 +234,7 @@ export class V2WebAwbCodService {
               },
             );
 
-            if (awbItemAttr.transactionStatusId) {
+            if (checkAwb.transactionStatusId) {
               // find one data table cod_transaction_detail, get data cod_value
               let transactionDetail: CodTransactionDetail;
               const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
@@ -300,14 +304,17 @@ export class V2WebAwbCodService {
             }
 
             await transactionManager.insert(CodAwbRevision, {
-              awbId: awbItemAttr.awbId,
-              awbItemId: awbItemAttr.awbItemId,
+              codAwbRevisionId: uuidString,
+              awbId: checkAwb.awbId,
+              awbItemId: checkAwb.awbItemId,
               awbNumber: payload.awbNumber,
               codValueCurrent: payload.nominal,
-              codValue: codPayment.codValue,
+              codValue: checkAwb.codValue,
               attachmentId: attachment.attachmentTmsId,
               userIdCreated: authMeta.userId,
+              userIdUpdated: authMeta.userId,
               createdTime: moment().toDate(),
+              updatedTime: moment().toDate(),
               requestUserId: payload.requestUser,
             });
           });
