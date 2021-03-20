@@ -3,6 +3,7 @@ import { QueueBullBoard } from './queue-bull-board';
 import { BranchSortirLogDetail } from '../../../shared/orm-entity/branch-sortir-log-detail';
 import { BranchSortirLog } from '../../../shared/orm-entity/branch-sortir-log';
 import { Between, getManager } from 'typeorm';
+import moment= require('moment');
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -70,6 +71,21 @@ export class BagSortirLogQueueService {
             );
           }
         });
+      } else {
+        const cSuccess = 1;
+        let cFail = 1;
+        if (isSucceed) { cFail = 0; }
+
+        const createBranchSortirLog = BranchSortirLog.create({
+          scanDate: data.scanDate,
+          qtySucceed: cSuccess,
+          qtyFail: cFail,
+          createdTime: moment().toDate(),
+          updatedTime: moment().toDate(),
+          userIdCreated: data.userId,
+          userIdUpdated: data.userId,
+        });
+        BranchSortirLog.save(createBranchSortirLog);
       }
 
       const branchSortirLogDetail = BranchSortirLogDetail.create({
