@@ -3,6 +3,7 @@ import { BadRequestException, HttpStatus } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { CheckAwbPayloadVm, CheckAwbResponseVM } from '../../models/internal-sortir.vm';
+import { BagSortirLogQueueService } from '../../../queue/services/branch-sortir-log-queue.service';
 
 export class InternalSortirService {
 
@@ -23,21 +24,22 @@ export class InternalSortirService {
     let zip_code;
     let is_cod;
     let district_code;
+    const dateNow = moment().toDate();
     const rawQueryAwb = `
       SELECT
         consignee_zip,
         is_cod,
         awb_number
       FROM awb
-      WHERE
+      WHERE8
         awb_number = '${escape(payload.tracking_number)}'
       ;
     `;
     const resultDataAwb = await RawQueryService.query(rawQueryAwb);
     if (resultDataAwb.length > 0 ) {
       for (let a = 0; a < resultDataAwb.length; a++) {
-        zip_code = resultDataAwb[a].consignee_zip,
-        is_cod = resultDataAwb[a].is_cod
+        zip_code = resultDataAwb[a].consignee_zip;
+        is_cod = resultDataAwb[a].is_cod;
       }
 
       if ((is_cod) || (is_cod == true)) {
@@ -46,8 +48,8 @@ export class InternalSortirService {
         is_cod = false;
       }
 
-      if((zip_code == null) || (zip_code.trim() == '')) {
-        //Jika ZIPCODE tidak ada, Search By District
+      if ((zip_code == null) || (zip_code.trim() == '')) {
+        // Jika ZIPCODE tidak ada, Search By District
         const rawQueryStt = `
           SELECT
             ts.nostt,
@@ -60,7 +62,7 @@ export class InternalSortirService {
         const resultDataStt = await RawQueryService.query(rawQueryStt);
         if (resultDataStt.length > 0 ) {
           for (let a = 0; a < resultDataStt.length; a++) {
-            district_code = resultDataStt[a].tujuan
+            district_code = resultDataStt[a].tujuan;
           }
           const rawQuery = `
             SELECT bs.*
@@ -71,21 +73,32 @@ export class InternalSortirService {
               bs.is_deleted = FALSE AND
               d.district_code = '${escape(district_code)}' AND
               bs.is_cod = ${escape(is_cod)} AND
-              bs.branch_id = ${payload.sorting_branch_id} 
+              bs.branch_id = ${payload.sorting_branch_id}
             ;
           `;
           const resultData = await RawQueryService.query(rawQuery);
           if (resultData.length > 0 ) {
+            result.message = 'Check Spk Success';
+
             for (let a = 0; a < resultData.length; a++) {
               data.push({
                 state: 1,
                 tracking_number: payload.tracking_number,
                 chute_number: resultData[a].no_chute,
-                request_time: moment().format('DD/MM/YYYY, h:mm:ss a')
+                request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
               });
+              BagSortirLogQueueService.perform(
+                result.message,
+                dateNow,
+                1,
+                payload.sorting_branch_id,
+                payload.tracking_number,
+                resultData[a].no_chute,
+                resultData[a].branch_id_lastmile,
+                resultData[a].is_cod,
+              );
             }
             result.statusCode = HttpStatus.OK;
-            result.message = 'Check Spk Success';
             result.data = data;
             return result;
           } else {
@@ -96,6 +109,17 @@ export class InternalSortirService {
             result.statusCode = HttpStatus.OK;
             result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
             result.data = data;
+
+            BagSortirLogQueueService.perform(
+              result.message,
+              dateNow,
+              0,
+              payload.sorting_branch_id,
+              payload.tracking_number,
+              null,
+              null,
+              null,
+            );
             return result;
           }
         } else {
@@ -106,6 +130,17 @@ export class InternalSortirService {
           result.statusCode = HttpStatus.OK;
           result.message = `Zip Code not found`;
           result.data = data;
+
+          BagSortirLogQueueService.perform(
+            result.message,
+            dateNow,
+            0,
+            payload.sorting_branch_id,
+            payload.tracking_number,
+            null,
+            null,
+            null,
+          );
           return result;
         }
       }
@@ -120,20 +155,32 @@ export class InternalSortirService {
           bs.is_deleted = FALSE AND
           sd.zip_code = '${escape(zip_code)}' AND
           bs.is_cod = ${escape(is_cod)} AND
-          bs.branch_id = ${payload.sorting_branch_id} 
+          bs.branch_id = ${payload.sorting_branch_id}
         ;
       `;
       const resultData = await RawQueryService.query(rawQuery);
       if (resultData.length > 0 ) {
+        result.message = 'Check Spk Success';
+
         for (let a = 0; a < resultData.length; a++) {
           data.push({
             tracking_number: payload.tracking_number,
             chute_number: resultData[a].no_chute,
-            request_time: moment().format('DD/MM/YYYY, h:mm:ss a')
+            request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
           });
+
+          BagSortirLogQueueService.perform(
+            result.message,
+            dateNow,
+            1,
+            payload.sorting_branch_id,
+            payload.tracking_number,
+            resultData[a].no_chute,
+            resultData[a].branch_id_lastmile,
+            resultData[a].is_cod,
+          );
         }
         result.statusCode = HttpStatus.OK;
-        result.message = 'Check Spk Success';
         result.data = data;
         return result;
 
@@ -145,6 +192,17 @@ export class InternalSortirService {
         result.statusCode = HttpStatus.OK;
         result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
         result.data = data;
+
+        BagSortirLogQueueService.perform(
+          result.message,
+          dateNow,
+          0,
+          payload.sorting_branch_id,
+          payload.tracking_number,
+          null,
+          null,
+          null,
+        );
         return result;
       }
     } else {
@@ -155,6 +213,17 @@ export class InternalSortirService {
       result.statusCode = HttpStatus.OK;
       result.message = `Can't Find AWB: ` + payload.tracking_number;
       result.data = data;
+
+      BagSortirLogQueueService.perform(
+        result.message,
+        dateNow,
+        0,
+        payload.sorting_branch_id,
+        payload.tracking_number,
+        null,
+        null,
+        null,
+      );
       return result;
     }
 
