@@ -31,7 +31,7 @@ export class InternalSortirService {
         is_cod,
         awb_number
       FROM awb
-      WHERE8
+      WHERE
         awb_number = '${escape(payload.tracking_number)}'
       ;
     `;
@@ -90,7 +90,7 @@ export class InternalSortirService {
               BagSortirLogQueueService.perform(
                 result.message,
                 dateNow,
-                1,
+                0,
                 payload.sorting_branch_id,
                 payload.tracking_number,
                 resultData[a].no_chute,
@@ -113,7 +113,7 @@ export class InternalSortirService {
             BagSortirLogQueueService.perform(
               result.message,
               dateNow,
-              0,
+              1,
               payload.sorting_branch_id,
               payload.tracking_number,
               null,
@@ -134,7 +134,7 @@ export class InternalSortirService {
           BagSortirLogQueueService.perform(
             result.message,
             dateNow,
-            0,
+            1,
             payload.sorting_branch_id,
             payload.tracking_number,
             null,
@@ -173,7 +173,7 @@ export class InternalSortirService {
           BagSortirLogQueueService.perform(
             result.message,
             dateNow,
-            1,
+            0,
             payload.sorting_branch_id,
             payload.tracking_number,
             resultData[a].no_chute,
@@ -197,7 +197,7 @@ export class InternalSortirService {
         BagSortirLogQueueService.perform(
           result.message,
           dateNow,
-          0,
+          1,
           payload.sorting_branch_id,
           payload.tracking_number,
           null,
@@ -218,7 +218,7 @@ export class InternalSortirService {
       BagSortirLogQueueService.perform(
         result.message,
         dateNow,
-        0,
+        1,
         payload.sorting_branch_id,
         payload.tracking_number,
         null,
