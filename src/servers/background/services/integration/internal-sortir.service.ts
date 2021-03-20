@@ -82,7 +82,7 @@ export class InternalSortirService {
 
             for (let a = 0; a < resultData.length; a++) {
               data.push({
-                state: 1,
+                state: 0,
                 tracking_number: payload.tracking_number,
                 chute_number: resultData[a].no_chute,
                 request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
@@ -103,10 +103,10 @@ export class InternalSortirService {
             return result;
           } else {
             data.push({
-              state: 0,
+              state: 1,
               tracking_number: payload.tracking_number,
             });
-            result.statusCode = HttpStatus.OK;
+            result.statusCode = HttpStatus.BAD_REQUEST;
             result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
             result.data = data;
 
@@ -124,10 +124,10 @@ export class InternalSortirService {
           }
         } else {
           data.push({
-            state: 0,
+            state: 1,
             tracking_number: payload.tracking_number,
           });
-          result.statusCode = HttpStatus.OK;
+          result.statusCode = HttpStatus.BAD_REQUEST;
           result.message = `Zip Code not found`;
           result.data = data;
 
@@ -164,6 +164,7 @@ export class InternalSortirService {
 
         for (let a = 0; a < resultData.length; a++) {
           data.push({
+            state: 0,
             tracking_number: payload.tracking_number,
             chute_number: resultData[a].no_chute,
             request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
@@ -186,10 +187,10 @@ export class InternalSortirService {
 
       } else {
         data.push({
-          state: 0,
+          state: 1,
           tracking_number: payload.tracking_number,
         });
-        result.statusCode = HttpStatus.OK;
+        result.statusCode = HttpStatus.BAD_REQUEST;
         result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
         result.data = data;
 
@@ -207,10 +208,10 @@ export class InternalSortirService {
       }
     } else {
       data.push({
-        state: 0,
+        state: 1,
         tracking_number: payload.tracking_number,
       });
-      result.statusCode = HttpStatus.OK;
+      result.statusCode = HttpStatus.BAD_REQUEST;
       result.message = `Can't Find AWB: ` + payload.tracking_number;
       result.data = data;
 
