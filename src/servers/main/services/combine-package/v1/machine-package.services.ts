@@ -66,7 +66,7 @@ export class V1MachineService {
         },
       });
       if(branch){
-        const scanResultMachine = await this.machineAwbScan(awbNumber,branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId);
+        // const scanResultMachine = await this.machineAwbScan(awbNumber,branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId);
       } else {
         throw new BadRequestException('Branch not found');
       }
@@ -75,7 +75,8 @@ export class V1MachineService {
     // scan awb number or district code
     if (regexNumber.test(value) && valueLength === 12) {
       // TODO: handle first scan and create bag number
-      const scanResult = await this.machineAwbScan(awbNumber);
+      // const scanResult = await this.machineAwbScan(awbNumber);
+      const scanResult = null;
 
       result.dataBag = scanResult.dataBag;
       result.bagNumber = scanResult.bagNumber;
