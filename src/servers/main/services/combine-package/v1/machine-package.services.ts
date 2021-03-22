@@ -38,7 +38,7 @@ import { BagService } from '../../v1/bag.service';
 
 import moment = require('moment');
 import { PackageMachinePayloadVm } from '../../../models/gabungan-mesin-payload.vm';
-import { BranchSortir } from 'src/shared/orm-entity/branch-sortir';
+import { BranchSortir } from '../../../../../shared/orm-entity/branch-sortir';
 // //#endregion
 
 export class V1MachineService {
