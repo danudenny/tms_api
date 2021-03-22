@@ -249,6 +249,7 @@ export class V1WebAwbHighValueService {
     payload.fieldResolverMap['displayName'] = 't1.display_name';
     payload.fieldResolverMap['partnerName'] = 't4.partner_name';
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -312,6 +313,8 @@ export class V1WebAwbHighValueService {
     payload.fieldResolverMap['uploadedDate'] = 't1.uploaded_time';
     payload.fieldResolverMap['displayName'] = 't1.display_name';
     payload.fieldResolverMap['partnerName'] = 't4.partner_name';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
+    payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -333,6 +336,8 @@ export class V1WebAwbHighValueService {
       ['true', 'isUpload'],
       ['t1.display_name', 'displayName'],
       ['t1.uploaded_time', 'uploadedDate'],
+      ['t5.branch_name', 'branchName'],
+      ['t6.awb_status_name', 'awbStatusName'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -345,7 +350,15 @@ export class V1WebAwbHighValueService {
     q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    //
+
+    q.innerJoin(e => e.awbItemAttr.branchLast, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbItemAttr.awbStatus, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.userIdUploaded, w => w.equals(1));
 
@@ -375,6 +388,7 @@ export class V1WebAwbHighValueService {
       payload.fieldResolverMap['displayName'] = 't1.display_name';
       payload.fieldResolverMap['partnerName'] = 't4.partner_name';
       payload.fieldResolverMap['branchName'] = 't5.branch_name';
+      payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
 
       payload.globalSearchFields = [
         {
