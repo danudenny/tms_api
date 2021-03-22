@@ -25,13 +25,6 @@ export class GabunganMesinPayloadVm {
 export class PackageMachinePayloadVm {
 
   @ApiModelProperty({
-    example: 'CGK10003',
-    skipValidation: true,
-  })
-  @IsDefined({ message: 'Tujuan tidak boleh kosong' })
-  value: string;
-
-  @ApiModelProperty({
     example: 12,
   })
   @IsDefined({ message: 'Lokasi mesin tidak boleh kosong' })
@@ -45,30 +38,18 @@ export class PackageMachinePayloadVm {
 
   @ApiModelProperty({
     example: 'SEAL123490CQ',
-    skipValidation: true,
+    skipValidation: false,
   })
   @IsDefined({ message: 'Seal tidak boleh kosong' })
   tag_seal_number: string;
 
   @ApiModelProperty({
-    example: [1203483, 2390493, 9203920932],
+    example: 'SEAL123490CQ',
+    skipValidation: true,
   })
-  awbItemId?: [];
+  @IsDefined({ message: 'Seal tidak boleh kosong' })
+  chute_number: string;
 
-  @ApiModelPropertyOptional({
-    example: 1129348,
-  })
-  bagItemId?: number;
-
-  @ApiModelPropertyOptional({
-    example: 'GS002939403001',
-  })
-  bagNumber?: string;
-
-  @ApiModelPropertyOptional({
-    example: '112',
-  })
-  podScanInHubId?: string;
 }
 
 export class PackageBackupPayloadVm {

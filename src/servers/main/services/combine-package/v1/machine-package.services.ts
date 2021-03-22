@@ -38,6 +38,7 @@ import { BagService } from '../../v1/bag.service';
 
 import moment = require('moment');
 import { PackageMachinePayloadVm } from '../../../models/gabungan-mesin-payload.vm';
+import { BranchSortir } from 'src/shared/orm-entity/branch-sortir';
 // //#endregion
 
 export class V1MachineService {
@@ -47,8 +48,8 @@ export class V1MachineService {
     payload: PackageMachinePayloadVm,
   ): Promise<PackageAwbResponseVm> {
     const regexNumber = /^[0-9]+$/;
-    const value = payload.value;
-    const valueLength = value.length;
+    // const value = payload.value;
+    // const valueLength = value.length;
     const result = new PackageAwbResponseVm();
 
     result.branchId = 0;
@@ -56,6 +57,7 @@ export class V1MachineService {
     let paramBagItemId = null;
     let paramBagNumber = null;
     let paramPodScanInHubId = null;
+    let scanResultMachine;
 
     if (!payload.sorting_branch_id) {
       throw new BadRequestException('Sorting Branch ID Null');
@@ -65,37 +67,66 @@ export class V1MachineService {
           branchId: payload.sorting_branch_id,
         },
       });
+
+      const branchSortir = await BranchSortir.findOne({
+        where: {
+          branchId: payload.sorting_branch_id,
+          noChute: payload.chute_number,
+        },
+      });
       if(branch){
-        // const scanResultMachine = await this.machineAwbScan(awbNumber,branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId);
+        if (branchSortir) {
+          for(let i = 0; i < payload.reference_numbers.length; i++) {
+            scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile);
+            if(scanResultMachine) {
+              paramBagItemId = scanResultMachine.bagItemId;
+              paramBagNumber = scanResultMachine.bagNumber;
+              paramPodScanInHubId = scanResultMachine.podScanInHubId;
+            }
+          }
+          result.dataBag = scanResultMachine.dataBag;
+          result.bagNumber = scanResultMachine.bagNumber;
+          result.branchId = scanResultMachine.branchId;
+          result.branchName = scanResultMachine.branchName;
+          result.branchCode = scanResultMachine.branchCode;
+          result.data = scanResultMachine.data;
+          result.bagItemId = scanResultMachine.bagItemId;
+          result.isAllow = scanResultMachine.isAllow;
+          result.podScanInHubId = scanResultMachine.podScanInHubId;
+          result.bagSeq = scanResultMachine.bagSeq;
+          result.bagWeight = scanResultMachine.bagWeight;
+        } else {
+          throw new BadRequestException('Branch Sortir not found');
+        }
       } else {
         throw new BadRequestException('Branch not found');
       }
     }
 
     // scan awb number or district code
-    if (regexNumber.test(value) && valueLength === 12) {
-      // TODO: handle first scan and create bag number
-      // const scanResult = await this.machineAwbScan(awbNumber);
-      const scanResult = null;
+    // if (regexNumber.test(value) && valueLength === 12) {
+    //   // TODO: handle first scan and create bag number
+    //   // const scanResult = await this.machineAwbScan(awbNumber);
+    //   const scanResult = null;
 
-      result.dataBag = scanResult.dataBag;
-      result.bagNumber = scanResult.bagNumber;
-      result.branchId = scanResult.branchId;
-      result.branchName = scanResult.branchName;
-      result.branchCode = scanResult.branchCode;
-      result.data = scanResult.data;
-      result.bagItemId = scanResult.bagItemId;
-      result.isAllow = scanResult.isAllow;
-      result.podScanInHubId = scanResult.podScanInHubId;
-      result.bagSeq = scanResult.bagSeq;
-      result.bagWeight = scanResult.bagWeight;
+    //   result.dataBag = scanResult.dataBag;
+    //   result.bagNumber = scanResult.bagNumber;
+    //   result.branchId = scanResult.branchId;
+    //   result.branchName = scanResult.branchName;
+    //   result.branchCode = scanResult.branchCode;
+    //   result.data = scanResult.data;
+    //   result.bagItemId = scanResult.bagItemId;
+    //   result.isAllow = scanResult.isAllow;
+    //   result.podScanInHubId = scanResult.podScanInHubId;
+    //   result.bagSeq = scanResult.bagSeq;
+    //   result.bagWeight = scanResult.bagWeight;
 
-    }
+    // }
 
     return result;
   }
 
-  private static async machineAwbScan(paramawbNumber: string, paramBranchId: number, paramBagItemId: number, paramBagNumber: string, paramPodScanInHubId: string): Promise<any> {
+  private static async machineAwbScan(paramawbNumber: string, paramBranchId: number, paramBagItemId: number, paramBagNumber: string, paramPodScanInHubId: string, paramBranchIdLastmile: number): Promise<any> {
     const awbNumber = paramawbNumber;
     const branchId: number = paramBranchId;
     const result = new Object();
@@ -188,14 +219,14 @@ export class V1MachineService {
       // NOTE: critical path
       // get data bag / create new data bag
       if (paramBagNumber) {
-        const bagItem = await this.MachineInsertDetailAwb(paramBagNumber, awb, podScanInHubId, awbItemAttr.awbItemId);
+        const bagItem = await this.MachineInsertDetailAwb(paramBagNumber, awb, podScanInHubId, awbItemAttr.awbItemId, paramBranchId);
         if (bagItem) {
           bagWeight = bagItem.weight;
           bagSeq = bagItem.bagSeq;
         }
       } else {
         // Generate Bag Number
-        const genBagNumber = await this.MachineCreateBagNumber(paramBranchId, awbItemAttr.awbItemId, districtDetail, branch, awb );
+        const genBagNumber = await this.MachineCreateBagNumber(paramBranchId, awbItemAttr.awbItemId, districtDetail, branch, awb, paramBranchIdLastmile );
         bagNumber = genBagNumber.bagNumber;
         podScanInHubId = genBagNumber.podScanInHubId;
         bagItemId = genBagNumber.bagItemId;
@@ -246,9 +277,9 @@ export class V1MachineService {
     return result;
   }
 
-  private static async MachineInsertDetailAwb(paramBagNumber: string, paramAwbDetail, paramPodScanInHubId: string, paramAwbItemId: number): Promise<BagItem> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+  private static async MachineInsertDetailAwb(paramBagNumber: string, paramAwbDetail, paramPodScanInHubId: string, paramAwbItemId: number, paramBranchId: number): Promise<BagItem> {
+    // const authMeta = AuthService.getAuthData();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
     const bagDetail = await BagService.validBagNumber(paramBagNumber);
 
     if (!bagDetail) {
@@ -284,8 +315,8 @@ export class V1MachineService {
         paramAwbDetail.awbNumber,
         paramPodScanInHubId,
         paramAwbDetail.totalWeightRealRounded,
-        authMeta.userId,
-        permissonPayload.branchId,
+        1,
+        paramBranchId,
         moment().toDate(),
       );
       // //#endregion
@@ -297,10 +328,10 @@ export class V1MachineService {
     return bagItem;
   }
 
-  private static async MachineCreateBagNumber(paramBranchId: number, paramAwbItemId, districtDetail, branchDetail, paramAwbDetail ): Promise<CreateBagNumberResponseVM> {
+  private static async MachineCreateBagNumber(paramBranchId: number, paramAwbItemId, districtDetail, branchDetail, paramAwbDetail, paramBranchIdLastmile ): Promise<CreateBagNumberResponseVM> {
     const result = new CreateBagNumberResponseVM();
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    // const authMeta = AuthService.getAuthData();
+    // const permissonPayload = AuthService.getPermissionTokenPayload();
     const branchId = paramBranchId;
 
     let bagId: number;
@@ -341,7 +372,7 @@ export class V1MachineService {
       const refBranchCode = branchDetail ? branchDetail.branchCode : '';
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
-        branchIdTo: branchId,
+        branchIdTo: paramBranchIdLastmile,
         refRepresentativeCode: representative
           ? representative.representativeCode
           : null,
@@ -350,13 +381,13 @@ export class V1MachineService {
           : null,
         refBranchCode,
         bagType: 'branch',
-        branchId: permissonPayload.branchId,
+        branchId: branchId,
         bagDate: moment().format('YYYY-MM-DD'),
         bagDateReal: moment().toDate(),
         createdTime: moment().toDate(),
         updatedTime: moment().toDate(),
-        userIdCreated: authMeta.userId,
-        userIdUpdated: authMeta.userId,
+        userIdCreated: 1,
+        userIdUpdated: 1,
         isSortir: true,
       });
 
@@ -376,13 +407,13 @@ export class V1MachineService {
     const bagItemDetail = BagItem.create({
       bagId,
       bagSeq: sequence,
-      branchIdLast: permissonPayload.branchId,
+      branchIdLast: branchId,
       bagItemStatusIdLast: 3000,
-      userIdCreated: authMeta.userId,
+      userIdCreated: 1,
       weight: awbDetail.totalWeightRealRounded,
       createdTime: moment().toDate(),
       updatedTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
+      userIdUpdated: 1,
       isSortir: true,
     });
     const bagItem = await BagItem.save(bagItemDetail);
@@ -391,27 +422,27 @@ export class V1MachineService {
     BagItemHistoryQueueService.addData(
       bagItem.bagItemId,
       500,
-      permissonPayload.branchId,
-      authMeta.userId,
+      branchId,
+      1,
     );
 
     BagItemHistoryQueueService.addData(
       bagItem.bagItemId,
       3000,
-      permissonPayload.branchId,
-      authMeta.userId,
+      branchId,
+      1,
     );
 
     // insert into pod scan in hub
     // 100 = inprogress, 200 = done
     const podScanInHubData = PodScanInHub.create({
-      branchId: permissonPayload.branchId,
+      branchId: branchId,
       scanInType: 'BAG',
       transactionStatusId: 100,
-      userIdCreated: authMeta.userId,
+      userIdCreated: 1,
       createdTime: moment().toDate(),
       updatedTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
+      userIdUpdated: 1,
     });
     const podScanInHub = await PodScanInHub.save(podScanInHubData);
 
@@ -424,8 +455,8 @@ export class V1MachineService {
       awbDetail.awbNumber,
       podScanInHub.podScanInHubId,
       parseFloat(awbDetail.totalWeightRealRounded),
-      authMeta.userId,
-      permissonPayload.branchId,
+      1,
+      branchId,
       moment().toDate(),
     );
     // #endregion send to background process
