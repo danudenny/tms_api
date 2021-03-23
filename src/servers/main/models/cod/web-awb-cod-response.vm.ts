@@ -775,3 +775,34 @@ export class WebCodNominalCheckResponseVm {
   @ApiModelProperty()
   status: boolean;
 }
+
+export class WebItemUpdateNominalCodResponseVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  requestorId: number;
+
+  @ApiModelProperty()
+  requestorName: string;
+
+  @ApiModelProperty()
+  codValue: number;
+
+  @ApiModelProperty()
+  codValueCurrent: number;
+
+  @ApiModelProperty()
+  attachmentId: number;
+
+  @ApiModelProperty()
+  attachmentUrl: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  updateDate: string;
+}
+
+export class WebUpdateNominalCodListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebItemUpdateNominalCodResponseVm] })
+  data: WebItemUpdateNominalCodResponseVm[];
+}

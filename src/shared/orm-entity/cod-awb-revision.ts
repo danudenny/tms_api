@@ -1,5 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { AttachmentTms } from './attachment-tms';
+import { User } from './user';
 
 @Entity('cod_awb_revision', { schema: 'public' })
 export class CodAwbRevision extends TmsBaseEntity {
@@ -57,4 +59,12 @@ export class CodAwbRevision extends TmsBaseEntity {
     name: 'is_deleted',
   })
   isDeleted: boolean;
+
+  @OneToOne(() => AttachmentTms)
+  @JoinColumn({ name: 'attachment_id', referencedColumnName: 'attachmentTmsId' })
+  attachment: AttachmentTms;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'request_user_id' })
+  requestor: User;
 }

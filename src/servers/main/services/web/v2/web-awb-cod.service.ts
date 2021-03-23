@@ -29,6 +29,7 @@ import {
   WebCodTransferBranchCashlessResponseVm,
   WebCodNominalUpdateResponseVm,
   WebCodNominalCheckResponseVm,
+  WebUpdateNominalCodListResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -45,6 +46,9 @@ import { AttachmentService } from '../../../../../shared/services/attachment.ser
 import { Awb } from '../../../../../shared/orm-entity/awb';
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { CodAwbRevision } from '../../../../../shared/orm-entity/cod-awb-revision';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { MetaService } from '../../../../../shared/services/meta.service';
 
 export class V2WebAwbCodService {
   static async transferBranch(
@@ -121,7 +125,9 @@ export class V2WebAwbCodService {
     }
 
     if (!awb) {
-      throw new BadRequestException('Tidak dapat diproses karena resi bukan resi COD');
+      throw new BadRequestException(
+        'Tidak dapat diproses karena resi bukan resi COD',
+      );
     }
 
     const totalCodValue = parseFloat(awb.totalCodValue.toString()).toFixed();
@@ -130,9 +136,7 @@ export class V2WebAwbCodService {
       result.message = 'Nominal COD sesuai';
       result.status = true;
     } else {
-      throw new BadRequestException(
-        'Nominal COD tidak boleh sama!',
-      );
+      throw new BadRequestException('Nominal COD tidak boleh sama!');
     }
     return result;
   }
@@ -180,7 +184,9 @@ export class V2WebAwbCodService {
     }
 
     if (!checkAwb) {
-      throw new BadRequestException('Resi tidak ditemukan atau status resi belum Deliver!');
+      throw new BadRequestException(
+        'Resi tidak ditemukan atau status resi belum Deliver!',
+      );
     }
 
     try {
@@ -339,6 +345,51 @@ export class V2WebAwbCodService {
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
+  }
+
+  static async nominal(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebUpdateNominalCodListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['requestorId'] = 'car.request_user_id';
+    payload.fieldResolverMap['updateDate'] = 'car.created_time';
+
+    const repo = new OrionRepositoryService(CodAwbRevision, 'car');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['car.awb_number', 'awbNumber'],
+      ['car.created_time', 'updateDate'],
+      ['car.request_user_id', 'requestorId'],
+      ['userreq.first_name', 'requestorName'],
+      ['car.cod_value', 'codValue'],
+      ['car.cod_value_current', 'codValueCurrent'],
+      ['car.attachment_id', 'attachmentId'],
+      ['at.url', 'attachmentUrl'],
+    );
+
+    q.innerJoin(e => e.attachment, 'at', j =>
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.requestor, 'userreq', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebUpdateNominalCodListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
   }
 
   // func private ==============================================================
