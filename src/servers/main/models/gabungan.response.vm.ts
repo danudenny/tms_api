@@ -29,7 +29,28 @@ export class AwbPackageDetail {
   isTrouble: boolean;
 }
 
-export class PackageAwbResponseVm   {
+export class MachinePackageResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [MachinePackageAwbResponseVm]})
+  data: MachinePackageAwbResponseVm[];
+}
+
+export class MachinePackageAwbResponseVm {
+
+  @ApiModelProperty()
+  state: number;
+
+  @ApiModelProperty()
+  no_gabung_sortir: string;
+}
+
+
+export class PackageAwbResponseVm {
 
   @ApiModelPropertyOptional({ type: () => AwbPackageDetail })
   data: AwbPackageDetail;

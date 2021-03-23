@@ -2,7 +2,7 @@
 import _, { assign, join, sampleSize } from 'lodash';
 import { createQueryBuilder, getManager } from 'typeorm';
 
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, HttpStatus } from '@nestjs/common';
 import { Awb } from '../../../../../shared/orm-entity/awb';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { AwbTrouble } from '../../../../../shared/orm-entity/awb-trouble';
@@ -28,7 +28,7 @@ import {
     CreateBagFirstScanHubQueueService,
 } from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
 import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
-import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
+import { MachinePackageResponseVm, PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
 import {
     CreateBagNumberResponseVM, OpenSortirCombineVM, PackageBagDetailVM, UnloadAwbPayloadVm,
     UnloadAwbResponseVm,
@@ -46,21 +46,29 @@ export class V1MachineService {
 
   static async awbPackage(
     payload: PackageMachinePayloadVm,
-  ): Promise<PackageAwbResponseVm> {
+  ): Promise<MachinePackageResponseVm> {
     const regexNumber = /^[0-9]+$/;
     // const value = payload.value;
     // const valueLength = value.length;
-    const result = new PackageAwbResponseVm();
+    const result = new MachinePackageResponseVm();
 
-    result.branchId = 0;
-    result.branchName = null;
+    // result.branchId = 0;
+    // result.branchName = null;
     let paramBagItemId = null;
     let paramBagNumber = null;
     let paramPodScanInHubId = null;
     let scanResultMachine;
 
     if (!payload.sorting_branch_id) {
-      throw new BadRequestException('Sorting Branch ID Null');
+      const data = [];
+      data.push({
+        state: 1,
+        no_gabung_sortir: null,
+      });
+      result.statusCode = HttpStatus.BAD_REQUEST;
+      result.message = `Sorting Branch ID Null`;
+      result.data = data;
+      // throw new BadRequestException('Sorting Branch ID Null');
     } else {
       const branch = await Branch.findOne({
         where: {
@@ -77,56 +85,49 @@ export class V1MachineService {
       if(branch){
         if (branchSortir) {
           for(let i = 0; i < payload.reference_numbers.length; i++) {
-            scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile);
+            scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
             if(scanResultMachine) {
               paramBagItemId = scanResultMachine.bagItemId;
               paramBagNumber = scanResultMachine.bagNumber;
               paramPodScanInHubId = scanResultMachine.podScanInHubId;
             }
           }
-          result.dataBag = scanResultMachine.dataBag;
-          result.bagNumber = scanResultMachine.bagNumber;
-          result.branchId = scanResultMachine.branchId;
-          result.branchName = scanResultMachine.branchName;
-          result.branchCode = scanResultMachine.branchCode;
-          result.data = scanResultMachine.data;
-          result.bagItemId = scanResultMachine.bagItemId;
-          result.isAllow = scanResultMachine.isAllow;
-          result.podScanInHubId = scanResultMachine.podScanInHubId;
-          result.bagSeq = scanResultMachine.bagSeq;
-          result.bagWeight = scanResultMachine.bagWeight;
+          if(scanResultMachine) {
+            const data = [];
+            data.push({
+              state: 0,
+              no_gabung_sortir: scanResultMachine.bagNumber,
+            });
+            result.statusCode = HttpStatus.OK;
+            result.message = `Success Upload`;
+            result.data = data;
+          }
+          
         } else {
-          throw new BadRequestException('Branch Sortir not found');
+          const data = [];
+          data.push({
+            state: 1,
+            no_gabung_sortir: null,
+          });
+          result.statusCode = HttpStatus.BAD_REQUEST;
+          result.message = `Branch Sortir not found`;
+          result.data = data;
         }
       } else {
-        throw new BadRequestException('Branch not found');
+        const data = [];
+        data.push({
+          state: 1,
+          no_gabung_sortir: null,
+        });
+        result.statusCode = HttpStatus.BAD_REQUEST;
+        result.message = `Branch not found`;
+        result.data = data;
       }
     }
-
-    // scan awb number or district code
-    // if (regexNumber.test(value) && valueLength === 12) {
-    //   // TODO: handle first scan and create bag number
-    //   // const scanResult = await this.machineAwbScan(awbNumber);
-    //   const scanResult = null;
-
-    //   result.dataBag = scanResult.dataBag;
-    //   result.bagNumber = scanResult.bagNumber;
-    //   result.branchId = scanResult.branchId;
-    //   result.branchName = scanResult.branchName;
-    //   result.branchCode = scanResult.branchCode;
-    //   result.data = scanResult.data;
-    //   result.bagItemId = scanResult.bagItemId;
-    //   result.isAllow = scanResult.isAllow;
-    //   result.podScanInHubId = scanResult.podScanInHubId;
-    //   result.bagSeq = scanResult.bagSeq;
-    //   result.bagWeight = scanResult.bagWeight;
-
-    // }
-
     return result;
   }
 
-  private static async machineAwbScan(paramawbNumber: string, paramBranchId: number, paramBagItemId: number, paramBagNumber: string, paramPodScanInHubId: string, paramBranchIdLastmile: number): Promise<any> {
+  private static async machineAwbScan(paramawbNumber: string, paramBranchId: number, paramBagItemId: number, paramBagNumber: string, paramPodScanInHubId: string, paramBranchIdLastmile: number, paramSealNumber: string): Promise<any> {
     const awbNumber = paramawbNumber;
     const branchId: number = paramBranchId;
     const result = new Object();
@@ -226,7 +227,7 @@ export class V1MachineService {
         }
       } else {
         // Generate Bag Number
-        const genBagNumber = await this.MachineCreateBagNumber(paramBranchId, awbItemAttr.awbItemId, districtDetail, branch, awb, paramBranchIdLastmile );
+        const genBagNumber = await this.MachineCreateBagNumber(paramBranchId, awbItemAttr.awbItemId, districtDetail, branch, awb, paramBranchIdLastmile, paramSealNumber);
         bagNumber = genBagNumber.bagNumber;
         podScanInHubId = genBagNumber.podScanInHubId;
         bagItemId = genBagNumber.bagItemId;
@@ -328,7 +329,7 @@ export class V1MachineService {
     return bagItem;
   }
 
-  private static async MachineCreateBagNumber(paramBranchId: number, paramAwbItemId, districtDetail, branchDetail, paramAwbDetail, paramBranchIdLastmile ): Promise<CreateBagNumberResponseVM> {
+  private static async MachineCreateBagNumber(paramBranchId: number, paramAwbItemId, districtDetail, branchDetail, paramAwbDetail, paramBranchIdLastmile, paramSealNumber ): Promise<CreateBagNumberResponseVM> {
     const result = new CreateBagNumberResponseVM();
     // const authMeta = AuthService.getAuthData();
     // const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -389,6 +390,8 @@ export class V1MachineService {
         userIdCreated: 1,
         userIdUpdated: 1,
         isSortir: true,
+        isManual : false,
+        sealNumber: paramSealNumber,
       });
 
       const bag = await Bag.save(bagDetail);

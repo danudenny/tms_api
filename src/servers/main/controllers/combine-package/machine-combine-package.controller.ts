@@ -3,7 +3,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs
 import { ApiBearerAuth, ApiImplicitHeader, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PackagePayloadVm } from '../../models/gabungan-payload.vm';
-import { PackageAwbResponseVm } from '../../models/gabungan.response.vm';
+import { MachinePackageResponseVm, PackageAwbResponseVm } from '../../models/gabungan.response.vm';
 import { PackageService } from '../../services/combine-package/package.services';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { V1PackageService } from '../../services/combine-package/v1/package.services';
@@ -20,7 +20,7 @@ export class SortirCombinePackageController {
   @HttpCode(HttpStatus.OK)
   @ApiImplicitHeader({ name: 'x-api-key' })
   @UseGuards(AuthXAPIKeyGuard)
-  @ApiOkResponse({ type: PackageAwbResponseVm })
+  @ApiOkResponse({ type: MachinePackageResponseVm })
   public async checkSpk(@Body() payload: PackageMachinePayloadVm) {
     return V1MachineService.awbPackage(payload);
   }
@@ -35,13 +35,13 @@ export class SortirCombinePackageController {
   //   return V1PackageService.awbPackage(payload);
   // }
 
-  @Post('loadPackages')
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: PackageAwbResponseVm })
-  public async loadPackageAwb() {
-    // return this.packageService.loadAwbPackage();
-    return V1PackageService.loadAwbPackage();
-  }
+  // @Post('loadPackages')
+  // @HttpCode(200)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ApiOkResponse({ type: PackageAwbResponseVm })
+  // public async loadPackageAwb() {
+  //   // return this.packageService.loadAwbPackage();
+  //   return V1PackageService.loadAwbPackage();
+  // }
 }
