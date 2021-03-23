@@ -210,8 +210,6 @@ export class V2WebAwbCodService {
           );
         }
 
-        const uuidv1 = require('uuid/v1');
-        const uuidString = uuidv1();
         const attachment = await AttachmentService.uploadFileBufferToS3(
           file.buffer,
           uuidString,
@@ -314,20 +312,55 @@ export class V2WebAwbCodService {
               );
             }
 
-            await transactionManager.insert(CodAwbRevision, {
-              codAwbRevisionId: uuidString,
-              awbId: checkAwb.awbId,
-              awbItemId: checkAwb.awbItemId,
-              awbNumber: payload.awbNumber,
-              codValueCurrent: payload.nominal,
-              codValue: checkAwb.codValue,
-              attachmentId: attachment.attachmentTmsId,
-              userIdCreated: authMeta.userId,
-              userIdUpdated: authMeta.userId,
-              createdTime: moment().toDate(),
-              updatedTime: moment().toDate(),
-              requestUserId: payload.requestUser,
-            });
+            let resivion: CodAwbRevision;
+            const masterRevisionQueryRunner = getConnection().createQueryRunner(
+              'master',
+            );
+            try {
+              resivion = await getConnection()
+                .createQueryBuilder(CodAwbRevision, 'car')
+                .setQueryRunner(masterRevisionQueryRunner)
+                .where('car.awbNumber = :awbNumber AND car.isDeleted = false', {
+                  awbNumber: payload.awbNumber,
+                })
+                .getOne();
+            } finally {
+              await masterRevisionQueryRunner.release();
+            }
+
+            if (resivion) {
+              await transactionManager.update(
+                CodAwbRevision,
+                {
+                  codAwbRevisionId: resivion.codAwbRevisionId,
+                  isDeleted: false,
+                },
+                {
+                  codValueCurrent: Number(payload.nominal),
+                  attachmentId: attachment.attachmentTmsId,
+                  userIdCreated: authMeta.userId,
+                  userIdUpdated: authMeta.userId,
+                  createdTime: moment().toDate(),
+                  updatedTime: moment().toDate(),
+                  requestUserId: payload.requestUser,
+                },
+              );
+            } else {
+              await transactionManager.insert(CodAwbRevision, {
+                codAwbRevisionId: uuidString,
+                awbId: checkAwb.awbId,
+                awbItemId: checkAwb.awbItemId,
+                awbNumber: payload.awbNumber,
+                codValueCurrent: payload.nominal,
+                codValue: checkAwb.codValue,
+                attachmentId: attachment.attachmentTmsId,
+                userIdCreated: authMeta.userId,
+                userIdUpdated: authMeta.userId,
+                createdTime: moment().toDate(),
+                updatedTime: moment().toDate(),
+                requestUserId: payload.requestUser,
+              });
+            }
           });
 
           const result = new WebCodNominalUpdateResponseVm();
@@ -371,8 +404,7 @@ export class V2WebAwbCodService {
     );
 
     q.innerJoin(e => e.attachment, 'at', j =>
-      j
-        .andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.leftJoin(e => e.requestor, 'userreq', j =>
