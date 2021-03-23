@@ -36,6 +36,12 @@ export class AwbHighValueUploadListDataResponseVm {
 
   @ApiModelProperty()
   displayName: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  awbStatusName: string;
 }
 
 export class AwbHighValueUploadListResponseVm extends BaseMetaResponseVm {
