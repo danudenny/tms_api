@@ -6,6 +6,7 @@ import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-transaction-detail';
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { AuthService } from '../../../../../shared/services/auth.service';
+import { CodAwbRevision } from '../../../../../shared/orm-entity/cod-awb-revision';
 
 export class V2WebCodReportService {
   static async printCodSupplierInvoice(payload: BaseMetaPayloadVm, response) {
@@ -632,6 +633,55 @@ export class V2WebCodReportService {
     }
   }
 
+  static async nominalStream(payload: BaseMetaPayloadVm, response) {
+    try {
+      const fileName = `COD_update_nominal_${new Date().getTime()}.csv`;
+
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+      response.flushHeaders();
+      response.write(`${this.CodHeaderNominal.join(',')}\n`);
+
+      // mapping field
+      payload.fieldResolverMap['requestorId'] = 'car.request_user_id';
+      payload.fieldResolverMap['updateDate'] = 'car.created_time';
+
+      const repo = new OrionRepositoryService(CodAwbRevision, 'car');
+      const q = repo.findAllRaw();
+
+      payload.applyToOrionRepositoryQuery(q, true);
+
+      q.selectRaw(
+        ['car.awb_number', 'awbNumber'],
+        ['car.created_time', 'updateDate'],
+        ['car.request_user_id', 'requestorId'],
+        ['userreq.first_name', 'requestorName'],
+        ['car.cod_value', 'codValue'],
+        ['car.cod_value_current', 'codValueCurrent'],
+        ['car.attachment_id', 'attachmentId'],
+        ['at.url', 'attachmentUrl'],
+      );
+
+      q.innerJoin(e => e.attachment, 'at', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.leftJoin(e => e.requestor, 'userreq', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      await q.stream(response, this.streamTransformCodNominal);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
   // ==================================== private ===================================
   private static CodHeader = [
     'Partner',
@@ -786,6 +836,17 @@ export class V2WebCodReportService {
     'Date Updated',
     // 'User Updated',
     'Awb Status Date',
+  ];
+
+  private static CodHeaderNominal = [
+    'Awb Number',
+    'Requestor Id',
+    'Requestor Name',
+    'Cod Value',
+    'Cod Value Current',
+    'Attachment Id',
+    'Attachment Url',
+    'Update Date',
   ];
 
   private static strReplaceFunc = str => {
@@ -1000,6 +1061,23 @@ export class V2WebCodReportService {
         d.awbStatusDate
           ? moment(d.awbStatusDate).format('YYYY-MM-DD HH:mm')
           : null,
+      ],
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  private static streamTransformCodNominal(d) {
+    const values = [
+      [
+        `'${d.awbNumber}`,
+        d.requestorId ? d.requestorId : '',
+        d.requestorName ? V2WebCodReportService.strReplaceFunc(d.requestorName) : '',
+        d.codValue,
+        d.codValueCurrent,
+        d.attachmentId,
+        d.attachmentUrl,
+        d.updateDate ? moment(d.updateDate).format('YYYY-MM-DD HH:mm') : null,
       ],
     ];
 
