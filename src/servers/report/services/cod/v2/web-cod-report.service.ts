@@ -661,7 +661,6 @@ export class V2WebCodReportService {
         ['userreq.first_name', 'requestorName'],
         ['car.cod_value', 'codValue'],
         ['car.cod_value_current', 'codValueCurrent'],
-        ['car.attachment_id', 'attachmentId'],
         ['at.url', 'attachmentUrl'],
       );
 
@@ -840,11 +839,9 @@ export class V2WebCodReportService {
 
   private static CodHeaderNominal = [
     'Awb Number',
-    'Requestor Id',
     'Requestor Name',
     'Cod Value',
     'Cod Value Current',
-    'Attachment Id',
     'Attachment Url',
     'Update Date',
   ];
@@ -1071,11 +1068,9 @@ export class V2WebCodReportService {
     const values = [
       [
         `'${d.awbNumber}`,
-        d.requestorId ? d.requestorId : '',
         d.requestorName ? V2WebCodReportService.strReplaceFunc(d.requestorName) : '',
         d.codValue,
         d.codValueCurrent,
-        d.attachmentId,
         d.attachmentUrl,
         d.updateDate ? moment(d.updateDate).format('YYYY-MM-DD HH:mm') : null,
       ],
