@@ -8,6 +8,7 @@ import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 import { PrintBaggingVm } from '../../models/print-bagging.payload';
 import {AuthenticatedGuard} from '../../../../shared/guards/authenticated.guard';
 import {PermissionTokenGuard} from '../../../../shared/guards/permission-token.guard';
+import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
 
 @ApiUseTags('SMD printing')
 @Controller('smd/print')
@@ -40,6 +41,7 @@ export class SmdPrintController {
     @Query() queryParams: PrintBaggingStickerPayloadVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return SmdPrintService.executePrintBaggingSticker(
       serverResponse,
       queryParams,
@@ -59,6 +61,7 @@ export class SmdPrintController {
     @Query() queryParams: PrintBaggingPaperPayloadVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return SmdPrintService.executePrintBagging(serverResponse, queryParams);
   }
 
@@ -79,6 +82,7 @@ export class SmdPrintController {
     @Query() queryParams: PrintDoSmdPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return SmdPrintService.printDoSmdByRequest(serverResponse, queryParams);
   }
 
@@ -89,6 +93,7 @@ export class SmdPrintController {
     @Query() queryParams: PrintBaggingPaperPayloadVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return SmdPrintService.printVendorForPaper(serverResponse, queryParams);
   }
 
@@ -109,6 +114,7 @@ export class SmdPrintController {
     @Query() params: PrintReceivedBagPaperPayloadVm,
     @Response() response: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(params.userId);
     return SmdPrintService.executeReceivedBagPrint(response, params);
   }
 

@@ -185,7 +185,7 @@ export class MobileKorwilService {
     if (!isNull(status)) {
       qb.andWhere('kt.status = :status', { status });
     }
-    qb.orderBy('created_time', 'DESC');
+    qb.orderBy('kt.created_time', 'DESC');
     const dataKorwil = await qb.getRawOne();
 
     return dataKorwil ? dataKorwil.id : null;

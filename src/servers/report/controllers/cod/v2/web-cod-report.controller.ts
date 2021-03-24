@@ -89,4 +89,18 @@ export class V2WebCodReportController {
       outgoingHTTP,
     );
   }
+
+  @Post('nominal/stream')
+  @UseGuards(AuthenticatedGuard)
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async nominalStream(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await V2WebCodReportService.nominalStream(
+      payload,
+      outgoingHTTP,
+    );
+  }
 }

@@ -1285,6 +1285,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
