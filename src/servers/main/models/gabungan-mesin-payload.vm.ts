@@ -21,7 +21,7 @@ export class GabunganMesinPayloadVm {
   @ApiModelProperty()
   awbNumber: string[];
 }
-
+ 
 export class PackageMachinePayloadVm {
 
   @ApiModelProperty({
