@@ -6,16 +6,16 @@ import { BranchSortirLog } from './branch-sortir-log';
 @Entity('branch_sortir_log_detail', { schema: 'public' })
 export class BranchSortirLogDetail extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
-    type: 'bigint',
+    type: 'uuid',
     name: 'branch_sortir_log_detail_id',
   })
-  branchSortirLogDetailId: number;
+  branchSortirLogDetailId: string;
 
-  @Column('bigint', {
+  @Column('uuid', {
     nullable: false,
     name: 'branch_sortir_log_id',
   })
-  branchSortirLogId: number;
+  branchSortirLogId: string;
 
   @Column('timestamp without time zone', {
     nullable: false,

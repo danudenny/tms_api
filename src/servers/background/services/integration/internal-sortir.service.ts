@@ -3,7 +3,9 @@ import { BadRequestException, HttpStatus } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { CheckAwbPayloadVm, CheckAwbResponseVM } from '../../models/internal-sortir.vm';
-import { BagSortirLogQueueService } from '../../../queue/services/branch-sortir-log-queue.service';
+import { BranchSortirLogQueueService } from '../../../queue/services/branch-sortir-log-queue.service';
+import { BranchSortirLog} from '../../../../shared/orm-entity/branch-sortir-log';
+import { Between, getManager } from 'typeorm';
 
 export class InternalSortirService {
 
@@ -24,6 +26,8 @@ export class InternalSortirService {
     let zip_code;
     let is_cod;
     let district_code;
+    let branchSortirLogId = '';
+
     const dateNow = moment().toDate();
     const rawQueryAwb = `
       SELECT
@@ -87,7 +91,8 @@ export class InternalSortirService {
                 chute_number: resultData[a].no_chute,
                 request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
               });
-              BagSortirLogQueueService.perform(
+
+              branchSortirLogId = await this.upsertBranchSortirLog(
                 result.message,
                 dateNow,
                 0,
@@ -96,6 +101,8 @@ export class InternalSortirService {
                 resultData[a].no_chute,
                 resultData[a].branch_id_lastmile,
                 resultData[a].is_cod,
+                1,
+                branchSortirLogId,
               );
             }
             result.statusCode = HttpStatus.OK;
@@ -110,7 +117,7 @@ export class InternalSortirService {
             result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
             result.data = data;
 
-            BagSortirLogQueueService.perform(
+            branchSortirLogId = await this.upsertBranchSortirLog(
               result.message,
               dateNow,
               1,
@@ -118,7 +125,9 @@ export class InternalSortirService {
               payload.tracking_number,
               null,
               null,
-              null,
+              false,
+              1,
+              branchSortirLogId,
             );
             return result;
           }
@@ -131,7 +140,7 @@ export class InternalSortirService {
           result.message = `Zip Code not found`;
           result.data = data;
 
-          BagSortirLogQueueService.perform(
+          branchSortirLogId = await this.upsertBranchSortirLog(
             result.message,
             dateNow,
             1,
@@ -139,7 +148,9 @@ export class InternalSortirService {
             payload.tracking_number,
             null,
             null,
-            null,
+            false,
+            1,
+            branchSortirLogId,
           );
           return result;
         }
@@ -170,7 +181,7 @@ export class InternalSortirService {
             request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
           });
 
-          BagSortirLogQueueService.perform(
+          branchSortirLogId = await this.upsertBranchSortirLog(
             result.message,
             dateNow,
             0,
@@ -179,6 +190,8 @@ export class InternalSortirService {
             resultData[a].no_chute,
             resultData[a].branch_id_lastmile,
             resultData[a].is_cod,
+            1,
+            branchSortirLogId,
           );
         }
         result.statusCode = HttpStatus.OK;
@@ -194,7 +207,7 @@ export class InternalSortirService {
         result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
         result.data = data;
 
-        BagSortirLogQueueService.perform(
+        branchSortirLogId = await this.upsertBranchSortirLog(
           result.message,
           dateNow,
           1,
@@ -202,7 +215,9 @@ export class InternalSortirService {
           payload.tracking_number,
           null,
           null,
-          null,
+          false,
+          1,
+          branchSortirLogId,
         );
         return result;
       }
@@ -215,7 +230,7 @@ export class InternalSortirService {
       result.message = `Can't Find AWB: ` + payload.tracking_number;
       result.data = data;
 
-      BagSortirLogQueueService.perform(
+      branchSortirLogId = await this.upsertBranchSortirLog(
         result.message,
         dateNow,
         1,
@@ -223,11 +238,96 @@ export class InternalSortirService {
         payload.tracking_number,
         null,
         null,
-        null,
+        false,
+        1,
+        branchSortirLogId,
       );
       return result;
     }
 
   }
 
+  private static async upsertBranchSortirLog(
+    message: string,
+    scanDate: Date,
+    state: 0|1,
+    branchId: string | number,
+    awbNumber: string | number,
+    noChute: number | string,
+    branchIdLastmile: number | string,
+    isCod: boolean,
+    userId: number = 1,
+    branchSortirLogId?: string,
+  ) {
+    const isSucceed = state == 0 ? true : false;
+    let branchSortirLog = null;
+
+    if (!branchSortirLogId) {
+      branchSortirLog = await BranchSortirLog.findOne({
+        where: {
+          scanDate: Between(
+            moment(scanDate).format('YYYY-MM-DD') + ' 00:00:00',
+            moment(scanDate).add(1, 'days').format('YYYY-MM-DD') + ' 00:00:00',
+          ),
+          isDeleted: false,
+        },
+      });
+      branchSortirLogId = branchSortirLog ? branchSortirLog.branchSortirLogId : null;
+    }
+    if (branchSortirLogId) {
+      await getManager().transaction(async transactionEntityManager => {
+        if (isSucceed) {
+          await transactionEntityManager.increment(
+            BranchSortirLog,
+            {
+              branchSortirLogId,
+            },
+            'qtySucceed',
+            1,
+          );
+        } else {
+          await transactionEntityManager.increment(
+            BranchSortirLog,
+            {
+              branchSortirLogId,
+            },
+            'qtyFail',
+            1,
+          );
+        }
+      });
+    } else {
+      const cSuccess = 1;
+      let cFail = 1;
+      if (isSucceed) { cFail = 0; }
+
+      const createBranchSortirLog = BranchSortirLog.create({
+        scanDate,
+        qtySucceed: cSuccess,
+        qtyFail: cFail,
+        branchId: parseInt(branchId.toString()),
+        createdTime: scanDate,
+        updatedTime: scanDate,
+        userIdCreated: userId,
+        userIdUpdated: userId,
+      });
+      await BranchSortirLog.save(createBranchSortirLog);
+      branchSortirLogId = createBranchSortirLog.branchSortirLogId;
+    }
+
+    BranchSortirLogQueueService.perform(
+      message,
+      scanDate,
+      0,
+      branchId,
+      awbNumber,
+      noChute,
+      branchIdLastmile,
+      isCod,
+      userId,
+      branchSortirLogId,
+    );
+
+    return branchSortirLogId;
+  }
 }

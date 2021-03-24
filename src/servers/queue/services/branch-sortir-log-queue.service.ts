@@ -7,7 +7,7 @@ import moment= require('moment');
 
 // DOC: https://optimalbits.github.io/bull/
 
-export class BagSortirLogQueueService {
+export class BranchSortirLogQueueService {
   public static queue = QueueBullBoard.createQueue.add(
     'branch-sortir-log-queue',
     {
@@ -37,67 +37,21 @@ export class BagSortirLogQueueService {
     this.queue.process(5, async job => {
       console.log('### CREATE BRANCH SORTIR LOG QUEUE ID =========', job.id);
       const data = job.data;
-      const isSucceed = data.state == 1 ? true : false;
-
-      const branchSortirLog = await BranchSortirLog.findOne({
-        where: {
-          scanDate: Between(
-            data.scanDate.format('YYYY-MM-DD') + ' 00:00:00',
-            data.scanDate.add(1, 'days').format('YYYY-MM-DD') + ' 00:00:00',
-          ),
-          isDeleted: false,
-        },
-      });
-
-      if (branchSortirLog) {
-        await getManager().transaction(async transactionEntityManager => {
-          if (isSucceed) {
-            await transactionEntityManager.increment(
-              BranchSortirLog,
-              {
-                branchSortirLogId: branchSortirLog.branchSortirLogId,
-              },
-              'qtySucceed',
-              1,
-            );
-          } else {
-            await transactionEntityManager.increment(
-              BranchSortirLog,
-              {
-                branchSortirLogId: branchSortirLog.branchSortirLogId,
-              },
-              'qtyFail',
-              1,
-            );
-          }
-        });
-      } else {
-        const cSuccess = 1;
-        let cFail = 1;
-        if (isSucceed) { cFail = 0; }
-
-        const createBranchSortirLog = BranchSortirLog.create({
-          scanDate: data.scanDate,
-          qtySucceed: cSuccess,
-          qtyFail: cFail,
-          createdTime: moment().toDate(),
-          updatedTime: moment().toDate(),
-          userIdCreated: data.userId,
-          userIdUpdated: data.userId,
-        });
-        BranchSortirLog.save(createBranchSortirLog);
-      }
 
       const branchSortirLogDetail = BranchSortirLogDetail.create({
-        branchSortirLogId: branchSortirLog.branchSortirLogId,
+        branchSortirLogId: data.sortirId,
         scanDate: data.scanDate,
         branchId: data.branchId,
         awbNumber: data.awbNumber,
         noChute: data.noChute,
         branchIdLastmile: data.branchIdLastmile,
         isCod: data.isCod,
-        isSucceed,
+        isSucceed: data.state == 0 ? true : false,
         reason: data.message,
+        userIdCreated: data.userId,
+        userIdUpdated: data.userId,
+        updatedTime: moment().toDate(),
+        createdTime: moment().toDate(),
       });
       return BranchSortirLogDetail.save(branchSortirLogDetail);
     });
@@ -122,6 +76,8 @@ export class BagSortirLogQueueService {
     noChute: number | string,
     branchIdLastmile: number | string,
     isCod: boolean,
+    userId: number = 1,
+    sortirId?: string,
   ) {
     const obj = {
       message,
@@ -132,8 +88,10 @@ export class BagSortirLogQueueService {
       noChute,
       branchIdLastmile,
       isCod,
+      userId,
+      sortirId,
     };
 
-    return BagSortirLogQueueService.queue.add(obj);
+    return BranchSortirLogQueueService.queue.add(obj);
   }
 }

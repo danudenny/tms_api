@@ -45,7 +45,8 @@ import { CodCronSettlementQueueService } from './services/cod/cod-cron-settlemen
 import { MongoDbConfig } from './config/database/mongodb.config';
 import { CodExportMongoQueueService } from './services/cod/cod-export-queue.service';
 import { BagRepresentativeScanOutHubQueueService } from './services/bag-representative-scan-out-hub-queue.service';
-import {BagScanVendorQueueService} from './services/bag-scan-vendor-queue.service';
+import { BagScanVendorQueueService } from './services/bag-scan-vendor-queue.service';
+import { BranchSortirLogQueueService } from './services/branch-sortir-log-queue.service';
 
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
@@ -161,6 +162,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     CodExportMongoQueueService.boot();
     BagRepresentativeScanOutHubQueueService.boot();
     BagScanVendorQueueService.boot();
+    BranchSortirLogQueueService.boot();
     // BagItemAwbQueueService.boot();
     // GenerateReportQueueService.boot();
 
