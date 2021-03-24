@@ -129,7 +129,7 @@ import { SortirCombinePackageController } from './combine-package/machine-combin
     TransactionStatusController,
     BankAccountController,
     PackageTypeController,
-    SortirCombinePackageController,
+    SortirCombinePackageController, 
   ],
 })
 export class MainServerControllersModule {}
