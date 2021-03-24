@@ -24,6 +24,7 @@ export class InternalSortirService {
     let zip_code;
     let is_cod;
     let district_id;
+    let arr = [];
     const dateNow = moment().toDate();
     const rawQueryAwb = `
       SELECT
@@ -68,12 +69,7 @@ export class InternalSortirService {
         if (resultData.length > 0 ) {
           result.message = 'Check Spk Success';
           for (let a = 0; a < resultData.length; a++) {
-            data.push({
-              state: 0,
-              tracking_number: payload.tracking_number,
-              chute_number: resultData[a].no_chute,
-              request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
-            });
+            arr.push(resultData[a].no_chute);
             BagSortirLogQueueService.perform(
               result.message,
               dateNow,
@@ -85,6 +81,12 @@ export class InternalSortirService {
               resultData[a].is_cod,
             );
           }
+          data.push({
+            state: 0,
+            tracking_number: payload.tracking_number,
+            chute_number: arr,
+            request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
+          });
           result.statusCode = HttpStatus.OK;
           result.data = data;
           return result;
@@ -127,15 +129,8 @@ export class InternalSortirService {
       const resultData = await RawQueryService.query(rawQuery);
       if (resultData.length > 0 ) {
         result.message = 'Check Spk Success';
-
         for (let a = 0; a < resultData.length; a++) {
-          data.push({
-            state: 0,
-            tracking_number: payload.tracking_number,
-            chute_number: resultData[a].no_chute,
-            request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
-          });
-
+          arr.push(resultData[a].no_chute);
           BagSortirLogQueueService.perform(
             result.message,
             dateNow,
@@ -147,6 +142,12 @@ export class InternalSortirService {
             resultData[a].is_cod,
           );
         }
+        data.push({
+          state: 0,
+          tracking_number: payload.tracking_number,
+          chute_number: arr,
+          request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
+        });
         result.statusCode = HttpStatus.OK;
         result.data = data;
         return result;
