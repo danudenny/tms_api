@@ -2,18 +2,15 @@ import fs = require('fs');
 import * as moment from 'moment';
 import * as path from 'path';
 import _ = require('lodash');
-import { DateHelper } from '../../../../../shared/helpers/date-helpers';
-import { BaseMetaPayloadFilterVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwsS3Service } from '../../../../../shared/services/aws-s3.service';
 import { ConfigService } from '../../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
 import { BadRequestException } from '@nestjs/common';
-import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { CodExportMongoQueueService } from '../../../../queue/services/cod/cod-export-queue.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import uuid = require('uuid');
-import { forEach } from 'lodash';
+import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 
 export class V1WebReportCodService {
   static expireOnSeconds = 600; // 5 minute
@@ -182,7 +179,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
           '', '',
-          d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+          d.dateUpdated ? moment(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
           (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : '') + ' - ' + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ''),
         ]);
 
@@ -231,7 +228,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.receiverRemark),
           '',
           '',
-          d.tdDateUpdated ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+          d.tdDateUpdated ? moment(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
           (d.tdUserIdUpdatedNik ? this.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : '-')),
         ]);
 
@@ -764,7 +761,7 @@ export class V1WebReportCodService {
           $and: spartanFilter,
         },
       },
-      { '$sort': { awbNumber: 1 } },
+      { $sort: { awbNumber: 1 } },
       {
         $lookup: {
           from: 'transaction_detail',
@@ -991,7 +988,7 @@ export class V1WebReportCodService {
           $and: filterList,
         },
       },
-      { '$sort': { awbNumber: 1 } },
+      { $sort: { awbNumber: 1 } },
       {
         $limit: limit,
       },
@@ -1346,7 +1343,7 @@ export class V1WebReportCodService {
       }
     }
 
-    filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
+    filterList.push({ supplierInvoiceStatusId: { $eq: TRANSACTION_STATUS.PAIDHO } });
 
     const skip = limit * (pageNumber - 1);
 
@@ -1356,7 +1353,7 @@ export class V1WebReportCodService {
           $and: filterList,
         },
       },
-      { '$sort': { awbNumber: 1 } },
+      { $sort: { awbNumber: 1 } },
       {
         $limit: limit,
       },

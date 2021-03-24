@@ -63,6 +63,7 @@ import {
   WebCodCountResponseVm,
   WebAwbCodDlvV2ListResponseVm,
   WebInsertCodPaymentResponseVm,
+  WebAwbCodSummaryResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
 import { V1WebCodBankStatementService } from '../../../services/web/v1/web-cod-bank-statement.service';
@@ -76,6 +77,14 @@ import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sq
 @Controller('web/v1/cod')
 @ApiBearerAuth()
 export class V1WebAwbCodController {
+  @Post('awb/summary')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbCodSummaryResponseVm })
+  public async awbSummary(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbCodService.awbSummary(payload);
+  }
+
   @Post('awb')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
@@ -478,5 +487,15 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodTransactionRejectPayloadVm,
   ) {
     return V1WebAwbCodService.transactionReject(payload);
+  }
+
+  @Post('transaction/delete')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebCodTransactionUpdateResponseVm })
+  public async transactionDelete(
+    @Body() payload: WebCodTransactionRejectPayloadVm,
+  ) {
+    return V1WebAwbCodService.transactionDelete(payload);
   }
 }

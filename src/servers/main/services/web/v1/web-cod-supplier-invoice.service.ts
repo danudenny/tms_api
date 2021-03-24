@@ -1,25 +1,33 @@
 // #region import
-import { getManager, IsNull, createQueryBuilder } from 'typeorm';
-import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+import { getManager, IsNull, createQueryBuilder, getConnection } from 'typeorm';
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
-import {
-    CodTransactionDetail,
-} from '../../../../../shared/orm-entity/cod-transaction-detail';
+import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-transaction-detail';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { WebCodInvoiceDraftPayloadVm, WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceRemoveAwbPayloadVm, WebCodInvoiceCreatePayloadVm, WebCodFirstTransactionPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-    WebAwbCodDetailPartnerResponseVm, WebAwbCodSupplierInvoiceResponseVm,
-    WebCodSupplierInvoicePaidResponseVm,
-    WebAwbCodInvoiceResponseVm,
-    WebCodInvoiceDraftResponseVm,
-    WebCodListInvoiceResponseVm,
-    WebCodInvoiceAddResponseVm,
-    WebCodAwbDelivery,
-    WebCodInvoiceRemoveResponseVm,
-    WebCodInvoiceCreateResponseVm,
+  WebCodInvoiceDraftPayloadVm,
+  WebCodInvoiceAddAwbPayloadVm,
+  WebCodInvoiceRemoveAwbPayloadVm,
+  WebCodInvoiceCreatePayloadVm,
+  WebCodFirstTransactionPayloadVm,
+} from '../../../models/cod/web-awb-cod-payload.vm';
+import {
+  WebAwbCodDetailPartnerResponseVm,
+  WebAwbCodSupplierInvoiceResponseVm,
+  WebCodSupplierInvoicePaidResponseVm,
+  WebAwbCodInvoiceResponseVm,
+  WebCodInvoiceDraftResponseVm,
+  WebCodListInvoiceResponseVm,
+  WebCodInvoiceAddResponseVm,
+  WebCodAwbDelivery,
+  WebCodInvoiceRemoveResponseVm,
+  WebCodInvoiceCreateResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
@@ -34,7 +42,6 @@ import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/c
 // #endregion import
 
 export class V1WebCodSupplierInvoiceService {
-
   static async supplierInvoice(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodSupplierInvoiceResponseVm> {
@@ -66,7 +73,10 @@ export class V1WebCodSupplierInvoiceService {
     );
 
     // NOTE: set filter
-    q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
+    q.andWhere(
+      e => e.transactionStatusId,
+      w => w.equals(TRANSACTION_STATUS.TRMHO),
+    );
     q.andWhere(e => e.codSupplierInvoiceId, w => w.isNull());
     q.andWhere(e => e.isVoid, w => w.isFalse());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -86,11 +96,7 @@ export class V1WebCodSupplierInvoiceService {
   static async awbDetailByPartnerId(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodDetailPartnerResponseVm> {
-
-    const repo = new OrionRepositoryService(
-      CodTransactionDetail,
-      't1',
-    );
+    const repo = new OrionRepositoryService(CodTransactionDetail, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -104,7 +110,10 @@ export class V1WebCodSupplierInvoiceService {
     );
 
     // NOTE: set filter
-    q.andWhere(e => e.transactionStatusId, w => w.equals(40000));
+    q.andWhere(
+      e => e.transactionStatusId,
+      w => w.equals(TRANSACTION_STATUS.TRMHO),
+    );
     q.andWhere(e => e.codSupplierInvoiceId, w => w.isNull());
     q.andWhere(e => e.isVoid, w => w.isFalse());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -142,7 +151,7 @@ export class V1WebCodSupplierInvoiceService {
       const randomCode = await CustomCounterCode.supplierInvoiceCod(timestamp);
       supplierInvoice.supplierInvoiceCode = randomCode;
       supplierInvoice.supplierInvoiceDate = timestamp;
-      supplierInvoice.supplierInvoiceStatusId = 41000; // status DRAFT
+      supplierInvoice.supplierInvoiceStatusId = TRANSACTION_STATUS.DRAFT_INV; // status DRAFT
       supplierInvoice.branchId = permissonPayload.branchId;
       supplierInvoice.partnerId = payload.partnerId;
       await CodSupplierInvoice.save(supplierInvoice);
@@ -153,13 +162,13 @@ export class V1WebCodSupplierInvoiceService {
           CodTransactionDetail,
           {
             partnerId: payload.partnerId,
-            transactionStatusId: 40000,
+            transactionStatusId: TRANSACTION_STATUS.TRMHO,
             codSupplierInvoiceId: IsNull(),
             isVoid: false,
           },
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
-            supplierInvoiceStatusId: 41000,
+            supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
           },
@@ -169,7 +178,7 @@ export class V1WebCodSupplierInvoiceService {
       CodUpdateSupplierInvoiceQueueService.perform(
         payload.partnerId,
         supplierInvoice.codSupplierInvoiceId,
-        41000,
+        TRANSACTION_STATUS.DRAFT_INV,
         permissonPayload.branchId,
         authMeta.userId,
         timestamp,
@@ -190,7 +199,9 @@ export class V1WebCodSupplierInvoiceService {
     payload: WebCodInvoiceDraftPayloadVm,
   ): Promise<WebCodInvoiceDraftResponseVm> {
     // get data supplier invoice
-    const supplierInvoice = await this.getSupplierInvoice(payload.supplierInvoiceId);
+    const supplierInvoice = await this.getSupplierInvoice(
+      payload.supplierInvoiceId,
+    );
     if (supplierInvoice) {
       return supplierInvoice;
     } else {
@@ -202,8 +213,10 @@ export class V1WebCodSupplierInvoiceService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodInvoiceResponseVm> {
     // mapping field
-    payload.fieldResolverMap['supplierInvoiceId'] = 't1.cod_supplier_invoice_id';
-    payload.fieldResolverMap['transactionStatusId'] = 't1.transaction_status_id';
+    payload.fieldResolverMap['supplierInvoiceId'] =
+      't1.cod_supplier_invoice_id';
+    payload.fieldResolverMap['transactionStatusId'] =
+      't1.transaction_status_id';
     payload.fieldResolverMap['weight'] = 't1.weight_rounded';
     payload.fieldResolverMap['transactionStatusName'] = 't2.status_title';
 
@@ -246,15 +259,30 @@ export class V1WebCodSupplierInvoiceService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const timestamp = moment().toDate();
 
-    const supplierInvoice = await CodSupplierInvoice.findOne({
-      where: {
-        codSupplierInvoiceId: payload.supplierInvoiceId,
-        supplierInvoiceStatusId: 41000,
-        isDeleted: false,
-      },
-    });
+    let supplierInvoice: CodSupplierInvoice;
+    const masterSupplierInvoiceQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      supplierInvoice = await getConnection()
+        .createQueryBuilder(CodSupplierInvoice, 'si')
+        .setQueryRunner(masterSupplierInvoiceQueryRunner)
+        .where(
+          'si.codSupplierInvoiceId = :codSupplierInvoiceId AND si.supplierInvoiceStatusId = :supplierInvoiceStatusId AND si.isDeleted = false',
+          {
+            codSupplierInvoiceId: payload.supplierInvoiceId,
+            supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterSupplierInvoiceQueryRunner.release();
+    }
+
     if (!supplierInvoice) {
-      throw new BadRequestException('Supplier Invoice tidak valid/sudah di proses!');
+      throw new BadRequestException(
+        'Supplier Invoice tidak valid/sudah di proses!',
+      );
     }
 
     // check Total data
@@ -266,7 +294,7 @@ export class V1WebCodSupplierInvoiceService {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
           },
           {
-            supplierInvoiceStatusId: 45000,
+            supplierInvoiceStatusId: TRANSACTION_STATUS.PAIDHO,
             userIdUpdated: authMeta.userId,
             paidDatetime: timestamp,
             updatedTime: timestamp,
@@ -278,10 +306,10 @@ export class V1WebCodSupplierInvoiceService {
           CodTransactionDetail,
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
-            supplierInvoiceStatusId: 41000,
+            supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
           },
           {
-            supplierInvoiceStatusId: 45000,
+            supplierInvoiceStatusId: TRANSACTION_STATUS.PAIDHO,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
           },
@@ -291,7 +319,7 @@ export class V1WebCodSupplierInvoiceService {
         CodUpdateSupplierInvoiceQueueService.perform(
           supplierInvoice.partnerId,
           supplierInvoice.codSupplierInvoiceId,
-          45000,
+          TRANSACTION_STATUS.PAIDHO,
           permissonPayload.branchId,
           authMeta.userId,
           timestamp,
@@ -303,7 +331,6 @@ export class V1WebCodSupplierInvoiceService {
       result.status = 'ok';
       result.message = 'success';
       return result;
-
     } catch (error) {
       throw new ServiceUnavailableException(error.message);
     }
@@ -322,16 +349,31 @@ export class V1WebCodSupplierInvoiceService {
     for (const awbNumber of payload.awbNumber) {
       let errorMessage = null;
       // handle race condition
-      const redlock = await RedisService.redlock(`redlock:invoiceAddAwb:${awbNumber}`);
+      const redlock = await RedisService.redlock(
+        `redlock:invoiceAddAwb:${awbNumber}`,
+      );
       if (redlock) {
         // check transaction status id
-        const transactionDetail = await CodTransactionDetail.findOne({
-          where: {
-            awbNumber,
-            partnerId: payload.partnerId,
-            isDeleted: false,
-          },
-        });
+        let transactionDetail: CodTransactionDetail;
+        const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+          'master',
+        );
+        try {
+          transactionDetail = await getConnection()
+            .createQueryBuilder(CodTransactionDetail, 'ctd')
+            .setQueryRunner(masterTransactionDetailQueryRunner)
+            .where(
+              'ctd.awbNumber = :awbNumber AND ctd.partnerId = :partnerId AND ctd.isDeleted = false',
+              {
+                awbNumber,
+                partnerId: payload.partnerId,
+              },
+            )
+            .getOne();
+        } finally {
+          await masterTransactionDetailQueryRunner.release();
+        }
+
         if (transactionDetail) {
           if (transactionDetail.supplierInvoiceStatusId) {
             errorMessage = `Resi ${awbNumber} tidak valid, sudah di proses!`;
@@ -343,7 +385,8 @@ export class V1WebCodSupplierInvoiceService {
               // update data transaction detail
               await CodTransactionDetail.update(
                 {
-                  codTransactionDetailId: transactionDetail.codTransactionDetailId,
+                  codTransactionDetailId:
+                    transactionDetail.codTransactionDetailId,
                 },
                 {
                   codSupplierInvoiceId: payload.supplierInvoiceId,
@@ -401,7 +444,9 @@ export class V1WebCodSupplierInvoiceService {
       }
 
       // NOTE: error message
-      if (errorMessage) { dataError.push(errorMessage); }
+      if (errorMessage) {
+        dataError.push(errorMessage);
+      }
     } // end of loop
 
     const result = new WebCodInvoiceAddResponseVm();
@@ -421,25 +466,42 @@ export class V1WebCodSupplierInvoiceService {
     const timestamp = moment().toDate();
     const dataError = [];
     let totalSuccess = 0;
-        // NOTE: loop payload
+    // NOTE: loop payload
     for (const awbNumber of payload.awbNumber) {
       let errorMessage = null;
-      const transactionDetail = await CodTransactionDetail.findOne({
-        where: {
-          awbNumber,
-          codSupplierInvoiceId: payload.supplierInvoiceId,
-          isDeleted: false,
-        },
-      });
+
+      let transactionDetail: CodTransactionDetail;
+      const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+        'master',
+      );
+      try {
+        transactionDetail = await getConnection()
+          .createQueryBuilder(CodTransactionDetail, 'ctd')
+          .setQueryRunner(masterTransactionDetailQueryRunner)
+          .where(
+            'ctd.awbNumber = :awbNumber AND ctd.codSupplierInvoiceId = :codSupplierInvoiceId AND ctd.isDeleted = false',
+            {
+              awbNumber,
+              codSupplierInvoiceId: payload.supplierInvoiceId,
+            },
+          )
+          .getOne();
+      } finally {
+        await masterTransactionDetailQueryRunner.release();
+      }
+
       if (transactionDetail) {
-        await CodTransactionDetail.update({
-          codTransactionDetailId: transactionDetail.codTransactionDetailId,
-        }, {
-          supplierInvoiceStatusId: null,
-          codSupplierInvoiceId: null,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timestamp,
-        });
+        await CodTransactionDetail.update(
+          {
+            codTransactionDetailId: transactionDetail.codTransactionDetailId,
+          },
+          {
+            supplierInvoiceStatusId: null,
+            codSupplierInvoiceId: null,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timestamp,
+          },
+        );
         // NOTE: update transaction history for supplier invoice??
         CodTransactionHistoryQueueService.perform(
           transactionDetail.awbItemId,
@@ -456,7 +518,9 @@ export class V1WebCodSupplierInvoiceService {
       }
 
       // NOTE: error message
-      if (errorMessage) { dataError.push(errorMessage); }
+      if (errorMessage) {
+        dataError.push(errorMessage);
+      }
     } // end of loop
     const result = new WebCodInvoiceRemoveResponseVm();
     result.status = 'ok';
@@ -476,26 +540,40 @@ export class V1WebCodSupplierInvoiceService {
     let totalSuccess = 0;
     // NOTE: loop payload
     for (const awbNumber of payload.awbNumber) {
-      const transactionDetail = await CodTransactionDetail.findOne({
-        where: {
-          awbNumber,
-          codSupplierInvoiceId: payload.supplierInvoiceId,
-          isVoid: false,
-          isDeleted: false,
-        },
-      });
+      let transactionDetail: CodTransactionDetail;
+      const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+        'master',
+      );
+      try {
+        transactionDetail = await getConnection()
+          .createQueryBuilder(CodTransactionDetail, 'ctd')
+          .setQueryRunner(masterTransactionDetailQueryRunner)
+          .where(
+            'ctd.awbNumber = :awbNumber AND ctd.codSupplierInvoiceId = :codSupplierInvoiceId AND ctd.isVoid = false AND ctd.isDeleted = false',
+            {
+              awbNumber,
+              codSupplierInvoiceId: payload.supplierInvoiceId,
+            },
+          )
+          .getOne();
+      } finally {
+        await masterTransactionDetailQueryRunner.release();
+      }
 
       if (transactionDetail) {
-        await CodTransactionDetail.update({
-          codTransactionDetailId: transactionDetail.codTransactionDetailId,
-        }, {
-          supplierInvoiceStatusId: null,
-          codSupplierInvoiceId: null,
-          voidNote: payload.voidNote,
-          isVoid: true,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timestamp,
-        });
+        await CodTransactionDetail.update(
+          {
+            codTransactionDetailId: transactionDetail.codTransactionDetailId,
+          },
+          {
+            supplierInvoiceStatusId: null,
+            codSupplierInvoiceId: null,
+            voidNote: payload.voidNote,
+            isVoid: true,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timestamp,
+          },
+        );
         // NOTE: update transaction history for supplier invoice??
         CodTransactionHistoryQueueService.perform(
           transactionDetail.awbItemId,
@@ -511,7 +589,6 @@ export class V1WebCodSupplierInvoiceService {
         const errorMessage = `Resi ${awbNumber} tidak valid, sudah pernah void resi!`;
         dataError.push(errorMessage);
       }
-
     } // end of loop
     const result = new WebCodInvoiceRemoveResponseVm();
     result.status = 'ok';
@@ -527,7 +604,8 @@ export class V1WebCodSupplierInvoiceService {
     // mapping field
     payload.fieldResolverMap['supplierInvoiceStatus'] = 't2.status_title';
     payload.fieldResolverMap['adminName'] = 't5.first_name';
-    payload.fieldResolverMap['supplierInvoiceStatusId'] = 't1.supplier_invoice_status_id';
+    payload.fieldResolverMap['supplierInvoiceStatusId'] =
+      't1.supplier_invoice_status_id';
     payload.fieldResolverMap['partnerId'] = 't1.partner_id';
     payload.fieldResolverMap['partnerName'] = 't4.partner_name';
 
@@ -613,54 +691,63 @@ export class V1WebCodSupplierInvoiceService {
     awbNumber: string,
     partnerId: number,
   ): Promise<WebCodAwbDelivery> {
-
     // #region get data query builder
-    const qb = createQueryBuilder();
-    qb.addSelect('t1.awb_item_id', 'awbItemId');
-    qb.addSelect('t1.awb_number', 'awbNumber');
-    qb.addSelect('t3.cod_value', 'codValue');
-    qb.addSelect('t6.user_id_driver', 'userIdDriver');
-    qb.addSelect('t7.cod_payment_method', 'paymentMethod');
-    qb.addSelect('t7.cod_payment_service', 'paymentService');
-    qb.addSelect('t7.no_reference', 'noReference');
+    let results: WebCodAwbDelivery;
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      const qb = await getConnection()
+        .createQueryBuilder()
+        .setQueryRunner(masterQueryRunner);
 
-    qb.from('awb_item_attr', 't1');
-    qb.innerJoin(
-      'awb',
-      't2',
-      't1.awb_id = t2.awb_id AND t2.is_cod = true AND t2.is_deleted = false',
-    );
-    qb.innerJoin(
-      'pickup_request_detail',
-      't3',
-      't1.awb_item_id = t3.awb_item_id AND t3.is_deleted = false',
-    );
-    qb.innerJoin(
-      'pickup_request',
-      't4',
-      't3.pickup_request_id = t4.pickup_request_id AND t4.is_deleted = false',
-    );
-    qb.innerJoin(
-      'do_pod_deliver_detail',
-      't5',
-      't5.awb_item_id = t1.awb_item_id AND t5.awb_status_id_last = 30000 AND t5.is_deleted = false',
-    );
-    qb.innerJoin(
-      'do_pod_deliver',
-      't6',
-      't6.do_pod_deliver_id = t5.do_pod_deliver_id AND t6.is_deleted = false',
-    );
-    qb.innerJoin(
-      'cod_payment',
-      't7',
-      't7.do_pod_deliver_detail_id = t5.do_pod_deliver_detail_id AND t7.is_deleted = false',
-    );
-    qb.where('t1.awb_number = :awbNumber', { awbNumber });
-    qb.andWhere('t1.is_deleted = false');
-    qb.andWhere('t4.partner_id = :partnerId', { partnerId });
-    // #endregion query
+      qb.addSelect('t1.awb_item_id', 'awbItemId');
+      qb.addSelect('t1.awb_number', 'awbNumber');
+      qb.addSelect('t3.cod_value', 'codValue');
+      qb.addSelect('t6.user_id_driver', 'userIdDriver');
+      qb.addSelect('t7.cod_payment_method', 'paymentMethod');
+      qb.addSelect('t7.cod_payment_service', 'paymentService');
+      qb.addSelect('t7.no_reference', 'noReference');
 
-    return await qb.getRawOne();
+      qb.from('awb_item_attr', 't1');
+      qb.innerJoin(
+        'awb',
+        't2',
+        't1.awb_id = t2.awb_id AND t2.is_cod = true AND t2.is_deleted = false',
+      );
+      qb.innerJoin(
+        'pickup_request_detail',
+        't3',
+        't1.awb_item_id = t3.awb_item_id AND t3.is_deleted = false',
+      );
+      qb.innerJoin(
+        'pickup_request',
+        't4',
+        't3.pickup_request_id = t4.pickup_request_id AND t4.is_deleted = false',
+      );
+      qb.innerJoin(
+        'do_pod_deliver_detail',
+        't5',
+        't5.awb_item_id = t1.awb_item_id AND t5.awb_status_id_last = 30000 AND t5.is_deleted = false',
+      );
+      qb.innerJoin(
+        'do_pod_deliver',
+        't6',
+        't6.do_pod_deliver_id = t5.do_pod_deliver_id AND t6.is_deleted = false',
+      );
+      qb.innerJoin(
+        'cod_payment',
+        't7',
+        't7.do_pod_deliver_detail_id = t5.do_pod_deliver_detail_id AND t7.is_deleted = false',
+      );
+      qb.where('t1.awb_number = :awbNumber', { awbNumber });
+      qb.andWhere('t1.is_deleted = false');
+      qb.andWhere('t4.partner_id = :partnerId', { partnerId });
+      // #endregion query
+
+      results = await qb.getRawOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
+    return results;
   }
 
   private static createTransactionDetail(
@@ -674,7 +761,7 @@ export class V1WebCodSupplierInvoiceService {
     firstTransaction.awbItemId = item.awbItemId;
     firstTransaction.awbNumber = item.awbNumber;
     firstTransaction.codTransactionId = null;
-    firstTransaction.transactionStatusId = 30000;
+    firstTransaction.transactionStatusId = TRANSACTION_STATUS.SIGESIT;
     firstTransaction.supplierInvoiceStatusId = TRANSACTION_STATUS.DRAFT_INV;
     firstTransaction.codSupplierInvoiceId = codSupplierInvoiceId;
     firstTransaction.paymentMethod = item.paymentMethod;
