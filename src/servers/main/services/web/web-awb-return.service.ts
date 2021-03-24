@@ -21,6 +21,41 @@ import { WebReturHistoryPayloadVm } from '../../models/web-retur-history-payload
 import { QueryBuilder, createQueryBuilder } from 'typeorm';
 
 export class WebAwbReturnService {
+  static ExportHeaderReturnList = [
+    'Resi',
+    'Status',
+    'Tanggal Retur',
+    'Gerai Manifest',
+    'Gerai Asal Retur',
+    'Partner',
+    'Resi Retur',
+    'Jenis Return',
+  ];
+
+  private static strReplaceFunc = str => {
+    return str
+      ? str
+          .replace(/\n/g, ' ')
+          .replace(/\r/g, ' ')
+          .replace(/;/g, '|')
+          .replace(/,/g, '.')
+      : null;
+  }
+
+  private static streamTransformReturList(d) {
+    const values = [
+      `'${d.originAwbNumber}`,
+      WebAwbReturnService.strReplaceFunc(d.awbStatus),
+      d.createdTime ?  moment(d.createdTime).format('YYYY-MM-DD') : '-',
+      WebAwbReturnService.strReplaceFunc(d.branchManifest),
+      WebAwbReturnService.strReplaceFunc(d.branchFrom),
+      WebAwbReturnService.strReplaceFunc(d.partnerName),
+      d.returnAwbNumber ? WebAwbReturnService.strReplaceFunc(`'${d.returnAwbNumber}`) : '-',
+      d.userIdDriver ? 'Manual' : (d.isPartnerLogistic ? d.partnerLogisticName : 'Internal'),
+    ];
+    return `${values.join(',')} \n`;
+  }
+
   static async getAwb(
     payload: WebAwbReturnGetAwbPayloadVm,
   ): Promise<WebAwbReturnGetAwbResponseVm> {
@@ -287,12 +322,23 @@ export class WebAwbReturnService {
       //   result.status = 'error';
       //   result.message = `No resi ${payload.awbReturnNumber} tidak ditemukan`;
       // } else {
-      AwbReturn.update(awbReturn.awbReturnId, {
-        returnAwbId,
-        returnAwbNumber: payload.awbReturnNumber,
-        userIdUpdated: authMeta.userId,
-        updatedTime: moment().toDate(),
-      });
+
+      if (payload.userIdDriver) {
+        AwbReturn.update(awbReturn.awbReturnId, {
+          returnAwbId,
+          returnAwbNumber: payload.awbReturnNumber,
+          userIdUpdated: authMeta.userId,
+          updatedTime: moment().toDate(),
+          userIdDriver: payload.userIdDriver,
+        });
+      } else {
+        AwbReturn.update(awbReturn.awbReturnId, {
+          returnAwbId,
+          returnAwbNumber: payload.awbReturnNumber,
+          userIdUpdated: authMeta.userId,
+          updatedTime: moment().toDate(),
+        });
+      }
 
       result.status = 'ok';
       result.message = 'success';
@@ -342,6 +388,8 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
     payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
     payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
+    payload.fieldResolverMap['branchManifest'] = 't4.branch_name';
+    payload.fieldResolverMap['partnerName'] = 't5.partner_name';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -350,7 +398,7 @@ export class WebAwbReturnService {
     payload.globalSearchFields = [
       {
         field: 'originAwbNumber',
-      }
+      },
     ];
 
     const repo = new OrionRepositoryService(AwbReturn, 't1');
@@ -373,12 +421,21 @@ export class WebAwbReturnService {
       ['t3.branch_name', 'branchFrom'],
       ['t2.awb_status_name', 'awbStatus'],
       ['t2.awb_status_id', 'awbStatusId'],
+      ['t4.branch_name', 'branchManifest'],
+      ['t5.partner_name', 'partnerName'],
+      ['COALESCE(t1.user_id_driver, 0)', 'userIdDriver'],
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.originAwb.awb.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.originAwb.awb.partner, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     const data = await q.exec();
@@ -396,22 +453,138 @@ export class WebAwbReturnService {
     payload: WebReturHistoryPayloadVm,
   ): Promise<WebReturHistoryFindAllResponseVm> {
     const result = new WebReturHistoryFindAllResponseVm();
-    const qb = createQueryBuilder();
-    qb.addSelect('c.do_pod_date_time', 'doPodDateTime');
-    qb.addSelect('c.do_pod_code', 'doPodCode');
-    qb.addSelect('c.do_pod_id', 'doPodId');
-    qb.addSelect('c.branch_id_to', 'branchIdTo');
-    qb.addSelect('d.branch_name', 'branchNameTo');
-    qb.addSelect('e.first_name', 'driverName');
-    qb.from('awb_return', 'a');
-    qb.innerJoin('do_pod_detail', 'b', 'a.return_awb_number = b.awb_number AND b.is_deleted = false');
-    qb.innerJoin('do_pod', 'c', 'c.do_pod_id = b.do_pod_id AND c.is_deleted = false');
-    qb.innerJoin('branch', 'd', 'd.branch_id = c.branch_id_to AND d.is_deleted = false');
-    qb.innerJoin('users', 'e', 'c.user_id_driver = e.user_id AND e.is_deleted = false');
-    qb.where('a.is_deleted = false');
-    qb.andWhere('a.return_awb_number = :awbNumber', { awbNumber: payload.awbNumber });
-    const data = await qb.getRawMany();
-    result.data = data;
+
+    if (payload.isManual) {
+      result.data = (await this.historyAwbManualReturn(payload)).data;
+    } else {
+      const qb = createQueryBuilder();
+      qb.addSelect('c.do_pod_date_time', 'doPodDateTime');
+      qb.addSelect('c.do_pod_code', 'doPodCode');
+      qb.addSelect('c.do_pod_id', 'doPodId');
+      qb.addSelect('c.branch_id_to', 'branchIdTo');
+      qb.addSelect('d.branch_name', 'branchNameTo');
+      qb.addSelect('e.first_name', 'driverName');
+      qb.from('awb_return', 'a');
+      qb.innerJoin('do_pod_detail', 'b', 'a.return_awb_number = b.awb_number AND b.is_deleted = false');
+      qb.innerJoin('do_pod', 'c', 'c.do_pod_id = b.do_pod_id AND c.is_deleted = false');
+      qb.innerJoin('branch', 'd', 'd.branch_id = c.branch_id_to AND d.is_deleted = false');
+      qb.innerJoin('users', 'e', 'c.user_id_driver = e.user_id AND e.is_deleted = false');
+      qb.where('a.is_deleted = false');
+      qb.andWhere('a.return_awb_number = :awbNumber', { awbNumber: payload.awbNumber });
+      const data = await qb.getRawMany();
+      result.data = data;
+    }
+
     return result;
+  }
+
+  private static async historyAwbManualReturn(
+    payload: WebReturHistoryPayloadVm,
+  ): Promise<WebReturHistoryFindAllResponseVm> {
+    const repo = new OrionRepositoryService(AwbReturn, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q);
+
+    q.selectRaw(
+      ['t1.awb_return_id', 'awbReturnId'],
+      ['t1.return_awb_number', 'returnAwbNumber'],
+      ['t1.created_time', 'createdTime'],
+      ['t2.employee_id', 'userDriverId'],
+      ['t2.fullname', 'driverName'],
+    );
+
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.returnAwbNumber, w => w.equals(payload.awbNumber));
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebReturHistoryFindAllResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+    return result;
+  }
+
+  static async exportReturnList(payload: BaseMetaPayloadVm, response) {
+    try {
+      const fileName = `POD_return_list${new Date().getTime()}.csv`;
+
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+      response.flushHeaders();
+      response.write(`${this.ExportHeaderReturnList.join(',')}\n`);
+
+      payload.fieldResolverMap['awbReturnId'] = 't1.awb_return_id';
+      payload.fieldResolverMap['originAwbId'] = 't1.origin_awb_id';
+      payload.fieldResolverMap['originAwbNumber'] = 't1.origin_awb_number';
+      payload.fieldResolverMap['returnAwbId'] = 't1.return_awb_id';
+      payload.fieldResolverMap['partnerLogisticAwb'] = 't1.partner_logistic_awb';
+      payload.fieldResolverMap['returnAwbNumber'] = 't1.return_awb_number';
+      payload.fieldResolverMap['isPartnerLogistic'] = 't1.is_partner_logistic';
+      payload.fieldResolverMap['partnerLogisticName'] = 't1.partner_logistic_name';
+      payload.fieldResolverMap['branchId'] = 't1.branch_id';
+      payload.fieldResolverMap['branchFrom'] = 't3.branch_name';
+      payload.fieldResolverMap['createdTime'] = 't1.created_time';
+      payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
+      payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
+      payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
+      payload.fieldResolverMap['branchManifest'] = 't4.branch_name';
+      payload.fieldResolverMap['partnerName'] = 't5.partner_name';
+
+      payload.globalSearchFields = [
+        {
+          field: 'originAwbNumber',
+        },
+      ];
+
+      const repo = new OrionRepositoryService(AwbReturn, 't1');
+      const q = repo.findAllRaw();
+
+      payload.applyToOrionRepositoryQuery(q);
+
+      q.selectRaw(
+      ['t1.awb_return_id', 'awbReturnId'],
+      ['t1.origin_awb_id', 'originAwbId'],
+      ['t1.partner_logistic_awb', 'partnerLogisticAwb'],
+      ['t1.origin_awb_number', 'originAwbNumber'],
+      ['t1.return_awb_id', 'returnAwbId'],
+      ['t1.is_partner_logistic', 'isPartnerLogistic'],
+      ['t1.partner_logistic_name', 'partnerLogisticName'],
+      ['t1.partner_logistic_id', 'partnerLogisticId'],
+      ['t1.return_awb_number', 'returnAwbNumber'],
+      ['t1.branch_id', 'branchId'],
+      ['t1.created_time', 'createdTime'],
+      ['t3.branch_name', 'branchFrom'],
+      ['t2.awb_status_name', 'awbStatus'],
+      ['t2.awb_status_id', 'awbStatusId'],
+      ['t4.branch_name', 'branchManifest'],
+      ['t5.partner_name', 'partnerName'],
+      ['t1.user_id_driver', 'userIdDriver'],
+    );
+
+      q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+      q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+      q.innerJoin(e => e.originAwb.awb.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+      q.innerJoin(e => e.originAwb.awb.partner, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+      await q.stream(response, this.streamTransformReturList);
+
+    } catch (err) {
+      throw err;
+    }
   }
 }

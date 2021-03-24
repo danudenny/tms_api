@@ -19,6 +19,12 @@ export class ReturHistoryVm {
 
   @ApiModelProperty()
   driverName: string;
+
+  @ApiModelProperty()
+  createdTime: string;
+
+  @ApiModelProperty()
+  returnAwbNumber: string;
 }
 
 export class WebReturHistoryFindAllResponseVm extends BaseMetaResponseVm {
