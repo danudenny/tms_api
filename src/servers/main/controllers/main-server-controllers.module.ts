@@ -62,7 +62,7 @@ import { V1WebAwbCodVoucherController } from './web/v1/web-awb-cod-voucher.contr
 import { TransactionStatusController } from './master/transaction-status.controller';
 import { BankAccountController } from './master/bank-account.controller';
 import { PackageTypeController } from './master/package-type.controller';
-import { SortirCombinePackageController } from './combine-package/machine-combine-package.controller';
+import { SortirCombinePackageController } from './combine-package/machine-combine-package.controller'; 
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
