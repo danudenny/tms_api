@@ -1,7 +1,10 @@
 // #region import
 import { getConnection, getManager } from 'typeorm';
 
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
@@ -14,6 +17,8 @@ import {
   WebCodAwbPayloadVm,
   WebCodFirstTransactionPayloadVm,
   WebCodTransferPayloadVm,
+  WebCodNominalUpdatePayloadVm,
+  WebCodNominalCheckPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   PrintCodTransferBranchVm,
@@ -22,6 +27,9 @@ import {
   WebCodTransferBranchResponseVm,
   WebCodTransferBranchCashResponseVm,
   WebCodTransferBranchCashlessResponseVm,
+  WebCodNominalUpdateResponseVm,
+  WebCodNominalCheckResponseVm,
+  WebUpdateNominalCodListResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -34,6 +42,13 @@ import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-trans
 import { CodTransactionHistory } from '../../../../../shared/orm-entity/cod-transaction-history';
 import { CodTransferTransactionQueueService } from '../../../../queue/services/cod/cod-transfer-transaction-queue.service';
 // #endregion
+import { AttachmentService } from '../../../../../shared/services/attachment.service';
+import { Awb } from '../../../../../shared/orm-entity/awb';
+import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
+import { CodAwbRevision } from '../../../../../shared/orm-entity/cod-awb-revision';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { MetaService } from '../../../../../shared/services/meta.service';
 
 export class V2WebAwbCodService {
   static async transferBranch(
@@ -86,6 +101,328 @@ export class V2WebAwbCodService {
     result.printIdCash = printIdCash;
     result.printIdCashless = printIdCashless;
     result.dataError = dataError;
+    return result;
+  }
+
+  static async nominalCheck(
+    payload: WebCodNominalCheckPayloadVm,
+  ): Promise<WebCodNominalCheckResponseVm> {
+    let awb: Awb;
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      awb = await getConnection()
+        .createQueryBuilder(Awb, 'awb')
+        .setQueryRunner(masterQueryRunner)
+        .where(
+          'awb.awbNumber = :awbNumber AND awb.isCod = true AND awb.isDeleted = false',
+          {
+            awbNumber: payload.awbNumber,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
+
+    if (!awb) {
+      throw new BadRequestException(
+        'Tidak dapat diproses karena resi bukan resi COD',
+      );
+    }
+
+    const totalCodValue = parseFloat(awb.totalCodValue.toString()).toFixed();
+    const result = new WebCodNominalCheckResponseVm();
+    if (Number(totalCodValue) !== payload.nominal) {
+      result.message = 'Nominal COD sesuai';
+      result.status = true;
+    } else {
+      throw new BadRequestException('Nominal COD tidak boleh sama!');
+    }
+    return result;
+  }
+
+  static async nominalUpdate(
+    payload: WebCodNominalUpdatePayloadVm,
+    file,
+  ): Promise<WebCodNominalUpdateResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const uuidv1 = require('uuid/v1');
+    const uuidString = uuidv1();
+
+    if (payload.nominal < 0 || payload.nominal.toString().length > 9) {
+      throw new BadRequestException('Nominal tidak sesuai!');
+    }
+
+    let checkAwb;
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      const qb = await getConnection()
+        .createQueryBuilder()
+        .setQueryRunner(masterQueryRunner);
+
+      qb.addSelect('aia.awb_id', 'awbId');
+      qb.addSelect('aia.awb_item_id', 'awbItemId');
+      qb.addSelect('aia.transaction_status_id', 'transactionStatusId');
+      qb.addSelect('cp.cod_value', 'codValue');
+
+      qb.from('AwbItemAttr', 'aia');
+      qb.innerJoin(
+        'cod_payment',
+        'cp',
+        'aia.awb_item_id = cp.awb_item_id AND cp.is_deleted = false',
+      );
+      qb.where('aia.is_deleted = false');
+      qb.andWhere('aia.awb_status_id_final = :awbStatusIdFinal');
+      qb.andWhere('aia.awb_number = :awbNumber', {
+        awbStatusIdFinal: AWB_STATUS.DLV,
+        awbNumber: payload.awbNumber,
+      });
+
+      checkAwb = await qb.getRawOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
+
+    if (!checkAwb) {
+      throw new BadRequestException(
+        'Resi tidak ditemukan atau status resi belum Deliver!',
+      );
+    }
+
+    try {
+      // upload file to aws s3
+      if (file) {
+        const formatFileName = file.originalname.split('.')[0];
+        // const splitFileNameFirst = formatFileName.split('-')[0]
+        //   ? formatFileName.split('-')[0]
+        //   : '';
+        const splitFileNameLast = formatFileName.split('-')[1]
+          ? formatFileName.split('-')[1]
+          : '';
+        if (
+          file.mimetype !== 'application/pdf' ||
+          formatFileName.indexOf('-') < 0 ||
+          // splitFileNameFirst.trim() !== 'FORM PERUBAHAN NOMINAL COD' ||
+          splitFileNameLast.trim() !== payload.awbNumber
+        ) {
+          throw new BadRequestException(
+            'Format file tidak sesuai, upload file dengan format pdf dan sesuai dengan nomor resi!',
+          );
+        }
+
+        const attachment = await AttachmentService.uploadFileBufferToS3(
+          file.buffer,
+          uuidString,
+          file.mimetype,
+          'update-nominal-cod',
+        );
+
+        if (attachment) {
+          // update data table awb, total_cod_value set params new cod value where awb_number and is_deleted = false
+          await getManager().transaction(async transactionManager => {
+            await transactionManager.update(
+              Awb,
+              {
+                awbNumber: payload.awbNumber,
+                isDeleted: false,
+              },
+              {
+                totalCodValue: Number(payload.nominal),
+              },
+            );
+
+            // update data table cod_payment, cod_value set params new cod value where awb_number and is_deleted = false
+            await transactionManager.update(
+              CodPayment,
+              {
+                awbNumber: payload.awbNumber,
+                isDeleted: false,
+              },
+              {
+                codValue: Number(payload.nominal),
+              },
+            );
+
+            if (checkAwb.transactionStatusId) {
+              // find one data table cod_transaction_detail, get data cod_value
+              let transactionDetail: CodTransactionDetail;
+              const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+                'master',
+              );
+              try {
+                transactionDetail = await getConnection()
+                  .createQueryBuilder(CodTransactionDetail, 'ctd')
+                  .setQueryRunner(masterTransactionDetailQueryRunner)
+                  .where(
+                    'ctd.awbNumber = :awbNumber AND ctd.isDeleted = false',
+                    {
+                      awbNumber: payload.awbNumber,
+                    },
+                  )
+                  .getOne();
+              } finally {
+                await masterTransactionDetailQueryRunner.release();
+              }
+
+              // find one data table cod_transaction, get data total_cod_value
+              let transaction: CodTransaction;
+              const masterTransactionQueryRunner = getConnection().createQueryRunner(
+                'master',
+              );
+              try {
+                transaction = await getConnection()
+                  .createQueryBuilder(CodTransaction, 'ct')
+                  .setQueryRunner(masterTransactionQueryRunner)
+                  .where(
+                    'ct.codTransactionId = :codTransactionId AND ct.isDeleted = false',
+                    {
+                      codTransactionId: transactionDetail.codTransactionId,
+                    },
+                  )
+                  .getOne();
+              } finally {
+                await masterTransactionQueryRunner.release();
+              }
+
+              // update data table cod_transaction, total_cod_value - cod_value + params cod_value where cod_transaction_id
+              await transactionManager.update(
+                CodTransaction,
+                {
+                  codTransactionId: transactionDetail.codTransactionId,
+                  isDeleted: false,
+                },
+                {
+                  totalCodValue:
+                    Number(transaction.totalCodValue) -
+                    Number(transactionDetail.codValue) +
+                    Number(payload.nominal),
+                },
+              );
+
+              // update data table cod_transaction_detail, cod_value where awb_number and is_deleted = false
+              await transactionManager.update(
+                CodTransactionDetail,
+                {
+                  awbNumber: payload.awbNumber,
+                  isDeleted: false,
+                },
+                {
+                  codValue: Number(payload.nominal),
+                },
+              );
+            }
+
+            let revision: CodAwbRevision;
+            const masterRevisionQueryRunner = getConnection().createQueryRunner(
+              'master',
+            );
+            try {
+              revision = await getConnection()
+                .createQueryBuilder(CodAwbRevision, 'car')
+                .setQueryRunner(masterRevisionQueryRunner)
+                .where('car.awbNumber = :awbNumber AND car.isDeleted = false', {
+                  awbNumber: payload.awbNumber,
+                })
+                .getOne();
+            } finally {
+              await masterRevisionQueryRunner.release();
+            }
+
+            console.log('testt', revision);
+
+            if (revision) {
+              await transactionManager.update(
+                CodAwbRevision,
+                {
+                  codAwbRevisionId: revision.codAwbRevisionId,
+                  isDeleted: false,
+                },
+                {
+                  codValueCurrent: Number(payload.nominal),
+                  attachmentId: attachment.attachmentTmsId,
+                  userIdCreated: authMeta.userId,
+                  userIdUpdated: authMeta.userId,
+                  createdTime: moment().toDate(),
+                  updatedTime: moment().toDate(),
+                  requestUserId: payload.requestUser,
+                },
+              );
+            } else {
+              await transactionManager.insert(CodAwbRevision, {
+                codAwbRevisionId: uuidString,
+                awbId: checkAwb.awbId,
+                awbItemId: checkAwb.awbItemId,
+                awbNumber: payload.awbNumber,
+                codValueCurrent: payload.nominal,
+                codValue: checkAwb.codValue,
+                attachmentId: attachment.attachmentTmsId,
+                userIdCreated: authMeta.userId,
+                userIdUpdated: authMeta.userId,
+                createdTime: moment().toDate(),
+                updatedTime: moment().toDate(),
+                requestUserId: payload.requestUser,
+              });
+            }
+          });
+
+          const result = new WebCodNominalUpdateResponseVm();
+          result.message = 'Nominal COD berhasil diupdate';
+          result.status = true;
+          return result;
+        } else {
+          throw new BadRequestException(
+            'Gagal upload form attachment, coba ulangi lagi!',
+          );
+        }
+      } else {
+        throw new BadRequestException('Harap upload form attachment!');
+      }
+    } catch (error) {
+      throw new ServiceUnavailableException(error.message);
+    }
+  }
+
+  static async nominal(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebUpdateNominalCodListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['requestorId'] = 'car.request_user_id';
+    payload.fieldResolverMap['updateDate'] = 'car.created_time';
+
+    const repo = new OrionRepositoryService(CodAwbRevision, 'car');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['car.awb_number', 'awbNumber'],
+      ['car.created_time', 'updateDate'],
+      ['car.request_user_id', 'requestorId'],
+      ['userreq.first_name', 'requestorName'],
+      ['car.cod_value', 'codValue'],
+      ['car.cod_value_current', 'codValueCurrent'],
+      ['car.attachment_id', 'attachmentId'],
+      ['at.url', 'attachmentUrl'],
+    );
+
+    q.innerJoin(e => e.attachment, 'at', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.requestor, 'userreq', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebUpdateNominalCodListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
     return result;
   }
 
@@ -180,8 +517,8 @@ export class V2WebAwbCodService {
       const firstTransaction = new WebCodFirstTransactionPayloadVm();
       firstTransaction.awbItemId = item.awbItemId;
       firstTransaction.awbNumber = item.awbNumber;
-      firstTransaction.transactionStatusId = TRANSACTION_STATUS.TRM,
-      firstTransaction.codTransactionId = transactiontId;
+      (firstTransaction.transactionStatusId = TRANSACTION_STATUS.TRM),
+        (firstTransaction.codTransactionId = transactiontId);
       firstTransaction.supplierInvoiceStatusId = null;
       firstTransaction.codSupplierInvoiceId = null;
       firstTransaction.paymentService = item.paymentService;
