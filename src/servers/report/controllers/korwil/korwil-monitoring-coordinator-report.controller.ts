@@ -1,9 +1,9 @@
-import { Body, Controller, Post, Get, Query, Response } from '@nestjs/common';
+import { Body, Controller, Post, Get, Query, Response, HttpCode, HttpStatus } from '@nestjs/common';
 import express = require('express');
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import { MonitoringCoordinatorExcelExecuteResponseVm } from '../../../main/models/web-monitoring-coordinator.response.vm';
+import { MonitoringCoordinatorExcelExecuteResponseVm, WebMonitoringCoordinatorTaskReportResponse } from '../../../main/models/web-monitoring-coordinator.response.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
-import { MonitoringCoordinatorExcelExecutePayloadVm } from '../../../main/models/web-monitoring-coordinator-payload.vm';
+import { MonitoringCoordinatorExcelExecutePayloadVm, WebMonitoringCoordinatorTaskPayload } from '../../../main/models/web-monitoring-coordinator-payload.vm';
 import { KorwilMonitoringCoordinatorReportService } from '../../services/korwil/korwil-monitoring-coordinator-report.service';
 
 @ApiUseTags('Korwil Monitoring Coordinator Report')
@@ -31,5 +31,15 @@ export class KorwilMonitoringCoordinatorReportController {
     @Response() serverResponse: express.Response,
   ) {
     return KorwilMonitoringCoordinatorReportService.generateMonitoringBranchCSV(serverResponse, queryParams);
+  }
+
+  @Get('coordinator/taskReport')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebMonitoringCoordinatorTaskReportResponse })
+  public async monitoringCoordinatorTaskReport(
+    @Query() payload: WebMonitoringCoordinatorTaskPayload,
+    @Response() serverResponse: express.Response,
+  ) {
+    return KorwilMonitoringCoordinatorReportService.generateMonitoringBranchPDF(payload, serverResponse);
   }
 }

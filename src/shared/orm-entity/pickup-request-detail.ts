@@ -395,6 +395,13 @@ export class PickupRequestDetail extends TmsBaseEntity {
   })
   isHighValue: boolean;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'handover_delivery',
+  })
+  handoverDelivery: boolean;
+
   @OneToOne(() => District)
   @JoinColumn({ name: 'origin_code', referencedColumnName: 'districtCode' })
   districtOrigin: District;
