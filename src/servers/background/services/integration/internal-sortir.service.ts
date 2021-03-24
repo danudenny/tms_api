@@ -23,13 +23,14 @@ export class InternalSortirService {
     const data = [];
     let zip_code;
     let is_cod;
-    let district_code;
+    let district_id;
     const dateNow = moment().toDate();
     const rawQueryAwb = `
       SELECT
         consignee_zip,
         is_cod,
-        awb_number
+        awb_number,
+        to_id
       FROM awb
       WHERE
         awb_number = '${escape(payload.tracking_number)}'
@@ -40,6 +41,7 @@ export class InternalSortirService {
       for (let a = 0; a < resultDataAwb.length; a++) {
         zip_code = resultDataAwb[a].consignee_zip;
         is_cod = resultDataAwb[a].is_cod;
+        district_id = resultDataAwb[a].to_id;
       }
 
       if ((is_cod) || (is_cod == true)) {
@@ -50,85 +52,49 @@ export class InternalSortirService {
 
       if ((zip_code == null) || (zip_code.trim() == '')) {
         // Jika ZIPCODE tidak ada, Search By District
-        const rawQueryStt = `
-          SELECT
-            ts.nostt,
-            ts.tujuan
-          FROM temp_stt ts
+        const rawQuery = `
+          SELECT bs.*
+          FROM branch_sortir bs
+          INNER JOIN branch b ON bs.branch_id_lastmile = b.branch_id AND b.is_deleted = FALSE
+          INNER JOIN district d ON b.district_id = d.district_id AND d.is_deleted = FALSE
           WHERE
-            ts.nostt = '${escape(payload.tracking_number)}'
+            bs.is_deleted = FALSE AND
+            d.district_id = ${district_id} AND
+            bs.is_cod = ${escape(is_cod)} AND
+            bs.branch_id = ${payload.sorting_branch_id}
           ;
         `;
-        const resultDataStt = await RawQueryService.query(rawQueryStt);
-        if (resultDataStt.length > 0 ) {
-          for (let a = 0; a < resultDataStt.length; a++) {
-            district_code = resultDataStt[a].tujuan;
-          }
-          const rawQuery = `
-            SELECT bs.*
-            FROM branch_sortir bs
-            INNER JOIN branch b ON bs.branch_id_lastmile = b.branch_id AND b.is_deleted = FALSE
-            INNER JOIN district d ON b.district_id = d.district_id AND d.is_deleted = FALSE
-            WHERE
-              bs.is_deleted = FALSE AND
-              d.district_code = '${escape(district_code)}' AND
-              bs.is_cod = ${escape(is_cod)} AND
-              bs.branch_id = ${payload.sorting_branch_id}
-            ;
-          `;
-          const resultData = await RawQueryService.query(rawQuery);
-          if (resultData.length > 0 ) {
-            result.message = 'Check Spk Success';
-
-            for (let a = 0; a < resultData.length; a++) {
-              data.push({
-                state: 0,
-                tracking_number: payload.tracking_number,
-                chute_number: resultData[a].no_chute,
-                request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
-              });
-              BagSortirLogQueueService.perform(
-                result.message,
-                dateNow,
-                0,
-                payload.sorting_branch_id,
-                payload.tracking_number,
-                resultData[a].no_chute,
-                resultData[a].branch_id_lastmile,
-                resultData[a].is_cod,
-              );
-            }
-            result.statusCode = HttpStatus.OK;
-            result.data = data;
-            return result;
-          } else {
+        const resultData = await RawQueryService.query(rawQuery);
+        if (resultData.length > 0 ) {
+          result.message = 'Check Spk Success';
+          for (let a = 0; a < resultData.length; a++) {
             data.push({
-              state: 1,
+              state: 0,
               tracking_number: payload.tracking_number,
+              chute_number: resultData[a].no_chute,
+              request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
             });
-            result.statusCode = HttpStatus.BAD_REQUEST;
-            result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
-            result.data = data;
-
             BagSortirLogQueueService.perform(
               result.message,
               dateNow,
-              1,
+              0,
               payload.sorting_branch_id,
               payload.tracking_number,
-              null,
-              null,
-              null,
+              resultData[a].no_chute,
+              resultData[a].branch_id_lastmile,
+              resultData[a].is_cod,
             );
-            return result;
           }
+          result.statusCode = HttpStatus.OK;
+          result.data = data;
+          return result;
         } else {
           data.push({
             state: 1,
             tracking_number: payload.tracking_number,
           });
           result.statusCode = HttpStatus.BAD_REQUEST;
-          result.message = `Zip Code not found`;
+          result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
           result.data = data;
 
           BagSortirLogQueueService.perform(
