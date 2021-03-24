@@ -25,7 +25,7 @@ export class CheckAwbVm {
   state: number;
 
   @ApiModelProperty()
-  tracking_number: string;
+  tracking_number: string [];
 
   @ApiModelProperty()
   chute_number: string;
