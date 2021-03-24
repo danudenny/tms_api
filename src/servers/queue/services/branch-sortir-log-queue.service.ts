@@ -6,7 +6,7 @@ import { Between, getManager } from 'typeorm';
 import moment= require('moment');
 
 // DOC: https://optimalbits.github.io/bull/
-
+ 
 export class BagSortirLogQueueService {
   public static queue = QueueBullBoard.createQueue.add(
     'branch-sortir-log-queue',
