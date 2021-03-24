@@ -423,7 +423,7 @@ export class WebAwbReturnService {
       ['t2.awb_status_id', 'awbStatusId'],
       ['t4.branch_name', 'branchManifest'],
       ['t5.partner_name', 'partnerName'],
-      ['COALESCE(t1.user_id_driver, 0)', 'userIdDriver'],
+      ['t1.user_id_driver', 'userIdDriver'],
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
