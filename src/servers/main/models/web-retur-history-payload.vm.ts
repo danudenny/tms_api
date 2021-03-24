@@ -1,7 +1,7 @@
 import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 import { ApiModelProperty, ApiModelPropertyOptional} from '../../../shared/external/nestjs-swagger';
 
-export class WebReturHistoryPayloadVm extends BaseMetaPayloadVm {
+export class WebReturHistoryPayloadVm{
   @ApiModelProperty()
   awbNumber: string;
 

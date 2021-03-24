@@ -484,8 +484,6 @@ export class WebAwbReturnService {
     const repo = new OrionRepositoryService(AwbReturn, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q);
-
     q.selectRaw(
       ['t1.awb_return_id', 'awbReturnId'],
       ['t1.return_awb_number', 'returnAwbNumber'],
@@ -500,11 +498,9 @@ export class WebAwbReturnService {
 
     q.andWhere(e => e.returnAwbNumber, w => w.equals(payload.awbNumber));
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebReturHistoryFindAllResponseVm();
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
     return result;
   }
 
