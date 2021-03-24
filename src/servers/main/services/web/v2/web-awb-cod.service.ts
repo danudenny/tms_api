@@ -312,12 +312,12 @@ export class V2WebAwbCodService {
               );
             }
 
-            let resivion: CodAwbRevision;
+            let revision: CodAwbRevision;
             const masterRevisionQueryRunner = getConnection().createQueryRunner(
               'master',
             );
             try {
-              resivion = await getConnection()
+              revision = await getConnection()
                 .createQueryBuilder(CodAwbRevision, 'car')
                 .setQueryRunner(masterRevisionQueryRunner)
                 .where('car.awbNumber = :awbNumber AND car.isDeleted = false', {
@@ -328,11 +328,13 @@ export class V2WebAwbCodService {
               await masterRevisionQueryRunner.release();
             }
 
-            if (resivion) {
+            console.log('testt', revision);
+
+            if (revision) {
               await transactionManager.update(
                 CodAwbRevision,
                 {
-                  codAwbRevisionId: resivion.codAwbRevisionId,
+                  codAwbRevisionId: revision.codAwbRevisionId,
                   isDeleted: false,
                 },
                 {
