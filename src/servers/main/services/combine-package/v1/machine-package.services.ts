@@ -148,6 +148,8 @@ export class V1MachineService {
     let isAllow: boolean = true;
     let districtId = null;
 
+    const resultA = new MachinePackageResponseVm();
+
     const awbItemAttr = await AwbService.validAwbNumber(awbNumber);
     // NOTE: check destination awb with awb.toId
     const awb = await Awb.findOne({
@@ -155,9 +157,25 @@ export class V1MachineService {
     });
     // handle awb not found
     if (!awbItemAttr || !awb) {
-      throw new BadRequestException('No resi tidak ditemukan / tidak valid');
+      const data = [];
+      data.push({
+        state: 1,
+        no_gabung_sortir: null,
+      });
+      resultA.statusCode = HttpStatus.BAD_REQUEST;
+      resultA.message = `No resi tidak ditemukan / tidak valid`;
+      resultA.data = data;
+      return resultA;
     } else if (awbItemAttr.isPackageCombined) {
-      throw new BadRequestException('Nomor resi sudah digabung sortir');
+      const data = [];
+      data.push({
+        state: 1,
+        no_gabung_sortir: null,
+      });
+      resultA.statusCode = HttpStatus.BAD_REQUEST;
+      resultA.message = `Nomor resi sudah digabung sortir`;
+      resultA.data = data;
+      return resultA;
     }
     // check awb status
     if (awbItemAttr.awbStatusIdLast !== 2600) {
