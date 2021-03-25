@@ -11,12 +11,10 @@ export class AwbPatchStatusController {
 
   @Post('dlv')
   @HttpCode(HttpStatus.OK)
-  @ApiImplicitHeader({ name: 'x-api-key' })
+  @ApiImplicitHeader({ name: 'auth-key' })
   @UseGuards(AuthKeyCodGuard)
   @ApiOkResponse({ type: AwbPatchStatusSuccessResponseVm })
-  public async patchDataDlv(
-    @Body() payload: AwbPatchStatusPayloadVm,
-  ) {
+  public async patchDataDlv(@Body() payload: AwbPatchStatusPayloadVm) {
     return AwbPatchStatusService.patchDataDlv(payload);
   }
 }
