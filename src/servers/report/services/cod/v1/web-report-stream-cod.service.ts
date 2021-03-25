@@ -88,8 +88,8 @@ export class V1WebReportCodStreamService {
     'Recipient',
     'Tipe Pembayaran',
     'Status Internal',
-    'Status Invoice',
     'Tracking Status',
+    'Status Invoice',
     'Cust Package',
     'Pickup Source',
     'Current Position',
@@ -304,9 +304,9 @@ export class V1WebReportCodStreamService {
       '',
       '',
       doc.tdDateUpdated
-        ? moment.utc(doc.tdDateUpdated).format('YYYY-MM-DD HH:mm')
+        ? moment(doc.tdDateUpdated).format('YYYY-MM-DD HH:mm')
         : doc.dateUpdated
-        ? moment.utc(doc.dateUpdated).format('YYYY-MM-DD HH:mm')
+        ? moment(doc.dateUpdated).format('YYYY-MM-DD HH:mm')
         : null,
       doc.tdUserIdUpdatedNik
         ? V1WebReportCodStreamService.strReplaceFunc(doc.tdUserIdUpdatedNik) +
@@ -353,7 +353,7 @@ export class V1WebReportCodStreamService {
         '',
         '',
         d.dateUpdated
-          ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm')
+          ? moment(d.dateUpdated).format('YYYY-MM-DD HH:mm')
           : null,
         (d.userIdUpdatedNik
           ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedNik)
