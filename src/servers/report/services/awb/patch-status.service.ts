@@ -19,6 +19,7 @@ export class AwbPatchStatusService {
       { cache: true },
     );
     const errorMsg = [];
+    let totalSuccess = 0;
     for (const awb of payload.data) {
       let message = null;
       if (awb.length == 12) {
@@ -62,6 +63,7 @@ export class AwbPatchStatusService {
               awbPod.latitudeDeliveryLast,
               awbPod.longitudeDeliveryLast,
             );
+            totalSuccess += 1;
           } else {
             message = `Status Resi ${awb} bukan Antar`;
           }
@@ -79,7 +81,7 @@ export class AwbPatchStatusService {
 
     const result = new AwbPatchStatusSuccessResponseVm();
     result.errors = errorMsg;
-    result.message = 'Update Status Success';
+    result.message = `Update Status Success ${totalSuccess} Resi`;
     result.status = 200;
     return result;
   }
