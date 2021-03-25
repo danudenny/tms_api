@@ -84,6 +84,36 @@ export class V1MachineService {
       });
       if(branch){
         if (branchSortir) {
+
+          for(let i = 0; i < payload.reference_numbers.length; i++) {
+            const awbItemAttr = await AwbService.validAwbNumber(payload.reference_numbers[i]);
+            // NOTE: check destination awb with awb.toId
+            const awb = await Awb.findOne({
+              where: { awbNumber: payload.reference_numbers[i], isDeleted: false },
+            });
+            if (!awbItemAttr || !awb) {
+              const data = [];
+              data.push({
+                state: 1,
+                no_gabung_sortir: null,
+              });
+              result.statusCode = HttpStatus.BAD_REQUEST;
+              result.message = `No resi tidak ditemukan / tidak valid`;
+              result.data = data;
+              return result;
+            } else if (awbItemAttr.isPackageCombined) {
+              const data = [];
+              data.push({
+                state: 1,
+                no_gabung_sortir: null,
+              });
+              result.statusCode = HttpStatus.BAD_REQUEST;
+              result.message = `Nomor resi sudah digabung sortir`;
+              result.data = data;
+              return result;
+            }
+          }
+          // Process Create GS
           for(let i = 0; i < payload.reference_numbers.length; i++) {
             scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
             if(scanResultMachine) {
@@ -148,35 +178,33 @@ export class V1MachineService {
     let isAllow: boolean = true;
     let districtId = null;
 
-    const resultA = new MachinePackageResponseVm();
-
     const awbItemAttr = await AwbService.validAwbNumber(awbNumber);
     // NOTE: check destination awb with awb.toId
     const awb = await Awb.findOne({
       where: { awbNumber, isDeleted: false },
     });
     // handle awb not found
-    if (!awbItemAttr || !awb) {
-      const data = [];
-      data.push({
-        state: 1,
-        no_gabung_sortir: null,
-      });
-      resultA.statusCode = HttpStatus.BAD_REQUEST;
-      resultA.message = `No resi tidak ditemukan / tidak valid`;
-      resultA.data = data;
-      return resultA;
-    } else if (awbItemAttr.isPackageCombined) {
-      const data = [];
-      data.push({
-        state: 1,
-        no_gabung_sortir: null,
-      });
-      resultA.statusCode = HttpStatus.BAD_REQUEST;
-      resultA.message = `Nomor resi sudah digabung sortir`;
-      resultA.data = data;
-      return resultA;
-    }
+    // if (!awbItemAttr || !awb) {
+    //   const data = [];
+    //   data.push({
+    //     state: 1,
+    //     no_gabung_sortir: null,
+    //   });
+    //   resultA.statusCode = HttpStatus.BAD_REQUEST;
+    //   resultA.message = `No resi tidak ditemukan / tidak valid`;
+    //   resultA.data = data;
+    //   return resultA;
+    // } else if (awbItemAttr.isPackageCombined) {
+    //   const data = [];
+    //   data.push({
+    //     state: 1,
+    //     no_gabung_sortir: null,
+    //   });
+    //   resultA.statusCode = HttpStatus.BAD_REQUEST;
+    //   resultA.message = `Nomor resi sudah digabung sortir`;
+    //   resultA.data = data;
+    //   return resultA;
+    // }
     // check awb status
     if (awbItemAttr.awbStatusIdLast !== 2600) {
       isTrouble = true;
