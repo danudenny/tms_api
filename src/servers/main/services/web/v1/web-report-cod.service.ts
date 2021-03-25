@@ -179,7 +179,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.packageType),
           this.strReplaceFunc(d.parcelNote),
           '', '',
-          d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+          d.dateUpdated ? moment(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
           (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) : '') + ' - ' + (d.userIdUpdatedName ? this.strReplaceFunc(d.userIdUpdatedName) : ''),
         ]);
 
@@ -228,7 +228,7 @@ export class V1WebReportCodService {
           this.strReplaceFunc(d.receiverRemark),
           '',
           '',
-          d.tdDateUpdated ? moment.utc(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
+          d.tdDateUpdated ? moment(d.tdDateUpdated).format('YYYY-MM-DD HH:mm') : d.dateUpdated ? moment(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
           (d.tdUserIdUpdatedNik ? this.strReplaceFunc(d.tdUserIdUpdatedNik) + ' - ' + (d.tdUserIdUpdatedName) : (d.userIdUpdatedNik ? this.strReplaceFunc(d.userIdUpdatedNik) + ' - ' + (d.userIdUpdatedName) : '-')),
         ]);
 

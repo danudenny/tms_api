@@ -185,3 +185,22 @@ export class WebCodTransactionRejectPayloadVm {
   @ApiModelProperty()
   transactionId: string;
 }
+
+export class WebCodNominalCheckPayloadVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  nominal: number;
+}
+
+export class WebCodNominalUpdatePayloadVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  requestUser: number;
+
+  @ApiModelProperty()
+  nominal: number;
+}
