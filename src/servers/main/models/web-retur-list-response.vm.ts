@@ -42,7 +42,13 @@ export class ItemReturResponseVm {
   awbStatus: string;
 
   @ApiModelProperty()
+  branchIdManifest: string;
+
+  @ApiModelProperty()
   branchManifest: string;
+
+  @ApiModelProperty()
+  partnerId: number;
 
   @ApiModelProperty()
   partnerName: string;

@@ -389,7 +389,9 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
     payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
     payload.fieldResolverMap['branchManifest'] = 't4.branch_name';
+    payload.fieldResolverMap['branchIdManifest'] = 't4.branch_id';
     payload.fieldResolverMap['partnerName'] = 't5.partner_name';
+    payload.fieldResolverMap['partnerId'] = 't5.partner_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -421,7 +423,9 @@ export class WebAwbReturnService {
       ['t3.branch_name', 'branchFrom'],
       ['t2.awb_status_name', 'awbStatus'],
       ['t2.awb_status_id', 'awbStatusId'],
+      ['t4.branch_id', 'branchIdManifest'],
       ['t4.branch_name', 'branchManifest'],
+      ['t5.partner_id', 'partnerId'],
       ['t5.partner_name', 'partnerName'],
       ['t1.user_id_driver', 'userIdDriver'],
     );
@@ -531,7 +535,9 @@ export class WebAwbReturnService {
       payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
       payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
       payload.fieldResolverMap['branchManifest'] = 't4.branch_name';
+      payload.fieldResolverMap['branchIdManifest'] = 't4.branch_id';
       payload.fieldResolverMap['partnerName'] = 't5.partner_name';
+      payload.fieldResolverMap['partnerId'] = 't5.partner_id';
 
       payload.globalSearchFields = [
         {
@@ -559,7 +565,9 @@ export class WebAwbReturnService {
       ['t3.branch_name', 'branchFrom'],
       ['t2.awb_status_name', 'awbStatus'],
       ['t2.awb_status_id', 'awbStatusId'],
+      ['t4.branch_id', 'branchIdManifest'],
       ['t4.branch_name', 'branchManifest'],
+      ['t5.partner_id', 'partnerId'],
       ['t5.partner_name', 'partnerName'],
       ['t1.user_id_driver', 'userIdDriver'],
     );
