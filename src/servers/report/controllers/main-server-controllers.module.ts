@@ -13,6 +13,7 @@ import { KorwilMonitoringCoordinatorReportController } from './korwil/korwil-mon
 import { HubMonitoringReportController } from './pod/hub-monitoring-report.controller';
 import { ScanoutWebReportController } from './pod/scanout-web-report.controller';
 import { ScaninWebDeliveryReportController } from './pod/scanin-web-delivery-report.controller';
+import { AwbPatchStatusController } from './awb-patch-status.controller';
 
 // #endregion
 @Module({
@@ -28,6 +29,7 @@ import { ScaninWebDeliveryReportController } from './pod/scanin-web-delivery-rep
     SmdMonitoringReportController,
     SmdScaninReportController,
     SmdScanoutReportController,
+    AwbPatchStatusController,
   ],
 })
 export class MainServerControllersModule {}
