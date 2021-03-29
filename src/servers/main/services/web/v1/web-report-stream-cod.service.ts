@@ -330,7 +330,7 @@ export class V1WebReportCodStreamService {
         d.codValue,
         d.codFee,
         d.codValue,
-        d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
         V1WebReportCodStreamService.strReplaceFunc(d.consigneeName),
         V1WebReportCodStreamService.strReplaceFunc(d.paymentMethod),
         'PAID', // supplier invoice status
