@@ -273,14 +273,14 @@ export class V1WebReportCodStreamService {
     // param = doc.awbNumber
     const values = [
       V1WebReportCodStreamService.strReplaceFunc(doc.partnerName),
-      doc.awbDate ? moment.utc(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
       `'${doc.awbNumber}`,
       doc.tdParcelValue ? doc.tdParcelValue : doc.prtParcelValue,
       doc.codNilai,
       doc.codFee ? doc.codFee : '-',
       doc.codNilai,
       doc.lastValidTrackingDateTime
-        ? moment.utc(doc.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
+        ? moment(doc.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
         : null,
       V1WebReportCodStreamService.strReplaceFunc(doc.penerima),
       doc.paymentMethod,
