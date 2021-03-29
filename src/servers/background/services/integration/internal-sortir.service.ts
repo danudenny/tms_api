@@ -27,6 +27,7 @@ export class InternalSortirService {
     let is_cod;
     let district_code;
     let branchSortirLogId = '';
+    let ArrChute = [];
 
     const dateNow = moment().toDate();
     const rawQueryAwb = `
@@ -85,13 +86,7 @@ export class InternalSortirService {
             result.message = 'Check Spk Success';
 
             for (let a = 0; a < resultData.length; a++) {
-              data.push({
-                state: 0,
-                tracking_number: payload.tracking_number,
-                chute_number: resultData[a].no_chute,
-                request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
-              });
-
+              ArrChute.push(resultData[a].no_chute)
               branchSortirLogId = await this.upsertBranchSortirLog(
                 result.message,
                 dateNow,
@@ -105,6 +100,12 @@ export class InternalSortirService {
                 branchSortirLogId,
               );
             }
+            data.push({
+              state: 0,
+              tracking_number: payload.tracking_number,
+              chute_number: ArrChute,
+              request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
+            });
             result.statusCode = HttpStatus.OK;
             result.data = data;
             return result;
@@ -185,12 +186,7 @@ export class InternalSortirService {
           result.message = 'Check Spk Success';
 
           for (let a = 0; a < resultData.length; a++) {
-            data.push({
-              state: 0,
-              tracking_number: payload.tracking_number,
-              chute_number: resultData[a].no_chute,
-              request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
-            });
+            ArrChute.push(resultData[a].no_chute)
 
             branchSortirLogId = await this.upsertBranchSortirLog(
               result.message,
@@ -205,6 +201,12 @@ export class InternalSortirService {
               branchSortirLogId,
             );
           }
+          data.push({
+            state: 0,
+            tracking_number: payload.tracking_number,
+            chute_number: ArrChute,
+            request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
+          });
           result.statusCode = HttpStatus.OK;
           result.data = data;
           return result;
