@@ -463,33 +463,15 @@ export class WebAwbReturnService {
     if (payload.isManual) {
       result.data = (await this.historyAwbManualReturn(payload)).data;
     } else {
-      // const qb = createQueryBuilder();
-      // qb.addSelect('c.do_pod_date_time', 'doPodDateTime');
-      // qb.addSelect('c.do_pod_code', 'doPodCode');
-      // qb.addSelect('c.do_pod_id', 'doPodId');
-      // qb.addSelect('c.branch_id_to', 'branchIdTo');
-      // // qb.addSelect('d.branch_name', 'branchNameTo');
-      // // qb.addSelect('e.first_name', 'driverName');
-      // qb.from('awb_return', 'a');
-      // qb.innerJoin('do_pod_detail', 'b', 'a.return_awb_number = b.awb_number AND b.is_deleted = false');
-      // qb.innerJoin('do_pod', 'c', 'c.do_pod_id = b.do_pod_id AND c.is_deleted = false');
-      // // qb.innerJoin('branch', 'd', 'd.branch_id = c.branch_id_to AND d.is_deleted = false');
-      // // qb.innerJoin('users', 'e', 'c.user_id_driver = e.user_id AND e.is_deleted = false');
-      // qb.where('a.is_deleted = false');
-      // qb.andWhere('a.return_awb_number = :awbNumber', { awbNumber: payload.awbNumber });
-      // const data = await qb.getRawMany();
-      // result.data = data;
-
       const repo = new OrionRepositoryService(AwbReturn, 't1');
       const q = repo.findAllRaw();
-
       q.selectRaw(
         ['t2.do_pod_date_time', 'doPodDateTime'],
         ['t2.do_pod_code', 'doPodCode'],
         ['t2.do_pod_id', 'doPodId'],
         ['t2.branch_id_to', 'branchIdTo'],
         ['t3.branch_name', 'branchNameTo'],
-        ['t4.first_name', 'driverName'],
+        [`CONCAT(t4.nik, ' - ', t4.fullname)`, 'driverName'],
       );
       q.innerJoin(e => e.doPodDetail.doPod, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -497,7 +479,7 @@ export class WebAwbReturnService {
       q.innerJoin(e => e.doPodDetail.doPod.branchTo, 't3', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-      q.innerJoin(e => e.doPodDetail.doPod.userDriver, 't4', j =>
+      q.innerJoin(e => e.doPodDetail.doPod.userDriver.employee, 't4', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
@@ -521,7 +503,8 @@ export class WebAwbReturnService {
       ['t1.return_awb_number', 'returnAwbNumber'],
       ['t1.created_time', 'createdTime'],
       ['t2.employee_id', 'userDriverId'],
-      ['t2.fullname', 'driverName'],
+      ['t2.nik', 'driverNik'],
+      [`CONCAT(t2.nik, ' - ', t2.fullname)`, 'driverName'],
     );
 
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
