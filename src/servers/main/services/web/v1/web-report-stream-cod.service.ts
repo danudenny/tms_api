@@ -1333,6 +1333,7 @@ export class V1WebReportCodStreamService {
     };
   }
 
+  // Report COD non fee stream
   static async printNonCodSupplierInvoice(filters, response) {
     // TODO: query get data
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod(
@@ -1541,6 +1542,7 @@ export class V1WebReportCodStreamService {
     return coll.aggregate(queryParam);
   }
 
+  // Report COD fee stream
   static async printCodSupplierInvoice(filters, response) {
     // TODO: query get data
     // step 1 : query get data by filter
