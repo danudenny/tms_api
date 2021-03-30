@@ -273,14 +273,14 @@ export class V1WebReportCodStreamService {
     // param = doc.awbNumber
     const values = [
       V1WebReportCodStreamService.strReplaceFunc(doc.partnerName),
-      doc.awbDate ? moment.utc(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
       `'${doc.awbNumber}`,
       doc.tdParcelValue ? doc.tdParcelValue : doc.prtParcelValue,
       doc.codNilai,
       doc.codFee ? doc.codFee : '-',
       doc.codNilai,
       doc.lastValidTrackingDateTime
-        ? moment.utc(doc.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
+        ? moment(doc.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
         : null,
       V1WebReportCodStreamService.strReplaceFunc(doc.penerima),
       doc.paymentMethod,
@@ -333,7 +333,7 @@ export class V1WebReportCodStreamService {
         d.codValue,
         d.codFee,
         d.codValue,
-        d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
         V1WebReportCodStreamService.strReplaceFunc(d.consigneeName),
         V1WebReportCodStreamService.strReplaceFunc(d.paymentMethod),
         'PAID', // supplier invoice status
@@ -1336,6 +1336,7 @@ export class V1WebReportCodStreamService {
     };
   }
 
+  // Report COD non fee stream
   static async printNonCodSupplierInvoice(filters, response) {
     // TODO: query get data
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod(
@@ -1544,6 +1545,7 @@ export class V1WebReportCodStreamService {
     return coll.aggregate(queryParam);
   }
 
+  // Report COD fee stream
   static async printCodSupplierInvoice(filters, response) {
     // TODO: query get data
     // step 1 : query get data by filter
