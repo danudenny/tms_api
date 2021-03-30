@@ -168,71 +168,134 @@ export class InternalSortirService {
       `;
       const resultDataSubDistrict = await RawQueryService.query(rawQuerySubDistrict);
       if (resultDataSubDistrict.length > 0 ) {
-        const rawQuery = `
-          SELECT bs.*
-          FROM branch_sortir bs
-          INNER JOIN branch b ON bs.branch_id_lastmile = b.branch_id AND b.is_deleted = FALSE
-          INNER JOIN district d ON b.district_id = d.district_id AND d.is_deleted = FALSE
-          WHERE
-            bs.is_deleted = FALSE AND
-            d.district_id = '${resultDataSubDistrict[0].district_id}' AND
-            bs.is_cod = ${escape(is_cod)} AND
-            bs.branch_id = ${payload.sorting_branch_id}
-          ;
-        `;
-        const resultData = await RawQueryService.query(rawQuery);
-        console.log(rawQuery);
-        if (resultData.length > 0 ) {
-          result.message = 'Check Spk Success';
+        if (is_cod == true) {
+          const rawQuery = `
+            SELECT bs.*
+            FROM branch_sortir bs
+            WHERE
+              bs.is_deleted = FALSE AND
+              bs.is_cod = ${escape(is_cod)} AND
+              bs.branch_id = ${payload.sorting_branch_id}
+            ;
+          `;
+          const resultData = await RawQueryService.query(rawQuery);
+          if (resultData.length > 0 ) {
+            result.message = 'Check Spk Success';
+            for (let a = 0; a < resultData.length; a++) {
+              ArrChute.push(resultData[a].no_chute)
 
-          for (let a = 0; a < resultData.length; a++) {
-            ArrChute.push(resultData[a].no_chute)
+              branchSortirLogId = await this.upsertBranchSortirLog(
+                result.message,
+                dateNow,
+                0,
+                payload.sorting_branch_id,
+                payload.tracking_number,
+                resultData[a].no_chute,
+                resultData[a].branch_id_lastmile,
+                resultData[a].is_cod,
+                1,
+                branchSortirLogId,
+              );
+            }
+            data.push({
+              state: 0,
+              tracking_number: payload.tracking_number,
+              chute_number: ArrChute,
+              request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
+            });
+            result.statusCode = HttpStatus.OK;
+            result.data = data;
+            return result;
+          }else {
+            data.push({
+              state: 1,
+              tracking_number: payload.tracking_number,
+            });
+            result.statusCode = HttpStatus.BAD_REQUEST;
+            result.message = `Can't Find Chute COD For AWB: ` + payload.tracking_number;
+            result.data = data;
 
             branchSortirLogId = await this.upsertBranchSortirLog(
               result.message,
               dateNow,
-              0,
+              1,
               payload.sorting_branch_id,
               payload.tracking_number,
-              resultData[a].no_chute,
-              resultData[a].branch_id_lastmile,
-              resultData[a].is_cod,
+              null,
+              null,
+              false,
               1,
               branchSortirLogId,
             );
+            return result;
           }
-          data.push({
-            state: 0,
-            tracking_number: payload.tracking_number,
-            chute_number: ArrChute,
-            request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
-          });
-          result.statusCode = HttpStatus.OK;
-          result.data = data;
-          return result;
-
         } else {
-          data.push({
-            state: 1,
-            tracking_number: payload.tracking_number,
-          });
-          result.statusCode = HttpStatus.BAD_REQUEST;
-          result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
-          result.data = data;
+          const rawQuery = `
+            SELECT bs.*
+            FROM branch_sortir bs
+            INNER JOIN branch b ON bs.branch_id_lastmile = b.branch_id AND b.is_deleted = FALSE
+            INNER JOIN district d ON b.district_id = d.district_id AND d.is_deleted = FALSE
+            WHERE
+              bs.is_deleted = FALSE AND
+              d.district_id = ${resultDataSubDistrict[0].district_id} AND
+              bs.is_cod = ${escape(is_cod)} AND
+              bs.branch_id = ${payload.sorting_branch_id}
+            ;
+          `;
+          const resultData = await RawQueryService.query(rawQuery);
+          // console.log(rawQuery);
+          if (resultData.length > 0 ) {
+            result.message = 'Check Spk Success';
 
-          branchSortirLogId = await this.upsertBranchSortirLog(
-            result.message,
-            dateNow,
-            1,
-            payload.sorting_branch_id,
-            payload.tracking_number,
-            null,
-            null,
-            false,
-            1,
-            branchSortirLogId,
-          );
-          return result;
+            for (let a = 0; a < resultData.length; a++) {
+              ArrChute.push(resultData[a].no_chute)
+
+              branchSortirLogId = await this.upsertBranchSortirLog(
+                result.message,
+                dateNow,
+                0,
+                payload.sorting_branch_id,
+                payload.tracking_number,
+                resultData[a].no_chute,
+                resultData[a].branch_id_lastmile,
+                resultData[a].is_cod,
+                1,
+                branchSortirLogId,
+              );
+            }
+            data.push({
+              state: 0,
+              tracking_number: payload.tracking_number,
+              chute_number: ArrChute,
+              request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
+            });
+            result.statusCode = HttpStatus.OK;
+            result.data = data;
+            return result;
+
+          } else {
+            data.push({
+              state: 1,
+              tracking_number: payload.tracking_number,
+            });
+            result.statusCode = HttpStatus.BAD_REQUEST;
+            result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
+            result.data = data;
+
+            branchSortirLogId = await this.upsertBranchSortirLog(
+              result.message,
+              dateNow,
+              1,
+              payload.sorting_branch_id,
+              payload.tracking_number,
+              null,
+              null,
+              false,
+              1,
+              branchSortirLogId,
+            );
+            return result;
+          }
         }
       } else {
         data.push({
