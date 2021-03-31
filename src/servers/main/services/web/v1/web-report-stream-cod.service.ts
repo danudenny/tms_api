@@ -269,7 +269,7 @@ export class V1WebReportCodStreamService {
   static streamTransformUtc(doc) {
     const values = [
       V1WebReportCodStreamService.strReplaceFunc(doc.partnerName),
-      doc.awbDate ? moment.utc(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      doc.awbDate ? moment.utc(doc.awbDate).format('YYYY-MM-DD') : null,
       `'${doc.awbNumber}`,
       doc.tdParcelValue ? doc.tdParcelValue : doc.prtParcelValue,
       doc.codNilai,
@@ -323,7 +323,7 @@ export class V1WebReportCodStreamService {
   static streamTransformWithoutUtc(doc) {
     const values = [
       V1WebReportCodStreamService.strReplaceFunc(doc.partnerName),
-      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD') : null,
       `'${doc.awbNumber}`,
       doc.tdParcelValue ? doc.tdParcelValue : doc.prtParcelValue,
       doc.codNilai,
