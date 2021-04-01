@@ -158,6 +158,9 @@
 
     @ApiModelProperty()
     representativeCode: string;
+
+    @ApiModelProperty()
+    sealNumber: string;
   }
 
   export class WebScanInBagResponseVm {

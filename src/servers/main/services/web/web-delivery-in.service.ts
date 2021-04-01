@@ -384,6 +384,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchScanName'] = 't5.branch_name';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
+    payload.fieldResolverMap['sealNumber'] = 't1.seal_number'; ;
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -396,6 +397,9 @@ export class WebDeliveryInService {
       },
       {
         field: 'bagNumberCode',
+      },
+      {
+        field: 'sealNumber',
       },
     ];
 
@@ -420,6 +424,7 @@ export class WebDeliveryInService {
       ['t5.branch_id', 'branchScanId'],
       ['COUNT (t4.*)', 'totalAwb'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['t1.seal_number', 'sealNumber'],
     );
 
     q.innerJoin(e => e.bagItems, 't2', j =>
@@ -445,7 +450,8 @@ export class WebDeliveryInService {
       t3.branch_name,
       t3.branch_id,
       t5.branch_id,
-      t5.branch_name
+      t5.branch_name,
+      t1.seal_number
     `);
 
     const data = await q.exec();
