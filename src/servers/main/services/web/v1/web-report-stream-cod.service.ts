@@ -85,8 +85,8 @@ export class V1WebReportCodStreamService {
     'Recipient',
     'Tipe Pembayaran',
     'Status Internal',
-    'Status Invoice',
     'Tracking Status',
+    'Status Invoice',
     'Cust Package',
     'Pickup Source',
     'Current Position',
@@ -266,11 +266,10 @@ export class V1WebReportCodStreamService {
     return true;
   }
 
-  static streamTransform(doc) {
-    // param = doc.awbNumber
+  static streamTransformUtc(doc) {
     const values = [
       V1WebReportCodStreamService.strReplaceFunc(doc.partnerName),
-      doc.awbDate ? moment.utc(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      doc.awbDate ? moment.utc(doc.awbDate).format('YYYY-MM-DD') : null,
       `'${doc.awbNumber}`,
       doc.tdParcelValue ? doc.tdParcelValue : doc.prtParcelValue,
       doc.codNilai,
@@ -294,16 +293,72 @@ export class V1WebReportCodStreamService {
       V1WebReportCodStreamService.strReplaceFunc(doc.perwakilan),
       (doc.userIdDriverNik ? doc.userIdDriverNik : '') +
         ' - ' +
-        (doc.userIdDriverName ? V1WebReportCodStreamService.strReplaceFunc(doc.userIdDriverName) : ''),
+        (doc.userIdDriverName
+          ? V1WebReportCodStreamService.strReplaceFunc(doc.userIdDriverName)
+          : ''),
       V1WebReportCodStreamService.strReplaceFunc(doc.parcelContent),
       V1WebReportCodStreamService.strReplaceFunc(doc.layanan),
       V1WebReportCodStreamService.strReplaceFunc(doc.receiverRemark),
       '',
       '',
       doc.tdDateUpdated
-        ? moment.utc(doc.tdDateUpdated).format('YYYY-MM-DD HH:mm')
+        ? moment(doc.tdDateUpdated).format('YYYY-MM-DD HH:mm')
         : doc.dateUpdated
-        ? moment.utc(doc.dateUpdated).format('YYYY-MM-DD HH:mm')
+        ? moment(doc.dateUpdated).format('YYYY-MM-DD HH:mm')
+        : null,
+      doc.tdUserIdUpdatedNik
+        ? V1WebReportCodStreamService.strReplaceFunc(doc.tdUserIdUpdatedNik) +
+          ' - ' +
+          doc.tdUserIdUpdatedName
+        : doc.userIdUpdatedNik
+        ? V1WebReportCodStreamService.strReplaceFunc(doc.userIdUpdatedNik) +
+          ' - ' +
+          doc.userIdUpdatedName
+        : '-',
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  static streamTransformWithoutUtc(doc) {
+    const values = [
+      V1WebReportCodStreamService.strReplaceFunc(doc.partnerName),
+      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD') : null,
+      `'${doc.awbNumber}`,
+      doc.tdParcelValue ? doc.tdParcelValue : doc.prtParcelValue,
+      doc.codNilai,
+      doc.codFee ? doc.codFee : '-',
+      doc.codNilai,
+      doc.lastValidTrackingDateTime
+        ? moment(doc.lastValidTrackingDateTime).format('YYYY-MM-DD HH:mm')
+        : null,
+      V1WebReportCodStreamService.strReplaceFunc(doc.penerima),
+      doc.paymentMethod,
+      doc.transactionStatus,
+      doc.lastValidTrackingType,
+      doc.supplierInvoiceStatus,
+      V1WebReportCodStreamService.strReplaceFunc(
+        doc.tdcustPackage ? doc.tdcustPackage : doc.prtReferenceNo,
+      ),
+      V1WebReportCodStreamService.strReplaceFunc(doc.manifestTrackingSiteName),
+      V1WebReportCodStreamService.strReplaceFunc(doc.lastValidTrackingSiteName),
+      V1WebReportCodStreamService.strReplaceFunc(doc.prtDestinationCode),
+      V1WebReportCodStreamService.strReplaceFunc(doc.tujuanKecamatan),
+      V1WebReportCodStreamService.strReplaceFunc(doc.perwakilan),
+      (doc.userIdDriverNik ? doc.userIdDriverNik : '') +
+        ' - ' +
+        (doc.userIdDriverName
+          ? V1WebReportCodStreamService.strReplaceFunc(doc.userIdDriverName)
+          : ''),
+      V1WebReportCodStreamService.strReplaceFunc(doc.parcelContent),
+      V1WebReportCodStreamService.strReplaceFunc(doc.layanan),
+      V1WebReportCodStreamService.strReplaceFunc(doc.receiverRemark),
+      '',
+      '',
+      doc.tdDateUpdated
+        ? moment(doc.tdDateUpdated).format('YYYY-MM-DD HH:mm')
+        : doc.dateUpdated
+        ? moment(doc.dateUpdated).format('YYYY-MM-DD HH:mm')
         : null,
       doc.tdUserIdUpdatedNik
         ? V1WebReportCodStreamService.strReplaceFunc(doc.tdUserIdUpdatedNik) +
@@ -330,7 +385,7 @@ export class V1WebReportCodStreamService {
         d.codValue,
         d.codFee,
         d.codValue,
-        d.podDate ? moment.utc(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
         V1WebReportCodStreamService.strReplaceFunc(d.consigneeName),
         V1WebReportCodStreamService.strReplaceFunc(d.paymentMethod),
         'PAID', // supplier invoice status
@@ -343,15 +398,15 @@ export class V1WebReportCodStreamService {
         d.perwakilan,
         (d.userIdDriverNik ? d.userIdDriverNik : '') +
           ' - ' +
-          (d.userIdDriverName ? V1WebReportCodStreamService.strReplaceFunc(d.userIdDriverName) : ''),
+          (d.userIdDriverName
+            ? V1WebReportCodStreamService.strReplaceFunc(d.userIdDriverName)
+            : ''),
         V1WebReportCodStreamService.strReplaceFunc(d.parcelContent),
         V1WebReportCodStreamService.strReplaceFunc(d.packageType),
         V1WebReportCodStreamService.strReplaceFunc(d.parcelNote),
         '',
         '',
-        d.dateUpdated
-          ? moment.utc(d.dateUpdated).format('YYYY-MM-DD HH:mm')
-          : null,
+        d.dateUpdated ? moment(d.dateUpdated).format('YYYY-MM-DD HH:mm') : null,
         (d.userIdUpdatedNik
           ? V1WebReportCodStreamService.strReplaceFunc(d.userIdUpdatedNik)
           : '') +
@@ -954,9 +1009,9 @@ export class V1WebReportCodStreamService {
             lastValidTrackingSiteCode: { $in: filter.value },
           });
         } else {
-            spartanFilter.push({
-              lastValidTrackingSiteCode: { $eq: filter.value },
-            });
+          spartanFilter.push({
+            lastValidTrackingSiteCode: { $eq: filter.value },
+          });
         }
       }
 
@@ -1333,6 +1388,7 @@ export class V1WebReportCodStreamService {
     };
   }
 
+  // Report COD non fee stream
   static async printNonCodSupplierInvoice(filters, response) {
     // TODO: query get data
     const dbTransactionDetail = await MongoDbConfig.getDbSicepatCod(
@@ -1357,19 +1413,32 @@ export class V1WebReportCodStreamService {
 
       // prepare csv file
       try {
+        let filterStream = '';
         if (
           reportType.filterTransaction === true &&
           reportType.filterAwb === false
         ) {
+          filterStream = 'transaction';
           cursor = await this.getNonCodSupplierInvoiceTransactionDetailData(
             dbTransactionDetail,
             filters,
           );
         } else {
+          filterStream = 'awb';
           cursor = await this.getNonCodSupplierInvoiceJoinData(dbAwb, filters);
         }
 
-        const transformer = this.streamTransform;
+        if (
+          reportType.filterAwb === false &&
+          reportType.filterTransaction === false
+        ) {
+          filterStream = 'transaction';
+        }
+
+        const transformer =
+          filterStream === 'awb'
+            ? this.streamTransformUtc
+            : this.streamTransformWithoutUtc;
 
         cursor.stream({ transform: transformer }).pipe(response);
       } finally {
@@ -1462,7 +1531,9 @@ export class V1WebReportCodStreamService {
       }
     }
 
-    filterList.push({ supplierInvoiceStatusId: { $eq: TRANSACTION_STATUS.PAIDHO } });
+    filterList.push({
+      supplierInvoiceStatusId: { $eq: TRANSACTION_STATUS.PAIDHO },
+    });
 
     const queryParam = [
       {
@@ -1541,6 +1612,7 @@ export class V1WebReportCodStreamService {
     return coll.aggregate(queryParam);
   }
 
+  // Report COD fee stream
   static async printCodSupplierInvoice(filters, response) {
     // TODO: query get data
     // step 1 : query get data by filter
@@ -1554,7 +1626,7 @@ export class V1WebReportCodStreamService {
     let cursor: any;
     try {
       const reportType = await this.reportTypeFromFilter(filters);
-      const fileName = `COD_nonfee_${new Date().getTime()}.csv`;
+      const fileName = `COD_${new Date().getTime()}.csv`;
 
       response.setHeader(
         'Content-disposition',
