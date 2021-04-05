@@ -159,7 +159,8 @@ export class InternalSortirService {
 
       const rawQuerySubDistrict = `
         SELECT
-          district_id
+          district_id,
+          sub_district_id
         FROM sub_district
         WHERE
           zip_code = '${escape(zip_code)}' AND
@@ -233,11 +234,10 @@ export class InternalSortirService {
           const rawQuery = `
             SELECT bs.*
             FROM branch_sortir bs
-            INNER JOIN branch b ON bs.branch_id_lastmile = b.branch_id AND b.is_deleted = FALSE
-            INNER JOIN district d ON b.district_id = d.district_id AND d.is_deleted = FALSE
+            INNER JOIN branch_sub_district d ON bs.branch_id_lastmile  = d.branch_id AND d.is_deleted = FALSE
             WHERE
               bs.is_deleted = FALSE AND
-              d.district_id = ${resultDataSubDistrict[0].district_id} AND
+              d.sub_district_id = ${resultDataSubDistrict[0].sub_district_id} AND
               bs.is_cod = ${escape(is_cod)} AND
               bs.branch_id = ${payload.sorting_branch_id}
             ;
