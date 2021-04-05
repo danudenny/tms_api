@@ -27,7 +27,7 @@ export class InternalSortirService {
     let is_cod;
     let district_code;
     let branchSortirLogId = '';
-    let ArrChute = [];
+    const ArrChute = [];
 
     const dateNow = moment().toDate();
     const rawQueryAwb = `
@@ -86,7 +86,7 @@ export class InternalSortirService {
             result.message = 'Check Spk Success';
 
             for (let a = 0; a < resultData.length; a++) {
-              ArrChute.push(resultData[a].no_chute)
+              ArrChute.push(resultData[a].no_chute);
               branchSortirLogId = await this.upsertBranchSortirLog(
                 result.message,
                 dateNow,
@@ -183,7 +183,7 @@ export class InternalSortirService {
           if (resultData.length > 0 ) {
             result.message = 'Check Spk Success';
             for (let a = 0; a < resultData.length; a++) {
-              ArrChute.push(resultData[a].no_chute)
+              ArrChute.push(resultData[a].no_chute);
 
               branchSortirLogId = await this.upsertBranchSortirLog(
                 result.message,
@@ -207,7 +207,7 @@ export class InternalSortirService {
             result.statusCode = HttpStatus.OK;
             result.data = data;
             return result;
-          }else {
+          } else {
             data.push({
               state: 1,
               tracking_number: payload.tracking_number,
@@ -248,7 +248,7 @@ export class InternalSortirService {
             result.message = 'Check Spk Success';
 
             for (let a = 0; a < resultData.length; a++) {
-              ArrChute.push(resultData[a].no_chute)
+              ArrChute.push(resultData[a].no_chute);
 
               branchSortirLogId = await this.upsertBranchSortirLog(
                 result.message,
@@ -416,7 +416,7 @@ export class InternalSortirService {
     BranchSortirLogQueueService.perform(
       message,
       scanDate,
-      0,
+      state,
       branchId,
       awbNumber,
       noChute,
