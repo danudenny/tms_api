@@ -151,7 +151,8 @@ export class ScaninSmdService {
           if (isNew == true) {
             paramTotalSeq = 1;
             paramTotalBagWeight = weight;
-            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
+            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeRandom(timeNow);
+            // const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
             // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
             const redlock = await RedisService.redlock(`redlock:receivedBag:${dataReceivedBagCode}`, 10);
             if (redlock) {
@@ -368,7 +369,8 @@ export class ScaninSmdService {
           if (isNew == true) {
             paramTotalSeq = 1;
             paramTotalBagWeight = weight;
-            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
+            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeRandom(timeNow);
+            // const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
             // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
             const redlock = await RedisService.redlock(`redlock:receivedBag:${dataReceivedBagCode}`, 10);
             if (redlock) {
