@@ -6,6 +6,7 @@ import { CheckAwbPayloadVm, CheckAwbResponseVM } from '../../models/hub-machine-
 import { BranchSortirLogQueueService } from '../../../queue/services/branch-sortir-log-queue.service';
 import { BranchSortirLog} from '../../../../shared/orm-entity/branch-sortir-log';
 import { Between, getManager } from 'typeorm';
+import { BranchSortirLogSummary } from '../../../../shared/orm-entity/branch-sortir-log-summary';
 
 export class HubMachineSortirService {
 
@@ -27,6 +28,7 @@ export class HubMachineSortirService {
     let is_cod;
     let district_code;
     let branchSortirLogId = '';
+    let branchSortirLogSummaryId;
     const ArrChute = [];
 
     const dateNow = moment().toDate();
@@ -52,110 +54,6 @@ export class HubMachineSortirService {
       } else {
         is_cod = false;
       }
-
-      // if ((zip_code == null) || (zip_code.trim() == '')) {
-      //   // Jika ZIPCODE tidak ada, Search By District
-      //   const rawQueryStt = `
-      //     SELECT
-      //       ts.nostt,
-      //       ts.tujuan
-      //     FROM temp_stt ts
-      //     WHERE
-      //       ts.nostt = '${escape(payload.tracking_number)}'
-      //     ;
-      //   `;
-      //   const resultDataStt = await RawQueryService.query(rawQueryStt);
-      //   if (resultDataStt.length > 0 ) {
-      //     for (let a = 0; a < resultDataStt.length; a++) {
-      //       district_code = resultDataStt[a].tujuan;
-      //     }
-      //     const rawQuery = `
-      //       SELECT bs.*
-      //       FROM branch_sortir bs
-      //       INNER JOIN branch b ON bs.branch_id_lastmile = b.branch_id AND b.is_deleted = FALSE
-      //       INNER JOIN district d ON b.district_id = d.district_id AND d.is_deleted = FALSE
-      //       WHERE
-      //         bs.is_deleted = FALSE AND
-      //         d.district_code = '${escape(district_code)}' AND
-      //         bs.is_cod = ${escape(is_cod)} AND
-      //         bs.branch_id = ${payload.sorting_branch_id}
-      //       ;
-      //     `;
-      //     const resultData = await RawQueryService.query(rawQuery);
-      //     if (resultData.length > 0 ) {
-      //       result.message = 'Check Spk Success';
-
-      //       for (let a = 0; a < resultData.length; a++) {
-      //         ArrChute.push(resultData[a].no_chute);
-      //         branchSortirLogId = await this.upsertBranchSortirLog(
-      //           result.message,
-      //           dateNow,
-      //           0,
-      //           payload.sorting_branch_id,
-      //           payload.tracking_number,
-      //           resultData[a].no_chute,
-      //           resultData[a].branch_id_lastmile,
-      //           resultData[a].is_cod,
-      //           1,
-      //           branchSortirLogId,
-      //         );
-      //       }
-      //       data.push({
-      //         state: 0,
-      //         tracking_number: payload.tracking_number,
-      //         chute_number: ArrChute,
-      //         request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
-      //       });
-      //       result.statusCode = HttpStatus.OK;
-      //       result.data = data;
-      //       return result;
-      //     } else {
-      //       data.push({
-      //         state: 1,
-      //         tracking_number: payload.tracking_number,
-      //       });
-      //       result.statusCode = HttpStatus.BAD_REQUEST;
-      //       result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
-      //       result.data = data;
-
-      //       branchSortirLogId = await this.upsertBranchSortirLog(
-      //         result.message,
-      //         dateNow,
-      //         1,
-      //         payload.sorting_branch_id,
-      //         payload.tracking_number,
-      //         null,
-      //         null,
-      //         false,
-      //         1,
-      //         branchSortirLogId,
-      //       );
-      //       return result;
-      //     }
-      //   } else {
-      //     data.push({
-      //       state: 1,
-      //       tracking_number: payload.tracking_number,
-      //     });
-      //     result.statusCode = HttpStatus.BAD_REQUEST;
-      //     result.message = `Zip Code not found`;
-      //     result.data = data;
-
-      //     branchSortirLogId = await this.upsertBranchSortirLog(
-      //       result.message,
-      //       dateNow,
-      //       1,
-      //       payload.sorting_branch_id,
-      //       payload.tracking_number,
-      //       null,
-      //       null,
-      //       false,
-      //       1,
-      //       branchSortirLogId,
-      //     );
-      //     return result;
-      //   }
-      // }
 
       const rawQuerySubDistrict = `
         SELECT
@@ -198,6 +96,15 @@ export class HubMachineSortirService {
                 branchSortirLogId,
               );
             }
+
+            branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+              result.message,
+              1,
+              dateNow,
+              payload.sorting_branch_id,
+              payload.tracking_number
+            );
+
             data.push({
               state: 0,
               tracking_number: payload.tracking_number,
@@ -228,6 +135,15 @@ export class HubMachineSortirService {
               1,
               branchSortirLogId,
             );
+
+            branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+              result.message,
+              0,
+              dateNow,
+              payload.sorting_branch_id,
+              payload.tracking_number
+            );
+
             return result;
           }
         } else {
@@ -263,6 +179,15 @@ export class HubMachineSortirService {
                 branchSortirLogId,
               );
             }
+
+            branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+              result.message,
+              1,
+              dateNow,
+              payload.sorting_branch_id,
+              payload.tracking_number
+            );
+
             data.push({
               state: 0,
               tracking_number: payload.tracking_number,
@@ -294,6 +219,15 @@ export class HubMachineSortirService {
               1,
               branchSortirLogId,
             );
+
+            branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+              result.message,
+              0,
+              dateNow,
+              payload.sorting_branch_id,
+              payload.tracking_number
+            );
+
             return result;
           }
         }
@@ -317,6 +251,15 @@ export class HubMachineSortirService {
           1,
           branchSortirLogId,
         );
+
+        branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+          result.message,
+          0,
+          dateNow,
+          payload.sorting_branch_id,
+          payload.tracking_number
+        );
+
         return result;
       }
     } else {
@@ -340,6 +283,15 @@ export class HubMachineSortirService {
         1,
         branchSortirLogId,
       );
+
+      branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+        result.message,
+        0,
+        dateNow,
+        payload.sorting_branch_id,
+        payload.tracking_number
+      );
+
       return result;
     }
 
@@ -427,5 +379,50 @@ export class HubMachineSortirService {
     );
 
     return branchSortirLogId;
+  }
+
+  private static async upsertBranchSortirLogSummary(
+    message: string,
+    paramSucceed: number,
+    scanDate: Date,
+    branchId: string | number,
+    awbNumber: string,
+    userId: number = 1,
+  ) {
+    let branchSortirLogSummary = null;
+    let paramBranchSortirLogSummaryId;
+
+    branchSortirLogSummary = await BranchSortirLogSummary.findOne({
+      where: {
+        awbNumber: awbNumber,
+        isDeleted: false,
+      },
+    });
+
+    if(branchSortirLogSummary) {
+      paramBranchSortirLogSummaryId = branchSortirLogSummary.branchSortirLogSummaryId
+      await BranchSortirLogSummary.update({
+        branchSortirLogSummaryId: paramBranchSortirLogSummaryId,
+      }, {
+        isSucceed: paramSucceed,
+        updatedTime: scanDate
+      });
+    } else {
+      const createBranchSortirLogSummary = BranchSortirLogSummary.create({
+        scanDate,
+        branchId: parseInt(branchId.toString()),
+        awbNumber,
+        isSucceed: paramSucceed,
+        reason: message,
+        createdTime: scanDate,
+        updatedTime: scanDate,
+        userIdCreated: userId,
+        userIdUpdated: userId,
+      });
+      await BranchSortirLogSummary.save(createBranchSortirLogSummary);
+      paramBranchSortirLogSummaryId = createBranchSortirLogSummary.branchSortirLogSummaryId;
+    }
+
+    return paramBranchSortirLogSummaryId;
   }
 }
