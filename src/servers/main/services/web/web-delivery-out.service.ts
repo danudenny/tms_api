@@ -761,6 +761,7 @@ export class WebDeliveryOutService {
       // push item
       dataItem.push({
         bagNumber,
+        sealNumber : bagData.bag.sealNumber,
         ...response,
       });
     } // end of loop
@@ -1597,7 +1598,7 @@ export class WebDeliveryOutService {
         response.message = 'success';
       // }
     }
-    result = { bagNumber, ...response };
+    result = { bagNumber, sealNumber: null, ...response };
     return result;
   }
 
