@@ -370,7 +370,7 @@ export class HubMachineService {
     if (!bagData) {
       // generate bag number
       randomBagNumber =
-        'S' + sampleSize('012345678900123456789001234567890', 6).join('');
+        'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
       const representativeCode = districtDetail
         ? districtDetail.districtCode.substring(0, 3)
         : null;
