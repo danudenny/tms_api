@@ -3,7 +3,7 @@ const path = require("path");
 
 module.exports = {
   redis: {
-    host: '3.1.243.32',
+    host: '172.31.37.148',
     port: '6379',
     password: '9F864DAF0B09974AA3F0E90646EEFEA3',
     db: process.env.NODE_ENV === 'test' ? 1 : 0,
