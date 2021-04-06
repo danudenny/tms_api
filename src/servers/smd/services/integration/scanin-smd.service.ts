@@ -149,8 +149,7 @@ export class ScaninSmdService {
                 UPDATE received_bag
                 SET total_seq = total_seq + 1, total_bag_weight = total_bag_weight + ${Number(weight)}
                 WHERE
-                  received_bag_id = ${paramReceivedBagId} AND
-                  bi.is_deleted = false
+                  received_bag_id = ${paramReceivedBagId}
               `;
               const updReceivedBag = await RawQueryService.query(rawQuery,null,false);
               isNew = false;
@@ -375,8 +374,7 @@ export class ScaninSmdService {
                 UPDATE received_bag
                 SET total_seq = total_seq + 1, total_bag_weight = total_bag_weight + ${Number(weight)}
                 WHERE
-                  received_bag_id = ${paramReceivedBagId} AND
-                  bi.is_deleted = false
+                  received_bag_id = ${paramReceivedBagId}
               `;
               const updReceivedBag = await RawQueryService.query(rawQuery,null,false);
               isNew = false;
