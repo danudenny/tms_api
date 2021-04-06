@@ -10,7 +10,7 @@ import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload
 
 @ApiUseTags('Hub Mesin Sortir Resi Bag')
 @Controller('sortir/combine')
-export class SortirCombinePackageController {
+export class HubMachinePackageController {
   constructor() {}
 
   @Post('packages')
