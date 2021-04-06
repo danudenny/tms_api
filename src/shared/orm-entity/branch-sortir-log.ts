@@ -6,10 +6,10 @@ import { BranchSortirLogDetail } from './branch-sortir-log-detail';
 @Entity('branch_sortir_log', { schema: 'public' })
 export class BranchSortirLog extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
-    type: 'bigint',
+    type: 'uuid',
     name: 'branch_sortir_log_id',
   })
-  branchSortirLogId: number;
+  branchSortirLogId: string;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -28,6 +28,12 @@ export class BranchSortirLog extends TmsBaseEntity {
     name: 'qty_fail',
   })
   qtyFail: number;
+
+  @Column('integer', {
+    nullable: false,
+    name: 'branch_id',
+  })
+  branchId: number;
 
   @OneToMany(() => BranchSortirLogDetail, e => e.branchSortirLog)
   @JoinColumn({ name: 'branch_sortir_log_id', referencedColumnName: 'branchSortirLogId' })
