@@ -316,6 +316,7 @@ export class BagService {
           refRepresentativeCode: true,
           bagId: true,
           bagNumber: true,
+          sealNumber: true, 
         },
         weight: true,
       });
