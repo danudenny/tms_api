@@ -6,9 +6,7 @@ import _ = require('lodash');
 import { AwsS3Service } from '../../../../../shared/services/aws-s3.service';
 import { ConfigService } from '../../../../../shared/services/config.service';
 import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
-import { BadRequestException } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
-import uuid = require('uuid');
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { createQueryBuilder } from 'typeorm';
 import { CodSqlExportMongoQueueService } from '../../../../queue/services/cod/cod-sql-export-queue.service';
@@ -84,9 +82,6 @@ export class V1WebReportSqlCodService {
             return;
           }
 
-
-
-
           if (!datas || datas.length < (limit * 3)) {
             finish = true;
           }
@@ -135,33 +130,32 @@ export class V1WebReportSqlCodService {
   }
 
   static async getNonCodSupplierInvoiceData(arrDatas: any[], filters, limit, pageNumber) {
-    let sWhere: string = "";
-    let allowNullSite = true;
-    let allowNullTd = true;
+    let sWhere: string = '';
+    const allowNullSite = true;
+    const allowNullTd = true;
 
     const skip = limit * (pageNumber - 1);
-
 
     for (const filter of filters) {
       // local time
       if (filter.field == 'periodStart' && filter.value) {
-        const dateFormat = moment(filter.value).format('YYYY-MM-DD HH:mm:ss')
+        const dateFormat = moment(filter.value).format('YYYY-MM-DD HH:mm:ss');
         sWhere += ` AND t1.updated_time >= '${dateFormat}'`;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const dateFormat = moment(filter.value).add(1, 'days').format('YYYY-MM-DD HH:mm:ss')
+        const dateFormat = moment(filter.value).add(1, 'days').format('YYYY-MM-DD HH:mm:ss');
         sWhere += ` AND t1.updated_time < '${dateFormat} \n'`;
       }
 
       // local time
       if (filter.field == 'transactionStart' && filter.value) {
-        const dateFormat = moment(filter.value).format('YYYY-MM-DD HH:mm:ss')
+        const dateFormat = moment(filter.value).format('YYYY-MM-DD HH:mm:ss');
         sWhere += ` AND ctd.updated_time >= '${dateFormat}'`;
       }
 
       if (filter.field == 'transactionEnd' && filter.value) {
-        const dateFormat = moment(filter.value).add(1, 'days').format('YYYY-MM-DD HH:mm:ss')
+        const dateFormat = moment(filter.value).add(1, 'days').format('YYYY-MM-DD HH:mm:ss');
         sWhere += ` AND ctd.updated_time < '${dateFormat} \n'`;
       }
 
@@ -190,15 +184,15 @@ export class V1WebReportSqlCodService {
       }
     }
 
-    let q = `SELECT "t3"."notes" AS "parcelNote", "t4"."reference_no" AS "custPackage", "t4"."partner_id" AS "partnerId", 
+    let q = `SELECT "t3"."notes" AS "parcelNote", "t4"."reference_no" AS "custPackage", "t4"."partner_id" AS "partnerId",
     t1.awb_item_id AS "awbItemId", t1.awb_number AS "awbNumber", t1.branch_id_last AS "currentPositionId",
     t7.branch_name AS "currentPosition", t1.awb_status_id_last AS "awbStatusIdLast", t1.awb_history_date_last AS "podDate",
     t2.awb_date AS "awbDate", t2.ref_destination_code AS "destinationCode", t2.to_id AS "destinationId",
     t9.district_name AS "destination", t2.package_type_id AS "packageTypeId", t5.package_type_code AS "packageTypeCode",
     t5.package_type_name AS "packageTypeName", t2.branch_id_last AS "pickupSourceId", t8.branch_name AS "pickupSource",
-    t2.total_weight_real_rounded AS "weightRealRounded", t2.total_weight_final_rounded AS "weightFinalRounded", t2.consignee_name AS "consigneeName",      
-    t3.parcel_value AS "parcelValue", t3.cod_value AS "codValue", t3.parcel_content AS "parcelContent", t6.partner_name AS "partnerName", 
-    ctd.transaction_status_id AS "transactionStatusId", ctd.supplier_invoice_status_id AS "supplierInvoiceStatusId", 
+    t2.total_weight_real_rounded AS "weightRealRounded", t2.total_weight_final_rounded AS "weightFinalRounded", t2.consignee_name AS "consigneeName",
+    t3.parcel_value AS "parcelValue", t3.cod_value AS "codValue", t3.parcel_content AS "parcelContent", t6.partner_name AS "partnerName",
+    ctd.transaction_status_id AS "transactionStatusId", ctd.supplier_invoice_status_id AS "supplierInvoiceStatusId",
     ctd.user_id_driver  "userIdDriver", concat(edriverUser.nik,  ' - ',edriverUser.fullname) driver,
     ctd.user_id_updated  "userIdUpdated", concat(eupdUser.nik,  ' - ', eupdUser.fullname) "updUser", ctd.updated_time "updatedTime", ts.status_title  "transactionStatus",
     ctd.payment_method, awbStatus.status_title awbStatus, branres.representative_code "perwakilan", statusInvoice.status_title "statusInvoice"
@@ -209,26 +203,25 @@ export class V1WebReportSqlCodService {
     INNER JOIN "public"."package_type" "t5" ON t2.package_type_id = t5.package_type_id AND t5.is_deleted = false
     INNER JOIN "public"."partner" "t6" ON "t4"."partner_id" = "t6"."partner_id" AND t6.is_deleted = false
     INNER JOIN "public"."branch" "t7" ON t1.branch_id_last = t7.branch_id AND t7.is_deleted = FALSE
-    LEFT JOIN transaction_status awbStatus ON awbStatus.transaction_status_id  = "t1".transaction_status_id 
-    LEFT JOIN representative branres ON branres.representative_id = "t7".representative_id 
-    LEFT JOIN cod_transaction_detail ctd ON ctd.awb_item_id  = "t1".awb_item_id AND ctd.is_deleted  = false 
-    LEFT JOIN transaction_status ts ON ts.transaction_status_id  = ctd.transaction_status_id AND ts.is_deleted  = false 
-    LEFT JOIN transaction_status statusInvoice ON statusinvoice.transaction_status_id  = ctd.supplier_invoice_status_id AND statusinvoice.is_deleted  = false 
-    LEFT JOIN users upduser ON upduser.user_id  = ctd.user_id_updated  AND upduser.is_deleted  = false 
-    LEFT JOIN employee eupdUser ON eupdUser.employee_id  = upduser.employee_id AND eupdUser.is_deleted  = false 
-    LEFT JOIN users driverUser ON driverUser.user_id  = ctd.user_id_driver  AND driverUser.is_deleted  = false 
+    LEFT JOIN transaction_status awbStatus ON awbStatus.transaction_status_id  = "t1".transaction_status_id
+    LEFT JOIN representative branres ON branres.representative_id = "t7".representative_id
+    LEFT JOIN cod_transaction_detail ctd ON ctd.awb_item_id  = "t1".awb_item_id AND ctd.is_deleted  = false
+    LEFT JOIN transaction_status ts ON ts.transaction_status_id  = ctd.transaction_status_id AND ts.is_deleted  = false
+    LEFT JOIN transaction_status statusInvoice ON statusinvoice.transaction_status_id  = ctd.supplier_invoice_status_id AND statusinvoice.is_deleted  = false
+    LEFT JOIN users upduser ON upduser.user_id  = ctd.user_id_updated  AND upduser.is_deleted  = false
+    LEFT JOIN employee eupdUser ON eupdUser.employee_id  = upduser.employee_id AND eupdUser.is_deleted  = false
+    LEFT JOIN users driverUser ON driverUser.user_id  = ctd.user_id_driver  AND driverUser.is_deleted  = false
     LEFT JOIN employee edriverUser ON edriverUser.employee_id  = driverUser.employee_id AND edriverUser.is_deleted  = false
     LEFT JOIN "public"."branch" "t8" ON t2.branch_id_last = t8.branch_id AND t8.is_deleted = false
     LEFT JOIN "public"."district" "t9" ON t2.to_id = t9.district_id AND t8.is_deleted = false
               WHERE  t1.is_deleted = FALSE AND "t2".is_cod = true `;
 
     // where transaction
-    if (sWhere != "") {
-      q += sWhere
+    if (sWhere != '') {
+      q += sWhere;
     }
 
-    q += ` OFFSET ${skip} LIMIT ${limit}`
-
+    q += ` OFFSET ${skip} LIMIT ${limit}`;
 
     // loop filter
 
@@ -325,17 +318,17 @@ export class V1WebReportSqlCodService {
   private static async getCodSupplierInvoiceData(filters, limit, pageNumber) {
     const skip = limit * (pageNumber - 1);
 
-    let sWhere: string = "";
+    let sWhere: string = '';
 
     for (const filter of filters) {
       // local time
       if (filter.field == 'periodStart' && filter.value) {
-        const dateFormat = moment(filter.value).format('YYYY-MM-DD HH:mm:ss')
+        const dateFormat = moment(filter.value).format('YYYY-MM-DD HH:mm:ss');
         sWhere += ` AND t1.updated_time >= '${dateFormat}'`;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
-        const dateFormat = moment(filter.value).add(1, 'days').format('YYYY-MM-DD HH:mm:ss')
+        const dateFormat = moment(filter.value).add(1, 'days').format('YYYY-MM-DD HH:mm:ss');
         sWhere += ` AND t1.updated_time < '${dateFormat} \n'`;
       }
 
@@ -344,44 +337,44 @@ export class V1WebReportSqlCodService {
       }
     }
 
-    let q = `SELECT "t3"."notes" AS "parcelNote", "t4"."reference_no" AS "custPackage", "t4"."partner_id" AS "partnerId", 
-              t1.awb_item_id AS "awbItemId", t1.awb_number AS "awbNumber", t1.branch_id_last AS "currentPositionId", 
-              t7.branch_name AS "currentPosition", t1.awb_status_id_last AS "awbStatusIdLast", t1.awb_history_date_last AS "podDate", 
-              t2.awb_date AS "awbDate", t2.ref_destination_code AS "destinationCode", t2.to_id AS "destinationId", 
-              t9.district_name AS "destination", t2.package_type_id AS "packageTypeId", t5.package_type_code AS "packageTypeCode", 
-              t5.package_type_name AS "packageTypeName", t2.branch_id_last AS "pickupSourceId", t8.branch_name AS "pickupSource", 
+    let q = `SELECT "t3"."notes" AS "parcelNote", "t4"."reference_no" AS "custPackage", "t4"."partner_id" AS "partnerId",
+              t1.awb_item_id AS "awbItemId", t1.awb_number AS "awbNumber", t1.branch_id_last AS "currentPositionId",
+              t7.branch_name AS "currentPosition", t1.awb_status_id_last AS "awbStatusIdLast", t1.awb_history_date_last AS "podDate",
+              t2.awb_date AS "awbDate", t2.ref_destination_code AS "destinationCode", t2.to_id AS "destinationId",
+              t9.district_name AS "destination", t2.package_type_id AS "packageTypeId", t5.package_type_code AS "packageTypeCode",
+              t5.package_type_name AS "packageTypeName", t2.branch_id_last AS "pickupSourceId", t8.branch_name AS "pickupSource",
               t2.total_weight_real_rounded AS "weightRealRounded", t2.total_weight_final_rounded AS "weightFinalRounded", t2.consignee_name AS "consigneeName",
               t3.parcel_value AS "parcelValue", t3.cod_value AS "codValue", t3.parcel_content AS "parcelContent", t6.partner_name AS "partnerName",
               ctd.user_id_driver  "userIdDriver", concat(edriverUser.nik,  ' - ',edriverUser.fullname) driver,
-              ctd.user_id_updated  "userIdUpdated", concat(eupdUser.nik,  ' - ', eupdUser.fullname) "updUser", 
+              ctd.user_id_updated  "userIdUpdated", concat(eupdUser.nik,  ' - ', eupdUser.fullname) "updUser",
               ctd.updated_time "updatedTime",  branres.representative_code "perwakilan" , ctd.payment_method "paymentMethod"
-              FROM "public"."awb_item_attr" "t1" 
-              INNER JOIN "public"."awb" "t2" ON t1.awb_id = t2.awb_id AND t2.is_deleted = false  
-              INNER JOIN "public"."pickup_request_detail" "t3" ON t1.awb_item_id = t3.awb_item_id AND t3.is_deleted = false  
-              INNER JOIN "public"."pickup_request" "t4" ON t3.pickup_request_id = "t4"."pickup_request_id" AND t4.is_deleted = false  
-              INNER JOIN "public"."package_type" "t5" ON t2.package_type_id = t5.package_type_id AND t5.is_deleted = false  
-              INNER JOIN "public"."partner" "t6" ON "t4"."partner_id" = "t6"."partner_id" AND t6.is_deleted = false  
-              INNER JOIN "public"."branch" "t7" ON t1.branch_id_last = t7.branch_id AND t7.is_deleted = false  
-              INNER JOIN cod_transaction_detail ctd ON ctd.awb_item_id  = "t1".awb_item_id 
-              INNER JOIN cod_transaction ct  ON ct.cod_transaction_id = ctd.cod_transaction_id 
-              LEFT JOIN representative branres ON branres.representative_id = "t7".representative_id 
-              LEFT JOIN users upduser ON upduser.user_id  = ctd.user_id_updated  AND upduser.is_deleted  = false 
-              LEFT JOIN employee eupdUser ON eupdUser.employee_id  = upduser.employee_id AND eupdUser.is_deleted  = false 
-              LEFT JOIN users driverUser ON driverUser.user_id  = ctd.user_id_driver  AND driverUser.is_deleted  = false 
+              FROM "public"."awb_item_attr" "t1"
+              INNER JOIN "public"."awb" "t2" ON t1.awb_id = t2.awb_id AND t2.is_deleted = false
+              INNER JOIN "public"."pickup_request_detail" "t3" ON t1.awb_item_id = t3.awb_item_id AND t3.is_deleted = false
+              INNER JOIN "public"."pickup_request" "t4" ON t3.pickup_request_id = "t4"."pickup_request_id" AND t4.is_deleted = false
+              INNER JOIN "public"."package_type" "t5" ON t2.package_type_id = t5.package_type_id AND t5.is_deleted = false
+              INNER JOIN "public"."partner" "t6" ON "t4"."partner_id" = "t6"."partner_id" AND t6.is_deleted = false
+              INNER JOIN "public"."branch" "t7" ON t1.branch_id_last = t7.branch_id AND t7.is_deleted = false
+              INNER JOIN cod_transaction_detail ctd ON ctd.awb_item_id  = "t1".awb_item_id
+              INNER JOIN cod_transaction ct  ON ct.cod_transaction_id = ctd.cod_transaction_id
+              LEFT JOIN representative branres ON branres.representative_id = "t7".representative_id
+              LEFT JOIN users upduser ON upduser.user_id  = ctd.user_id_updated  AND upduser.is_deleted  = false
+              LEFT JOIN employee eupdUser ON eupdUser.employee_id  = upduser.employee_id AND eupdUser.is_deleted  = false
+              LEFT JOIN users driverUser ON driverUser.user_id  = ctd.user_id_driver  AND driverUser.is_deleted  = false
               LEFT JOIN employee edriverUser ON edriverUser.employee_id  = driverUser.employee_id AND edriverUser.is_deleted  = false
-              LEFT JOIN "public"."branch" "t8" ON t2.branch_id_last = t8.branch_id AND t8.is_deleted = false  
-              LEFT JOIN "public"."district" "t9" ON t2.to_id = t9.district_id AND t8.is_deleted = false 
+              LEFT JOIN "public"."branch" "t8" ON t2.branch_id_last = t8.branch_id AND t8.is_deleted = false
+              LEFT JOIN "public"."district" "t9" ON t2.to_id = t9.district_id AND t8.is_deleted = false
               WHERE t1.is_deleted = FALSE `;
 
     // where transaction
-    if (sWhere != "") {
-      q += sWhere
+    if (sWhere != '') {
+      q += sWhere;
     }
-    q += ` OFFSET ${skip} LIMIT ${limit}`
+    q += ` OFFSET ${skip} LIMIT ${limit}`;
 
     const datas = await RawQueryService.query(q);
 
-    console.log(datas.length, "query datas")
+    console.log(datas.length, 'query datas');
     return datas;
   }
 
@@ -480,7 +473,7 @@ export class V1WebReportSqlCodService {
 
   // csv file code
   static async getCSVConfig(cod = true) {
-    console.log(cod, "cod status")
+    console.log(cod, 'cod status');
     const csvHeaders: any = cod ? [
       'Partner',
       'Awb Date',
@@ -613,7 +606,7 @@ export class V1WebReportSqlCodService {
           '',
           '',
           d.updatedTime ? moment.utc(d.updatedTime).format('YYYY-MM-DD HH:mm') : null,
-          d.updUser
+          d.updUser,
         ]);
 
       }
@@ -663,7 +656,7 @@ export class V1WebReportSqlCodService {
             this.strReplaceFunc(d.parcelNote),
             '', '',
             d.updatedTime ? moment.utc(d.updatedTime).format('YYYY-MM-DD HH:mm') : null,
-            d.updUser
+            d.updUser,
           ]) : writer.write([
             this.strReplaceFunc(d.partnerName),
             d.awbDate

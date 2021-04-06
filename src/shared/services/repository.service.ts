@@ -38,6 +38,7 @@ import { BagRepresentative } from '../orm-entity/bag-representative';
 import { TransactionStatus } from '../orm-entity/transaction-status';
 import { PackageType } from '../orm-entity/package-type';
 import { ReceivedBag } from '../orm-entity/received-bag';
+import { CustomerAccount } from '../orm-entity/customer-account';
 import { PenaltyCategory } from '../orm-entity/penalty_category';
 import { EmployeePenalty } from '../orm-entity/employee-penalty';
 import { EmployeeRole } from '../orm-entity/employee-role';
@@ -165,6 +166,9 @@ export class RepositoryService {
   }
   static get receivedBag() {
     return new OrionRepositoryService(ReceivedBag);
+  }
+  static get customerAccount() {
+    return new OrionRepositoryService(CustomerAccount);
   }
   static get penaltyCategory() {
     return new OrionRepositoryService(PenaltyCategory);

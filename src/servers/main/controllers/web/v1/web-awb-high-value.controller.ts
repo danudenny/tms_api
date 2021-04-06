@@ -1,5 +1,5 @@
 import {
-    BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards,
+    BadRequestException, Body, Controller, HttpCode, HttpStatus, Post, Res, UploadedFile, UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -11,6 +11,7 @@ import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.g
 import { AwbHighValueUploadListResponseVm, AwbHighValueUploadResponseVm } from '../../../models/last-mile/awb-high-value.vm';
 import { V1WebAwbHighValueService } from '../../../services/web/v1/web-awb-high-value.service';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
 
 @ApiUseTags('Awb High Value')
 @Controller('web/v1/awbHighValue')
@@ -63,5 +64,18 @@ export class V1WebAwbHighValueController {
   @ApiOkResponse({ type: AwbHighValueUploadListResponseVm })
   public async ApiAwbCount(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbHighValueService.ApiAwbListCount(payload);
+  }
+
+  @Post('apilist/report/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async export(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await V1WebAwbHighValueService.export(
+      payload,
+      outgoingHTTP,
+    );
   }
 }
