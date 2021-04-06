@@ -1,21 +1,22 @@
-import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, OneToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, OneToMany, ManyToOne, OneToOne } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
 import { BranchSortirLog } from './branch-sortir-log';
+import { Branch } from './branch';
 
 @Entity('branch_sortir_log_detail', { schema: 'public' })
 export class BranchSortirLogDetail extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
-    type: 'uuid',
+    type: 'bigint',
     name: 'branch_sortir_log_detail_id',
   })
-  branchSortirLogDetailId: string;
+  branchSortirLogDetailId: number;
 
-  @Column('uuid', {
+  @Column('bigint', {
     nullable: false,
     name: 'branch_sortir_log_id',
   })
-  branchSortirLogId: string;
+  branchSortirLogId: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -28,6 +29,13 @@ export class BranchSortirLogDetail extends TmsBaseEntity {
     name: 'branch_id',
   })
   branchId: number;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'seal_number',
+  })
+  sealNumber: string;
 
   @Column('character varying', {
     nullable: false,
@@ -72,4 +80,12 @@ export class BranchSortirLogDetail extends TmsBaseEntity {
   @ManyToOne(() => BranchSortirLog, e => e.branchSortirLogDetail)
   @JoinColumn({ name: 'branch_sortir_log_id', referencedColumnName: 'branchSortirLogId' })
   branchSortirLog: BranchSortirLog;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_lastmile' })
+  branchLastmile: Branch;
 }
