@@ -7,7 +7,7 @@ import { CheckAwbPayloadVm, CheckAwbResponseVM } from '../../models/hub-machine-
 import { HubMachineSortirService } from '../../services/integration/hub-machine-sortir.service';
 
 @ApiUseTags('Hub Cek Chute Mesin Sortir')
-@Controller('internal/sortir')
+@Controller('hub/internal/sortir')
 export class HubMachineSortirController {
   constructor() {}
 
