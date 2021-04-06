@@ -30,6 +30,8 @@ export class HubMachineSortirService {
     let branchSortirLogId = '';
     let branchSortirLogSummaryId;
     const ArrChute = [];
+    let paramBranchIdLastmile;
+    let paramChute;
 
     const dateNow = moment().toDate();
     const rawQueryAwb = `
@@ -95,6 +97,8 @@ export class HubMachineSortirService {
                 1,
                 branchSortirLogId,
               );
+              paramBranchIdLastmile = resultData[a].branch_id_lastmile,
+              paramChute = resultData[a].no_chute
             }
 
             branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
@@ -102,7 +106,10 @@ export class HubMachineSortirService {
               1,
               dateNow,
               payload.sorting_branch_id,
-              payload.tracking_number
+              payload.tracking_number,
+              paramBranchIdLastmile,
+              paramChute,
+              is_cod,
             );
 
             data.push({
@@ -141,7 +148,10 @@ export class HubMachineSortirService {
               0,
               dateNow,
               payload.sorting_branch_id,
-              payload.tracking_number
+              payload.tracking_number,
+              null,
+              null,
+              is_cod,
             );
 
             return result;
@@ -178,6 +188,8 @@ export class HubMachineSortirService {
                 1,
                 branchSortirLogId,
               );
+              paramBranchIdLastmile = resultData[a].branch_id_lastmile,
+              paramChute = resultData[a].no_chute
             }
 
             branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
@@ -185,7 +197,10 @@ export class HubMachineSortirService {
               1,
               dateNow,
               payload.sorting_branch_id,
-              payload.tracking_number
+              payload.tracking_number,
+              paramBranchIdLastmile,
+              paramChute,
+              is_cod
             );
 
             data.push({
@@ -225,7 +240,10 @@ export class HubMachineSortirService {
               0,
               dateNow,
               payload.sorting_branch_id,
-              payload.tracking_number
+              payload.tracking_number,
+              null,
+              null,
+              false
             );
 
             return result;
@@ -257,7 +275,10 @@ export class HubMachineSortirService {
           0,
           dateNow,
           payload.sorting_branch_id,
-          payload.tracking_number
+          payload.tracking_number,
+          null,
+          null,
+          false
         );
 
         return result;
@@ -289,7 +310,10 @@ export class HubMachineSortirService {
         0,
         dateNow,
         payload.sorting_branch_id,
-        payload.tracking_number
+        payload.tracking_number,
+        null,
+        null,
+        false
       );
 
       return result;
@@ -387,6 +411,9 @@ export class HubMachineSortirService {
     scanDate: Date,
     branchId: string | number,
     awbNumber: string,
+    paramBranchIdLastmile: number,
+    paramChuteNumber: number,
+    paramIsCod: boolean,
     userId: number = 1,
   ) {
     let branchSortirLogSummary = null;
@@ -414,6 +441,9 @@ export class HubMachineSortirService {
         awbNumber,
         isSucceed: paramSucceed,
         reason: message,
+        branchIdLastmile: paramBranchIdLastmile,
+        chuteNumber: paramChuteNumber,
+        isCod: paramIsCod,
         createdTime: scanDate,
         updatedTime: scanDate,
         userIdCreated: userId,

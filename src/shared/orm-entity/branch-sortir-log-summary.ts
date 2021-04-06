@@ -41,4 +41,30 @@ export class BranchSortirLogSummary extends TmsBaseEntity {
     name: 'reason',
   })
   reason: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'seal_number',
+  })
+  sealNumber: string | null;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'branch_id_lastmile',
+  })
+  branchIdLastmile: number;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'chute_number',
+  })
+  chuteNumber: number;
+
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_cod',
+  })
+  isCod: boolean;
 }
