@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
+import { Branch } from './branch';
 @Entity('branch_sortir_log_summary', { schema: 'public' })
 export class BranchSortirLogSummary extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
@@ -67,4 +68,12 @@ export class BranchSortirLogSummary extends TmsBaseEntity {
     name: 'is_cod',
   })
   isCod: boolean;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id_lastmile' })
+  branchLastmile: Branch;
 }

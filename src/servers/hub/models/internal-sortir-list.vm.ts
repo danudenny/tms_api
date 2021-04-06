@@ -12,8 +12,8 @@ export class ListDataBranchSortirLogVm {
   @ApiModelProperty()
   qtyFail: string;
 
-  @ApiModelProperty()
-  branchSortirLogId: string;
+  // @ApiModelProperty()
+  // branchSortirLogId: string;
 
 }
 

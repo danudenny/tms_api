@@ -5,6 +5,8 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { BranchSortirLog } from '../../../../shared/orm-entity/branch-sortir-log';
 import { BranchSortirLogDetail } from '../../../../shared/orm-entity/branch-sortir-log-detail';
 import { ListBranchSortirLogVm, DetailBranchSortirLogVm } from '../../models/internal-sortir-list.vm';
+import { BranchSortirLogSummary } from '../../../../shared/orm-entity/branch-sortir-log-summary';
+import {RawQueryService} from '../../../../shared/services/raw-query.service';
 
 @Injectable()
 export class InternalSortirListService {
@@ -12,37 +14,40 @@ export class InternalSortirListService {
     payload: BaseMetaPayloadVm,
   ): Promise<ListBranchSortirLogVm> {
 
-    payload.fieldResolverMap['createdTime'] = 'bsl.scan_date';
-    payload.fieldResolverMap['scanDate'] = 'bsl.scan_date';
-    payload.fieldResolverMap['awbNumber'] = 'bsld.awb_number';
-    payload.fieldResolverMap['isCod'] = 'bsld.is_cod';
-    payload.fieldResolverMap['branchId'] = 'bsld.branch_id';
+    payload.fieldResolverMap['createdTime'] = 'bsls.scan_date';
+    payload.fieldResolverMap['scanDate'] = 'bsls.scan_date';
+    payload.fieldResolverMap['awbNumber'] = 'bsls.awb_number';
+    payload.fieldResolverMap['isCod'] = 'bsls.is_cod';
+    payload.fieldResolverMap['branchId'] = 'bsls.branch_id';
 
     payload.globalSearchFields = [
       {
-        field: 'bsld.awbNumber',
+        field: 'bsls.awbNumber',
       },
     ];
 
-    const repo = new OrionRepositoryService(BranchSortirLog, 'bsl');
+    const repo = new OrionRepositoryService(BranchSortirLogSummary, 'bsls');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
-      ['bsl.scan_date', 'scanDate'],
-      ['bsl.qty_succeed', 'qtySucceed'],
-      [`bsl.qty_fail`, 'qtyFail'],
-      [`bsl.branch_sortir_log_id`, 'branchSortirLogId'],
-    );
-    q.innerJoin(e => e.branchSortirLogDetail, 'bsld', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      ['scan_date::date', 'scanDate'],
+      [`COUNT(
+          DISTINCT CASE
+            WHEN bsls.is_succeed = 1 THEN bsls.awb_number::FLOAT
+            ELSE null
+          END
+        )`, 'qtySucceed'],
+      [`COUNT(
+          DISTINCT CASE
+            WHEN bsls.is_succeed = 0 THEN bsls.awb_number::FLOAT
+            ELSE null
+          END
+        )`, 'qtyFail'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.groupByRaw(`
-      bsl.scan_date,
-      bsl.qty_succeed,
-      bsl.qty_fail,
-      bsl.branch_sortir_log_id
+      bsls.scan_date::date
     `);
 
     const data = await q.exec();
@@ -60,53 +65,75 @@ export class InternalSortirListService {
     payload: BaseMetaPayloadVm,
   ): Promise<DetailBranchSortirLogVm> {
 
-    payload.fieldResolverMap['branchSortirLogId'] = 'bsld.branch_sortir_log_id';
-    payload.fieldResolverMap['awbNumber'] = 'bsld.awb_number';
-    payload.fieldResolverMap['createdTime'] = 'bsld.scan_date';
-    payload.fieldResolverMap['scanDate'] = 'bsld.scan_date';
-    payload.fieldResolverMap['isCod'] = 'bsld.is_cod';
-    payload.fieldResolverMap['isSucceed'] = 'bsld.is_succeed';
+    payload.fieldResolverMap['branchSortirLogId'] = 'bsls.branch_sortir_log_id';
+    payload.fieldResolverMap['awbNumber'] = 'bsls.awb_number';
+    payload.fieldResolverMap['createdTime'] = 'bsls.scan_date';
+    payload.fieldResolverMap['scanDate'] = 'bsls.scan_date';
+    payload.fieldResolverMap['isCod'] = 'bsls.is_cod';
+    payload.fieldResolverMap['isSucceed'] = 'bsls.is_succeed';
+    payload.fieldResolverMap['noChute'] = 'bsls.chute_number';
 
     payload.globalSearchFields = [
       {
-        field: 'bsld.awb_number',
+        field: 'bsls.awb_number',
       },
       {
-        field: 'bsld.no_chute',
+        field: 'bsls.chute_number',
       },
       {
-        field: 'bsld.seal_number',
+        field: 'bsls.seal_number',
       },
     ];
 
-    const repo = new OrionRepositoryService(BranchSortirLogDetail, 'bsld');
+    const repo = new OrionRepositoryService(BranchSortirLogSummary, 'bsls');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
-      ['bsld.scan_date', 'scanDate'],
+      ['bsls.scan_date', 'scanDate'],
       ['b.branch_id', 'branchId'],
       ['b.branch_name', 'branchName'],
-      [`bsld.no_chute`, 'noChute'],
-      [`bsld.awb_number`, 'awbNumber'],
-      [`bsld.seal_number`, 'sealNumber'],
-      [`bsld.branch_id_lastmile`, 'branchIdLastmile'],
-      [`bsld.is_cod`, 'isCod'],
-      [`bsld.is_succeed`, 'isSucceed'],
-      [`bsld.reason`, 'reason'],
+      [`bsls.chute_number`, 'noChute'],
+      [`bsls.awb_number`, 'awbNumber'],
+      [`bsls.seal_number`, 'sealNumber'],
+      [`bsls.branch_id_lastmile`, 'branchIdLastmile'],
+      [`bsls.is_cod`, 'isCod'],
+      [`bsls.is_succeed`, 'isSucceed'],
+      [`bsls.reason`, 'reason'],
+      [`RANK () OVER (PARTITION BY awb_number ORDER BY scan_date DESC)`, 'rank'],
     );
     q.innerJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
+    const order = payload.sortBy ? `ORDER BY ${payload.sortBy} ${payload.sortDir}` : '';
+    const page = payload.limit ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : '';
+
+    const subQuery = q.getQuery();
+    const queryData = `
+      SELECT * FROM (
+        ${subQuery}
+      ) t
+      WHERE rank = 1
+      ${order}
+      ${limit}
+      ${page}
+    `;
+    const queryTotal = `
+      SELECT COUNT(*) AS total FROM (
+        ${subQuery}
+      ) t
+      WHERE rank = 1
+    `;
+    const data = await RawQueryService.query(queryData);
+    const total = await RawQueryService.query(queryTotal);
 
     const result = new DetailBranchSortirLogVm();
 
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+    result.paging = MetaService.set(payload.page, payload.limit, total[0].total);
 
     return result;
   }
