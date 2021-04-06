@@ -66,6 +66,7 @@ export class HubMachineService {
       const branch = await Branch.findOne({
         where: {
           branchId: payload.sorting_branch_id,
+          isDeleted: false,
         },
       });
 
@@ -73,6 +74,7 @@ export class HubMachineService {
         where: {
           branchId: payload.sorting_branch_id,
           noChute: payload.chute_number,
+          isDeleted: false,
         },
       });
       if(branch){
