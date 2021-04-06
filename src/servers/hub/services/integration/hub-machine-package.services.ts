@@ -350,24 +350,24 @@ export class HubMachineService {
       throw new BadRequestException('Tidak ada nomor resi');
     }
 
-    const qb = createQueryBuilder();
-    qb.addSelect('a.bag_id', 'bagId');
-    qb.addSelect('a.bag_number', 'bagNumber');
-    qb.addSelect('a.district_id_to', 'districtIdTo');
-    qb.addSelect('MAX(b.bag_seq)', 'lastSequence');
-    qb.from('bag', 'a');
-    qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
-    qb.where('a.created_time >= :today AND a.created_time < :tomorrow', {
-      today: moment().format('YYYY-MM-DD'),
-      tomorrow: moment().add(1, 'd').format('YYYY-MM-DD'),
-    });
-    qb.andWhere('a.branch_id_to = :branchId', { branchId });
-    qb.andWhere('a.is_deleted = false');
-    qb.groupBy('a.bag_id');
+    // const qb = createQueryBuilder();
+    // qb.addSelect('a.bag_id', 'bagId');
+    // qb.addSelect('a.bag_number', 'bagNumber');
+    // qb.addSelect('a.district_id_to', 'districtIdTo');
+    // qb.addSelect('MAX(b.bag_seq)', 'lastSequence');
+    // qb.from('bag', 'a');
+    // qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
+    // qb.where('a.created_time >= :today AND a.created_time < :tomorrow', {
+    //   today: moment().format('YYYY-MM-DD'),
+    //   tomorrow: moment().add(1, 'd').format('YYYY-MM-DD'),
+    // });
+    // qb.andWhere('a.branch_id_to = :branchId', { branchId });
+    // qb.andWhere('a.is_deleted = false');
+    // qb.groupBy('a.bag_id');
 
-    const bagData = await qb.getRawOne();
+    // const bagData = await qb.getRawOne();
 
-    if (!bagData) {
+    // if (!bagData) {
       // generate bag number
       randomBagNumber =
         'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
@@ -405,11 +405,11 @@ export class HubMachineService {
       bagId = bag.bagId;
       sequence = 1;
       assign(result, { bagNumber: randomBagNumber });
-    } else {
-      bagId = bagData.bagId;
-      sequence = bagData.lastSequence + 1;
-      randomBagNumber = bagData.bagNumber;
-    }
+    // } else {
+    //   bagId = bagData.bagId;
+    //   sequence = bagData.lastSequence + 1;
+    //   randomBagNumber = bagData.bagNumber;
+    // }
     const bagSeq: string = sequence.toString().padStart(3, '0');
     const awbDetail = paramAwbDetail;
 
