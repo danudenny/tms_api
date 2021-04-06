@@ -9,20 +9,20 @@ import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('Hub Monitoring')
-@Controller('hub/monitoring')
+@Controller('pod/hub')
 @ApiBearerAuth()
 @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
 export class HubController {
   constructor() {}
 
-  @Post('bag')
+  @Post('monitoring/bag')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringBagHubResponseVm })
   public async monitoringBagHub(@Body() payload: BaseMetaPayloadVm) {
     return HubMonitoringService.monitoringBagHub(payload);
   }
 
-  @Post('sortir')
+  @Post('monitoring/sortir')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringSortirHubResponseVm })
   public async monitoringSortirHub(@Body() payload: BaseMetaPayloadVm) {
