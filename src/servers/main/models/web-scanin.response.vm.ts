@@ -28,6 +28,9 @@
     bagNumber: string;
 
     @ApiModelProperty()
+    totalSealNumberScan: string;
+
+    @ApiModelProperty()
     totalBagScan: string;
 
     @ApiModelProperty()

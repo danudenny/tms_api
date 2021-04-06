@@ -191,6 +191,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['totalAwbScan'] = 'totalAwbScan';
+    payload.fieldResolverMap['totalSealNumberScan'] = 't1.total_seal_number_scan';
     // payload.fieldResolverMap['totalAwbScan'] = 't2.total_awb_scan';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -211,6 +212,7 @@ export class WebDeliveryInService {
       ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
       ['t1.created_time', 'createdTime'],
       ['t3.branch_name', 'branchName'],
+      ['t1.total_seal_number_scan', 'totalSealNumberScan'],
       ['t1.total_bag_scan', 'totalBagScan'],
       ['COUNT(t4.awb_number)', 'totalAwbScan'],
     );
@@ -384,7 +386,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchScanName'] = 't5.branch_name';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
-    payload.fieldResolverMap['sealNumber'] = 't1.seal_number'; ;
+    payload.fieldResolverMap['sealNumber'] = 't1.seal_number';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';

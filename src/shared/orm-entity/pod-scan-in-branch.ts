@@ -39,6 +39,13 @@ export class PodScanInBranch extends TmsBaseEntity {
   })
   totalBagScan: number | null;
 
+  @Column('integer', {
+    nullable: false,
+    default: () => 0,
+    name: 'total_seal_number_scan',
+  })
+  totalSealNumberScan: number | null;
+
   @ManyToOne(() => PodScanInBranchBag)
   @JoinColumn({ name: 'pod_scan_in_branch_id', referencedColumnName: 'podScanInBranchId' })
   podScanInBranchBag: PodScanInBranchBag;
