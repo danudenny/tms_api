@@ -52,7 +52,7 @@ module.exports = {
     selector: 'ORDER',
   },
   extra: {
-    max: 25,
+    max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
   },
