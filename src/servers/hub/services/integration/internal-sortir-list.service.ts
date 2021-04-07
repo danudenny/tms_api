@@ -103,18 +103,21 @@ export class InternalSortirListService {
       ['b.branch_name', 'branchName'],
       [`bsls.chute_number`, 'noChute'],
       [`bsls.awb_number`, 'awbNumber'],
-      [`bsls.seal_number`, 'sealNumber'],
+      [`bag.seal_number`, 'sealNumber'],
       [`bl.branch_id`, 'branchIdLastmile'],
       [`bl.branch_name`, 'branchNameLastmile'],
       [`bsls.is_cod`, 'isCod'],
       [`bsls.is_succeed`, 'isSucceed'],
       [`bsls.reason`, 'reason'],
-      [`RANK () OVER (PARTITION BY awb_number ORDER BY scan_date DESC)`, 'rank'],
+      [`RANK () OVER (PARTITION BY bsls.awb_number ORDER BY bsls.scan_date DESC)`, 'rank'],
     );
-    q.innerJoin(e => e.branch, 'b', j =>
+    q.leftJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.branchLastmile, 'bl', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.bagItemAwb.bagItem.bag, 'bag', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());

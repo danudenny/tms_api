@@ -2,6 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'ty
 
 import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
+import { BagItemAwb } from './bag-item-awb';
 @Entity('branch_sortir_log_summary', { schema: 'public' })
 export class BranchSortirLogSummary extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
@@ -77,4 +78,8 @@ export class BranchSortirLogSummary extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_lastmile' })
   branchLastmile: Branch;
+
+  @OneToOne(() => BagItemAwb)
+  @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber' })
+  bagItemAwb: BagItemAwb;
 }
