@@ -56,11 +56,12 @@ export class BranchSortirLogSummary extends TmsBaseEntity {
   })
   branchIdLastmile: number;
 
-  @Column('integer', {
+  @Column('character varying', {
     nullable: true,
+    length: 255,
     name: 'chute_number',
   })
-  chuteNumber: number;
+  chuteNumber: string;
 
   @Column('boolean', {
     nullable: true,

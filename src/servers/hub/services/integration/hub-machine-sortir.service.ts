@@ -80,6 +80,7 @@ export class HubMachineSortirService {
             ;
           `;
           const resultData = await RawQueryService.query(rawQuery);
+          let combineChute = '';
           if (resultData.length > 0 ) {
             result.message = 'Check Spk Success';
             for (let a = 0; a < resultData.length; a++) {
@@ -98,7 +99,8 @@ export class HubMachineSortirService {
                 branchSortirLogId,
               );
               paramBranchIdLastmile = resultData[a].branch_id_lastmile,
-              paramChute = resultData[a].no_chute
+              paramChute = resultData[a].no_chute;
+              combineChute = combineChute ? (',' + paramChute) : paramChute;
             }
 
             branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
@@ -108,7 +110,7 @@ export class HubMachineSortirService {
               payload.sorting_branch_id,
               payload.tracking_number,
               paramBranchIdLastmile,
-              paramChute,
+              combineChute,
               is_cod,
             );
 
@@ -172,7 +174,7 @@ export class HubMachineSortirService {
           // console.log(rawQuery);
           if (resultData.length > 0 ) {
             result.message = 'Check Spk Success';
-
+            let combineChute = '';
             for (let a = 0; a < resultData.length; a++) {
               ArrChute.push(resultData[a].no_chute);
 
@@ -189,7 +191,8 @@ export class HubMachineSortirService {
                 branchSortirLogId,
               );
               paramBranchIdLastmile = resultData[a].branch_id_lastmile,
-              paramChute = resultData[a].no_chute
+              paramChute = resultData[a].no_chute;
+              combineChute = combineChute ? (',' + paramChute) : paramChute;
             }
 
             branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
@@ -199,8 +202,8 @@ export class HubMachineSortirService {
               payload.sorting_branch_id,
               payload.tracking_number,
               paramBranchIdLastmile,
-              paramChute,
-              is_cod
+              combineChute,
+              is_cod,
             );
 
             data.push({
@@ -243,7 +246,7 @@ export class HubMachineSortirService {
               payload.tracking_number,
               null,
               null,
-              false
+              false,
             );
 
             return result;
@@ -278,7 +281,7 @@ export class HubMachineSortirService {
           payload.tracking_number,
           null,
           null,
-          false
+          false,
         );
 
         return result;
@@ -313,7 +316,7 @@ export class HubMachineSortirService {
         payload.tracking_number,
         null,
         null,
-        false
+        false,
       );
 
       return result;
@@ -412,7 +415,7 @@ export class HubMachineSortirService {
     branchId: string | number,
     awbNumber: string,
     paramBranchIdLastmile: number,
-    paramChuteNumber: number,
+    paramChuteNumber: string,
     paramIsCod: boolean,
     userId: number = 1,
   ) {
@@ -421,18 +424,18 @@ export class HubMachineSortirService {
 
     branchSortirLogSummary = await BranchSortirLogSummary.findOne({
       where: {
-        awbNumber: awbNumber,
+        awbNumber,
         isDeleted: false,
       },
     });
 
-    if(branchSortirLogSummary) {
-      paramBranchSortirLogSummaryId = branchSortirLogSummary.branchSortirLogSummaryId
+    if (branchSortirLogSummary) {
+      paramBranchSortirLogSummaryId = branchSortirLogSummary.branchSortirLogSummaryId;
       await BranchSortirLogSummary.update({
         branchSortirLogSummaryId: paramBranchSortirLogSummaryId,
       }, {
         isSucceed: paramSucceed,
-        updatedTime: scanDate
+        updatedTime: scanDate,
       });
     } else {
       const createBranchSortirLogSummary = BranchSortirLogSummary.create({
