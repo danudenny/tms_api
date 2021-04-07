@@ -373,7 +373,6 @@ export class WebDeliveryInService {
   async findAllHubSortInByRequest(
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInHubSortListResponseVm> {
-    const permissionPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['createdTime'] = 't2.created_time';
     payload.fieldResolverMap['branchId'] = 't3.branch_id';
@@ -444,9 +443,6 @@ export class WebDeliveryInService {
     );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
 
-    if (permissionPayload.branchId) {
-      q.andWhere(e => e.bagItems.branchLast.branchId, w => w.equals(permissionPayload.branchId));
-    }
     q.groupByRaw(`
       t2.created_time,
       t2.bag_seq,
