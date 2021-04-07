@@ -340,61 +340,6 @@ export class HubMachineSortirService {
     userId: number = 1,
     branchSortirLogId?: string,
   ) {
-    const isSucceed = state == 0 ? true : false;
-    let branchSortirLog = null;
-
-    if (!branchSortirLogId) {
-      branchSortirLog = await BranchSortirLog.findOne({
-        where: {
-          scanDate: Between(
-            moment(scanDate).format('YYYY-MM-DD') + ' 00:00:00',
-            moment(scanDate).add(1, 'days').format('YYYY-MM-DD') + ' 00:00:00',
-          ),
-          isDeleted: false,
-        },
-      });
-      branchSortirLogId = branchSortirLog ? branchSortirLog.branchSortirLogId : null;
-    }
-    if (branchSortirLogId) {
-      await getManager().transaction(async transactionEntityManager => {
-        if (isSucceed) {
-          await transactionEntityManager.increment(
-            BranchSortirLog,
-            {
-              branchSortirLogId,
-            },
-            'qtySucceed',
-            1,
-          );
-        } else {
-          await transactionEntityManager.increment(
-            BranchSortirLog,
-            {
-              branchSortirLogId,
-            },
-            'qtyFail',
-            1,
-          );
-        }
-      });
-    } else {
-      const cSuccess = 1;
-      let cFail = 1;
-      if (isSucceed) { cFail = 0; }
-
-      const createBranchSortirLog = BranchSortirLog.create({
-        scanDate,
-        qtySucceed: cSuccess,
-        qtyFail: cFail,
-        branchId: parseInt(branchId.toString()),
-        createdTime: scanDate,
-        updatedTime: scanDate,
-        userIdCreated: userId,
-        userIdUpdated: userId,
-      });
-      await BranchSortirLog.save(createBranchSortirLog);
-      branchSortirLogId = createBranchSortirLog.branchSortirLogId;
-    }
 
     BranchSortirLogQueueService.perform(
       message,
