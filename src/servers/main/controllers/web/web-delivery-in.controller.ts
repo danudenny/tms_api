@@ -86,7 +86,7 @@ export class WebDeliveryInController {
   @Post('hubSortList')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanInHubSortListResponseVm })
   // @ResponseSerializerOptions({ disable: true })
   public async findAllHubSortList(@Body() payload: BaseMetaPayloadVm) {
