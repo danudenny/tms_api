@@ -82,6 +82,9 @@
 
     @ApiModelProperty()
     weight: string;
+
+    @ApiModelProperty()
+    sealNumber: string;
   }
 
   export class WebScanInBranchAwbResponseVm {

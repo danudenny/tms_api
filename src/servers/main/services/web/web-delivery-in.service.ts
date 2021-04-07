@@ -281,6 +281,7 @@ export class WebDeliveryInService {
       ['t1.total_diff', 'totalDiff'],
       ['t2.ref_representative_code', 'representativeCode'],
       [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['t1.seal_number', 'sealNumber'],
     );
     q.innerJoin(e => e.bag, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -349,6 +350,7 @@ export class WebDeliveryInService {
       ['t1.total_diff', 'totalDiff'],
       ['t2.ref_representative_code', 'representativeCode'],
       [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['t1.seal_number', 'sealNumber'],
     );
     q.innerJoin(e => e.bag, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
