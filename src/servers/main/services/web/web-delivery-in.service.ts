@@ -322,6 +322,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
     payload.fieldResolverMap['refRepresentativeCode'] =
       't2.ref_representative_code';
+    payload.fieldResolverMap['sealNumber'] = 't1.seal_number';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
