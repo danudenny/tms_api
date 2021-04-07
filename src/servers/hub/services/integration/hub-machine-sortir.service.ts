@@ -439,6 +439,7 @@ export class HubMachineSortirService {
         branchSortirLogSummaryId: paramBranchSortirLogSummaryId,
       }, {
         isSucceed: paramSucceed,
+        reason: message,
         updatedTime: scanDate,
       });
     } else {
