@@ -388,8 +388,8 @@ export class ScanBagVm {
   @ApiModelProperty()
   bagNumber: string;
 
-  @ApiModelPropertyOptional()
-  sealNumber: string;
+  // @ApiModelProperty()
+  // sealNumber: string;
 
   @ApiModelProperty()
   status: string;
