@@ -71,6 +71,13 @@ export class PodScanInBranchBag extends TmsBaseEntity {
   })
   bagNumber: string;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'seal_number',
+  })
+  sealNumber: string | null;
+
   @ManyToOne(() => Bag, bag => bag.podScanInBranchBags, {
     onDelete: 'CASCADE',
   })

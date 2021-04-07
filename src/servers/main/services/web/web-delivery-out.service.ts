@@ -758,10 +758,10 @@ export class WebDeliveryOutService {
         response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
       }
 
-      // const sealNumber = bagData.bag.sealNumber;
       // push item
       dataItem.push({
         bagNumber: bagData.bag.bagNumber,
+        sealNumber: bagData.bag.sealNumber,
         ...response,
       });
     } // end of loop
@@ -1598,7 +1598,7 @@ export class WebDeliveryOutService {
         response.message = 'success';
       // }
     }
-    result = { bagNumber, ...response };
+    result = { bagNumber, sealNumber: null, ...response };
     return result;
   }
 
