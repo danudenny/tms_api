@@ -285,7 +285,8 @@ export class LastMileDeliveryInService {
               podScanInBranchBagObj.totalAwbItem = bagItemsAwb.length;
               podScanInBranchBagObj.totalAwbScan = 0;
               podScanInBranchBagObj.totalDiff = 0;
-              podScanInBranchBagObj.sealNumber = bagData.bag.sealNumber;
+              podScanInBranchBagObj.sealNumber = bagData.bag.sealNumber ? bagData.bag.sealNumber : null;
+              podScanInBranchBag.isSealNumberScan = isSealNumber;
               await PodScanInBranchBag.save(podScanInBranchBagObj);
 
               if (isSealNumber) {

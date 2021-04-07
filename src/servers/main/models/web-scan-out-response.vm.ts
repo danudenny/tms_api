@@ -387,10 +387,7 @@ export class WebScanOutAwbResponseVm {
 export class ScanBagVm {
   @ApiModelProperty()
   bagNumber: string;
-
-  @ApiModelProperty()
-  sealNumber: string;
-
+  
   @ApiModelProperty()
   status: string;
 

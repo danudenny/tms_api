@@ -684,6 +684,7 @@ export class WebDeliveryOutService {
             response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
             response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
             response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagData.bag.bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.sealNumber = bagData.bag.sealNumber;
             response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
             // AFTER Scan OUT ===============================================
             // #region after scanout
@@ -760,8 +761,7 @@ export class WebDeliveryOutService {
 
       // push item
       dataItem.push({
-        bagNumber: bagData.bag.bagNumber,
-        sealNumber: bagData.bag.sealNumber,
+        bagNumber,
         ...response,
       });
     } // end of loop
@@ -1598,7 +1598,7 @@ export class WebDeliveryOutService {
         response.message = 'success';
       // }
     }
-    result = { bagNumber, sealNumber: null, ...response };
+    result = { bagNumber, ...response };
     return result;
   }
 

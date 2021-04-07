@@ -292,7 +292,7 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.sealNumber, w => w.isNull);
+    q.andWhere(e => e.isSealNumberScan, w => w.isFalse);
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -360,7 +360,7 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.sealNumber, w => w.isNotNull);
+    q.andWhere(e => e.isSealNumberScan, w => w.isTrue);
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
