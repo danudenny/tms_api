@@ -440,6 +440,10 @@ export class HubMachineSortirService {
       }, {
         isSucceed: paramSucceed,
         reason: message,
+        branchId: parseInt(branchId.toString()),
+        branchIdLastmile: paramBranchIdLastmile,
+        chuteNumber: paramChuteNumber,
+        isCod: paramIsCod,
         updatedTime: scanDate,
       });
     } else {
