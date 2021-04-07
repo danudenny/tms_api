@@ -38,11 +38,15 @@ export class CreateBagFirstScanHubQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(async job => {
       const data = job.data;
+      const awbItemAttr = await AwbItemAttr.findOne({
+        where: { awbItemId: data.awbItemId, isDeleted: false },
+      });
       await getManager().transaction(async transactional => {
         // Handle first awb scan
-        const awbItemAttr = await AwbItemAttr.findOne({
-          where: { awbItemId: data.awbItemId, isDeleted: false },
-        });
+        // const awbItemAttr = await AwbItemAttr.findOne({
+        //   where: { awbItemId: data.awbItemId, isDeleted: false },
+        // });
+        // Pindah Ke atas Transaction
 
         if (awbItemAttr) {
           // update awb_item_attr
