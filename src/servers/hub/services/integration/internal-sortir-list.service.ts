@@ -34,13 +34,13 @@ export class InternalSortirListService {
       ['scan_date::date', 'scanDate'],
       [`COUNT(
           DISTINCT CASE
-            WHEN bsls.is_succeed = 1 AND bsls.awb_number IS NOT NULL THEN bsls.awb_number::FLOAT
+            WHEN bsls.is_succeed = 1 AND bsls.awb_number != '' THEN bsls.awb_number::FLOAT
             ELSE null
           END
         )`, 'qtySucceed'],
       [`COUNT(
           DISTINCT CASE
-            WHEN bsls.is_succeed = 0 AND bsls.awb_number IS NOT NULL THEN bsls.awb_number::FLOAT
+            WHEN bsls.is_succeed = 0 AND bsls.awb_number != '' THEN bsls.awb_number::FLOAT
             ELSE null
           END
         )`, 'qtyFail'],
