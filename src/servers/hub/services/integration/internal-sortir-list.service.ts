@@ -67,7 +67,6 @@ export class InternalSortirListService {
     payload: BaseMetaPayloadVm,
   ): Promise<DetailBranchSortirLogVm> {
 
-    payload.fieldResolverMap['branchSortirLogId'] = 'bsls.branch_sortir_log_id';
     payload.fieldResolverMap['awbNumber'] = 'bsls.awb_number';
     payload.fieldResolverMap['createdTime'] = 'bsls.scan_date';
     payload.fieldResolverMap['scanDate'] = 'bsls.scan_date';
@@ -86,7 +85,14 @@ export class InternalSortirListService {
         field: 'bsls.seal_number',
       },
     ];
-
+    const map = {
+      awbNumber: 'awbNumber',
+      createdTime: '"scanDate"',
+      scanDate: '"scanDate"',
+      isCod: '"isCod"',
+      isSucceed: '"isSucceed"',
+      noChute: '"noChute"',
+    };
     const repo = new OrionRepositoryService(BranchSortirLogSummary, 'bsls');
     const q = repo.findAllRaw();
 
@@ -114,7 +120,7 @@ export class InternalSortirListService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
-    const order = payload.sortBy ? `ORDER BY ${payload.sortBy} ${payload.sortDir}` : '';
+    const order = payload.sortBy ? `ORDER BY ${map[payload.sortBy]} ${payload.sortDir}` : '';
     const page = payload.limit ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : '';
 
     const subQuery = q.getQuery();
