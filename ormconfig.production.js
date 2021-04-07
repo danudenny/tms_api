@@ -51,6 +51,11 @@ module.exports = {
      */
     selector: 'ORDER',
   },
+  extra: {
+    max: 25,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  },
   entities: ['dist/shared/orm-entity/*.js'],
   migrations: ['dist/shared/orm-migration/*.js'],
   subscribers: ['dist/shared/orm-subscriber/*.js'],
