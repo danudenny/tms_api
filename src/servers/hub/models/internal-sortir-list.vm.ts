@@ -46,6 +46,9 @@ export class DetailDataBranchSortirLogVm {
   branchIdLastmile: string;
 
   @ApiModelProperty()
+  branchNameLastmile: string;
+
+  @ApiModelProperty()
   isCod: string;
 
   @ApiModelProperty()
