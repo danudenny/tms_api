@@ -40,7 +40,7 @@ export class InternalSortirListService {
         )`, 'qtySucceed'],
       [`COUNT(
           DISTINCT CASE
-            WHEN bsls.is_succeed = 0 THEN AND bsls.awb_number IS NOT NULL bsls.awb_number::FLOAT
+            WHEN bsls.is_succeed = 0 AND bsls.awb_number IS NOT NULL THEN bsls.awb_number::FLOAT
             ELSE null
           END
         )`, 'qtyFail'],
