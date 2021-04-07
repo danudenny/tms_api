@@ -79,55 +79,69 @@ export class HubMachineService {
       });
       if(branch){
         if (branchSortir) {
+          // Jagain COD Tidak boleh buat GS
+          if(branchSortir.isCod == true) {
 
-          for(let i = 0; i < payload.reference_numbers.length; i++) {
-            const awbItemAttr = await AwbService.validAwbNumber(payload.reference_numbers[i]);
-            // NOTE: check destination awb with awb.toId
-            const awb = await Awb.findOne({
-              where: { awbNumber: payload.reference_numbers[i], isDeleted: false },
-            });
-            if (!awbItemAttr || !awb) {
-              const data = [];
-              data.push({
-                state: 1,
-                no_gabung_sortir: null,
-              });
-              result.statusCode = HttpStatus.BAD_REQUEST;
-              result.message = `No resi tidak ditemukan / tidak valid`;
-              result.data = data;
-              return result;
-            } else if (awbItemAttr.isPackageCombined) {
-              const data = [];
-              data.push({
-                state: 1,
-                no_gabung_sortir: null,
-              });
-              result.statusCode = HttpStatus.BAD_REQUEST;
-              result.message = `Nomor resi sudah digabung sortir`;
-              result.data = data;
-              return result;
-            }
-          }
-          // Process Create GS
-          for(let i = 0; i < payload.reference_numbers.length; i++) {
-            scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
-            if(scanResultMachine) {
-              paramBagItemId = scanResultMachine.bagItemId;
-              paramBagNumber = scanResultMachine.bagNumber;
-              paramPodScanInHubId = scanResultMachine.podScanInHubId;
-            }
-          }
-          if(scanResultMachine) {
             const data = [];
-            data.push({
-              state: 0,
-              no_gabung_sortir: scanResultMachine.bagNumber,
-            });
-            result.statusCode = HttpStatus.OK;
-            result.message = `Success Upload`;
-            result.data = data;
+              data.push({
+                state: 0,
+                no_gabung_sortir: null,
+              });
+              result.statusCode = HttpStatus.OK;
+              result.message = `Success Not Generate GS For COD`;
+              result.data = data;
+              return result;
+
+          } else {
+            for(let i = 0; i < payload.reference_numbers.length; i++) {
+              const awbItemAttr = await AwbService.validAwbNumber(payload.reference_numbers[i]);
+              // NOTE: check destination awb with awb.toId
+              const awb = await Awb.findOne({
+                where: { awbNumber: payload.reference_numbers[i], isDeleted: false },
+              });
+              if (!awbItemAttr || !awb) {
+                const data = [];
+                data.push({
+                  state: 1,
+                  no_gabung_sortir: null,
+                });
+                result.statusCode = HttpStatus.BAD_REQUEST;
+                result.message = `No resi tidak ditemukan / tidak valid`;
+                result.data = data;
+                return result;
+              } else if (awbItemAttr.isPackageCombined) {
+                const data = [];
+                data.push({
+                  state: 1,
+                  no_gabung_sortir: null,
+                });
+                result.statusCode = HttpStatus.BAD_REQUEST;
+                result.message = `Nomor resi sudah digabung sortir`;
+                result.data = data;
+                return result;
+              }
+            }
+            // Process Create GS
+            for(let i = 0; i < payload.reference_numbers.length; i++) {
+              scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
+              if(scanResultMachine) {
+                paramBagItemId = scanResultMachine.bagItemId;
+                paramBagNumber = scanResultMachine.bagNumber;
+                paramPodScanInHubId = scanResultMachine.podScanInHubId;
+              }
+            }
+            if(scanResultMachine) {
+              const data = [];
+              data.push({
+                state: 0,
+                no_gabung_sortir: scanResultMachine.bagNumber,
+              });
+              result.statusCode = HttpStatus.OK;
+              result.message = `Success Upload`;
+              result.data = data;
+            }
           }
-          
+
         } else {
           const data = [];
           data.push({
