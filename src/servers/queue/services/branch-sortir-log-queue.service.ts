@@ -37,7 +37,7 @@ export class BranchSortirLogQueueService {
       const data = job.data;
 
       const branchSortirLogDetail = BranchSortirLogDetail.create({
-        scanDate: data.scanDate,
+        scanDate: moment(data.scanDate).format('YYY-MM-DD'),
         branchId: data.branchId,
         awbNumber: data.awbNumber,
         noChute: data.noChute,

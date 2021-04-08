@@ -2,11 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { BranchSortirLog } from '../../../../shared/orm-entity/branch-sortir-log';
-import { BranchSortirLogDetail } from '../../../../shared/orm-entity/branch-sortir-log-detail';
 import { ListBranchSortirLogVm, DetailBranchSortirLogVm } from '../../models/internal-sortir-list.vm';
 import { BranchSortirLogSummary } from '../../../../shared/orm-entity/branch-sortir-log-summary';
-import {RawQueryService} from '../../../../shared/services/raw-query.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 @Injectable()
 export class InternalSortirListService {
@@ -122,6 +120,20 @@ export class InternalSortirListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.groupByRaw(`
+      bsls.reason,
+      bsls.scan_date,
+      bsls.updated_time,
+      b.branch_id,
+      b.branch_name,
+      bsls.chute_number,
+      bsls.awb_number,
+      bag.seal_number,
+      bl.branch_id,
+      bl.branch_name,
+      bsls.is_cod,
+      bsls.is_succeed
+    `);
 
     const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
     const order = payload.sortBy ? `ORDER BY ${map[payload.sortBy]} ${payload.sortDir}` : '';

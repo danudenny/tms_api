@@ -367,10 +367,12 @@ export class HubMachineSortirService {
 
     if (branchSortirLogSummary) {
       paramBranchSortirLogSummaryId = branchSortirLogSummary.branchSortirLogSummaryId;
+      const dateStr = moment(scanDate).format('YYY-MM-DD');
+
       await BranchSortirLogSummary.update({
         branchSortirLogSummaryId: paramBranchSortirLogSummaryId,
       }, {
-        scanDate,
+        scanDate: dateStr,
         isSucceed: paramSucceed,
         reason: message,
         branchId: parseInt(branchId.toString()),
@@ -380,8 +382,10 @@ export class HubMachineSortirService {
         updatedTime: moment().toDate(),
       });
     } else {
+      const dateStr = moment(scanDate).format('YYY-MM-DD');
+
       const createBranchSortirLogSummary = BranchSortirLogSummary.create({
-        scanDate,
+        scanDate: dateStr,
         branchId: parseInt(branchId.toString()),
         awbNumber,
         isSucceed: paramSucceed,
