@@ -87,7 +87,7 @@ export class CustomCounterCode {
 
   // #region SMD
   public static async receivedBagCodeRandom(dateTime: Date, digit: number = 8) {
-    const prefix = `TB/${moment(dateTime).format('YYMM/DD')}/`;
+    const prefix = `TB/${moment(dateTime).format('YYMMDD')}/`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
   }

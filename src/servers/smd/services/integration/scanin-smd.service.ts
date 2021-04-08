@@ -125,33 +125,41 @@ export class ScaninSmdService {
               paramTotalSeq = Number(resultReceivedBag.totalSeq) + 1;
               paramTotalBagWeight = Number(resultReceivedBag.totalBagWeight) + Number(weight) ;
 
-              await getManager().transaction(async transactionEntityManager => {
-                await transactionEntityManager.increment(
-                  ReceivedBag,
-                  {
-                    receivedBagId: paramReceivedBagId,
-                    isDeleted: false,
-                  },
-                  'totalSeq',
-                  1,
-                );
-                await transactionEntityManager.increment(
-                  ReceivedBag,
-                  {
-                    receivedBagId: paramReceivedBagId,
-                    isDeleted: false,
-                  },
-                  'totalBagWeight',
-                  Number(weight),
-                );
-              });
+              // await getManager().transaction(async transactionEntityManager => {
+              //   await transactionEntityManager.increment(
+              //     ReceivedBag,
+              //     {
+              //       receivedBagId: paramReceivedBagId,
+              //       isDeleted: false,
+              //     },
+              //     'totalSeq',
+              //     1,
+              //   );
+              //   await transactionEntityManager.increment(
+              //     ReceivedBag,
+              //     {
+              //       receivedBagId: paramReceivedBagId,
+              //       isDeleted: false,
+              //     },
+              //     'totalBagWeight',
+              //     Number(weight),
+              //   );
+              // });
+              const rawQuery = `
+                UPDATE received_bag
+                SET total_seq = total_seq + 1, total_bag_weight = total_bag_weight + ${Number(weight)}
+                WHERE
+                  received_bag_id = ${paramReceivedBagId}
+              `;
+              const updReceivedBag = await RawQueryService.query(rawQuery,null,false);
               isNew = false;
             }
           }
           if (isNew == true) {
             paramTotalSeq = 1;
             paramTotalBagWeight = weight;
-            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
+            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeRandom(timeNow);
+            // const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
             // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
             const redlock = await RedisService.redlock(`redlock:receivedBag:${dataReceivedBagCode}`, 10);
             if (redlock) {
@@ -342,33 +350,41 @@ export class ScaninSmdService {
               paramTotalSeq = Number(resultReceivedBag.totalSeq) + 1;
               paramTotalBagWeight = Number(resultReceivedBag.totalBagWeight) + Number(weight);
 
-              await getManager().transaction(async transactionEntityManager => {
-                await transactionEntityManager.increment(
-                  ReceivedBag,
-                  {
-                    receivedBagId: paramReceivedBagId,
-                    isDeleted: false,
-                  },
-                  'totalSeq',
-                  1,
-                );
-                await transactionEntityManager.increment(
-                  ReceivedBag,
-                  {
-                    receivedBagId: paramReceivedBagId,
-                    isDeleted: false,
-                  },
-                  'totalBagWeight',
-                  Number(weight),
-                );
-              });
+              // await getManager().transaction(async transactionEntityManager => {
+              //   await transactionEntityManager.increment(
+              //     ReceivedBag,
+              //     {
+              //       receivedBagId: paramReceivedBagId,
+              //       isDeleted: false,
+              //     },
+              //     'totalSeq',
+              //     1,
+              //   );
+              //   await transactionEntityManager.increment(
+              //     ReceivedBag,
+              //     {
+              //       receivedBagId: paramReceivedBagId,
+              //       isDeleted: false,
+              //     },
+              //     'totalBagWeight',
+              //     Number(weight),
+              //   );
+              // });
+              const rawQuery = `
+                UPDATE received_bag
+                SET total_seq = total_seq + 1, total_bag_weight = total_bag_weight + ${Number(weight)}
+                WHERE
+                  received_bag_id = ${paramReceivedBagId}
+              `;
+              const updReceivedBag = await RawQueryService.query(rawQuery,null,false);
               isNew = false;
             }
           }
           if (isNew == true) {
             paramTotalSeq = 1;
             paramTotalBagWeight = weight;
-            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
+            const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeRandom(timeNow);
+            // const dataReceivedBagCode = await CustomCounterCode.receivedBagCodeCounter(timeNow);
             // const dataReceivedBagCode = await this.getDataReceivedBagCode(timeNow);
             const redlock = await RedisService.redlock(`redlock:receivedBag:${dataReceivedBagCode}`, 10);
             if (redlock) {

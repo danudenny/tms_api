@@ -498,9 +498,10 @@ export class WebDeliveryOutService {
           case 'IN':
             if (awb.branchIdLast == permissonPayload.branchId) {
               // Add Locking setnx redis
-              const holdRedis = await RedisService.locking(
+              const holdRedis = await RedisService.lockingWithExpire(
                 `hold:scanout:${awb.awbItemId}`,
                 'locking',
+                10,
               );
               if (holdRedis) {
                 // NOTE: create data do pod detail per awb number
@@ -622,7 +623,7 @@ export class WebDeliveryOutService {
         doPodId: payload.doPodId,
         isDeleted: false,
       },
-      lock: { mode: 'pessimistic_write' },
+      // lock: { mode: 'pessimistic_write' },
     });
 
     // TODO:bagNumbers changes to Values,cause list of value can the bagNumber or sealNumber
@@ -647,9 +648,10 @@ export class WebDeliveryOutService {
         let additionMinutes = 0;
         const transactionStatusId = 300; // OUT HUB
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
-        const holdRedis = await RedisService.locking(
+        const holdRedis = await RedisService.lockingWithExpire(
           `hold:bagscanout:${bagData.bagItemId}`,
           'locking',
+          10,
         );
         if (notScan && holdRedis) {
           if (doPod) {
