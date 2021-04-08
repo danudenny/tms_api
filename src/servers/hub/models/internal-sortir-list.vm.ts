@@ -56,6 +56,9 @@ export class DetailDataBranchSortirLogVm {
 
   @ApiModelProperty()
   reason: string;
+
+  @ApiModelProperty()
+  updatedTime: string;
 }
 
 export class DetailBranchSortirLogVm extends BaseMetaResponseVm {

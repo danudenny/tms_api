@@ -99,6 +99,7 @@ export class InternalSortirListService {
     payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
       ['bsls.scan_date', 'scanDate'],
+      ['bsls.updated_time', 'updatedTime'],
       ['b.branch_id', 'branchId'],
       ['b.branch_name', 'branchName'],
       [`bsls.chute_number`, 'noChute'],
