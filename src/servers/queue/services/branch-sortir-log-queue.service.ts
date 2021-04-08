@@ -1,8 +1,6 @@
 import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import { BranchSortirLogDetail } from '../../../shared/orm-entity/branch-sortir-log-detail';
-import { BranchSortirLog } from '../../../shared/orm-entity/branch-sortir-log';
-import { Between, getManager } from 'typeorm';
 import moment= require('moment');
 
 // DOC: https://optimalbits.github.io/bull/
@@ -39,7 +37,6 @@ export class BranchSortirLogQueueService {
       const data = job.data;
 
       const branchSortirLogDetail = BranchSortirLogDetail.create({
-        branchSortirLogId: data.sortirId,
         scanDate: data.scanDate,
         branchId: data.branchId,
         awbNumber: data.awbNumber,
@@ -77,7 +74,6 @@ export class BranchSortirLogQueueService {
     branchIdLastmile: number | string,
     isCod: boolean,
     userId: number = 1,
-    sortirId?: string,
   ) {
     const obj = {
       message,
@@ -89,7 +85,6 @@ export class BranchSortirLogQueueService {
       branchIdLastmile,
       isCod,
       userId,
-      sortirId,
     };
 
     return BranchSortirLogQueueService.queue.add(obj);

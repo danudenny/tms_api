@@ -1,7 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, OneToMany, ManyToOne, OneToOne } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
-import { BranchSortirLog } from './branch-sortir-log';
 import { Branch } from './branch';
 import { BagItemAwb } from './bag-item-awb';
 
@@ -12,12 +11,6 @@ export class BranchSortirLogDetail extends TmsBaseEntity {
     name: 'branch_sortir_log_detail_id',
   })
   branchSortirLogDetailId: number;
-
-  @Column('bigint', {
-    nullable: false,
-    name: 'branch_sortir_log_id',
-  })
-  branchSortirLogId: number;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -77,10 +70,6 @@ export class BranchSortirLogDetail extends TmsBaseEntity {
     name: 'reason',
   })
   reason: string | null;
-
-  @ManyToOne(() => BranchSortirLog, e => e.branchSortirLogDetail)
-  @JoinColumn({ name: 'branch_sortir_log_id', referencedColumnName: 'branchSortirLogId' })
-  branchSortirLog: BranchSortirLog;
 
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })

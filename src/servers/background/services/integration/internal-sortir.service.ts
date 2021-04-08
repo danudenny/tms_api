@@ -1,11 +1,9 @@
 import moment = require('moment');
-import { BadRequestException, HttpStatus } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { CheckAwbPayloadVm, CheckAwbResponseVM } from '../../models/internal-sortir.vm';
 import { BranchSortirLogQueueService } from '../../../queue/services/branch-sortir-log-queue.service';
-import { BranchSortirLog} from '../../../../shared/orm-entity/branch-sortir-log';
-import { Between, getManager } from 'typeorm';
 
 export class InternalSortirService {
 
@@ -26,7 +24,7 @@ export class InternalSortirService {
     let zip_code;
     let is_cod;
     let district_code;
-    let branchSortirLogId = '';
+    const branchSortirLogId = '';
     const ArrChute = [];
 
     const dateNow = moment().toDate();
@@ -87,7 +85,7 @@ export class InternalSortirService {
 
             for (let a = 0; a < resultData.length; a++) {
               ArrChute.push(resultData[a].no_chute);
-              branchSortirLogId = await this.upsertBranchSortirLog(
+              await this.upsertBranchSortirLog(
                 result.message,
                 dateNow,
                 0,
@@ -97,7 +95,6 @@ export class InternalSortirService {
                 resultData[a].branch_id_lastmile,
                 resultData[a].is_cod,
                 1,
-                branchSortirLogId,
               );
             }
             data.push({
@@ -118,7 +115,7 @@ export class InternalSortirService {
             result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
             result.data = data;
 
-            branchSortirLogId = await this.upsertBranchSortirLog(
+            await this.upsertBranchSortirLog(
               result.message,
               dateNow,
               1,
@@ -128,7 +125,6 @@ export class InternalSortirService {
               null,
               false,
               1,
-              branchSortirLogId,
             );
             return result;
           }
@@ -141,7 +137,7 @@ export class InternalSortirService {
           result.message = `Zip Code not found`;
           result.data = data;
 
-          branchSortirLogId = await this.upsertBranchSortirLog(
+          await this.upsertBranchSortirLog(
             result.message,
             dateNow,
             1,
@@ -151,7 +147,6 @@ export class InternalSortirService {
             null,
             false,
             1,
-            branchSortirLogId,
           );
           return result;
         }
@@ -185,7 +180,7 @@ export class InternalSortirService {
             for (let a = 0; a < resultData.length; a++) {
               ArrChute.push(resultData[a].no_chute);
 
-              branchSortirLogId = await this.upsertBranchSortirLog(
+              await this.upsertBranchSortirLog(
                 result.message,
                 dateNow,
                 0,
@@ -195,7 +190,6 @@ export class InternalSortirService {
                 resultData[a].branch_id_lastmile,
                 resultData[a].is_cod,
                 1,
-                branchSortirLogId,
               );
             }
             data.push({
@@ -216,7 +210,7 @@ export class InternalSortirService {
             result.message = `Can't Find Chute COD For AWB: ` + payload.tracking_number;
             result.data = data;
 
-            branchSortirLogId = await this.upsertBranchSortirLog(
+            branchSortirLogId; await this.upsertBranchSortirLog(
               result.message,
               dateNow,
               1,
@@ -226,7 +220,6 @@ export class InternalSortirService {
               null,
               false,
               1,
-              branchSortirLogId,
             );
             return result;
           }
@@ -250,7 +243,7 @@ export class InternalSortirService {
             for (let a = 0; a < resultData.length; a++) {
               ArrChute.push(resultData[a].no_chute);
 
-              branchSortirLogId = await this.upsertBranchSortirLog(
+              await this.upsertBranchSortirLog(
                 result.message,
                 dateNow,
                 0,
@@ -260,7 +253,6 @@ export class InternalSortirService {
                 resultData[a].branch_id_lastmile,
                 resultData[a].is_cod,
                 1,
-                branchSortirLogId,
               );
             }
             data.push({
@@ -282,7 +274,7 @@ export class InternalSortirService {
             result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
             result.data = data;
 
-            branchSortirLogId = await this.upsertBranchSortirLog(
+            await this.upsertBranchSortirLog(
               result.message,
               dateNow,
               1,
@@ -292,7 +284,6 @@ export class InternalSortirService {
               null,
               false,
               1,
-              branchSortirLogId,
             );
             return result;
           }
@@ -305,7 +296,7 @@ export class InternalSortirService {
         result.statusCode = HttpStatus.BAD_REQUEST;
         result.message = `Can't Find District For: ` + payload.tracking_number;
         result.data = data;
-        branchSortirLogId = await this.upsertBranchSortirLog(
+        await this.upsertBranchSortirLog(
           result.message,
           dateNow,
           1,
@@ -315,7 +306,6 @@ export class InternalSortirService {
           null,
           false,
           1,
-          branchSortirLogId,
         );
         return result;
       }
@@ -328,7 +318,7 @@ export class InternalSortirService {
       result.message = `Can't Find AWB: ` + payload.tracking_number;
       result.data = data;
 
-      branchSortirLogId = await this.upsertBranchSortirLog(
+      await this.upsertBranchSortirLog(
         result.message,
         dateNow,
         1,
@@ -338,7 +328,6 @@ export class InternalSortirService {
         null,
         false,
         1,
-        branchSortirLogId,
       );
       return result;
     }
@@ -355,7 +344,6 @@ export class InternalSortirService {
     branchIdLastmile: number | string,
     isCod: boolean,
     userId: number = 1,
-    branchSortirLogId?: string,
   ) {
 
     BranchSortirLogQueueService.perform(
@@ -368,9 +356,6 @@ export class InternalSortirService {
       branchIdLastmile,
       isCod,
       userId,
-      branchSortirLogId,
     );
-
-    return branchSortirLogId;
   }
 }
