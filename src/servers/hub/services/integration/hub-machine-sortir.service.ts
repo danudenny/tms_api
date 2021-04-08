@@ -383,13 +383,14 @@ export class HubMachineSortirService {
       await BranchSortirLogSummary.update({
         branchSortirLogSummaryId: paramBranchSortirLogSummaryId,
       }, {
+        scanDate,
         isSucceed: paramSucceed,
         reason: message,
         branchId: parseInt(branchId.toString()),
         branchIdLastmile: paramBranchIdLastmile,
         chuteNumber: paramChuteNumber,
         isCod: paramIsCod,
-        updatedTime: scanDate,
+        updatedTime: moment().toDate(),
       });
     } else {
       const createBranchSortirLogSummary = BranchSortirLogSummary.create({

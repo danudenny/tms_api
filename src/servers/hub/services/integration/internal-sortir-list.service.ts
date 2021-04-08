@@ -31,7 +31,7 @@ export class InternalSortirListService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
-      ['scan_date::date', 'scanDate'],
+      ['scan_date', 'scanDate'],
       [`COUNT(
           DISTINCT CASE
             WHEN bsls.is_succeed = 1 AND bsls.awb_number != '' THEN bsls.awb_number::FLOAT
@@ -49,7 +49,7 @@ export class InternalSortirListService {
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.groupByRaw(`
-      bsls.scan_date::date
+      bsls.scan_date
     `);
 
     const data = await q.exec();
