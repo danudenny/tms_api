@@ -316,13 +316,14 @@ export class BagService {
           refRepresentativeCode: true,
           bagId: true,
           bagNumber: true,
-          sealNumber: true, 
+          sealNumber: true,
+          createdTime: true,
         },
         weight: true,
       });
       q.where(e => e.bag.sealNumber, w => w.equals(sealNumber));
       q.andWhere(e => e.isDeleted, w => w.isFalse());
-      q.orderBy({bagId : 'ASC'});
+      q.orderByRaw('bag_item_bag.created_time' , 'ASC');
       q.take(1);
       const bagDatas = await q.exec();
       if (bagDatas && bagDatas.length > 0) {

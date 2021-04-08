@@ -242,7 +242,7 @@ export class WebDeliveryInService {
   ): Promise<WebScanInBranchListBagResponseVm> {
     // mapping field
     payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
-    payload.fieldResolverMap['branchName'] = 't4.branch_name';
+    payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['totalDiff'] = 't1.total_diff';
     payload.fieldResolverMap['totalAwbScan'] = 't1.total_awb_scan';
@@ -251,7 +251,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['weight'] = 't3.weight';
     payload.fieldResolverMap['branchId'] = 't3.branch_id_last';
     payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
-    payload.fieldResolverMap['refRepresentativeCode'] =
+    payload.fieldResolverMap['representativeCode'] =
       't2.ref_representative_code';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -311,7 +311,7 @@ export class WebDeliveryInService {
   ): Promise<WebScanInBranchListBagResponseVm> {
     // mapping field
     payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
-    payload.fieldResolverMap['branchName'] = 't4.branch_name';
+    payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['totalDiff'] = 't1.total_diff';
     payload.fieldResolverMap['totalAwbScan'] = 't1.total_awb_scan';
@@ -320,7 +320,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['weight'] = 't3.weight';
     payload.fieldResolverMap['branchId'] = 't3.branch_id_last';
     payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
-    payload.fieldResolverMap['refRepresentativeCode'] =
+    payload.fieldResolverMap['representativeCode'] =
       't2.ref_representative_code';
     payload.fieldResolverMap['sealNumber'] = 't1.seal_number';
     if (payload.sortBy === '') {
