@@ -45,6 +45,9 @@ import {
 import { Employee } from '../../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-request-detail';
+import { BadRequestException } from '@nestjs/common';
+import { PrintDoPodDeliverDataDoPodDeliverDetailVm } from '../../../models/print-do-pod-deliver.vm';
+import { User } from '../../../../../shared/orm-entity/user';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -356,170 +359,146 @@ export class LastMileDeliveryOutService {
 
     let totalSuccess = 0;
     let totalError = 0;
+    let employeeIdDriver = 0; // partner does not have employee id
+    let employeeNameDriver = null;
+    const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.CANCEL_DLV];
 
     // find data doPod Deliver
-    const doPodDeliver = await DoPodDeliverRepository.getDataById(
-      payload.doPodId,
-    );
+    const doPodDeliver = await DoPodDeliverRepository.byIdCache(payload.doPodId);
+    if (!doPodDeliver) {
+      throw new BadRequestException('Surat Jalan tidak valid!');
+    }
+
+    if (doPodDeliver && doPodDeliver.userIdDriver) {
+      // find by user driver
+      const userDriver = await User.findOne({
+        userId: doPodDeliver.userIdDriver,
+        isDeleted: false,
+      }, { cache: true });
+      if (userDriver) {
+        employeeIdDriver = userDriver.employeeId;
+        employeeNameDriver =  userDriver.firstName;
+      }
+    }
 
     for (const awbNumber of payload.awbNumber) {
       const response = new ScanAwbVm();
+      let notDeliver = true;
+      let isValid = true;
+
       response.status = 'ok';
       response.message = 'success';
 
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        // TODO: validation need improvement
+        // #region check validation
         // handle if awb status is null
-        let notDeliver = true;
         if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
           notDeliver = awb.awbStatusIdLast != AWB_STATUS.ANT ? true : false;
         }
 
+        if (statusFinal.includes(awb.awbStatusIdLast)) {
+          isValid = false;
+          totalError += 1;
+          response.status = 'error';
+          // handle message
+          const desc =
+            awb.awbStatusIdLast == AWB_STATUS.CANCEL_DLV
+              ? 'telah di CANCEL oleh Partner !'
+              : 'sudah Final Status !';
+          response.message = `Resi ${awbNumber} ${desc}`;
+        }
+
+        // NOTE: check resi cancel delivery
+        const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
+        if (isCancel == true) {
+          isValid = false;
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner !`;
+        }
+        // #endregion validation
+
         // NOTE: first must scan in branch
-        if (notDeliver) {
-          // add handel final status
-          // TODO: handle status cancel delivery
-          const statusFinal = [AWB_STATUS.DLV, AWB_STATUS.CANCEL_DLV];
-          if (statusFinal.includes(awb.awbStatusIdLast)) {
-            totalError += 1;
-            response.status = 'error';
-            // handle message
-            const desc =
-              awb.awbStatusIdLast == AWB_STATUS.CANCEL_DLV
-                ? 'telah di CANCEL oleh Partner !'
-                : 'sudah Final Status !';
-            response.message = `Resi ${awbNumber} ${desc}`;
-          } else {
+        if (notDeliver && isValid) {
+          // Add Locking setnx redis
+          const holdRedis = await RedisService.lockingWithExpire(
+            `hold:scanoutant:${awb.awbItemId}`,
+            'locking',
+            60,
+          );
+          if (holdRedis) {
+            // #region after scanout
+            // save table do_pod_detail
+            // NOTE: check data double DoPodDeliverDetail by awb item id
+            // if found update flag is deleted true;
+            try {
 
-            // NOTE: disable handle last status != IN
-            // const statusCode = await AwbService.awbStatusGroup(
-            //   awb.awbStatusIdLast,
-            // );
-            // // save data to awb_trouble
-            // if (statusCode != 'IN') {
-            //   const branchName = awb.branchLast
-            //     ? awb.branchLast.branchName
-            //     : '';
-            //   await AwbTroubleService.fromScanOut(
-            //     awbNumber,
-            //     branchName,
-            //     awb.awbStatusIdLast,
-            //   );
-            // }
-
-            // NOTE: check resi cancel delivery
-            const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
-            if (isCancel == true) {
-              totalError += 1;
-              response.status = 'error';
-              response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner !`;
-            } else {
-              // Add Locking setnx redis
-              const holdRedis = await RedisService.locking(
-                `hold:scanoutant:${awb.awbItemId}`,
-                'locking',
-              );
-              if (holdRedis) {
-                // AFTER Scan OUT ===============================================
-                // #region after scanout
-                if (doPodDeliver) {
-                  // save table do_pod_detail
-                  // NOTE: check data double DoPodDeliverDetail by awb item id
-                  // if found update flag is deleted true;
-                  const oldData = await DoPodDeliverDetail.findOne({
-                    select: ['doPodDeliverDetailId'],
-                    where: {
-                      awbNumber,
+              await getManager().transaction(async transactionManager => {
+                // flag delete data if exist, handle double awb on spk
+                const dataSpk = await DoPodDeliverDetail.find({
+                  select: ['awbNumber'],
+                  where: {
+                    awbItemId: awb.awbItemId,
+                    awbStatusIdLast: AWB_STATUS.ANT,
+                    isDeleted: false,
+                  },
+                });
+                if (dataSpk.length) {
+                  transactionManager.update(
+                    DoPodDeliverDetail,
+                    {
+                      awbItemId: awb.awbItemId,
+                      awbStatusIdLast: AWB_STATUS.ANT,
                       isDeleted: false,
                     },
-                  });
-                  if (oldData) {
-                    await DoPodDeliverDetail.update(
-                      {
-                        doPodDeliverDetailId: oldData.doPodDeliverDetailId,
-                      },
-                      {
-                        isDeleted: true,
-                        userIdUpdated: authMeta.userId,
-                        updatedTime: moment().toDate(),
-                      },
-                    );
-                  }
-
-                  // NOTE: create data do pod detail per awb number
-                  const doPodDeliverDetail = DoPodDeliverDetail.create();
-                  doPodDeliverDetail.doPodDeliverId = payload.doPodId;
-                  doPodDeliverDetail.awbId = awb.awbId;
-                  doPodDeliverDetail.awbItemId = awb.awbItemId;
-                  doPodDeliverDetail.awbNumber = awbNumber;
-                  doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
-                  await DoPodDeliverDetail.insert(doPodDeliverDetail);
-
-                  // Assign print metadata - Scan Out & Deliver
-                  response.printDoPodDetailMetadata.awbItem.awb.awbId = awb.awbId;
-                  response.printDoPodDetailMetadata.awbItem.awb.awbNumber = awbNumber;
-                  response.printDoPodDetailMetadata.awbItem.awb.consigneeName =
-                    awb.awbItem.awb.consigneeName;
-
-                  // Assign print metadata - Deliver
-                  response.printDoPodDetailMetadata.awbItem.awb.consigneeAddress =
-                    awb.awbItem.awb.consigneeAddress;
-                  response.printDoPodDetailMetadata.awbItem.awb.awbItemId =
-                    awb.awbItemId;
-                  response.printDoPodDetailMetadata.awbItem.awb.consigneeNumber =
-                    awb.awbItem.awb.consigneeNumber;
-                  response.printDoPodDetailMetadata.awbItem.awb.consigneeZip =
-                    awb.awbItem.awb.consigneeZip;
-                  response.printDoPodDetailMetadata.awbItem.awb.isCod =
-                    awb.awbItem.awb.isCod;
-                  response.printDoPodDetailMetadata.awbItem.awb.totalCodValue =
-                    awb.awbItem.awb.totalCodValue;
-                  response.printDoPodDetailMetadata.awbItem.awb.totalWeight =
-                    awb.awbItem.awb.totalWeightFinalRounded;
-
-                  // NOTE: counter total scan out
-                  // const totalAwb = doPodDeliver.totalAwb + 1;
-                  // await DoPodDeliver.update({ doPodDeliverId: doPodDeliver.doPodDeliverId }, {
-                  //   totalAwb,
-                  // });
-
-                  // NOTE: queue by Bull ANT
-                  let employeeIdDriver;
-                  let employeeNameDriver;
-                  if (doPodDeliver.isPartner) {
-                    employeeIdDriver = 0; // partner does not have employee id
-                    employeeNameDriver = null;
-                  } else {
-                    employeeIdDriver = doPodDeliver.userDriver.employeeId;
-                    employeeNameDriver =
-                      doPodDeliver.userDriver.employee.employeeName;
-                  }
-
-                  DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
-                    awb.awbItemId,
-                    AWB_STATUS.ANT,
-                    permissonPayload.branchId,
-                    authMeta.userId,
-                    employeeIdDriver,
-                    employeeNameDriver,
+                    {
+                      isDeleted: true,
+                      userIdUpdated: authMeta.userId,
+                      updatedTime: moment().toDate(),
+                    },
                   );
-                  totalSuccess += 1;
-                } else {
-                  totalError += 1;
-                  response.status = 'error';
-                  response.message = `Surat Jalan: Resi ${awbNumber} tidak valid.`;
                 }
-                // #endregion after scanout
-                // remove key holdRedis
-                RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
-              } else {
-                totalError += 1;
-                response.status = 'error';
-                response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;
-              }
+
+                const doPodDeliverDetail = DoPodDeliverDetail.create();
+                doPodDeliverDetail.doPodDeliverId = payload.doPodId;
+                doPodDeliverDetail.awbId = awb.awbId;
+                doPodDeliverDetail.awbItemId = awb.awbItemId;
+                doPodDeliverDetail.awbNumber = awbNumber;
+                doPodDeliverDetail.awbStatusIdLast = AWB_STATUS.ANT;
+                await transactionManager.insert(DoPodDeliverDetail,
+                  doPodDeliverDetail,
+                );
+
+                // NOTE: queue by Bull ANT
+                DoPodDetailPostMetaQueueService.createJobByAwbDeliver(
+                  awb.awbItemId,
+                  AWB_STATUS.ANT,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                  employeeIdDriver,
+                  employeeNameDriver,
+                );
+
+                totalSuccess += 1;
+                // handle print metadata - Scan Out & Deliver
+                response.printDoPodDetailMetadata = this.handlePrintMetadata(awb);
+
+              });
+            } catch (e) {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `Gangguan Server: ${e.message}`;
             }
-          } // handle status final
+
+            // #endregion after scanout
+            // remove key holdRedis
+            RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
+          } else {
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Server Busy: Resi ${awbNumber} sedang di proses.`;
+          }
         } else {
           totalError += 1;
           response.status = 'error';
@@ -548,6 +527,9 @@ export class LastMileDeliveryOutService {
         {
           totalAwb,
         },
+      );
+      RedisService.del(
+        `hold:doPodDeliverId:${doPodDeliver.doPodDeliverId}`,
       );
     }
 
@@ -1259,4 +1241,23 @@ export class LastMileDeliveryOutService {
       return await AuditHistory.save(auditHistory);
     }
   }
+
+  private static handlePrintMetadata(awb: AwbItemAttr) {
+    const meta = new PrintDoPodDeliverDataDoPodDeliverDetailVm();
+    // Assign print metadata - Scan Out & Deliver
+    meta.awbItem.awb.awbId = awb.awbId;
+    meta.awbItem.awb.awbNumber = awb.awbNumber;
+    meta.awbItem.awb.consigneeName = awb.awbItem.awb.consigneeName;
+
+    // Assign print metadata - Deliver
+    meta.awbItem.awb.consigneeAddress = awb.awbItem.awb.consigneeAddress;
+    meta.awbItem.awb.awbItemId = awb.awbItemId;
+    meta.awbItem.awb.consigneeNumber = awb.awbItem.awb.consigneeNumber;
+    meta.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
+    meta.awbItem.awb.isCod = awb.awbItem.awb.isCod;
+    meta.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
+    meta.awbItem.awb.totalWeight = awb.awbItem.awb.totalWeightFinalRounded;
+    return meta;
+  }
+
 }
