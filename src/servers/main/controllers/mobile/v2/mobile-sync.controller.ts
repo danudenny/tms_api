@@ -44,19 +44,20 @@ export class V2MobileSyncController {
     return V2MobileSyncService.syncByRequest(payload);
   }
 
-  @Post('image')
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: MobileSyncImageResponseVm })
-  @Transactional()
-  public async checkInForm(
-    @Body() payload: MobileSyncImagePayloadVm,
-    @UploadedFile() file,
-  ) {
-    return V2MobileSyncService.syncImage(payload, file);
-  }
+  // TODO: to be removed
+  // @Post('image')
+  // @HttpCode(HttpStatus.OK)
+  // @UseInterceptors(FileInterceptor('file'))
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ApiOkResponse({ type: MobileSyncImageResponseVm })
+  // @Transactional()
+  // public async checkInForm(
+  //   @Body() payload: MobileSyncImagePayloadVm,
+  //   @UploadedFile() file,
+  // ) {
+  //   return V2MobileSyncService.syncImage(payload, file);
+  // }
 
   @Post('imageData')
   @HttpCode(HttpStatus.OK)

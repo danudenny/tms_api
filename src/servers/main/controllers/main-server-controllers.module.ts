@@ -68,6 +68,7 @@ import { V2MobileInitController } from './mobile/v2/mobile-init.controller';
 import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
 import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller';
+import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -118,6 +119,7 @@ import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller
     DoReturnController,
     V1MobileInitController,
     V2MobileInitController,
+    V1MobileSyncController,
     V2MobileSyncController,
     V1MobileAttendanceController,
     WebHubController,
