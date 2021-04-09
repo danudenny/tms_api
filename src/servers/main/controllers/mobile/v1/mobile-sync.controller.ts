@@ -30,7 +30,7 @@ import {
 import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
 import { V1MobileSyncService } from '../../../services/mobile/v1/mobile-sync.service';
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
-
+// TODO: to be removed
 @ApiUseTags('Mobile Sync Data')
 @Controller('mobile/v1/sync')
 export class V1MobileSyncController {

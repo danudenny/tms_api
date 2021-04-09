@@ -9,6 +9,7 @@ import { MobileSyncResponseVm, MobileSyncImageResponseVm } from '../../models/mo
 import { MobileSyncService } from '../../services/mobile/mobile-sync.service';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 
+// TODO: to be removed
 @ApiUseTags('Mobile')
 @Controller('mobile/sync')
 export class MobileSyncController {
