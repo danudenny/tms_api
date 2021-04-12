@@ -32,15 +32,15 @@ export class InternalSortirListService {
       ['scan_date', 'scanDate'],
       [`COUNT(
           DISTINCT CASE
-            WHEN bsls.is_succeed = 1 AND bsls.awb_number != '' THEN bsls.awb_number::FLOAT
-            WHEN bsls.is_succeed = 1 AND bsls.awb_number = '' THEN 1
+            WHEN bsls.is_succeed = 1 AND (bsls.awb_number != '' OR bsls.awb_number IS NULL) THEN bsls.awb_number::FLOAT
+            WHEN bsls.is_succeed = 1 AND (bsls.awb_number = '' OR bsls.awb_number IS NOT NULL) THEN 1
             ELSE null
           END
         )`, 'qtySucceed'],
       [`COUNT(
           DISTINCT CASE
-            WHEN bsls.is_succeed = 0 AND bsls.awb_number != '' THEN bsls.awb_number::FLOAT
-            WHEN bsls.is_succeed = 0 AND bsls.awb_number = '' THEN 1
+            WHEN bsls.is_succeed = 0 AND (bsls.awb_number != '' OR bsls.awb_number IS NULL) THEN bsls.awb_number::FLOAT
+            WHEN bsls.is_succeed = 0 AND  (bsls.awb_number = '' OR bsls.awb_number IS NOT NULL) THEN 1
             ELSE null
           END
         )`, 'qtyFail'],
