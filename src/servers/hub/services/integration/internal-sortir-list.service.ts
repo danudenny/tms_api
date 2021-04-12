@@ -149,7 +149,8 @@ export class InternalSortirListService {
       bl.branch_id,
       bl.branch_name,
       bsls.is_cod,
-      bsls.is_succeed
+      bsls.is_succeed,
+      bia.bag_item_awb_id
     `);
 
     const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
