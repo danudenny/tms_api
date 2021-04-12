@@ -91,7 +91,8 @@ export class CodCronSettlementQueueService {
         FROM
           cod_voucher_detail cvd
           LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
-        WHERE cvd.cod_voucher_id = :codVoucherId;
+            AND ctd.is_deleted = 'false'
+        WHERE cvd.cod_voucher_id = :codVoucherId AND cvd.is_deleted = 'false';
       `;
 
       const dataTotalMatch = await RawQueryService.queryWithParams(totalMatchQuery, { codVoucherId });
@@ -104,7 +105,8 @@ export class CodCronSettlementQueueService {
           FROM
             cod_voucher_detail cvd
             LEFT JOIN cod_transaction_detail ctd ON ctd.awb_number = cvd.awb_number
-          WHERE cvd.cod_voucher_id = :codVoucherId;
+              AND ctd.is_deleted = 'false'
+          WHERE cvd.cod_voucher_id = :codVoucherId AND cvd.is_deleted = 'false';
         `;
         const transactionDetails = await RawQueryService.queryWithParams(transactionDetailQuery, { codVoucherId });
         if (transactionDetails) {

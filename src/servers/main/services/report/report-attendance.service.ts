@@ -8,6 +8,9 @@ export class ReportAttendanceService {
   public static async reportListAttendance(
     payload: ReportAttendancePayloadVm,
   ) {
+    const roleIdOpsDriver = 34;
+    const roleIdOpsBandara = 51;
+
     const qb = createQueryBuilder();
     qb.addSelect('t1.employee_id', 'employeeId');
     qb.addSelect('t3.nik', 'nik');
@@ -43,17 +46,18 @@ export class ReportAttendanceService {
       't7',
       't7.branch_id=t3.branch_id',
     );
-    qb.leftJoin(
-      'attachment_tms',
-      't2',
-      't2.attachment_tms_id=t1.attachment_id_check_in',
+    qb.innerJoin(
+      'users',
+      't8',
+      't8.employee_id=t3.employee_id',
     );
-    qb.leftJoin(
-      'attachment_tms',
-      't5',
-      't5.attachment_tms_id=t1.attachment_id_check_in',
+    qb.innerJoin(
+      'user_role',
+      't9',
+      't9.user_id=t8.user_id AND t9.role_id IN (:roleIdOpsDriver, :roleIdOpsBandara)',
+      {roleIdOpsDriver, roleIdOpsBandara},
     );
-    qb.where('t1.created_time >= :startDate AND t1.created_time <= :endDate',
+    qb.where('t1.created_time >= :startDate AND t1.created_time < :endDate',
     {startDate: payload.startDate, endDate: payload.endDate});
 
     const result = await qb.getRawMany();

@@ -1,222 +1,190 @@
 
 import {
-  BaseEntity,
   Column,
   Entity,
   Index,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
   OneToOne,
-  PrimaryColumn,
   PrimaryGeneratedColumn,
-  RelationId,
 } from 'typeorm';
+import { CustomerMembershipDetail } from './customer-membership-detail';
 import { Partner } from './partner';
+import { TmsBaseEntity } from './tms-base';
 
 @Entity('pickup_request', { schema: 'public' })
 @Index('pickup_request_last_request_idx', [
-  'encrypt_address255',
-  'partner_id',
-  'pickup_request_date_time',
-  'pickup_request_name',
+  'encryptAddress255',
+  'partnerId',
+  'pickupRequestDateTime',
+  'pickupRequestName',
 ])
-@Index('pickup_request_partner_id', ['partner_id'])
-@Index('pickup_request_pickup_request_status_id', ['pickup_request_status_id'])
-@Index('pickup_request_pickup_schedule_date_time', [
-  'pickup_schedule_date_time',
-])
-export class PickupRequest extends BaseEntity {
+@Index('pickup_request_partner_id', ['partnerId'])
+@Index('pickup_request_pickup_request_status_id', ['pickupRequestStatusId'])
+@Index('pickup_request_pickup_schedule_date_time', ['pickupScheduleDateTime'])
+export class PickupRequest extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
-
+    name: 'pickup_request_id',
   })
-  pickup_request_id: string;
+  pickupRequestId: number;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'pickup_request_code',
   })
-  pickup_request_code: string | null;
+  pickupRequestCode: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
+    name: 'pickup_request_name',
   })
-  pickup_request_name: string | null;
+  pickupRequestName: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
+    name: 'pickup_request_email',
   })
-  pickup_request_email: string | null;
+  pickupRequestEmail: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-
+    name: 'pickup_request_contact_no',
   })
-  pickup_request_contact_no: string | null;
+  pickupRequestContactNo: string | null;
 
   @Column('text', {
     nullable: true,
-
+    name: 'pickup_request_address',
   })
-  pickup_request_address: string | null;
+  pickupRequestAddress: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'pickup_request_date_time',
   })
-  pickup_request_date_time: Date | null;
+  pickupRequestDateTime: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'pickup_schedule_date_time',
   })
-  pickup_schedule_date_time: Date | null;
+  pickupScheduleDateTime: Date | null;
 
   @Column('text', {
     nullable: true,
-
+    name: 'pickup_request_notes',
   })
-  pickup_request_notes: string | null;
+  pickupRequestNotes: string | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'pickup_request_status_id',
   })
-  pickup_request_status_id: string | null;
+  pickupRequestStatusId: number | null;
 
   @Column('bigint', {
     nullable: true,
-
+    name: 'pickup_request_status_id_last',
   })
-  pickup_request_status_id_last: string | null;
+  pickupRequestStatusIdLast: number | null;
 
   @Column('character varying', {
     nullable: true,
     length: 50,
-
+    name: 'pickup_request_type',
   })
-  pickup_request_type: string | null;
+  pickupRequestType: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 200,
-
+    name: 'reference_no',
   })
-  reference_no: string | null;
+  referenceNo: string | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'order_date_time',
   })
-  order_date_time: Date | null;
+  orderDateTime: Date | null;
 
   @Column('timestamp without time zone', {
     nullable: true,
-
+    name: 'expired_date_time',
   })
-  expired_date_time: Date | null;
+  expiredDateTime: Date | null;
 
   @Column('character varying', {
     nullable: true,
     length: 100,
-
+    name: 'encrypt_address100',
   })
-  encrypt_address100: string | null;
+  encryptAddress100: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'encrypt_address255',
   })
-  encrypt_address255: string | null;
+  encryptAddress255: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 500,
-
+    name: 'merchant_code',
   })
-  merchant_code: string | null;
+  merchantCode: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 200,
-
+    name: 'reference_number',
   })
-  reference_number: string | null;
+  referenceNumber: string | null;
 
   @Column('bigint', {
     nullable: true,
+    name: 'partner_id',
   })
-  partner_id: string | null;
+  partnerId: number | null;
 
   @Column('integer', {
     nullable: true,
-
+    name: 'total_awb',
   })
-  total_awb: number | null;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_created: string;
+  totalAwb: number | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'user_created',
   })
-  user_created: string | null;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  created_time: Date;
-
-  @Column('bigint', {
-    nullable: false,
-
-  })
-  user_id_updated: string;
+  userCreated: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'user_updated',
   })
-  user_updated: string | null;
-
-  @Column('timestamp without time zone', {
-    nullable: false,
-
-  })
-  updated_time: Date;
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
+  userUpdated: string | null;
 
   @Column('character varying', {
     nullable: true,
     length: 255,
-
+    name: 'encrypt_merchant_name',
   })
-  encrypt_merchant_name: string | null;
+  encryptMerchantName: string | null;
 
   @OneToOne(() => Partner)
-  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partner_id' })
+  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partnerId' })
   partner: Partner;
+
+  @OneToOne(() => CustomerMembershipDetail)
+  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partnerId' })
+  @JoinColumn({ name: 'pickup_request_email', referencedColumnName: 'email' })
+  customerMembershipDetail: CustomerMembershipDetail;
 }
