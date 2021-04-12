@@ -67,9 +67,16 @@ export class InternalSortirListService {
 
     payload.fieldResolverMap['awbNumber'] = 'bsls.awb_number';
     payload.fieldResolverMap['createdTime'] = 'bsls.scan_date';
+    payload.fieldResolverMap['updatedTime'] = 'bsls.updated_time';
+    payload.fieldResolverMap['branchId'] = 'b.branch_id';
+    payload.fieldResolverMap['branchName'] = 'b.branch_name';
+    payload.fieldResolverMap['sealNumber'] = 'bag.seal_number';
+    payload.fieldResolverMap['branchdLastmile'] = 'bl.branch_id';
+    payload.fieldResolverMap['branchNameLastmile'] = 'bl.branch_name';
     payload.fieldResolverMap['scanDate'] = 'bsls.scan_date';
     payload.fieldResolverMap['isCod'] = 'bsls.is_cod';
     payload.fieldResolverMap['isSucceed'] = 'bsls.is_succeed';
+    payload.fieldResolverMap['reason'] = 'bsls.reason';
     payload.fieldResolverMap['noChute'] = 'bsls.chute_number';
 
     payload.globalSearchFields = [
@@ -90,6 +97,13 @@ export class InternalSortirListService {
       isCod: '"isCod"',
       isSucceed: '"isSucceed"',
       noChute: '"noChute"',
+      updatedTime: '"updatedTime"',
+      branchId: '"branchId"',
+      branchName: '"branchName"',
+      sealNumber: '"sealNumber"',
+      branchdLastmile: '"branchdLastmile"',
+      branchNameLastmile: '"branchNameLastmile"',
+      reason: '"reason"',
     };
     const repo = new OrionRepositoryService(BranchSortirLogSummary, 'bsls');
     const q = repo.findAllRaw();
