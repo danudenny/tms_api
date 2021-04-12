@@ -122,12 +122,15 @@ export class InternalSortirListService {
       [`bsls.is_cod`, 'isCod'],
       [`bsls.is_succeed`, 'isSucceed'],
       [`bsls.reason`, 'reason'],
-      [`RANK () OVER (PARTITION BY bsls.awb_number ORDER BY bsls.scan_date DESC)`, 'rank'],
+      [`RANK () OVER (PARTITION BY bsls.awb_number ORDER BY bsls.scan_date, bia.bag_item_awb_id DESC)`, 'rank'],
     );
     q.leftJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.branchLastmile, 'bl', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.bagItemAwb, 'bia', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.bagItemAwb.bagItem.bag, 'bag', j =>
