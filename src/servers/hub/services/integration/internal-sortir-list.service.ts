@@ -122,7 +122,7 @@ export class InternalSortirListService {
       [`bsls.is_cod`, 'isCod'],
       [`bsls.is_succeed`, 'isSucceed'],
       [`bsls.reason`, 'reason'],
-      [`RANK () OVER (PARTITION BY bsls.awb_number ORDER BY bsls.scan_date, bia.bag_item_awb_id DESC)`, 'rank'],
+      [`RANK () OVER (PARTITION BY bsls.awb_number ORDER BY bsls.created_time DESC)`, 'rank'],
     );
     q.leftJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -150,7 +150,7 @@ export class InternalSortirListService {
       bl.branch_name,
       bsls.is_cod,
       bsls.is_succeed,
-      bia.bag_item_awb_id
+      bsls.created_time
     `);
 
     const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
