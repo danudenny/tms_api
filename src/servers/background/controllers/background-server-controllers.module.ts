@@ -12,7 +12,6 @@ import { MasterDataController } from './integration/masterdata.controller';
 import { PartnerFastpayController } from './integration/partner-fastpay.controller';
 import { PartnerDivaController } from './integration/partner-diva.controller';
 import { InternalTmsController } from './integration/internal-tms.controller';
-import { InternalSortirController } from './integration/internal-sortir.controller';
 
 @Module({
   imports: [SharedModule, BackgroundServerServicesModule],
@@ -27,7 +26,6 @@ import { InternalSortirController } from './integration/internal-sortir.controll
     MasterDataController,
     PartnerDivaController,
     InternalTmsController,
-    InternalSortirController,
   ],
 })
 export class BackgroundServerControllersModule {}
