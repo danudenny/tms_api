@@ -122,7 +122,6 @@ export class InternalSortirListService {
       [`bsls.is_cod`, 'isCod'],
       [`bsls.is_succeed`, 'isSucceed'],
       [`bsls.reason`, 'reason'],
-      [`RANK () OVER (PARTITION BY bsls.awb_number ORDER BY bsls.created_time DESC)`, 'rank'],
     );
     q.leftJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -133,53 +132,21 @@ export class InternalSortirListService {
     q.leftJoin(e => e.bagItemAwb, 'bia', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoin(e => e.bagItemAwb.bagItem, 'bi', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.leftJoin(e => e.bagItemAwb.bagItem.bag, 'bag', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.groupByRaw(`
-      bsls.reason,
-      bsls.scan_date,
-      bsls.updated_time,
-      b.branch_id,
-      b.branch_name,
-      bsls.chute_number,
-      bsls.awb_number,
-      bag.seal_number,
-      bl.branch_id,
-      bl.branch_name,
-      bsls.is_cod,
-      bsls.is_succeed,
-      bsls.created_time
-    `);
 
-    const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
-    const order = payload.sortBy ? `ORDER BY ${map[payload.sortBy]} ${payload.sortDir}` : '';
-    const page = payload.limit ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : '';
-
-    const subQuery = q.getQuery();
-    const queryData = `
-      SELECT * FROM (
-        ${subQuery}
-      ) t
-      WHERE rank = 1
-      ${order}
-      ${limit}
-      ${page}
-    `;
-    const queryTotal = `
-      SELECT COUNT(*) AS total FROM (
-        ${subQuery}
-      ) t
-      WHERE rank = 1
-    `;
-    const data = await RawQueryService.query(queryData);
-    const total = await RawQueryService.query(queryTotal);
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new DetailBranchSortirLogVm();
 
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total[0].total);
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
