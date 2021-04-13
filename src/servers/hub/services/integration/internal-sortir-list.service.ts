@@ -32,15 +32,15 @@ export class InternalSortirListService {
       ['scan_date', 'scanDate'],
       [`COUNT(
           DISTINCT CASE
-            WHEN bsls.is_succeed = 1 AND bsls.awb_number != '' THEN bsls.awb_number::FLOAT
-            WHEN bsls.is_succeed = 1 AND bsls.awb_number = '' THEN 1
+            WHEN bsls.is_succeed = 1 AND bsls.awb_number != '' THEN bsls.awb_number
+            WHEN bsls.is_succeed = 1 AND bsls.awb_number = '' THEN '1'
             ELSE null
           END
         )`, 'qtySucceed'],
       [`COUNT(
           DISTINCT CASE
-            WHEN bsls.is_succeed = 0 AND bsls.awb_number != '' THEN bsls.awb_number::FLOAT
-            WHEN bsls.is_succeed = 0 AND bsls.awb_number = '' THEN 1
+            WHEN bsls.is_succeed = 0 AND bsls.awb_number != '' THEN bsls.awb_number
+            WHEN bsls.is_succeed = 0 AND bsls.awb_number = '' THEN '1'
             ELSE null
           END
         )`, 'qtyFail'],
@@ -67,9 +67,16 @@ export class InternalSortirListService {
 
     payload.fieldResolverMap['awbNumber'] = 'bsls.awb_number';
     payload.fieldResolverMap['createdTime'] = 'bsls.scan_date';
+    payload.fieldResolverMap['updatedTime'] = 'bsls.updated_time';
+    payload.fieldResolverMap['branchId'] = 'b.branch_id';
+    payload.fieldResolverMap['branchName'] = 'b.branch_name';
+    payload.fieldResolverMap['sealNumber'] = 'bag.seal_number';
+    payload.fieldResolverMap['branchdLastmile'] = 'bl.branch_id';
+    payload.fieldResolverMap['branchNameLastmile'] = 'bl.branch_name';
     payload.fieldResolverMap['scanDate'] = 'bsls.scan_date';
     payload.fieldResolverMap['isCod'] = 'bsls.is_cod';
     payload.fieldResolverMap['isSucceed'] = 'bsls.is_succeed';
+    payload.fieldResolverMap['reason'] = 'bsls.reason';
     payload.fieldResolverMap['noChute'] = 'bsls.chute_number';
 
     payload.globalSearchFields = [
@@ -90,6 +97,13 @@ export class InternalSortirListService {
       isCod: '"isCod"',
       isSucceed: '"isSucceed"',
       noChute: '"noChute"',
+      updatedTime: '"updatedTime"',
+      branchId: '"branchId"',
+      branchName: '"branchName"',
+      sealNumber: '"sealNumber"',
+      branchdLastmile: '"branchdLastmile"',
+      branchNameLastmile: '"branchNameLastmile"',
+      reason: '"reason"',
     };
     const repo = new OrionRepositoryService(BranchSortirLogSummary, 'bsls');
     const q = repo.findAllRaw();
@@ -108,12 +122,15 @@ export class InternalSortirListService {
       [`bsls.is_cod`, 'isCod'],
       [`bsls.is_succeed`, 'isSucceed'],
       [`bsls.reason`, 'reason'],
-      [`RANK () OVER (PARTITION BY bsls.awb_number ORDER BY bsls.scan_date DESC)`, 'rank'],
+      [`RANK () OVER (PARTITION BY bsls.awb_number ORDER BY bsls.created_time DESC)`, 'rank'],
     );
     q.leftJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.branchLastmile, 'bl', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.bagItemAwb, 'bia', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.bagItemAwb.bagItem.bag, 'bag', j =>
@@ -132,7 +149,8 @@ export class InternalSortirListService {
       bl.branch_id,
       bl.branch_name,
       bsls.is_cod,
-      bsls.is_succeed
+      bsls.is_succeed,
+      bsls.created_time
     `);
 
     const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
