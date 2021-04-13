@@ -139,7 +139,7 @@ export class Bag extends TmsBaseEntity {
 
   @Column('character varying', {
     nullable: true,
-    length: 255,
+    length: 50,
     name: 'seal_number',
   })
   sealNumber: string | null;
