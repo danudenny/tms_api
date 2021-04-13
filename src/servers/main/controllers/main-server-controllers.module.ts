@@ -69,8 +69,7 @@ import { V1WebAwbHighValueController } from './web/v1/web-awb-high-value.control
 import { V2MobileInitController } from './mobile/v2/mobile-init.controller';
 import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
-import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller';
-import { SortirCombinePackageController } from './combine-package/machine-combine-package.controller'; 
+import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller'; 
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -146,7 +145,6 @@ import { SortirCombinePackageController } from './combine-package/machine-combin
     EmployeePenalty,
     MobileDeviceInfoController,
     V1WebAwbHandoverController,
-    SortirCombinePackageController, 
   ],
 })
 export class MainServerControllersModule {}

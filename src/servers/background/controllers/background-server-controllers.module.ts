@@ -16,8 +16,6 @@ import { ApiPartnersController } from './api/partners.controller';
 import { InternalHelpdeskController } from './integration/internal-helpdesk.controller';
 import { InternalTmsController } from './integration/internal-tms.controller';
 import { PartnerOneidController } from './integration/partner-oneid.controller';
-import { InternalSortirController } from './integration/internal-sortir.controller';
-
 
 @Module({
   imports: [SharedModule, BackgroundServerServicesModule],
@@ -36,7 +34,6 @@ import { InternalSortirController } from './integration/internal-sortir.controll
     PartnerOrchestraController,
     InternalTmsController,
     PartnerOneidController,
-    InternalSortirController,
   ],
 })
 export class BackgroundServerControllersModule {}
