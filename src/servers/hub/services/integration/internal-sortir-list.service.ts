@@ -90,21 +90,7 @@ export class InternalSortirListService {
         field: 'bsls.seal_number',
       },
     ];
-    const map = {
-      awbNumber: 'awbNumber',
-      createdTime: '"scanDate"',
-      scanDate: '"scanDate"',
-      isCod: '"isCod"',
-      isSucceed: '"isSucceed"',
-      noChute: '"noChute"',
-      updatedTime: '"updatedTime"',
-      branchId: '"branchId"',
-      branchName: '"branchName"',
-      sealNumber: '"sealNumber"',
-      branchdLastmile: '"branchdLastmile"',
-      branchNameLastmile: '"branchNameLastmile"',
-      reason: '"reason"',
-    };
+
     const repo = new OrionRepositoryService(BranchSortirLogSummary, 'bsls');
     const q = repo.findAllRaw();
 
