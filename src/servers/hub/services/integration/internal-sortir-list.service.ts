@@ -94,7 +94,7 @@ export class InternalSortirListService {
     const repo = new OrionRepositoryService(BranchSortirLogSummary, 'bsls');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q);
+    payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
       ['bsls.scan_date', 'scanDate'],
       ['bsls.updated_time', 'updatedTime'],
