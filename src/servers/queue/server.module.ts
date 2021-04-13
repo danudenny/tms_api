@@ -184,8 +184,11 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       BagRepresentativeSmdQueueService.boot();
       BaggingDropoffHubQueueService.boot();
       BagRepresentativeDropoffHubQueueService.boot();
-      CodCronSettlementQueueService.init();
+      // CodCronSettlementQueueService.init();
+      // Titip Bull HUB
+      BranchSortirLogQueueService.boot();
     }
+
 
   }
 }
