@@ -76,4 +76,18 @@ export class AwbStatus extends TmsBaseEntity {
     name: 'is_cod',
   })
   isCod: boolean | null;
+
+  @Column('character varying', {
+    nullable: false,
+    length: 255,
+    name: 'note',
+  })
+  note: string;
+
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_mobile',
+  })
+  isMobile: boolean;
 }

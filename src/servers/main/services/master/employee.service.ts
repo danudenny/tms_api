@@ -1,10 +1,14 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { RepositoryService } from '../../../../shared/services/repository.service';
-import { EmployeeFindAllResponseVm, EmployeeResponseVm } from '../../models/employee.response.vm';
-import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { AuthService } from '../../../../shared/services/auth.service';
 import { ConfigService } from '../../../../shared/services/config.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import {
+  EmployeeFindAllResponseVm,
+  EmployeeResponseVm,
+} from '../../models/employee.response.vm';
 
 @Injectable()
 export class EmployeeService {
@@ -33,15 +37,14 @@ export class EmployeeService {
       DISTINCT(users.user_id) AS "userId",
       employee.nik AS "nik",
       employee.employee_id AS "employeeId",
-      employee.fullname AS "employeeName"`,
-    );
+      employee.fullname AS "employeeName"
+    `);
     q.innerJoin(u => u.user, 'users', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(u => u.user.userRoles, 'user_role', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -56,6 +59,10 @@ export class EmployeeService {
     payload: BaseMetaPayloadVm,
     branchId: string,
   ): Promise<EmployeeFindAllResponseVm> {
+    if (branchId == 'null') {
+      throw new BadRequestException('Branch Not Valid!');
+    }
+
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -78,8 +85,8 @@ export class EmployeeService {
       DISTINCT(users.user_id) AS "userId",
       employee.nik AS "nik",
       employee.employee_id AS "employeeId",
-      employee.fullname AS "employeeName"`,
-    );
+      employee.fullname AS "employeeName"
+    `);
 
     q.innerJoin(u => u.user, 'users', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -87,7 +94,98 @@ export class EmployeeService {
     q.innerJoin(u => u.user.userRoles, 'user_role', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.andWhere(e => e.user.userRoles.branchId, w => w.equals(branchId));
+    q.andWhere(e => e.user.userRoles.branchId, w => w.equals(Number(branchId)));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new EmployeeFindAllResponseVm();
+    result.data = data;
+    result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllEmployeeCodByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<EmployeeFindAllResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'nik',
+      },
+      {
+        field: 'employeeName',
+      },
+    ];
+
+    // mapping field
+    payload.fieldResolverMap['employeeName'] = 'employee.fullname';
+    payload.fieldResolverMap['employeeRoleId'] = 'employee.employee_role_id';
+    payload.fieldResolverMap['roleId'] = 'user_role.role_id';
+    payload.fieldResolverMap['branchId'] = 'user_role.branch_id';
+
+    const q = RepositoryService.employee.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(`
+      DISTINCT(users.user_id) AS "userId",
+      employee.nik AS "nik",
+      employee.employee_id AS "employeeId",
+      employee.fullname AS "employeeName"
+    `);
+    q.innerJoin(u => u.user, 'users', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(u => u.user.userRoles, 'user_role');
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new EmployeeFindAllResponseVm();
+    result.data = data;
+    result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllEmployeeCodByRequestBranch(
+    payload: BaseMetaPayloadVm,
+    branchId: string,
+  ): Promise<EmployeeFindAllResponseVm> {
+    if (branchId == 'null') {
+      throw new BadRequestException('Branch Not Valid!');
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'nik',
+      },
+      {
+        field: 'employeeName',
+      },
+    ];
+
+    // mapping field
+    payload.fieldResolverMap['employeeName'] = 'employee.fullname';
+    payload.fieldResolverMap['employeeRoleId'] = 'employee.employee_role_id';
+    payload.fieldResolverMap['roleId'] = 'user_role.role_id';
+
+    const q = RepositoryService.employee.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(`
+      DISTINCT(users.user_id) AS "userId",
+      employee.nik AS "nik",
+      employee.employee_id AS "employeeId",
+      employee.fullname AS "employeeName"
+    `);
+
+    q.innerJoin(u => u.user, 'users', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(u => u.user.userRoles, 'user_role');
+    q.andWhere(e => e.user.userRoles.branchId, w => w.equals(Number(branchId)));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
@@ -114,7 +212,7 @@ export class EmployeeService {
         employeeName: true,
         nik: true,
         user: {
-          userId : true,
+          userId: true,
         },
         homeAddress: true,
         idCardAddress: true,
@@ -134,12 +232,10 @@ export class EmployeeService {
         attachmentUrl: `${ConfigService.get(
           'cloudStorage.cloudUrl',
         )}/${pathImage}`,
-        mobilePhone: employee.mobile1
-          ? employee.mobile1
-          : employee.mobile2,
-          userId: employee.user.userId,
+        mobilePhone: employee.mobile1 ? employee.mobile1 : employee.mobile2,
+        userId: employee.user.userId,
       };
-      return {...employee, ...additional};
+      return { ...employee, ...additional };
     } else {
       RequestErrorService.throwObj(
         {
@@ -148,5 +244,58 @@ export class EmployeeService {
         HttpStatus.BAD_REQUEST,
       );
     }
+  }
+
+  async findAllEmployeeCodMergerByRequest(
+    payload: BaseMetaPayloadVm,
+  ): Promise<EmployeeFindAllResponseVm> {
+    const authMeta = AuthService.getAuthData();
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'nik',
+      },
+      {
+        field: 'employeeName',
+      },
+    ];
+
+    // mapping field
+    payload.fieldResolverMap['employeeName'] = 'employee.fullname';
+    payload.fieldResolverMap['employeeRoleId'] = 'employee.employee_role_id';
+    payload.fieldResolverMap['roleId'] = 'user_role.role_id';
+
+    const q = RepositoryService.employee.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(`
+      DISTINCT(users.user_id) AS "userId",
+      employee.nik AS "nik",
+      employee.employee_id AS "employeeId",
+      employee.fullname AS "employeeName"
+    `);
+
+    q.innerJoin(u => u.user, 'users', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(u => u.user.userRoles, 'user_role');
+
+    // Region COD Merger
+    q.innerJoin(e => e.user.userRoles.codUserToBranch, 't6', j =>
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    );
+    // End Region
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new EmployeeFindAllResponseVm();
+    result.data = data;
+    result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
   }
 }

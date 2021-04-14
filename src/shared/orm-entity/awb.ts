@@ -11,6 +11,7 @@ import { User } from './user';
 import { Representative } from './representative';
 import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { PickupRequestDetail } from './pickup-request-detail';
+import { Partner } from './partner';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -682,6 +683,45 @@ export class Awb extends BaseEntity {
   })
   refRepresentativeCode: string | null;
 
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'claim_invoice_date',
+  })
+  claimInvoiceDate: Date | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'claim_invoice_code',
+  })
+  claimInvoiceCode: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'claim_special_case',
+  })
+  claimSpecialCase: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 100,
+    name: 'claim_term_type',
+  })
+  claimTermType: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: true,
+    name: 'claim_payment_date',
+  })
+  claimPaymentDate: Date | null;
+
+  @Column('integer', {
+    nullable: true,
+    name: 'claimn_sla_payment',
+  })
+  claimnSlaPayment: number | null;
+
   // @Column('bigint', {
   //   nullable: true,
   //   name: 'awb_trouble_id',
@@ -738,6 +778,10 @@ export class Awb extends BaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })
   userCreated: User;
+
+  @OneToOne(() => Partner)
+  @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerAccountId' })
+  partner: Partner;
 
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)

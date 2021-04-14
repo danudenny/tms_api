@@ -13,6 +13,9 @@ export class AwbStatusVm {
 
   @ApiModelProperty()
   awbStatusName: string;
+
+  @ApiModelProperty()
+  isDeleted: boolean;
 }
 export class AwbStatusNonDeliveVm {
   @ApiModelProperty()

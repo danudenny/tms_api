@@ -21,4 +21,9 @@ export class CheckSpkVm {
   @ApiModelProperty()
   awb_number: string;
 
+  @ApiModelProperty()
+  employee_name: string;
+
+  @ApiModelProperty()
+  employee_nik: string;
 }

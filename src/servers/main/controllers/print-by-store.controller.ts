@@ -21,6 +21,7 @@ import {
   PrintDoPodReturnAdmiStorePayloadVm,
 } from '../models/print-do-pod-return.vm';
 import { PrintCodTransferBranchPayloadQueryVm } from '../models/print/print-cod-transfer-branch-payload.vm';
+import { ResponseMaintenanceService } from '../../../shared/services/response-maintenance.service';
 
 @ApiUseTags('Print by Store')
 @Controller('print-by-store')
@@ -38,7 +39,22 @@ export class PrintByStoreController {
     @Query() queryParams: PrintDoPodPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintByStoreService.executePrintDoPod(serverResponse, queryParams);
+  }
+
+  @Get('do-pod-transit/execute')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async executePrintDoPodTransit(
+    @Query() queryParams: PrintDoPodPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
+    return PrintByStoreService.executePrintDoPodTransit(
+      serverResponse,
+      queryParams,
+    );
   }
 
   @Post('do-pod-bag/store')
@@ -54,6 +70,7 @@ export class PrintByStoreController {
     @Query() queryParams: PrintDoPodBagPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintByStoreService.executePrintDoPodBag(
       serverResponse,
       queryParams,
@@ -75,6 +92,7 @@ export class PrintByStoreController {
     @Query() queryParams: PrintDoPodDeliverPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintByStoreService.executePrintDoPodDeliver(
       serverResponse,
       queryParams,
@@ -97,6 +115,7 @@ export class PrintByStoreController {
     @Query() queryParams: PrintBagItemPayloadQueryVm,
     @Response() serverResponse: express.Response,
   ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return PrintByStoreService.executePrintBagItemPaper(
       serverResponse,
       queryParams,
