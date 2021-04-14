@@ -116,13 +116,19 @@ export class InternalSortirListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.bagItemAwb, 'bia', j =>
+    (
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isSortir, w => w.isTrue())
+    ),
     );
     q.leftJoin(e => e.bagItemAwb.bagItem, 'bi', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.bagItemAwb.bagItem.bag, 'bag', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      (
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+        j.andWhere(e => e.isManual, w => w.isFalse())
+      ),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
