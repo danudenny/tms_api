@@ -87,7 +87,7 @@ export class V1WebCodMigrationService {
       {
         totalCodValue,
         totalAwb: totalAwbCash,
-        transactionStatusId: TRANSACTION_STATUS.TRM,
+        transactionStatusId: 31000,
       },
     );
 
@@ -120,7 +120,7 @@ export class V1WebCodMigrationService {
     firstTransaction.awbItemId = awbItemId;
     firstTransaction.awbNumber = awbNumber;
     firstTransaction.codTransactionId = transctiontId;
-    firstTransaction.transactionStatusId = TRANSACTION_STATUS.TRM;
+    firstTransaction.transactionStatusId = 31000;
     firstTransaction.supplierInvoiceStatusId = null;
     firstTransaction.codSupplierInvoiceId = null;
 

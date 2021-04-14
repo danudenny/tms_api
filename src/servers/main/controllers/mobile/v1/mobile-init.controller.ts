@@ -30,7 +30,6 @@ export class V1MobileInitController {
   @ResponseSerializerOptions({ disable: true })
   @ApiOkResponse({ type: MobileInitDataResponseVm })
   public async initData(@Body() payload: MobileInitDataPayloadVm) {
-    // NOTE: optimize query change to v2
     return V1MobileInitDataService.getInitDataByRequest(
       payload.lastSyncDateTime,
     );
@@ -53,7 +52,6 @@ export class V1MobileInitController {
   @ResponseSerializerOptions({ disable: true })
   @ApiOkResponse({ type: MobileInitDataDeliveryResponseVm })
   public async initDataDelivery(@Body() payload: MobileInitDataPayloadVm) {
-    // NOTE: optimize query change to v2
     return V1MobileInitDataService.getInitDataDelivery(
       payload.lastSyncDateTime,
     );

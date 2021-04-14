@@ -6,7 +6,6 @@ import { User } from '../../../../shared/orm-entity/user';
 import { CodTransactionHistoryQueueService } from './cod-transaction-history-queue.service';
 import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
-import { getConnection } from 'typeorm';
 
 export class CodUpdateSupplierInvoiceQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -75,34 +74,20 @@ export class CodUpdateSupplierInvoiceQueueService {
           console.error(error);
           throw error;
         }
+
       } else {
         // Draft Invoice partial update data sync to mongo 41000 [DRAFT]
         partialDraftInvoice = true;
       }
       // #endregion
 
-      let dataTransaction: CodTransactionDetail[];
-      const masterDataTransactionQueryRunner = getConnection().createQueryRunner(
-        'master',
-      );
-      try {
-        dataTransaction = await getConnection()
-          .createQueryBuilder(CodTransactionDetail, 'ctd')
-          .setQueryRunner(masterDataTransactionQueryRunner)
-          .select([
-            'ctd.awbNumber',
-            'ctd.awbItemId',
-          ])
-          .where(
-            'ctd.codSupplierInvoiceId = :codSupplierInvoiceId AND ctd.isDeleted = false',
-            {
-              codSupplierInvoiceId: data.codSupplierInvoiceId,
-            },
-          )
-          .getMany();
-      } finally {
-        await masterDataTransactionQueryRunner.release();
-      }
+      const dataTransaction = await CodTransactionDetail.find({
+        select: ['awbNumber', 'awbItemId'],
+        where: {
+          codSupplierInvoiceId: data.codSupplierInvoiceId,
+          isDeleted: false,
+        },
+      });
 
       if (dataTransaction && dataTransaction.length) {
         console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);

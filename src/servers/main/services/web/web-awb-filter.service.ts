@@ -479,7 +479,7 @@ export class WebAwbFilterService {
                 zipCode: awb.consigneeZip,
               },
             );
-            qb.orderBy('bsd.branch_sub_district_id', 'DESC');
+            qb.orderBy('a.attachment_path');
             qb.limit(1);
             const data = await qb.getRawOne();
             if (data) {

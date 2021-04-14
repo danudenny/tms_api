@@ -42,7 +42,6 @@ export class PrintDoPodBagService {
             bag: {
               bagNumber: true,
               refRepresentativeCode: true,
-              sealNumber: true,
             },
           },
         },
@@ -175,7 +174,7 @@ export class PrintDoPodBagService {
       res,
       templates: [
         {
-          templateName: 'surat-jalan-gabung-paket-tag',
+          templateName: 'surat-jalan-gabung-paket',
           templateData: jsreportParams,
           printCopy: templateConfig.printCopy,
         },

@@ -54,7 +54,7 @@ export class PartnerController {
       return result;
     } else {
       if (partner.partnerName.toLocaleLowerCase() === 'pos indonesia') {
-        payload.partner_id = partner.partnerId;
+        payload.partner_id = partner.partner_id;
         return PartnerService.dropAwbPosIndonesia(payload);
       } else {
         result = {

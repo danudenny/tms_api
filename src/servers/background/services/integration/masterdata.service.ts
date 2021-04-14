@@ -12,8 +12,6 @@ import { PinoLoggerService } from '../../../../shared/services/pino-logger.servi
 import { RoleTmsResponseVm } from '../../models/role-tms.response.vm';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { UserPasswordPayloadVm } from '../../models/user-password.payload.vm';
-import { UserPasswordResponseVm } from '../../models/user-password.response.vm';
 
 import moment = require('moment');
 import { Role } from '../../../../shared/orm-entity/role';
@@ -120,85 +118,6 @@ export class MasterDataService {
 
     return result;
   }
-
-  static async userPassword(payload: UserPasswordPayloadVm){
-    const result = new UserPasswordResponseVm();
-    result.code = HttpStatus.OK;
-    result.message = 'Success';
-
-    var upperCaseLetter = /[A-Z]/;
-    var lowerCaseLetter = /[a-z]/;
-    var numeric = /[0-9]/;
-
-    if (payload.password.length >=8 && payload.password.match(upperCaseLetter) && payload.password.match(lowerCaseLetter) && payload.password.match(numeric)){
-      //#region Process For Master Data
-      const pool: any = DatabaseConfig.getMasterDataDbPool();
-      const client = await pool.connect();
-      try {
-        const crypto = require('crypto');
-        const password = crypto.createHash('md5').update(payload.password).digest('hex');
-
-        const timeNow = moment().toDate();
-
-        let employeeName = '';
-        let roleName = '';
-        const res = await client.query(`
-          SELECT e.fullname, er.employee_role_name, u.password
-          FROM users u
-          LEFT JOIN employee e on u.employee_id = e.employee_id
-          LEFT JOIN employee_role er on er.employee_role_id = e.employee_role_id
-          WHERE u.username = $1 and u.is_deleted=false
-        `, [payload.username]);
-
-        if (res && res.rows && res.rows.length && res.rows.length > 0) {
-          for (const r of res.rows) {
-            employeeName = r.fullname;
-            roleName = r.employee_role_name;
-          }
-        }
-
-        const query = `
-          UPDATE users
-          SET password = $1, updated_time = $2, user_id_updated = $3
-          WHERE username = $4 and is_deleted=false
-        `;
-      
-        await client.query(query, [password, timeNow, 1, payload.username], async function(err) {
-          PinoLoggerService.debug(this.logTitle, this.sql);
-          if (err) {
-            result.code = HttpStatus.UNPROCESSABLE_ENTITY;
-            result.message = 'Error update user pass';
-            PinoLoggerService.error(this.logTitle, err.message);
-          }
-        });
-
-        const query2 = `
-          insert into user_reset_log (username, employee_name, password, role_name, created_time, user_id_created)
-          values($1, $2, $3, $4, $5, $6);
-        `;
-
-        await client.query(query2, [ payload.username, employeeName, payload.password, roleName, timeNow, 1], async function(err) {
-          PinoLoggerService.debug(this.logTitle, this.sql);
-          if (err) {
-            result.code = HttpStatus.UNPROCESSABLE_ENTITY;
-            result.message = 'Error user reset log';
-            PinoLoggerService.error(this.logTitle, err.message);
-          }
-        });
-
-      } finally {
-        client.release();
-      }
-      //#endregion
-    } else {
-      result.code = HttpStatus.UNPROCESSABLE_ENTITY;
-      result.message = 'Password Must Contains Upper Case, Lower Case, Number, and minimum 8 characters';
-    }
-
-    return result;
-  }
-
-  // PRIVATE METHOD
 
   private static async getUsers(id: number, mode: number = 0, branchIdLast: number = 0, branchIdNew: number = 0): Promise<any> {
     let where = ' e.employee_role_id = :id ';

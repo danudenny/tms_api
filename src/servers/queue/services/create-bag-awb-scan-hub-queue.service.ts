@@ -38,9 +38,6 @@ export class CreateBagAwbScanHubQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
       const data = job.data;
-      const podScanInHubBag = await PodScanInHubBag.findOne({
-        where: { bagItemId: data.bagItemId },
-      });
       await getManager().transaction(async transactional => {
         // Handle awb scan
         const awbItemAttr = await AwbItemAttr.findOne({
@@ -91,10 +88,9 @@ export class CreateBagAwbScanHubQueueService {
           await transactional.insert(PodScanInHubDetail, podScanInHubDetailData);
 
           // Update Pod scan in hub bag
-          // const podScanInHubBag = await PodScanInHubBag.findOne({
-          //   where: { bagItemId: data.bagItemId },
-          // });
-          // Pindahin di atas transaction
+          const podScanInHubBag = await PodScanInHubBag.findOne({
+            where: { bagItemId: data.bagItemId },
+          });
           if (podScanInHubBag) {
             await transactional.update(
               PodScanInHubBag,
@@ -116,7 +112,6 @@ export class CreateBagAwbScanHubQueueService {
           );
         } else {
           console.error('## Gab Sortir :: Not Found Awb Number :: ', data);
-          throw new Error(data);
         }
 
       }); // end transaction

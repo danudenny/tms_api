@@ -4,7 +4,6 @@ import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
 import { Attachment } from './attachment';
 import { User } from './user';
-import { EmployeeRole } from './employee-role';
 
 @Entity('employee', { schema: 'public' })
 export class Employee extends TmsBaseEntity {
@@ -297,8 +296,4 @@ export class Employee extends TmsBaseEntity {
   @OneToOne(() => User)
   @JoinColumn({ name: 'employee_id', referencedColumnName: 'employeeId' })
   user: User;
-
-  @OneToOne(() => EmployeeRole)
-  @JoinColumn({ name: 'employee_role_id', referencedColumnName: 'employee_role_id' })
-  employeeRole: EmployeeRole;
 }

@@ -44,23 +44,3 @@ export class EmployeeRequestPayloadVm {
   })
   sortDir: string;
 }
-
-export class EmployeeMergerVm {
-  @ApiModelProperty()
-  userRoleId: number;
-
-  @ApiModelProperty()
-  username: string;
-
-  @ApiModelProperty()
-  nickname: string;
-
-  @ApiModelProperty()
-  roleName: string;
-
-  @ApiModelProperty()
-  branchName: string;
-
-  @ApiModelProperty()
-  branchCode: string;
-}

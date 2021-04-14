@@ -65,7 +65,6 @@ export class V1WebTrackingService {
       result.returnAwbNumber           = data.returnAwbNumber;
       result.doReturnAwb               = data.doReturnAwb;
       result.isDoReturnPartner         = data.isDoReturnPartner;
-      result.isHighValue               = data.isHighValue;
 
       // TODO: partial load data
       const history = await this.getRawAwbHistory(data.awbItemId);
@@ -110,7 +109,7 @@ export class V1WebTrackingService {
   }
 
   static async getAwbSubstitute(payload: BaseMetaPayloadVm): Promise <AwbSubstituteResponseVm> {
-    payload.fieldResolverMap['awbSubstitute']     = 't1.awb_substitute';
+    payload.fieldResolverMap['awbSubstitute']     = 't1.awbSubstitute';
     payload.fieldResolverMap['awbNumber']         = 't1.awb_number';
     payload.fieldResolverMap['awbItemId']         = 't1.awb_item_id';
     payload.fieldResolverMap['awbSubstituteType'] = '"awbSubstituteType"';
@@ -303,8 +302,7 @@ export class V1WebTrackingService {
         CASE
             WHEN ai.doreturn_new_awb_3pl IS NOT NULL THEN true
             ELSE false
-        END as "isDoReturnPartner",
-        COALESCE(ai.is_high_value, prd.is_high_value) as "isHighValue"
+        END as "isDoReturnPartner"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id

@@ -17,12 +17,10 @@ import {
 import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
-import { AwbNotificationMailQueueService } from '../../../queue/services/notification/awb-notification-mail-queue.service';
 // //#endregion
 export class WebAwbDeliverService {
   constructor() {}
 
-  // TODO: refactoring code ASAP
   static async syncAwbDeliver(
     payload: WebAwbDeliverSyncPayloadVm,
   ): Promise<WebAwbDeliverSyncResponseVm> {
@@ -42,100 +40,91 @@ export class WebAwbDeliverService {
         let syncManualDelivery = false;
         const awb = await AwbService.validAwbNumber(delivery.awbNumber);
         if (awb) {
-          // add handel status Cod problem
-          const statusCodProblem = [AWB_STATUS.CODB, AWB_STATUS.CODOC];
-          if (
-            awb.awbItem.awb.isCod == false &&
-            statusCodProblem.includes(delivery.awbStatusId)
-          ) {
-            response.status = 'error';
-            response.message = `Resi ${delivery.awbNumber} bukan resi COD !`;
-          } else {
-            const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
-            if (awbDeliver) {
-              // hardcode check role sigesit
-              const roleIdSigesit = 23;
-              if (permissonPayload.roleId == roleIdSigesit) {
-                // check only own awb number
-                if (
-                  awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
-                  awbDeliver.doPodDeliver.userIdDriver ==
-                    authMeta.userId
-                ) {
-                  syncManualDelivery = true;
-                } else {
-                  onlyDriver = true;
-                }
-              } else {
+          // const statusProblem = [AWB_STATUS.CODA, AWB_STATUS.BA, AWB_STATUS.RTN];
+          const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
+          if (awbDeliver) {
+            // hardcode check role sigesit
+            const roleIdSigesit = 23;
+            if (permissonPayload.roleId == roleIdSigesit) {
+              // check only own awb number
+              if (
+                awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
+                awbDeliver.doPodDeliver.userIdDriver ==
+                  authMeta.userId
+              ) {
                 syncManualDelivery = true;
-              }
-
-              if (syncManualDelivery) {
-                // add handel final status
-                const statusFinal = [AWB_STATUS.DLV];
-                if (statusFinal.includes(awb.awbStatusIdLast)) {
-                  response.status = 'error';
-                  response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
-                } else {
-                  // check awb is cod
-                  if (awb.awbItem.awb.isCod == true && delivery.awbStatusId == AWB_STATUS.DLV) {
-                    response.status = 'error';
-                    response.message = `Resi ${
-                      delivery.awbNumber
-                    }, adalah resi COD, tidak dapat melakukan POD Manual!`;
-                  } else {
-                    // set data deliver
-                    delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
-                    delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
-                    delivery.awbItemId = awbDeliver.awbItemId;
-                    // delivery.employeeId = authMeta.employeeId;
-                    await this.syncDeliver(delivery);
-                    // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
-                    if (payload.isReturn) {
-                      await this.createAwbReturn(
-                        delivery.awbNumber,
-                        awb.awbId,
-                        permissonPayload.branchId,
-                        authMeta.userId,
-                      );
-                    }
-                    response.status = 'ok';
-                    response.message = 'success';
-                  }
-                }
               } else {
+                onlyDriver = true;
+              }
+            } else {
+              syncManualDelivery = true;
+            }
+
+            if (syncManualDelivery) {
+              // add handel final status
+              const statusFinal = [AWB_STATUS.DLV];
+              if (statusFinal.includes(awb.awbStatusIdLast)) {
                 response.status = 'error';
-                if (onlyDriver) {
+                response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
+              } else {
+                // check awb is cod
+                if (awb.awbItem.awb.isCod == true && delivery.awbStatusId == AWB_STATUS.DLV) {
+                  response.status = 'error';
                   response.message = `Resi ${
                     delivery.awbNumber
-                  }, bukan milik user sigesit login`;
+                  }, adalah resi COD, tidak dapat melakukan POD Manual!`;
                 } else {
-                  response.message = `Resi ${
-                    delivery.awbNumber
-                  }, bermasalah harap scan antar terlebih dahulu`;
+                  // set data deliver
+                  delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
+                  delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
+                  delivery.awbItemId = awbDeliver.awbItemId;
+                  // delivery.employeeId = authMeta.employeeId;
+                  await this.syncDeliver(delivery);
+                  // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
+                  if (payload.isReturn) {
+                    await this.createAwbReturn(
+                      delivery.awbNumber,
+                      awb.awbId,
+                      permissonPayload.branchId,
+                      authMeta.userId,
+                    );
+                  }
+                  response.status = 'ok';
+                  response.message = 'success';
                 }
               }
             } else {
-              // NOTE: Manual Status not POD only status problem (not have spk)
-              delivery.awbItemId = awb.awbItemId;
-              if (delivery.awbStatusId != AWB_STATUS.DLV) {
-                const manualStatus = await this.syncStatusManual(
-                  authMeta.userId,
-                  permissonPayload.branchId,
-                  delivery,
-                  payload.isReturn,
-                  awb.awbId,
-                );
-                const messageError = `Resi ${delivery.awbNumber}, tidak dapat update status manual`;
-                response.status = manualStatus ? 'ok' : 'error';
-                response.message = manualStatus ? 'success' : messageError ;
-              } else {
-                // status DLV, but not have spk
-                response.status = 'error';
+              response.status = 'error';
+              if (onlyDriver) {
                 response.message = `Resi ${
                   delivery.awbNumber
-                }, tidak memiliki surat jalan, harap buatkan surat jalan terlebih dahulu!`;
+                }, bukan milik user sigesit login`;
+              } else {
+                response.message = `Resi ${
+                  delivery.awbNumber
+                }, bermasalah harap scan antar terlebih dahulu`;
               }
+            }
+          } else {
+            // NOTE: Manual Status not POD only status problem (not have spk)
+            delivery.awbItemId = awb.awbItemId;
+            if (delivery.awbStatusId != AWB_STATUS.DLV) {
+              const manualStatus = await this.syncStatusManual(
+                authMeta.userId,
+                permissonPayload.branchId,
+                delivery,
+                payload.isReturn,
+                awb.awbId,
+              );
+              const messageError = `Resi ${delivery.awbNumber}, tidak dapat update status manual`;
+              response.status = manualStatus ? 'ok' : 'error';
+              response.message = manualStatus ? 'success' : messageError ;
+            } else {
+              // status DLV, but not have spk
+              response.status = 'error';
+              response.message = `Resi ${
+                delivery.awbNumber
+              }, tidak memiliki surat jalan, harap buatkan surat jalan terlebih dahulu!`;
             }
           }
         } else {
@@ -184,13 +173,9 @@ export class WebAwbDeliverService {
     });
     const finalStatus = [AWB_STATUS.DLV];
     if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
-      const awbStatus = await AwbStatus.findOne({
-        where: {
-          awbStatusId: doPodDeliverHistory.awbStatusId,
-          isDeleted: false,
-        },
-        cache: true,
-      });
+      const awbStatus = await AwbStatus.findOne(
+        doPodDeliverHistory.awbStatusId,
+      );
       // #region transaction data
       await getManager().transaction(async transactionEntityManager => {
         // insert data deliver history
@@ -258,19 +243,17 @@ export class WebAwbDeliverService {
 
       // NOTE: queue by Bull need refactoring
       const reasonId = delivery.reasonId == 0 ? null : delivery.reasonId;
-      DoPodDetailPostMetaQueueService.createJobV2ByManual(
+      DoPodDetailPostMetaQueueService.createJobByManualSync(
         delivery.awbItemId,
         delivery.awbStatusId,
         authMeta.userId,
         permissonPayload.branchId,
-        delivery.reasonNotes,
+        authMeta.userId,
         reasonId,
+        delivery.reasonNotes,
         delivery.consigneeNameNote,
-      );
-      // NOTE: mail notification
-      AwbNotificationMailQueueService.perform(
-        delivery.awbItemId,
-        delivery.awbStatusId,
+        awbStatus.awbStatusName,
+        awbStatus.awbStatusTitle,
       );
 
     } else {
@@ -298,19 +281,12 @@ export class WebAwbDeliverService {
         );
       }
       // TODO: queue by Bull need refactoring
-      DoPodDetailPostMetaQueueService.createJobV2ByManual(
+      DoPodDetailPostMetaQueueService.createJobByManualStatus(
         delivery.awbItemId,
         delivery.awbStatusId,
         userId,
         branchId,
         delivery.reasonNotes,
-        null,
-        null,
-      );
-      // NOTE: mail notification
-      AwbNotificationMailQueueService.perform(
-        delivery.awbItemId,
-        delivery.awbStatusId,
       );
       return true;
     } catch (error) {
@@ -372,12 +348,6 @@ export class WebAwbDeliverService {
           updatedTime: moment().toDate(),
       });
       await AwbReturn.insert(awbReturnData);
-    } else {
-      AwbReturn.update(awbReturnData.awbReturnId, {
-          branchId,
-          userIdUpdated: userId,
-          updatedTime: moment().toDate(),
-      });
     }
     return true;
   }

@@ -27,8 +27,6 @@ import { UploadImagePodQueueService } from '../../../../queue/services/upload-po
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
-import { AwbSunfishV2QueueService } from '../../../../queue/services/integration/awb-sunfish-v2-queue.service';
-import { AwbNotificationMailQueueService } from '../../../../queue/services/notification/awb-notification-mail-queue.service';
 // #endregion
 
 export class V2MobileSyncService {
@@ -134,7 +132,6 @@ export class V2MobileSyncService {
                 syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
                 descLast: lastDoPodDeliverHistory.desc,
                 consigneeName: delivery.consigneeNameNote,
-                userIdUpdated: authMeta.userId,
                 updatedTime: moment().toDate(),
               },
             );
@@ -146,8 +143,7 @@ export class V2MobileSyncService {
                 CodPayment,
                 {
                   where: {
-                    awbItemId: delivery.awbItemId,
-                    isDeleted: false,
+                    doPodDeliverDetailId: delivery.doPodDeliverDetailId,
                   },
                 },
               );
@@ -165,15 +161,11 @@ export class V2MobileSyncService {
                     note: delivery.note,
                     noReference: delivery.noReference,
                     userIdUpdated: authMeta.userId,
-                    userIdDriver: authMeta.userId,
-                    branchId: awbdDelivery.branchId,
                     updatedTime: moment().toDate(),
                   },
                 );
               } else {
-                await transactionEntityManager.insert(
-                  CodPayment,
-                  {
+                await transactionEntityManager.insert(CodPayment, {
                   awbNumber: delivery.awbNumber,
                   codValue: delivery.totalCodValue,
                   codPaymentMethod: delivery.codPaymentMethod,
@@ -181,17 +173,13 @@ export class V2MobileSyncService {
                   note: delivery.note,
                   noReference: delivery.noReference,
                   doPodDeliverDetailId: delivery.doPodDeliverDetailId,
-                  awbItemId: delivery.awbItemId,
-                  branchId: awbdDelivery.branchId,
-                  userIdDriver: authMeta.userId,
                   userIdCreated: authMeta.userId,
                   userIdUpdated: authMeta.userId,
                   createdTime: moment().toDate(),
                   updatedTime: moment().toDate(),
                 });
               }
-              // TODO: update transaction_status_id = TRANSACTION_STATUS.SIGESIT
-
+              // CodPaymentQueueService.perform(delivery.awbNumber, delivery.noReference);
             }
 
             const doPodDeliver = await DoPodDeliver.findOne({
@@ -254,29 +242,12 @@ export class V2MobileSyncService {
             lastDoPodDeliverHistory.latitudeDelivery,
             lastDoPodDeliverHistory.longitudeDelivery,
           );
-
-          // NOTE: push data only DLV to Sunfish
-          if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
-            // TODO: add flag
-            // AwbSunfishV2QueueService.perform(
-            //   delivery.awbNumber,
-            //   delivery.employeeId,
-            //   historyDateTime,
-            // );
-          } else {
-            // NOTE: mail notification status problem
-            AwbNotificationMailQueueService.perform(
-              awbdDelivery.awbItemId,
-              awbStatus.awbStatusId,
-            );
-          }
           process = true;
         } else {
           PinoLoggerService.log('##### Data Not Valid', delivery);
         }
       } catch (error) {
-        console.error(error);
-        throw new ServiceUnavailableException(error);
+        throw new ServiceUnavailableException(error.message);
       }
     } // end of doPodDeliverHistories.length
     return process;

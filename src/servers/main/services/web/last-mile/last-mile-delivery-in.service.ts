@@ -87,23 +87,14 @@ export class LastMileDeliveryInService {
 
         dataBag = resultAwb.dataBag;
       } else if (
-        (inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))) ||
-        (inputNumber.length == 7 && regexNumber.test(inputNumber))
+        inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))
       ) {
         // check valid bag
-        let bagData;
-        let isSealNumber = false;
-        if (inputNumber.length == 7) {
-          bagData = await BagService.findOneBySealNumber(inputNumber);
-          isSealNumber = true;
-        } else {
-          bagData = await BagService.validBagNumber(inputNumber);
-        }
+        const bagData = await BagService.validBagNumber(inputNumber);
         const resultBag = await this.scanInBagBranch(
           bagData,
           inputNumber,
           payload.podScanInBranchId,
-          isSealNumber,
         );
         if (resultBag) {
           isBag = true;
@@ -142,7 +133,6 @@ export class LastMileDeliveryInService {
     bagData: BagItem,
     bagNumber: string,
     podScanInBranchId: string,
-    isSealNumber: boolean,
   ): Promise<WebScanInBagBranchResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -281,35 +271,22 @@ export class LastMileDeliveryInService {
               podScanInBranchBagObj.branchId = permissonPayload.branchId;
               podScanInBranchBagObj.bagId = bagData.bagId;
               podScanInBranchBagObj.bagItemId = bagData.bagItemId;
-              podScanInBranchBagObj.bagNumber = bagData.bag.bagNumber;
+              podScanInBranchBagObj.bagNumber = bagNumber;
               podScanInBranchBagObj.totalAwbItem = bagItemsAwb.length;
               podScanInBranchBagObj.totalAwbScan = 0;
               podScanInBranchBagObj.totalDiff = 0;
-              podScanInBranchBagObj.sealNumber = bagData.bag.sealNumber ? bagData.bag.sealNumber : null;
-              podScanInBranchBagObj.isSealNumberScan = isSealNumber;
               await PodScanInBranchBag.save(podScanInBranchBagObj);
 
-              if (isSealNumber) {
-                // update total seal number scan on pod_scan_in_branch
-                await transactionEntityManager.increment(
-                PodScanInBranch,
-                {
-                  podScanInBranchId,
-                  isDeleted: false,
-                },
-                'totalSealNumberScan',
-                1);
-              } else {
-                // update total bag scan on pod_scan_in_branch
-                await transactionEntityManager.increment(
+              // update total bag scan on pod_scan_in_branch
+              await transactionEntityManager.increment(
                 PodScanInBranch,
                 {
                   podScanInBranchId,
                   isDeleted: false,
                 },
                 'totalBagScan',
-                1);
-              }
+                1,
+              );
             });
 
           }
@@ -526,6 +503,11 @@ export class LastMileDeliveryInService {
 
           // AFTER Scan IN ===============================================
           // #region after scanin
+          await AwbService.updateAwbAttr(
+            awb.awbItemId,
+            AWB_STATUS.IN_BRANCH,
+            null,
+          );
 
           // NOTE: queue by Bull add awb history with status scan in branch
           DoPodDetailPostMetaQueueService.createJobByScanInAwbBranch(
