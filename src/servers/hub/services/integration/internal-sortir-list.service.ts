@@ -127,7 +127,8 @@ export class InternalSortirListService {
     q.leftJoin(e => e.bagItemAwb.bagItem.bag, 'bag', j =>
       (
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
-        j.andWhere(e => e.isManual, w => w.isFalse())
+        j.andWhere(e => e.isManual, w => w.isFalse()),
+        j.andWhere(e => e.isSortir, w => w.isTrue())
       ),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
