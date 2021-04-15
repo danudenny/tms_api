@@ -348,7 +348,7 @@ export class LastMileDeliveryOutService {
 
           // remove key holdRedis
           RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
-          RedisService.del(`hold:doPodDeliverId:${doPodDeliver.doPodDeliverId}`);
+          // RedisService.del(`hold:doPodDeliverId:${doPodDeliver.doPodDeliverId}`);
         } else {
           response.status = 'error';
           response.message = `Server Busy: Resi ${awbNumber} sudah di proses.`;

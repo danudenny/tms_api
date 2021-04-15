@@ -528,9 +528,9 @@ export class LastMileDeliveryOutService {
           totalAwb,
         },
       );
-      RedisService.del(
-        `hold:doPodDeliverId:${doPodDeliver.doPodDeliverId}`,
-      );
+      // RedisService.del(
+      //   `hold:doPodDeliverId:${doPodDeliver.doPodDeliverId}`,
+      // );
     }
 
     // Populate return value

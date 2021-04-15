@@ -56,19 +56,19 @@ export class DoPodDeliverRepository extends Repository<DoPodDeliver> {
 
   static async byIdCache(doPodDeliverId: string): Promise<DoPodDeliver> {
     // Add Locking setnx redis
-    const holdRedis = await RedisService.lockingWithExpire(
-      `hold:doPodDeliverId:${doPodDeliverId}`,
-      'locking',
-      60,
+    // const holdRedis = await RedisService.lockingWithExpire(
+    //   `hold:doPodDeliverId:${doPodDeliverId}`,
+    //   'locking',
+    //   60,
+    // );
+    // if (holdRedis) {
+    const doPodDeliver = await DoPodDeliver.findOne(
+      { doPodDeliverId },
+      { cache: true },
     );
-    if (holdRedis) {
-      const doPodDeliver = await DoPodDeliver.findOne(
-        { doPodDeliverId },
-        { cache: true },
-      );
-      return doPodDeliver;
-    } else {
-      throw new BadRequestException('Surat Jalan sedang di proses!');
-    }
+    return doPodDeliver;
+    // } else {
+    //   throw new BadRequestException('Surat Jalan sedang di proses!');
+    // }
   }
 }
