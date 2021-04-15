@@ -247,9 +247,9 @@ export class LastMileDeliveryOutService {
       throw new BadRequestException('Surat Jalan tidak valid!');
     }
 
-    if (doPodDeliver && doPodDeliver.userIdDriver != authMeta.userId) {
-      throw new BadRequestException('Surat Jalan bukan milik sigesit!');
-    }
+    // if (doPodDeliver && doPodDeliver.userIdDriver != authMeta.userId) {
+    //   throw new BadRequestException('Surat Jalan bukan milik sigesit!');
+    // }
 
     if (awb) {
       response.status = 'error';
