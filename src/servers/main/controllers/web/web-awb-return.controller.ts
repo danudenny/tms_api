@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
 import {
     ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
@@ -12,6 +12,7 @@ import { WebReturUpdateListPayloadVm} from '../../models/web-retur-update-respon
 import { WebReturUpdateResponseVm } from '../../models/web-retur-update-list-response.vm';
 import { WebReturHistoryFindAllResponseVm } from '../../models/web-retur-history.response.vm';
 import { WebReturHistoryPayloadVm } from '../../models/web-retur-history-payload.vm';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 // NOTE: PENDING TASK ==========================================================
 // ================================================================
 @ApiUseTags('Web Awb Return')
@@ -50,5 +51,18 @@ export class WebAwbReturnController {
   @ApiOkResponse({ type: WebReturHistoryFindAllResponseVm })
   public async historyAwb(@Body() payload: WebReturHistoryPayloadVm) {
     return WebAwbReturnService.historyAwbReturn(payload);
+  }
+
+  @Post('list/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async exportListAwbReturn(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await WebAwbReturnService.exportReturnList(
+      payload,
+      outgoingHTTP,
+    );
   }
 }

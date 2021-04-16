@@ -1,10 +1,10 @@
 import { Column, Entity, PrimaryGeneratedColumn, JoinColumn, OneToOne, ManyToOne } from 'typeorm';
 
 import { TmsBaseEntity } from './tms-base';
-import { Awb } from './awb';
-import { Customer } from './customer';
 import { Branch } from './branch';
 import { AwbItemAttr } from './awb-item-attr';
+import { User } from './user';
+import { DoPodDetail } from './do-pod-detail';
 
 @Entity('awb_return', { schema: 'public' })
 export class AwbReturn extends TmsBaseEntity {
@@ -73,11 +73,25 @@ export class AwbReturn extends TmsBaseEntity {
   })
   partnerLogisticId: string;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'user_id_driver',
+  })
+  userIdDriver: number | null;
+
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'origin_awb_id', referencedColumnName: 'awbId'})
   originAwb: AwbItemAttr;
 
+  @OneToOne(() => DoPodDetail)
+  @JoinColumn({ name: 'return_awb_id', referencedColumnName: 'awbId'})
+  doPodDetail: DoPodDetail;
+
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_driver', referencedColumnName: 'userId' })
+  userDriver: User;
 }

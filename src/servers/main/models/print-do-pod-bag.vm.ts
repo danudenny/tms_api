@@ -5,6 +5,9 @@ export class PrintDoPodBagDataDoPodDetailBagBagItemBagVm {
   bagNumber: string;
 
   @ApiModelProperty()
+  sealNumber: string;
+
+  @ApiModelProperty()
   refRepresentativeCode: string;
 }
 

@@ -258,32 +258,58 @@ export class ScanoutSmdCityService {
           },
         });
 
-        await getManager().transaction(async transactionEntityManager => {
-          await transactionEntityManager.increment(
-            DoSmdDetail,
-            {
+        // await getManager().transaction(async transactionEntityManager => {
+        //   await transactionEntityManager.increment(
+        //     DoSmdDetail,
+        //     {
+        //       doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+        //     },
+        //     'totalBagRepresentative',
+        //     1,
+        //   );
+        //   await transactionEntityManager.increment(
+        //     DoSmd,
+        //     {
+        //       doSmdId: resultDoSmd.doSmdId,
+        //     },
+        //     'totalBagRepresentative',
+        //     1,
+        //   );
+        //   await transactionEntityManager.increment(
+        //     DoSmd,
+        //     {
+        //       doSmdId: resultDoSmd.doSmdId,
+        //     },
+        //     'totalItem',
+        //     1,
+        //   );
+        // });
+
+        const queryDoSmdDetail = `
+          UPDATE do_smd_detail
+          SET total_bag_representative = total_bag_representative + 1
+          WHERE
+            do_smd_detail_id = :doSmdDetailId
+        `;
+        const queryDoSmd = `
+          UPDATE do_smd
+          SET total_bag_representative = total_bag_representative + 1, total_item = total_item + 1
+          WHERE
+            do_smd_id = :doSmdId
+        `;
+
+        await RawQueryService.queryTranWithParams([
+          {
+            sql: queryDoSmdDetail,
+            params: {
               doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
             },
-            'totalBagRepresentative',
-            1,
-          );
-          await transactionEntityManager.increment(
-            DoSmd,
-            {
-              doSmdId: resultDoSmd.doSmdId,
-            },
-            'totalBagRepresentative',
-            1,
-          );
-          await transactionEntityManager.increment(
-            DoSmd,
-            {
-              doSmdId: resultDoSmd.doSmdId,
-            },
-            'totalItem',
-            1,
-          );
-        });
+          },
+          {
+            sql: queryDoSmd,
+            params:  { doSmdId: resultDoSmd.doSmdId }, 
+          },
+        ]);
 
         BagRepresentativeScanDoSmdQueueService.perform(
           resultDataBagRepresentative[0].bag_representative_id,
@@ -374,32 +400,57 @@ export class ScanoutSmdCityService {
               isDeleted: false,
             },
           });
-          await getManager().transaction(async transactionEntityManager => {
-            await transactionEntityManager.increment(
-              DoSmdDetail,
-              {
+          // await getManager().transaction(async transactionEntityManager => {
+          //   await transactionEntityManager.increment(
+          //     DoSmdDetail,
+          //     {
+          //       doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+          //     },
+          //     'totalBagging',
+          //     1,
+          //   );
+          //   await transactionEntityManager.increment(
+          //     DoSmd,
+          //     {
+          //       doSmdId: resultDoSmd.doSmdId,
+          //     },
+          //     'totalBagging',
+          //     1,
+          //   );
+          //   await transactionEntityManager.increment(
+          //     DoSmd,
+          //     {
+          //       doSmdId: resultDoSmd.doSmdId,
+          //     },
+          //     'totalItem',
+          //     1,
+          //   );
+          // });
+          const queryDoSmdDetail = `
+            UPDATE do_smd_detail
+            SET total_bagging = total_bagging + 1
+            WHERE
+              do_smd_detail_id = :doSmdDetailId
+          `;
+          const queryDoSmd = `
+            UPDATE do_smd
+            SET total_bagging = total_bagging + 1, total_item = total_item + 1
+            WHERE
+              do_smd_id = :doSmdId
+          `;
+
+          await RawQueryService.queryTranWithParams([
+            {
+              sql: queryDoSmdDetail,
+              params: {
                 doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
               },
-              'totalBagging',
-              1,
-            );
-            await transactionEntityManager.increment(
-              DoSmd,
-              {
-                doSmdId: resultDoSmd.doSmdId,
-              },
-              'totalBagging',
-              1,
-            );
-            await transactionEntityManager.increment(
-              DoSmd,
-              {
-                doSmdId: resultDoSmd.doSmdId,
-              },
-              'totalItem',
-              1,
-            );
-          });
+            },
+            {
+              sql: queryDoSmd,
+              params:  { doSmdId: resultDoSmd.doSmdId }, 
+            },
+          ]);
 
           // Generate history bag and its awb IN_HUB
           BagScanDoSmdQueueService.perform(
@@ -488,33 +539,60 @@ export class ScanoutSmdCityService {
               isDeleted: false,
             },
           });
-          await getManager().transaction(async transactionEntityManager => {
-            await transactionEntityManager.increment(
-              DoSmdDetail,
-              {
+          // await getManager().transaction(async transactionEntityManager => {
+          //   await transactionEntityManager.increment(
+          //     DoSmdDetail,
+          //     {
+          //       doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+          //     },
+          //     'totalBag',
+          //     1,
+          //   );
+          //   await transactionEntityManager.increment(
+          //     DoSmd,
+          //     {
+          //       doSmdId: resultDoSmd.doSmdId,
+          //     },
+          //     'totalBag',
+          //     1,
+          //   );
+          //   await transactionEntityManager.increment(
+          //     DoSmd,
+          //     {
+          //       doSmdId: resultDoSmd.doSmdId,
+          //     },
+          //     'totalItem',
+          //     1,
+          //   );
+          // });
+
+          const queryDoSmdDetail = `
+            UPDATE do_smd_detail
+            SET total_bag = total_bag + 1
+            WHERE
+              do_smd_detail_id = :doSmdDetailId
+          `;
+          const queryDoSmd = `
+            UPDATE do_smd
+            SET total_bag = total_bag + 1, total_item = total_item + 1
+            WHERE
+              do_smd_id = :doSmdId
+          `;
+
+          await RawQueryService.queryTranWithParams([
+            {
+              sql: queryDoSmdDetail,
+              params: {
                 doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
               },
-              'totalBag',
-              1,
-            );
-            await transactionEntityManager.increment(
-              DoSmd,
-              {
-                doSmdId: resultDoSmd.doSmdId,
+            },
+            {
+              sql: queryDoSmd,
+              params:  {
+                doSmdId: resultDoSmd.doSmdId
               },
-              'totalBag',
-              1,
-            );
-            await transactionEntityManager.increment(
-              DoSmd,
-              {
-                doSmdId: resultDoSmd.doSmdId,
-              },
-              'totalItem',
-              1,
-            );
-          });
-
+            },
+          ]);
           await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
@@ -605,32 +683,59 @@ export class ScanoutSmdCityService {
               isDeleted: false,
             },
           });
-          await getManager().transaction(async transactionEntityManager => {
-            await transactionEntityManager.increment(
-              DoSmdDetail,
-              {
+          // await getManager().transaction(async transactionEntityManager => {
+          //   await transactionEntityManager.increment(
+          //     DoSmdDetail,
+          //     {
+          //       doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
+          //     },
+          //     'totalBag',
+          //     1,
+          //   );
+          //   await transactionEntityManager.increment(
+          //     DoSmd,
+          //     {
+          //       doSmdId: resultDoSmd.doSmdId,
+          //     },
+          //     'totalBag',
+          //     1,
+          //   );
+          //   await transactionEntityManager.increment(
+          //     DoSmd,
+          //     {
+          //       doSmdId: resultDoSmd.doSmdId,
+          //     },
+          //     'totalItem',
+          //     1,
+          //   );
+          // });
+          const queryDoSmdDetail = `
+            UPDATE do_smd_detail
+            SET total_bag = total_bag + 1
+            WHERE
+              do_smd_detail_id = :doSmdDetailId
+          `;
+          const queryDoSmd = `
+            UPDATE do_smd
+            SET total_bag = total_bag + 1, total_item = total_item + 1
+            WHERE
+              do_smd_id = :doSmdId
+          `;
+
+          await RawQueryService.queryTranWithParams([
+            {
+              sql: queryDoSmdDetail,
+              params: {
                 doSmdDetailId: resultDoSmdDetail.doSmdDetailId,
               },
-              'totalBag',
-              1,
-            );
-            await transactionEntityManager.increment(
-              DoSmd,
-              {
-                doSmdId: resultDoSmd.doSmdId,
+            },
+            {
+              sql: queryDoSmd,
+              params:  {
+                doSmdId: resultDoSmd.doSmdId
               },
-              'totalBag',
-              1,
-            );
-            await transactionEntityManager.increment(
-              DoSmd,
-              {
-                doSmdId: resultDoSmd.doSmdId,
-              },
-              'totalItem',
-              1,
-            );
-          });
+            },
+          ]);
           await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
           // Generate history bag and its awb IN_HUB

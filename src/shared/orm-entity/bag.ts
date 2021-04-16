@@ -131,6 +131,19 @@ export class Bag extends TmsBaseEntity {
   })
   isSortir: boolean;
 
+  @Column('boolean', {
+    nullable: true,
+    name: 'is_manual',
+  })
+  isManual: boolean;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 50,
+    name: 'seal_number',
+  })
+  sealNumber: string | null;
+
   // relation model
   @OneToMany(() => BagItem, e => e.bag, { cascade: ['insert'] })
   bagItems: BagItem[];
