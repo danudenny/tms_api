@@ -187,6 +187,13 @@ export class PickupRequestDetail extends TmsBaseEntity {
   @Column('character varying', {
     nullable: true,
     length: 255,
+    name: 'recipient_email',
+  })
+  recipientEmail: string | null;
+
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
     name: 'recipient_phone',
   })
   recipientPhone: string | null;
@@ -381,11 +388,35 @@ export class PickupRequestDetail extends TmsBaseEntity {
   })
   dropPartnerCharge: number | null;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_high_value',
+  })
+  isHighValue: boolean;
+
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'handover_delivery',
+  })
+  handoverDelivery: boolean;
+
   @OneToOne(() => District)
   @JoinColumn({ name: 'origin_code', referencedColumnName: 'districtCode' })
   districtOrigin: District;
 
   @OneToOne(() => District)
-  @JoinColumn({ name: 'destination_code', referencedColumnName: 'districtCode' })
+  @JoinColumn({
+    name: 'destination_code',
+    referencedColumnName: 'districtCode',
+  })
   districtDestination: District;
+
+  @ManyToOne(() => PickupRequest)
+  @JoinColumn({
+    name: 'pickup_request_id',
+    referencedColumnName: 'pickupRequestId',
+  })
+  pickupRequest: PickupRequest;
 }

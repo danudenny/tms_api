@@ -5,7 +5,6 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { CheckAwbPayloadVm, CheckAwbResponseVM } from '../../models/hub-machine-sortir.vm';
 import { BranchSortirLogQueueService } from '../../../queue/services/branch-sortir-log-queue.service';
 import { BranchSortirLogSummary } from '../../../../shared/orm-entity/branch-sortir-log-summary';
-import { getConnection } from 'typeorm';
 
 export class HubMachineSortirService {
 
@@ -356,29 +355,15 @@ export class HubMachineSortirService {
     paramIsCod: boolean,
     userId: number = 1,
   ) {
-    let branchSortirLogSummary ;
+    let branchSortirLogSummary = null;
     let paramBranchSortirLogSummaryId;
 
-    // branchSortirLogSummary = await BranchSortirLogSummary.findOne({
-    //   where: {
-    //     awbNumber,
-    //     isDeleted: false,
-    //   },
-    // });
-
-    // let branchSortirLogSummary;
-    const masterQueryRunner = getConnection().createQueryRunner('master');
-    try {
-      branchSortirLogSummary = await getConnection()
-        .createQueryBuilder(BranchSortirLogSummary, 'ctd')
-        .setQueryRunner(masterQueryRunner)
-        .where('ctd.awbNumber = :paramAwbNumber AND ctd.isDeleted = false', {
-          paramAwbNumber: awbNumber,
-        })
-        .getOne();
-    } finally {
-      await masterQueryRunner.release();
-    }
+    branchSortirLogSummary = await BranchSortirLogSummary.findOne({
+      where: {
+        awbNumber,
+        isDeleted: false,
+      },
+    });
 
     if (branchSortirLogSummary) {
       paramBranchSortirLogSummaryId = branchSortirLogSummary.branchSortirLogSummaryId;

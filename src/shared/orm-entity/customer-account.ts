@@ -13,6 +13,7 @@ import { PackagePriceSpecial } from './package-price-special';
 import { CustomerAddress } from './customer-address';
 import { Customer } from './customer';
 import { DoReturnAwb } from './do_return_awb';
+import { Partner } from './partner';
 
 @Entity('customer_account', { schema: 'public' })
 @Index('code_rds_idx', ['codeRds'])
@@ -456,6 +457,12 @@ export class CustomerAccount extends BaseEntity {
   })
   isPromo_3kg: boolean | null;
 
+  @Column('text', {
+    nullable: true,
+    name: 'one_id',
+  })
+  oneId: string | null;
+
   @OneToMany(
     type => PackagePriceSpecial,
     package_price_special => package_price_special.customerAccount,
@@ -472,4 +479,8 @@ export class CustomerAccount extends BaseEntity {
   @OneToOne(() => Customer)
   @JoinColumn({ name: 'customer_id', referencedColumnName: 'customerId' })
   customer: Customer;
+
+  @OneToOne(() => Partner)
+  @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerAccountId' })
+  partner: Partner;
 }

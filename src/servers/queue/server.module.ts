@@ -1,3 +1,4 @@
+// #region import
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
 
@@ -30,12 +31,12 @@ import { BagScanOutBranchSmdQueueService } from './services/bag-scan-out-branch-
 import { BagScanDoSmdQueueService } from './services/bag-scan-do-smd-queue.service';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from './services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 import { BagRepresentativeSmdQueueService } from './services/bag-representative-smd-queue.service';
-import {BagRepresentativeScanDoSmdQueueService} from './services/bag-representative-scan-do-smd-queue.service';
+import { BagRepresentativeScanDoSmdQueueService } from './services/bag-representative-scan-do-smd-queue.service';
 import { BagRepresentativeDropoffHubQueueService } from './services/bag-representative-dropoff-hub-queue.service';
 import { BaggingDropoffHubQueueService } from './services/bagging-dropoff-hub-queue.service';
 import { CreateBagFirstScanHubQueueService } from './services/create-bag-first-scan-hub-queue.service';
 import { CreateBagAwbScanHubQueueService } from './services/create-bag-awb-scan-hub-queue.service';
-import {CodPaymentQueueService} from './services/cod-payment-queue.service';
+import { CodPaymentQueueService } from './services/cod-payment-queue.service';
 import { CodFirstTransactionQueueService } from './services/cod/cod-first-transaction-queue.service';
 import { CodSyncTransactionQueueService } from './services/cod/cod-sync-transaction-queue.service';
 import { CodUpdateTransactionQueueService } from './services/cod/cod-update-transaction-queue.service';
@@ -46,8 +47,13 @@ import { MongoDbConfig } from './config/database/mongodb.config';
 import { CodExportMongoQueueService } from './services/cod/cod-export-queue.service';
 import { BagRepresentativeScanOutHubQueueService } from './services/bag-representative-scan-out-hub-queue.service';
 import { BagScanVendorQueueService } from './services/bag-scan-vendor-queue.service';
+import { CodSqlExportMongoQueueService } from './services/cod/cod-sql-export-queue.service';
+import { AwbNotificationMailQueueService } from './services/notification/awb-notification-mail-queue.service';
+import { AwbSunfishV2QueueService } from './services/integration/awb-sunfish-v2-queue.service';
+import { CodTransferTransactionQueueService } from './services/cod/cod-transfer-transaction-queue.service';
 import { BranchSortirLogQueueService } from './services/branch-sortir-log-queue.service';
 
+// #endregion import
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
 })
@@ -134,39 +140,55 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     // init connection mongodb
     MongoDbConfig.getSicepatMonggoClient();
     // init boot Queue
-    DoPodDetailPostMetaQueueService.boot();
-    BagItemHistoryQueueService.boot();
-    BagScanOutBranchQueueService.boot();
-    BagScanOutHubQueueService.boot();
-    MappingRoleQueueService.boot();
-    AwbSendPartnerQueueService.boot();
-    BagDropoffHubQueueService.boot();
-    UploadImagePodQueueService.boot();
-    DoSmdPostAwbHistoryMetaQueueService.boot();
-    BagScanInBranchSmdQueueService.boot();
-    BagScanOutBranchSmdQueueService.boot();
-    BagScanDoSmdQueueService.boot();
-    BagRepresentativeScanDoSmdQueueService.boot();
-    BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
-    BagRepresentativeSmdQueueService.boot();
-    BaggingDropoffHubQueueService.boot();
-    BagRepresentativeDropoffHubQueueService.boot();
-    CreateBagFirstScanHubQueueService.boot();
-    CreateBagAwbScanHubQueueService.boot();
-    CodPaymentQueueService.boot();
-    CodFirstTransactionQueueService.boot();
-    CodSyncTransactionQueueService.boot();
-    CodUpdateTransactionQueueService.boot();
-    CodTransactionHistoryQueueService.boot();
-    CodUpdateSupplierInvoiceQueueService.boot();
-    CodExportMongoQueueService.boot();
-    BagRepresentativeScanOutHubQueueService.boot();
-    BagScanVendorQueueService.boot();
-    BranchSortirLogQueueService.boot();
-    // BagItemAwbQueueService.boot();
-    // GenerateReportQueueService.boot();
+    if (serverConfig.bullPod) {
+      DoPodDetailPostMetaQueueService.boot();
+      BagItemHistoryQueueService.boot();
+      BagScanOutBranchQueueService.boot();
+      BagScanOutHubQueueService.boot();
+      MappingRoleQueueService.boot();
+      // AwbSendPartnerQueueService.boot();
+      BagDropoffHubQueueService.boot();
+      UploadImagePodQueueService.boot();
+      CreateBagFirstScanHubQueueService.boot();
+      CreateBagAwbScanHubQueueService.boot();
+      AwbNotificationMailQueueService.boot();
+    }
 
-    // init Cron here
-    CodCronSettlementQueueService.init();
+    if (serverConfig.bullPodMobile) {
+      AwbSunfishV2QueueService.boot();
+    }
+
+    if (serverConfig.bullCod) {
+      // CodPaymentQueueService.boot();
+      CodFirstTransactionQueueService.boot();
+      CodTransferTransactionQueueService.boot();
+      CodSyncTransactionQueueService.boot();
+      CodUpdateTransactionQueueService.boot();
+      CodTransactionHistoryQueueService.boot();
+      CodUpdateSupplierInvoiceQueueService.boot();
+      CodExportMongoQueueService.boot();
+      CodSqlExportMongoQueueService.boot();
+      // init Cron here
+      CodCronSettlementQueueService.init();
+    }
+
+    if (serverConfig.bullSmd) {
+      BagRepresentativeScanOutHubQueueService.boot();
+      BagScanVendorQueueService.boot();
+      DoSmdPostAwbHistoryMetaQueueService.boot();
+      BagScanInBranchSmdQueueService.boot();
+      BagScanOutBranchSmdQueueService.boot();
+      BagScanDoSmdQueueService.boot();
+      BagRepresentativeScanDoSmdQueueService.boot();
+      BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
+      BagRepresentativeSmdQueueService.boot();
+      BaggingDropoffHubQueueService.boot();
+      BagRepresentativeDropoffHubQueueService.boot();
+      // CodCronSettlementQueueService.init();
+      // Titip Bull HUB
+      BranchSortirLogQueueService.boot();
+    }
+
+
   }
 }

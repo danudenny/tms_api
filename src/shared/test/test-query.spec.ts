@@ -64,8 +64,12 @@ describe('Test Func', () => {
       ['t1.updated_time', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
+      ['t1.awb_status_id_final', 'awbStatusIdFinal'],
+      ['t11.awb_status_title', 'awbStatusFinal'],
       ['t1.branch_id_last', 'branchIdLast'],
       ['t6.branch_name', 'branchNameLast'],
+      ['t8.branch_id', 'branchIdFinal'],
+      ['t12.branch_name', 'branchNameFinal'],
       ['t2.awb_date', 'manifestedDate'],
       ['t2.consignee_name', 'consigneeName'],
       ['t2.total_cod_value', 'codValue'],
@@ -73,7 +77,7 @@ describe('Test Func', () => {
       ['t4.user_id', 'userIdDriver'],
       ['t4.first_name', 'driverName'],
       ['t5.package_type_code', 'packageTypeCode'],
-      ['t3.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
+      ['t8.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
       [`t8.cod_payment_method`, 'codPaymentMethod'],
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
@@ -84,14 +88,17 @@ describe('Test Func', () => {
     q.innerJoin(e => e.awb, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.doPodDeliverDetail, 't3', j =>
+
+    q.leftJoin(e => e.codPayment, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
     q.innerJoin(
-      e => e.doPodDeliverDetail.doPodDeliver.userDriver,
+      e => e.codPayment.userDriver,
       't4',
       j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
     q.innerJoin(e => e.awb.packageType, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -100,12 +107,15 @@ describe('Test Func', () => {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatus, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
-      ,
+    q.innerJoin(e => e.codPayment.branchFinal, 't12', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.doPodDeliverDetail.codPayment, 't8', j =>
+    q.innerJoin(e => e.awbStatus, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -113,8 +123,34 @@ describe('Test Func', () => {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    // //#region Cod Merger
+    // const codUserToBranch = await CodUserToBranch.findOne({
+    //   select: ['userId'],
+    //   where: {
+    //     userId: authMeta.userId,
+    //     isDeleted: false,
+    //   },
+    // });
+
+    // const userId = codUserToBranch ? codUserToBranch.userId : null;
+
+    // if (userId) {
+    //   q.innerJoin(e => e.codUserToBranch, 't10', j =>
+    //     j.andWhere(e => e.isDeleted, w => w.isFalse())
+    //     .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+    //   );
+    // }
+    // //#endregion
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
-    q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
+    // q.andWhere(e => e.awbStatus.isCod, w => w.isTrue());
+    // filter ANT, DLV, and IN_BRANCH
+    // q.andWhere(
+    //   e => e.awbStatusIdLast,
+    //   w => w.in([3500, 14000, 30000]),
+    // );
+
     q.take(5);
     const data = await q.exec();
     console.log('######## DATA :: ', data);

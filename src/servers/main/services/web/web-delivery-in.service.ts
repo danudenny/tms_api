@@ -191,6 +191,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['totalAwbScan'] = 'totalAwbScan';
+    payload.fieldResolverMap['totalSealNumberScan'] = 't1.total_seal_number_scan';
     // payload.fieldResolverMap['totalAwbScan'] = 't2.total_awb_scan';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -211,6 +212,7 @@ export class WebDeliveryInService {
       ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
       ['t1.created_time', 'createdTime'],
       ['t3.branch_name', 'branchName'],
+      ['t1.total_seal_number_scan', 'totalSealNumberScan'],
       ['t1.total_bag_scan', 'totalBagScan'],
       ['COUNT(t4.awb_number)', 'totalAwbScan'],
     );
@@ -240,7 +242,7 @@ export class WebDeliveryInService {
   ): Promise<WebScanInBranchListBagResponseVm> {
     // mapping field
     payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
-    payload.fieldResolverMap['branchName'] = 't4.branch_name';
+    payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['totalDiff'] = 't1.total_diff';
     payload.fieldResolverMap['totalAwbScan'] = 't1.total_awb_scan';
@@ -249,7 +251,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['weight'] = 't3.weight';
     payload.fieldResolverMap['branchId'] = 't3.branch_id_last';
     payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
-    payload.fieldResolverMap['refRepresentativeCode'] =
+    payload.fieldResolverMap['representativeCode'] =
       't2.ref_representative_code';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -279,6 +281,7 @@ export class WebDeliveryInService {
       ['t1.total_diff', 'totalDiff'],
       ['t2.ref_representative_code', 'representativeCode'],
       [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['t1.seal_number', 'sealNumber'],
     );
     q.innerJoin(e => e.bag, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -290,6 +293,77 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isSealNumberScan, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInBranchListBagResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllBranchListBagTagSeal(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInBranchListBagResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
+    payload.fieldResolverMap['branchNameFrom'] = 't4.branch_name';
+    payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
+    payload.fieldResolverMap['totalDiff'] = 't1.total_diff';
+    payload.fieldResolverMap['totalAwbScan'] = 't1.total_awb_scan';
+    payload.fieldResolverMap['totalAwbItem'] = 't1.total_awb_item';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['weight'] = 't3.weight';
+    payload.fieldResolverMap['branchId'] = 't3.branch_id_last';
+    payload.fieldResolverMap['bagItemId'] = 't6.bag_item_id';
+    payload.fieldResolverMap['representativeCode'] =
+      't2.ref_representative_code';
+    payload.fieldResolverMap['sealNumber'] = 't1.seal_number';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(PodScanInBranchBag, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(
+      ['t1.bag_id', 'bagId'],
+      ['t1.bag_item_id', 'bagItemId'],
+      ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
+      ['t1.bag_number', 'bagNumber'],
+      ['t1.created_time', 'createdTime'],
+      ['t3.branch_id_last', 'branchId'],
+      ['t4.branch_name', 'branchNameFrom'],
+      ['t1.total_awb_item', 'totalAwbItem'],
+      ['t1.total_awb_scan', 'totalAwbScan'],
+      ['t1.total_diff', 'totalDiff'],
+      ['t2.ref_representative_code', 'representativeCode'],
+      [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['t1.seal_number', 'sealNumber'],
+    );
+    q.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.bagItem.branchLast, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isSealNumberScan, w => w.isTrue());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -380,8 +454,11 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['representativeFrom'] =
       't1.ref_representative_code';
     payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
-    payload.fieldResolverMap['branchScanId'] = 't1.branch_id';
+    payload.fieldResolverMap['branchScanId'] = 't5.branch_id';
+    payload.fieldResolverMap['branchScanName'] = 't5.branch_name';
+    payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
+    payload.fieldResolverMap['sealNumber'] = 't1.seal_number';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -394,6 +471,9 @@ export class WebDeliveryInService {
       },
       {
         field: 'bagNumberCode',
+      },
+      {
+        field: 'sealNumber',
       },
     ];
 
@@ -418,6 +498,7 @@ export class WebDeliveryInService {
       ['t5.branch_id', 'branchScanId'],
       ['COUNT (t4.*)', 'totalAwb'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['t1.seal_number', 'sealNumber'],
     );
 
     q.innerJoin(e => e.bagItems, 't2', j =>
@@ -429,10 +510,11 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.branch, 't5', j =>
+    q.leftJoin(e => e.bagItems.branchLast, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
+
     q.groupByRaw(`
       t2.created_time,
       t2.bag_seq,
@@ -443,7 +525,8 @@ export class WebDeliveryInService {
       t3.branch_name,
       t3.branch_id,
       t5.branch_id,
-      t5.branch_name
+      t5.branch_name,
+      t1.seal_number
     `);
 
     const data = await q.exec();
@@ -464,6 +547,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagNumber'] = 't4.bag_number';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['bagItemId'] = 't1.bag_item_id';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -496,7 +580,7 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItem.bag, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awbItem.awb.district, 't5', j =>
+    q.leftJoin(e => e.awbItem.awb.districtTo, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -779,11 +863,6 @@ export class WebDeliveryInService {
                   }
 
                   await DoPod.save(doPod);
-                  await AwbService.updateAwbAttr(
-                    awb.awbItemId,
-                    AWB_STATUS.IN_BRANCH,
-                    doPod.branchIdTo,
-                  );
 
                   // NOTE: queue by Bull
                   DoPodDetailPostMetaQueueService.createJobByScanInAwb(
@@ -950,12 +1029,7 @@ export class WebDeliveryInService {
                   if (bagItemsAwb && bagItemsAwb.length > 0) {
                     for (const itemAwb of bagItemsAwb) {
                       if (itemAwb.awbItemId) {
-                        // NOTE: disable update status to awb item attr
-                        // await AwbService.updateAwbAttr(
-                        //   itemAwb.awbItemId,
-                        //   null,
-                        //   AWB_STATUS.DO_HUB,
-                        // );
+
                         // NOTE: queue by Bull awb history
                         DoPodDetailPostMetaQueueService.createJobByDropoffBag(
                           itemAwb.awbItemId,
@@ -1287,9 +1361,12 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] =
       't2.ref_representative_code';
-    // payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    payload.fieldResolverMap['representativeCode'] =
+      't2.ref_representative_code';
+    payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -1311,13 +1388,7 @@ export class WebDeliveryInService {
 
     q.selectRaw(
       [
-        `CASE LENGTH (CAST(t3.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t2.bag_number,'00',t3.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t2.bag_number,'0',t3.bag_seq)
-          ELSE
-            CONCAT (t2.bag_number,t3.bag_seq) END`,
+        `CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, '0'))`,
         'bagNumberCode',
       ],
       ['t2.bag_number', 'bagNumber'],
@@ -1350,7 +1421,7 @@ export class WebDeliveryInService {
       t2.ref_representative_code,
       t3.weight,
       t5.branch_name
-      `);
+    `);
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

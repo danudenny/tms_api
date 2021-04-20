@@ -13,3 +13,8 @@ export class WebMonitoringCoordinatorPhotoPayload {
   @ApiModelProperty()
   korwilTransactionDetailId: string;
 }
+
+export class MonitoringCoordinatorExcelExecutePayloadVm {
+  @ApiModelProperty()
+  id: string;
+}

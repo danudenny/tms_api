@@ -63,6 +63,34 @@ export class RawQueryService {
     }
   }
 
+  // only db master
+  // tslint:disable-next-line: array-type
+  public static async queryTranWithParams(sqlAndParams: {
+    sql: string,
+    params?: Object,
+  }[]) {
+    const queryRunner = this.manager.connection.createQueryRunner('master');
+    // lets now open a new transaction:
+    await queryRunner.startTransaction();
+
+    try {
+      // execute some operations on this transaction:
+      for (const item of sqlAndParams) {
+        const [q, params] = this.connection.driver.escapeQueryWithParameters(item.sql, item.params, {});
+        await queryRunner.query(q, params);
+      }
+      // commit transaction now:
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      // since we have errors let's rollback changes we made
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+        // you need to release query runner which is manually created:
+        await queryRunner.release();
+    }
+  }
+
   public static async queryCount(sql: string, sqlParamters?: any[], dbMode?: 'master' | 'slave') {
     let queryRunner;
 
