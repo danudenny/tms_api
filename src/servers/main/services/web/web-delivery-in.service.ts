@@ -414,9 +414,9 @@ export class WebDeliveryInService {
       ['t2.bag_seq', 'bagSeq'],
       ['t2.bag_item_id', 'bagItemId'],
       ['t2.created_time', 'createdTime'],
-      ['t3.branch_name', 'branchName'],
+      ['t3.branch_name', 'branchName'], // Gerai Tujuan
       ['t3.branch_id', 'branchId'],
-      ['t5.branch_name', 'branchScanName'],
+      ['t5.branch_name', 'branchScanName'], // Hub Sortir
       ['t5.branch_id', 'branchScanId'],
       ['COUNT (t4.*)', 'totalAwb'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
@@ -431,7 +431,8 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.bagItems.branchLast, 't5', j =>
+    // branch created bag
+    q.leftJoin(e => e.branch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
