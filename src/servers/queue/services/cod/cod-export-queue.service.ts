@@ -8,11 +8,21 @@ export class CodExportMongoQueueService {
     {
       defaultJobOptions: {
         timeout: 0,
-        attempts: 1,
+        attempts: Math.round(
+          (+ConfigService.get('queue.doPodDetailPostMeta.keepRetryInHours') *
+            60 *
+            60 *
+            1000) /
+          +ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
+        ),
         backoff: {
           type: 'fixed',
           delay: ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
         },
+      },
+      limiter: {
+        max: 1000,
+        duration: 5000, // on seconds
       },
     },
   );
@@ -26,10 +36,10 @@ export class CodExportMongoQueueService {
       const uuid = data.uuid;
 
       try {
-        console.log(noncodfee, uuid, 'codtype');
-        if (noncodfee === 'noncodfee') {
+        console.log(noncodfee, uuid, "codtype");
+        if (noncodfee === "noncodfee")
           await V1WebReportCodService.printNonCodSupplierInvoice(filter, uuid);
-        } else {
+        else {
           await V1WebReportCodService.printCodSupplierInvoice(filter, uuid);
         }
       } catch (error) {
@@ -45,16 +55,16 @@ export class CodExportMongoQueueService {
       console.log(`Job with id ${job.id} has been completed`);
     });
 
-    this.queue.on('cleaned', function(job, type) {
+    this.queue.on('cleaned', function (job, type) {
       console.log('Cleaned %s %s jobs', job.length, type);
     });
   }
 
   public static async perform(
-    filter, noncodfee, uuid,
+    filter, noncodfee, uuid
   ) {
     const obj = {
-      filter, noncodfee, uuid,
+      filter, noncodfee, uuid
     };
 
     return CodExportMongoQueueService.queue.add(obj);

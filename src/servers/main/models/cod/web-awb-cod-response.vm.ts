@@ -1,7 +1,4 @@
-import {
-  ApiModelProperty,
-  ApiModelPropertyOptional,
-} from '../../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../../shared/models/base-meta-response.vm';
 
 export class WebCodSuccessResponseVm {
@@ -41,18 +38,6 @@ export class WebItemAwbCodResponseVm {
   branchNameLast: string;
 
   @ApiModelProperty()
-  branchIdFinal: number;
-
-  @ApiModelProperty()
-  branchNameFinal: string;
-
-  @ApiModelProperty()
-  branchIdCopy: number;
-
-  @ApiModelProperty()
-  branchNameCopy: string;
-
-  @ApiModelProperty()
   representativeId: number;
 
   @ApiModelProperty()
@@ -60,12 +45,6 @@ export class WebItemAwbCodResponseVm {
 
   @ApiModelProperty()
   awbStatusLast: string;
-
-  @ApiModelProperty()
-  awbStatusIdFinal: string;
-
-  @ApiModelProperty()
-  awbStatusFinal: string;
 
   @ApiModelProperty()
   userIdDriver: number;
@@ -95,98 +74,6 @@ export class WebItemAwbCodResponseVm {
 export class WebAwbCodListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebItemAwbCodResponseVm] })
   data: WebItemAwbCodResponseVm[];
-}
-
-export class WebItemAwbCodDlvResponseVm {
-  @ApiModelProperty()
-  awbItemId: number;
-
-  @ApiModelProperty()
-  codValue: number;
-
-  @ApiModelProperty()
-  awbNumber: string;
-
-  @ApiModelProperty({ format: 'date-time' })
-  manifestedDate: string;
-
-  @ApiModelProperty({ format: 'date-time' })
-  transactionDate: string;
-
-  @ApiModelProperty()
-  consigneeName: string;
-
-  @ApiModelProperty()
-  packageTypeCode: string;
-
-  @ApiModelProperty()
-  branchIdLast: number;
-
-  @ApiModelProperty()
-  branchNameLast: string;
-
-  @ApiModelProperty()
-  representativeId: number;
-
-  @ApiModelProperty()
-  awbStatusIdLast: string;
-
-  @ApiModelProperty()
-  awbStatusIdFinal: string;
-
-  @ApiModelProperty()
-  awbStatusLast: string;
-
-  @ApiModelProperty()
-  userIdDriver: number;
-
-  @ApiModelProperty()
-  driverName: string;
-
-  @ApiModelProperty()
-  doPodDeliverDetailId: string;
-
-  @ApiModelPropertyOptional()
-  codPaymentMethod: string;
-
-  @ApiModelPropertyOptional()
-  codPaymentService: string;
-
-  @ApiModelPropertyOptional()
-  noReference: string;
-
-  @ApiModelPropertyOptional()
-  transactionStatusId: number;
-
-  @ApiModelPropertyOptional()
-  transactionStatusName: string;
-}
-
-export class WebAwbCodDlvV2ListResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [WebItemAwbCodDlvV2ResponseVm] })
-  data: WebItemAwbCodDlvV2ResponseVm[];
-}
-
-export class WebItemAwbCodDlvV2ResponseVm {
-  @ApiModelProperty()
-  userIdDriver: number;
-
-  @ApiModelProperty()
-  driverName: string;
-
-  @ApiModelProperty()
-  totalResi: number;
-
-  @ApiModelProperty()
-  branchIdFinal: number;
-
-  @ApiModelProperty()
-  branchNameFinal: string;
-}
-
-export class WebAwbCodDlvListResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [WebItemAwbCodDlvResponseVm] })
-  data: WebItemAwbCodDlvResponseVm[];
 }
 
 export class WebItemAwbCodVoidResponseVM {
@@ -358,34 +245,6 @@ export class WebCodTransferBranchResponseVm {
 
   @ApiModelProperty()
   printIdCash: string;
-
-  @ApiModelPropertyOptional()
-  printIdCashless: string;
-
-  @ApiModelProperty()
-  dataError: string[];
-}
-
-export class WebCodTransferBranchCashResponseVm {
-  // @ApiModelProperty()
-  // transactionCode: string;
-
-  // @ApiModelProperty({ format: 'date-time' })
-  // transactionDate: string;
-
-  @ApiModelProperty()
-  printIdCash: string;
-
-  @ApiModelProperty()
-  dataError: string[];
-}
-
-export class WebCodTransferBranchCashlessResponseVm {
-  // @ApiModelProperty()
-  // transactionCode: string;
-
-  // @ApiModelProperty({ format: 'date-time' })
-  // transactionDate: string;
 
   @ApiModelPropertyOptional()
   printIdCashless: string;
@@ -688,6 +547,7 @@ export class WebCodPrintMetaVm {
 }
 
 export class PrintCodTransferBranchVm {
+
   @ApiModelProperty({ type: () => WebCodPrintMetaVm })
   meta: WebCodPrintMetaVm;
 
@@ -705,104 +565,4 @@ export class WebCodVoucherSuccessResponseVm {
 
   @ApiModelProperty()
   dataError: string[];
-}
-
-export class WebCodCountResponseVm {
-  @ApiModelProperty()
-  total: number;
-}
-
-export class WebInsertCodPaymentResponseVm extends WebCodSuccessResponseVm {}
-
-export class WebMonitoringSettlementResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [WebMonitoringSettlementVm] })
-  data: WebMonitoringSettlementVm[];
-}
-
-export class WebMonitoringSettlementVm {
-  @ApiModelProperty()
-  awbNumber: string;
-
-  @ApiModelProperty()
-  codVoucherNo: string;
-
-  @ApiModelProperty({ format: 'date-time' })
-  codVoucherDate: string;
-
-  @ApiModelProperty()
-  codValue: number;
-
-  @ApiModelProperty()
-  statusPayment: string;
-
-  @ApiModelProperty()
-  transactionStatus: string;
-}
-
-export class WebAwbCodSummaryResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [WebItemAwbCodSummaryResponseVm] })
-  data: WebItemAwbCodSummaryResponseVm[];
-}
-
-export class WebItemAwbCodSummaryResponseVm {
-  @ApiModelProperty()
-  perwakilan: string;
-
-  @ApiModelProperty()
-  branchIdFinal: number;
-
-  @ApiModelProperty()
-  branchNameFinal: string;
-
-  @ApiModelProperty()
-  priceCod: number;
-
-  @ApiModelProperty()
-  countAwb: number;
-}
-export class WebCodNominalUpdateResponseVm {
-  @ApiModelProperty()
-  message: string;
-
-  @ApiModelProperty()
-  status: boolean;
-}
-
-export class WebCodNominalCheckResponseVm {
-  @ApiModelProperty()
-  message: string;
-
-  @ApiModelProperty()
-  status: boolean;
-}
-
-export class WebItemUpdateNominalCodResponseVm {
-  @ApiModelProperty()
-  awbNumber: string;
-
-  @ApiModelProperty()
-  requestorId: number;
-
-  @ApiModelProperty()
-  requestorName: string;
-
-  @ApiModelProperty()
-  codValue: number;
-
-  @ApiModelProperty()
-  codValueCurrent: number;
-
-  @ApiModelProperty()
-  attachmentId: number;
-
-  @ApiModelProperty()
-  attachmentUrl: string;
-
-  @ApiModelProperty({ format: 'date-time' })
-  updateDate: string;
-}
-
-export class WebUpdateNominalCodListResponseVm extends BaseMetaResponseVm {
-  @ApiModelProperty({ type: () => [WebItemUpdateNominalCodResponseVm] })
-  data: WebItemUpdateNominalCodResponseVm[];
 }

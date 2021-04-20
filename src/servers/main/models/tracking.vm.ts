@@ -203,9 +203,6 @@ export class TrackingAwbResponseVm {
   isDoReturnPartner: boolean;
 
   @ApiModelProperty()
-  isHighValue: boolean;
-
-  @ApiModelProperty()
   partnerLogisticSubstitute: string;
 
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })

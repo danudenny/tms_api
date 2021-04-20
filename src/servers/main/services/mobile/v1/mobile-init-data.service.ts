@@ -10,7 +10,6 @@ import { MobileCheckInResponseVm } from '../../../models/mobile-check-in-respons
 import {
     MobileInitDataDeliveryResponseVm, MobileInitDataResponseVm,
 } from '../../../models/mobile-init-data-response.vm';
-import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 
 export class V1MobileInitDataService {
 
@@ -123,8 +122,8 @@ export class V1MobileInitDataService {
       ['reason_code', 'reasonCode'],
       ['reason_category', 'reasonCategory'],
       ['reason_type', 'reasonType'],
-      ['is_deleted', 'isDeleted'],
     );
+    q.where(e => e.isDeleted, w => w.isFalse());
     q.andWhereIsolated(qw => {
       qw.where(p => p.reasonCategory, w => w.equals('pod'));
       qw.orWhere(p => p.reasonCategory, w => w.equals('pod_cod'));
@@ -146,17 +145,15 @@ export class V1MobileInitDataService {
   }
 
   private static async getAwbStatus(fromDate?: string) {
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const repository = new OrionRepositoryService(AwbStatus);
     const q = repository.findAllRaw();
     q.selectRaw(
       ['awb_status_id', 'awbStatusId'],
       ['awb_status_name', 'awbStatusCode'],
       ['awb_status_title', 'awbStatusName'],
-      ['is_deleted', 'isDeleted'],
     );
+    q.where(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.isProblem, w => w.isTrue());
-    q.andWhere(e => e.isMobile, w => w.isTrue());
     if (fromDate) {
       q.andWhereIsolated(qw => {
         qw.where(
@@ -170,28 +167,7 @@ export class V1MobileInitDataService {
       });
     }
 
-    const result = await q.exec();
-
-    // NOTE: add status RTC if role Ops - Sigesit Transit
-    if (Number(permissonPayload.roleId) == 50) {
-      const statusRTC = await repository
-        .findAllRaw()
-        .selectRaw(
-          ['awb_status_id', 'awbStatusId'],
-          ['awb_status_name', 'awbStatusCode'],
-          ['awb_status_title', 'awbStatusName'],
-          ['is_deleted', 'isDeleted'],
-        )
-        .andWhere(e => e.awbStatusId, w => w.equals(AWB_STATUS.RTC))
-        .take(1)
-        .exec();
-
-      if (statusRTC.length) {
-        result.push(statusRTC[0]);
-      }
-    }
-
-    return result;
+    return await q.exec();
   }
 
   private static async getDelivery(fromDate?: string) {

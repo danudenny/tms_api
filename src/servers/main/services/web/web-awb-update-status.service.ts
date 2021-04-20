@@ -144,6 +144,13 @@ export class WebAwbUpdateStatusService {
         statusCode == 'IN' &&
         awb.branchIdLast == permissonPayload.branchId
       ) {
+        // update awb item attr
+        await AwbService.updateAwbAttr(
+          awb.awbItemId,
+          awbStatusId,
+          null,
+        );
+
         // NOTE: queue by Bull
         DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
           awb.awbItemId,
@@ -196,6 +203,11 @@ export class WebAwbUpdateStatusService {
         if (bagItemsAwb && bagItemsAwb.length) {
           for (const itemAwb of bagItemsAwb) {
             if (itemAwb.awbItemId) {
+              await AwbService.updateAwbAttr(
+                itemAwb.awbItemId,
+                awbStatusId,
+                null,
+              );
               // NOTE: queue by Bull
               DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
                 itemAwb.awbItemId,

@@ -1,10 +1,12 @@
+import moment = require('moment');
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { AwbStatusGroupItem } from '../../../../shared/orm-entity/awb-status-group-item';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
+import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
 import { createQueryBuilder } from 'typeorm';
 import { AwbDeliverManualVm } from '../../models/web-awb-deliver.vm';
-import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
-import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 
 export class AwbService {
 
@@ -155,7 +157,7 @@ export class AwbService {
   }
 
   // TODO: deprecated
-  public static async getDataDeliver(awbNumber: string): Promise<AwbDeliverManualVm> {
+  public static async getDataDeliver(awbNumber: string, userIdDriver: number): Promise<AwbDeliverManualVm> {
     const qb = createQueryBuilder();
     qb.addSelect('dpdd.awb_item_id', 'awbItemId');
     qb.addSelect('dpdd.awb_number', 'awbNumber');
@@ -178,11 +180,6 @@ export class AwbService {
   }
 
   public static async awbStatusGroup(awbStatusId: number): Promise<string> {
-    // awbStatusId validation if the param is not number or null
-    if (isNaN(awbStatusId) || !awbStatusId) {
-      awbStatusId = 0;
-    }
-
     const awbRepository = new OrionRepositoryService(AwbStatusGroupItem);
     const q = awbRepository.findOne();
     // Manage relation (default inner join)
@@ -263,20 +260,6 @@ export class AwbService {
     // }
 
     return true;
-  }
-
-  public static async isCancelDelivery(
-    awbItemId: number,
-  ): Promise<boolean> {
-    const awbCancel = await AwbHistory.findOne({
-      select: ['awbHistoryId'],
-      where: {
-        awbItemId,
-        awbStatusId: AWB_STATUS.CANCEL_DLV,
-        isDeleted: false,
-      },
-    });
-    return awbCancel ? true : false;
   }
 
 }

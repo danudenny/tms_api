@@ -1,5 +1,4 @@
 // #region import
-import express = require('express');
 import {
   Controller,
   Post,
@@ -8,9 +7,6 @@ import {
   HttpStatus,
   UseGuards,
   Param,
-  Get,
-  Query,
-  Response,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -54,7 +50,6 @@ import {
   WebScanOutDeliverGroupListResponseVm,
   WebScanOutTransitUpdateAwbPartnerResponseVm,
   WebScanOutDeliverPartnerListResponseVm,
-  WebScanOutReportVm,
 } from '../../models/web-scan-out-response.vm';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -72,9 +67,6 @@ import {
 } from '../../models/bag-order-response.vm';
 import { LastMileDeliveryOutService } from '../../services/web/last-mile/last-mile-delivery-out.service';
 import { LastMileDeliveryService } from '../../services/web/last-mile/last-mile-delivery.service';
-import {ResponseSerializerOptions} from '../../../../shared/decorators/response-serializer-options.decorator';
-import {MonitoringPayloadVm} from '../../../smd/models/smd-monitoring-payload.vm';
-import {WebDeliveryOutReportService} from '../../services/web/web-delivery-out-report.service';
 // #endregion
 
 @ApiUseTags('Web Delivery Out')
@@ -423,50 +415,5 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: PhotoResponseVm })
   public async photoDetail(@Body() payload: PhotoDetailVm) {
     return this.webDeliveryOutService.photoDetail(payload);
-  }
-
-  @Post('excel/store')
-  @ApiBearerAuth()
-  @ResponseSerializerOptions({ disable: true })
-  public async storePayloadExcel(@Body() payloadBody: BaseMetaPayloadVm) {
-    return WebDeliveryOutReportService.storeExcelPayload(payloadBody);
-  }
-
-  @Get('branch/excel/export')
-  public async exportExcelBranch(
-    @Query() queryParams: WebScanOutReportVm,
-    @Response() serverResponse: express.Response,
-  ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams);
-  }
-
-  @Get('hubTransit/excel/export')
-  public async exportExcelCombinePackage(
-    @Query() queryParams: WebScanOutReportVm,
-    @Response() serverResponse: express.Response,
-  ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams, false, true);
-  }
-  @Get('hubSortir/excel/export')
-  public async exportExcelBagSortir(
-    @Query() queryParams: WebScanOutReportVm,
-    @Response() serverResponse: express.Response,
-  ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams, true);
-  }
-  @Get('transit/excel/export')
-  public async exportExcelDeliveryTransit(
-    @Query() queryParams: WebScanOutReportVm,
-    @Response() serverResponse: express.Response,
-  ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryTransitCSV(serverResponse, queryParams);
-  }
-
-  @Get('deliver/excel/export')
-  public async exportExcelDeliveryDeliver(
-    @Query() queryParams: WebScanOutReportVm,
-    @Response() serverResponse: express.Response,
-  ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryDeliverCSV(serverResponse, queryParams);
   }
 }

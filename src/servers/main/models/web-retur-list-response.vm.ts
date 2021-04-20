@@ -40,21 +40,6 @@ export class ItemReturResponseVm {
 
   @ApiModelProperty()
   awbStatus: string;
-
-  @ApiModelProperty()
-  branchIdManifest: string;
-
-  @ApiModelProperty()
-  branchManifest: string;
-
-  @ApiModelProperty()
-  partnerId: number;
-
-  @ApiModelProperty()
-  partnerName: string;
-
-  @ApiModelProperty()
-  userIdDriver: number;
 }
 
 export class WebReturListResponseVm extends BaseMetaResponseVm {

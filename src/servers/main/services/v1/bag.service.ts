@@ -68,7 +68,6 @@ export class BagService {
         bagId: true,
         bagNumber: true,
       },
-      weight: true,
     });
     q.where(e => e.bagItemId, w => w.equals(bagItemId));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -113,6 +112,11 @@ export class BagService {
             dropoffDetail.awbItemId = itemAwb.awbItemId;
             dropoffDetail.awbNumber = itemAwb.awbNumber;
             await DropoffHubDetail.save(dropoffDetail);
+
+            // await AwbService.updateAwbAttr(
+            //   itemAwb.awbItemId,
+            //   AWB_STATUS.DO_HUB,
+            // );
 
             // TODO: check awb status for auto check out ??
             // NOTE: queue by Bull
@@ -197,6 +201,12 @@ export class BagService {
           // last awb status
           if ((doPodType == 3020) || (doPodType == 3010)) {
             // HUB
+            await AwbService.updateAwbAttr(
+              itemAwb.awbItemId,
+              AWB_STATUS.OUT_HUB,
+              branchIdNext,
+            );
+
             // TODO: if isTransit auto IN
             if (doPodType == 3020) {
               // queue bull IN HUB
@@ -224,6 +234,12 @@ export class BagService {
             );
           } else {
             // BRANCH
+            await AwbService.updateAwbAttr(
+              itemAwb.awbItemId,
+              AWB_STATUS.OUT_BRANCH,
+              branchIdNext,
+            );
+
             // queue bull
             DoPodDetailPostMetaQueueService.createJobByScanOutBag(
               itemAwb.awbItemId,
@@ -280,6 +296,11 @@ export class BagService {
                 ? AWB_STATUS.IN_BRANCH
                 : AWB_STATUS.IN_HUB;
 
+            await AwbService.updateAwbAttr(
+              itemAwb.awbItemId,
+              awbStatus,
+              null,
+            );
             // queue bull
             DoPodDetailPostMetaQueueService.createJobByAwbUpdateStatus(
               itemAwb.awbItemId,
@@ -294,44 +315,5 @@ export class BagService {
       Logger.log('### Data Bag Item Awb :: Not Found!!');
     }
     return true;
-  }
-
-  static async findOneBySealNumber(sealNumber: string): Promise<BagItem> {
-    const regexNumber = /^[0-9]+$/;
-    if (sealNumber.length === 7 && regexNumber.test(sealNumber)) {
-      const bagRepository = new OrionRepositoryService(BagItem);
-      const q = bagRepository.findAll();
-      // Manage relation (default inner join)
-      q.innerJoin(e => e.bag, null, join => join.andWhere(e => e.isDeleted, w => w.isFalse()));
-
-      q.select({
-        bagItemId: true,
-        bagItemStatusIdLast: true,
-        branchIdLast: true,
-        branchIdNext: true,
-        bagSeq: true,
-        bagId: true,
-        bag: {
-          representativeIdTo: true,
-          refRepresentativeCode: true,
-          bagId: true,
-          bagNumber: true,
-          sealNumber: true,
-          createdTime: true,
-        },
-        weight: true,
-      });
-      q.where(e => e.bag.sealNumber, w => w.equals(sealNumber));
-      q.andWhere(e => e.isDeleted, w => w.isFalse());
-      q.orderByRaw('bag_item_bag.created_time' , 'ASC');
-      q.take(1);
-      const bagDatas = await q.exec();
-      if (bagDatas && bagDatas.length > 0) {
-        return bagDatas[0];
-      }
-    } else {
-      return null;
-    }
-
   }
 }

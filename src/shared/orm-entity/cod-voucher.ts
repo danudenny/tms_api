@@ -64,11 +64,4 @@ export class CodVoucher extends BaseEntity {
 
   @OneToMany(() => CodVoucherDetail, x => x.voucherBranch)
   details: CodVoucherDetail[];
-
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-    name: 'is_deleted',
-  })
-  isDeleted: boolean;
 }

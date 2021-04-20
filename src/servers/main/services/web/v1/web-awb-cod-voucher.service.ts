@@ -7,10 +7,11 @@ import { CodTransaction } from '../../../../../shared/orm-entity/cod-transaction
 import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-transaction-detail';
 import { CodVoucher } from '../../../../../shared/orm-entity/cod-voucher';
 import { CodVoucherDetail } from '../../../../../shared/orm-entity/cod-voucher-detail';
-import { WebCodVoucherPayloadVm } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-  WebCodVoucherSuccessResponseVm,
-  WebMonitoringSettlementResponseVm,
+    WebCodVoucherPayloadVm,
+} from '../../../models/cod/web-awb-cod-payload.vm';
+import {
+    WebCodVoucherSuccessResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 
 import moment = require('moment');
@@ -18,12 +19,10 @@ import { BadRequestException } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { error } from 'winston';
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
-import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
-import { MetaService } from '../../../../../shared/services/meta.service';
-import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 
 // #endregion
 export class V1WebAwbCodVoucherService {
+
   static async getAllVouchers(): Promise<any> {
     const data = [];
     const dataVouchers = await CodVoucher.find();
@@ -71,9 +70,7 @@ export class V1WebAwbCodVoucherService {
     if (!amountTransfer) {
       responseCode = '01';
       responseMessage = 'FAILED';
-      dataError.push(
-        'amountTransfer is required and have to be positive non-zero number',
-      );
+      dataError.push('amountTransfer is required and have to be positive non-zero number');
     }
 
     if (!codVoucherNo) {
@@ -100,15 +97,12 @@ export class V1WebAwbCodVoucherService {
       dataError.push('awbNumbers is required and not empty array.');
     }
 
-    const isDataVerified = await this.verifyData(
-      awbNumbers,
-      (errorMessage: string) => {
-        responseCode = '01';
-        responseMessage = 'FAILED';
-        dataError.push(errorMessage);
-        console.log(errorMessage);
-      },
-    );
+    const isDataVerified = await this.verifyData(awbNumbers, (errorMessage: string) => {
+      responseCode = '01';
+      responseMessage = 'FAILED';
+      dataError.push(errorMessage);
+      console.log(errorMessage);
+    });
 
     if (isDataVerified) {
       const voucher = await CodVoucher.findOne({
@@ -142,11 +136,7 @@ export class V1WebAwbCodVoucherService {
           console.log(errorMessage);
         }
       } else {
-        responseCode = '02';
-        responseMessage = 'DUPLICATED';
-        const errorMessage = `Cod Voucher No ${codVoucherNo} is duplicated.`;
-        dataError.push(errorMessage);
-        console.log(errorMessage);
+        codVoucherId = voucher.codVoucherId;
       }
 
       if (codVoucherId) {
@@ -158,9 +148,7 @@ export class V1WebAwbCodVoucherService {
             created_time: timeNow,
             updated_time: timeNow,
           };
-          const dataVoucherDetail = await this.getDataVoucherDetail(
-            paramsVoucherDetail,
-          );
+          const dataVoucherDetail = await this.getDataVoucherDetail(paramsVoucherDetail);
           await CodVoucherDetail.insert(dataVoucherDetail);
         }
       }
@@ -173,10 +161,7 @@ export class V1WebAwbCodVoucherService {
     return result;
   }
 
-  private static async verifyData(
-    awbNumbers: any[],
-    cbError: any,
-  ): Promise<boolean> {
+  private static async verifyData(awbNumbers: any[], cbError: any): Promise<boolean> {
     const errors = [];
     for (const awbNumber of awbNumbers) {
       const awbValid = await this.isAwbNumberValid(awbNumber);
@@ -205,9 +190,7 @@ export class V1WebAwbCodVoucherService {
     }
   }
 
-  private static async isAwbNumberDuplicated(
-    awbNumber: number,
-  ): Promise<boolean> {
+  private static async isAwbNumberDuplicated(awbNumber: number): Promise<boolean> {
     // check awb is not duplicated
     const awbDuplicated = await CodVoucherDetail.findOne({
       select: ['awbNumber'],
@@ -247,7 +230,7 @@ export class V1WebAwbCodVoucherService {
   }
 
   public static async getDataVoucher(params: {}): Promise<CodVoucher> {
-    const voucher = CodVoucher.create({
+    const voucher = await CodVoucher.create({
       codVoucherNo: params['cod_voucher_no'],
       codVoucherDate: params['cod_voucher_date'],
       codVoucherService: params['cod_voucher_service'],
@@ -259,10 +242,8 @@ export class V1WebAwbCodVoucherService {
     return voucher;
   }
 
-  public static async getDataVoucherDetail(params: {}): Promise<
-    CodVoucherDetail
-  > {
-    const voucherDetail = CodVoucherDetail.create({
+  public static async getDataVoucherDetail(params: {}): Promise<CodVoucherDetail> {
+    const voucherDetail = await CodVoucherDetail.create({
       codVoucherId: params['cod_voucher_id'],
       awbNumber: params['awb_number'],
       createdTime: params['created_time'],
@@ -270,53 +251,5 @@ export class V1WebAwbCodVoucherService {
     });
 
     return voucherDetail;
-  }
-
-  static async monitoringSettlement(
-    payload: BaseMetaPayloadVm,
-  ): Promise<WebMonitoringSettlementResponseVm> {
-    // mapping field
-    payload.fieldResolverMap['awbNumber'] = 'cvd.awb_number';
-    payload.fieldResolverMap['codVoucherDate'] = 'cv.cod_voucher_date';
-    payload.fieldResolverMap['statusPayment'] = 'cv.is_settlement';
-    payload.fieldResolverMap['transactionStatus'] = 'ts.status_title';
-
-    const repo = new OrionRepositoryService(CodVoucherDetail, 'cvd');
-    const q = repo.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(q, true);
-
-    q.selectRaw(
-      ['cvd.awb_number', 'awbNumber'],
-      ['cv.cod_voucher_no', 'codVoucherNo'],
-      ['cv.cod_voucher_date', 'codVoucherDate'],
-      ['cv.is_settlement', 'statusPayment'],
-      ['ctd.cod_value', 'codValue'],
-      ['COALESCE(ts.status_title, \'BELUM DI PROSES\')', 'transactionStatus'],
-    );
-
-    q.innerJoin(e => e.voucherBranch, 'cv', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.codTransactionDetail, 'ctd', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.codTransactionDetail.transactionStatus, 'ts', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
-
-    const result = new WebMonitoringSettlementResponseVm();
-
-    result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
-
-    return result;
   }
 }

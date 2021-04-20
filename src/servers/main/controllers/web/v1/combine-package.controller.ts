@@ -6,7 +6,6 @@ import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
 import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
 import { V1PackageService } from '../../../services/combine-package/v1/package.services';
 import { UnloadAwbPayloadVm, UnloadAwbResponseVm } from '../../../models/package-payload.vm';
-import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('Gabungan Sortir')
 @Controller('web/v1/combine')
@@ -18,7 +17,6 @@ export class V1CombinePackageController {
   @HttpCode(200)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PackageAwbResponseVm })
-  @Transactional()
   public async packageAwb(@Body() payload: PackagePayloadVm) {
     return V1PackageService.awbPackage(payload);
   }

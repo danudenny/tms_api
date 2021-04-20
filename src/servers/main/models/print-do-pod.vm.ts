@@ -9,12 +9,6 @@ export class PrintDoPodDataDoPodDetailAwbItemAwbVm {
 
   @ApiModelProperty()
   totalWeight: string;
-
-  @ApiModelPropertyOptional()
-  totalCodValue: number;
-
-  @ApiModelPropertyOptional()
-  isCod: boolean;
 }
 
 export class PrintDoPodDataDoPodDetailAwbItemVm {

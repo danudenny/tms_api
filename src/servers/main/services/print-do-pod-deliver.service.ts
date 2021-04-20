@@ -2,6 +2,8 @@ import { PrintDoPodDeliverPayloadQueryVm } from '../models/print-do-pod-deliver-
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { PrintDoPodDeliverDataVm } from '../models/print-do-pod-deliver.vm';
+import { map, isEmpty } from 'lodash';
+import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { PrinterService } from '../../../shared/services/printer.service';
 import express = require('express');
 import moment = require('moment');
@@ -79,7 +81,41 @@ export class PrintDoPodDeliverService {
       printCopy: 1,
     },
   ) {
-    // #region get user login and branch login
+    let totalAllCod = null;
+    let totalItems = null;
+
+    // TODO: need refactoring ??
+    // sum totalCodValue from object
+    if (data && data.doPodDeliverDetails) {
+      const awbIds = [];
+      data.doPodDeliverDetails.map(function(doPod) {
+        if (doPod && doPod.awbItem && doPod.awbItem.awb && doPod.awbItem.awb.awbId) {
+          awbIds.push(doPod.awbItem.awb.awbId);
+        }
+      });
+      if (isEmpty(awbIds)) {
+        RequestErrorService.throwObj({
+          message: 'Surat jalan tidak ditemukan',
+        });
+      }
+      const result = await RawQueryService.query(
+        `SELECT COALESCE(SUM(total_cod_value), 0) as total FROM awb WHERE awb_id IN (${awbIds.join(
+          ',',
+        )})`,
+      );
+      if (!result) {
+        RequestErrorService.throwObj({
+          message: 'Surat jalan tidak ditemukan',
+        });
+      }
+      totalAllCod = result[0].total;
+      totalItems = data.doPodDeliverDetails.length;
+
+      if (totalAllCod < 1) {
+        totalAllCod = 0;
+      }
+    }
+
     const currentUser = await RepositoryService.user
       .loadById(metaQuery.userId)
       .select({
@@ -107,25 +143,8 @@ export class PrintDoPodDeliverService {
         message: 'Gerai asal tidak ditemukan',
       });
     }
-    // #endregion
 
     const currentDate = moment();
-    let totalAllCod = 0;
-
-    // sum totalCodValue from object
-    // loop data and sum data totalCodValue
-    if (data && data.doPodDeliverDetails) {
-      data.doPodDeliverDetails.map(function(doPod) {
-        if (
-          doPod &&
-          doPod.awbItem &&
-          doPod.awbItem.awb &&
-          doPod.awbItem.awb.totalCodValue
-        ) {
-          totalAllCod += Number(doPod.awbItem.awb.totalCodValue);
-        }
-      });
-    }
 
     return this.printDoPodDeliver(
       res,
@@ -135,7 +154,7 @@ export class PrintDoPodDeliverService {
         currentBranchName: currentBranch.branchName,
         date: currentDate.format('DD/MM/YY'),
         time: currentDate.format('HH:mm'),
-        totalItems: data.doPodDeliverDetails.length,
+        totalItems,
         totalCod: totalAllCod,
       },
       templateConfig,

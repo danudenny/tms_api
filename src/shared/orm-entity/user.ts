@@ -129,6 +129,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => UserRole, e => e.user, {
     cascade: ['insert'],
+
   })
   userRoles: UserRole[];
 
@@ -141,13 +142,12 @@ export class User extends BaseEntity {
   })
   @JoinTable({
     name: 'user_role',
-    joinColumns: [{ name: 'user_id' }],
+    joinColumns: [{ name: 'user_id'}],
     inverseJoinColumns: [{ name: 'role_id' }],
   })
   roles: Role[];
 
-  // disable eager: true
-  @OneToOne(() => Employee, employee => employee, { nullable: true })
+  @OneToOne(() => Employee, employee => employee, { eager: true , nullable: true})
   @JoinColumn({ name: 'employee_id' })
   employee: Employee;
 
@@ -159,10 +159,7 @@ export class User extends BaseEntity {
   // additional method
   validatePassword(passwordToValidate: string) {
     const crypto = require('crypto');
-    const hashPass = crypto
-      .createHash('md5')
-      .update(passwordToValidate)
-      .digest('hex');
+    const hashPass = crypto.createHash('md5').update(passwordToValidate).digest('hex');
     // compare md5 hash password
     return hashPass === this.password;
   }

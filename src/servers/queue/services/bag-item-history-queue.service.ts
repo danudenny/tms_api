@@ -2,7 +2,6 @@ import moment = require('moment');
 import { ConfigService } from '../../../shared/services/config.service';
 import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { QueueBullBoard } from './queue-bull-board';
-import { BagItem } from '../../../shared/orm-entity/bag-item';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -44,12 +43,6 @@ export class BagItemHistoryQueueService {
       bagItemHistory.userIdCreated = data.userId;
       bagItemHistory.userIdUpdated = data.userId;
       await BagItemHistory.insert(bagItemHistory);
-
-      await BagItem.update({ bagItemId: data.bagItemId }, {
-        bagItemStatusIdLast: data.bagItemStatusId,
-        bagItemHistoryId: Number(bagItemHistory.bagItemHistoryId),
-        branchIdLast: data.branchId,
-      });
       return true;
     });
 

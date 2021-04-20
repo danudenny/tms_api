@@ -94,7 +94,7 @@ export class AwbSendPartner extends TmsBaseEntity {
   isDeleted: boolean;
   
   @ManyToOne(() => Partner)
-  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partnerId' })
+  @JoinColumn({ name: 'partner_id', referencedColumnName: 'partner_id' })
   partner: Partner;
 
 }

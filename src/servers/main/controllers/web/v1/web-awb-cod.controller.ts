@@ -1,73 +1,36 @@
-import { V1WebReportCodStreamService } from './../../../services/web/v1/web-report-stream-cod.service';
-import { Res } from '@nestjs/common';
 // #region import
 import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  UploadedFile,
-  UseGuards,
+  Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UploadedFile, UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
 import {
-  ApiBearerAuth,
-  ApiOkResponse,
-  ApiUseTags,
+  ResponseSerializerOptions,
+} from '../../../../../shared/decorators/response-serializer-options.decorator';
+import {
+  ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
+import { BaseMetaPayloadVm, ReportBaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
-  BaseMetaPayloadVm,
-  ReportBaseMetaPayloadVm,
-} from '../../../../../shared/models/base-meta-payload.vm';
-import {
-  WebCodBankStatementCancelPayloadVm,
-  WebCodBankStatementValidatePayloadVm,
-  WebCodInvoiceAddAwbPayloadVm,
-  WebCodInvoiceCreatePayloadVm,
-  WebCodInvoiceDraftPayloadVm,
-  WebCodInvoiceRemoveAwbPayloadVm,
-  WebCodTransferHeadOfficePayloadVm,
-  WebCodTransferPayloadVm,
-  WebCodTransactionUpdatePayloadVm,
-  WebInsertCodPaymentPayloadVm,
-  WebCodTransactionRejectPayloadVm,
+  WebCodBankStatementCancelPayloadVm, WebCodBankStatementValidatePayloadVm,
+  WebCodInvoiceAddAwbPayloadVm, WebCodInvoiceCreatePayloadVm, WebCodInvoiceDraftPayloadVm,
+  WebCodInvoiceRemoveAwbPayloadVm, WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodTransactionUpdatePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-  WebAwbCodBankStatementResponseVm,
-  WebAwbCodDetailPartnerResponseVm,
-  WebAwbCodInvoiceResponseVm,
-  WebAwbCodListResponseVm,
-  WebAwbCodDlvListResponseVm,
-  WebAwbCodListTransactionResponseVm,
-  WebAwbCodSupplierInvoiceResponseVm,
-  WebCodBankStatementResponseVm,
-  WebCodInvoiceAddResponseVm,
-  WebCodInvoiceDraftResponseVm,
-  WebCodInvoiceRemoveResponseVm,
-  WebCodListInvoiceResponseVm,
-  WebCodSupplierInvoicePaidResponseVm,
-  WebCodTransactionDetailResponseVm,
-  WebCodTransferBranchResponseVm,
-  WebCodTransferHeadOfficeResponseVm,
-  WebCodInvoiceCreateResponseVm,
-  WebCodTransactionUpdateResponseVm,
-  WebAwbCodVoidListResponseVm,
-  WebCodCountResponseVm,
-  WebAwbCodDlvV2ListResponseVm,
-  WebInsertCodPaymentResponseVm,
-  WebAwbCodSummaryResponseVm,
+  WebAwbCodBankStatementResponseVm, WebAwbCodDetailPartnerResponseVm, WebAwbCodInvoiceResponseVm,
+  WebAwbCodListResponseVm, WebAwbCodListTransactionResponseVm, WebAwbCodSupplierInvoiceResponseVm,
+  WebCodBankStatementResponseVm, WebCodInvoiceAddResponseVm, WebCodInvoiceDraftResponseVm,
+  WebCodInvoiceRemoveResponseVm, WebCodListInvoiceResponseVm,
+  WebCodSupplierInvoicePaidResponseVm, WebCodTransactionDetailResponseVm,
+  WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm, WebCodInvoiceCreateResponseVm, WebCodTransactionUpdateResponseVm, WebAwbCodVoidListResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodService } from '../../../services/web/v1/web-awb-cod.service';
-import { V1WebCodBankStatementService } from '../../../services/web/v1/web-cod-bank-statement.service';
-import { V1WebCodSupplierInvoiceService } from '../../../services/web/v1/web-cod-supplier-invoice.service';
+import {
+  V1WebCodSupplierInvoiceService,
+} from '../../../services/web/v1/web-cod-supplier-invoice.service';
 import { V1WebReportCodService } from '../../../services/web/v1/web-report-cod.service';
 import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sql-cod.service';
 
@@ -77,52 +40,12 @@ import { V1WebReportSqlCodService } from '../../../services/web/v1/web-report-sq
 @Controller('web/v1/cod')
 @ApiBearerAuth()
 export class V1WebAwbCodController {
-  @Post('awb/summary')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebAwbCodSummaryResponseVm })
-  public async awbSummary(@Body() payload: BaseMetaPayloadVm) {
-    return V1WebAwbCodService.awbSummary(payload);
-  }
-
   @Post('awb')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebAwbCodListResponseVm })
   public async awb(@Body() payload: BaseMetaPayloadVm) {
     return V1WebAwbCodService.awbCod(payload);
-  }
-
-  @Post('countAwb')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebCodCountResponseVm })
-  public async countAwb(@Body() payload: BaseMetaPayloadVm) {
-    return V1WebAwbCodService.countAwbCod(payload);
-  }
-
-  @Post('awbDlvV2')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebAwbCodDlvV2ListResponseVm })
-  public async awbDlvV2(@Body() payload: BaseMetaPayloadVm) {
-    return V1WebAwbCodService.awbCodDlvV2(payload);
-  }
-
-  @Post('awbDlv')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebAwbCodDlvListResponseVm })
-  public async awbDlv(@Body() payload: BaseMetaPayloadVm) {
-    return V1WebAwbCodService.awbCodDlv(payload);
-  }
-
-  @Post('countAwbDlv')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebCodCountResponseVm })
-  public async countAwbDlv(@Body() payload: BaseMetaPayloadVm) {
-    return V1WebAwbCodService.countAwbCodDlv(payload);
   }
 
   @Post('awb/void')
@@ -138,22 +61,12 @@ export class V1WebAwbCodController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebCodTransferBranchResponseVm })
   public async transferBranch(@Body() payload: WebCodTransferPayloadVm) {
-    return V1WebAwbCodService.transferBranchV2(payload);
-  }
-
-  @Get('reprintTransaction/:transactionId')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ApiOkResponse({ type: WebCodTransferBranchResponseVm })
-  public async reprintTransaction(
-    @Param('transactionId') transactionId: string,
-  ) {
-    return V1WebAwbCodService.reprintTransaction(transactionId);
+    return V1WebAwbCodService.transferBranch(payload);
   }
 
   @Post('transactionBranch')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebAwbCodListTransactionResponseVm })
   public async transactionBranch(@Body() payload: BaseMetaPayloadVm) {
     // get data transaction branch
@@ -192,7 +105,7 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodTransferHeadOfficePayloadVm,
     @UploadedFile() file,
   ) {
-    return V1WebCodBankStatementService.transferHeadOffice(payload, file);
+    return V1WebAwbCodService.transferHeadOffice(payload, file);
   }
 
   @Post('bankStatement')
@@ -201,7 +114,7 @@ export class V1WebAwbCodController {
   @ApiOkResponse({ type: WebAwbCodBankStatementResponseVm })
   public async bankStatement(@Body() payload: BaseMetaPayloadVm) {
     // get data bankStatement
-    return V1WebCodBankStatementService.bankStatement(payload);
+    return V1WebAwbCodService.bankStatement(payload);
   }
 
   @Get('bankStatement/transactionBranch/:bankStatementId')
@@ -212,7 +125,7 @@ export class V1WebAwbCodController {
     @Param('bankStatementId') bankStatementId: string,
   ) {
     // get data transaction branch
-    return V1WebCodBankStatementService.transactionBranchByBankStatementId(
+    return V1WebAwbCodService.transactionBranchByBankStatementId(
       bankStatementId,
     );
   }
@@ -225,7 +138,7 @@ export class V1WebAwbCodController {
     @Param('bankStatementId') bankStatementId: string,
   ) {
     // get data transaction branch
-    return V1WebCodBankStatementService.transactionBranchDetailByBankStatementId(
+    return V1WebAwbCodService.transactionBranchDetailByBankStatementId(
       bankStatementId,
     );
   }
@@ -238,7 +151,7 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodBankStatementValidatePayloadVm,
   ) {
     // validate bankStatement
-    return V1WebCodBankStatementService.bankStatementValidate(payload);
+    return V1WebAwbCodService.bankStatementValidate(payload);
   }
 
   @Post('bankStatement/cancel')
@@ -249,7 +162,7 @@ export class V1WebAwbCodController {
     @Body() payload: WebCodBankStatementCancelPayloadVm,
   ) {
     // cancel bankStatement
-    return V1WebCodBankStatementService.bankStatementCancel(payload);
+    return V1WebAwbCodService.bankStatementCancel(payload);
   }
 
   // #region SUPPLIER INVOICE
@@ -377,9 +290,7 @@ export class V1WebAwbCodController {
   public async supplierInvoiceNonCodFeePrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    return await V1WebReportCodService.printNonCodSupplierInvoice(
-      payload.filters,
-    );
+    return await V1WebReportCodService.printNonCodSupplierInvoice(payload.filters);
   }
 
   @Post('supplierInvoice/bull/print')
@@ -388,10 +299,7 @@ export class V1WebAwbCodController {
   public async supplierInvoiceBullPrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    return await V1WebReportCodService.addQueueBullPrint(
-      payload.filters,
-      'codfee',
-    );
+    return await V1WebReportCodService.addQueueBullPrint(payload.filters, 'codfee');
   }
 
   @Post('supplierInvoice/noncodfee/bull/print')
@@ -400,67 +308,16 @@ export class V1WebAwbCodController {
   public async supplierInvoiceBullNonCodFeePrint(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-    return await V1WebReportCodService.addQueueBullPrint(
-      payload.filters,
-      'noncodfee',
-    );
-  }
-
-  @Post('supplierInvoice/sql/bull/print')
-  @HttpCode(HttpStatus.OK)
-  @ResponseSerializerOptions({ disable: true })
-  public async supplierInvoiceBullSqlCodFeePrint(
-    @Body() payload: ReportBaseMetaPayloadVm,
-  ) {
-    return await V1WebReportSqlCodService.addQueueBullPrint(
-      payload.filters,
-      'codfee',
-    );
-  }
-
-  @Post('supplierInvoice/noncodfee/sql/bull/print')
-  @HttpCode(HttpStatus.OK)
-  @ResponseSerializerOptions({ disable: true })
-  public async supplierInvoiceBullSqlNonCodFeePrint(
-    @Body() payload: ReportBaseMetaPayloadVm,
-  ) {
-    return await V1WebReportSqlCodService.addQueueBullPrint(
-      payload.filters,
-      'noncodfee',
-    );
+    return await V1WebReportCodService.addQueueBullPrint(payload.filters, 'noncodfee');
   }
 
   @Get('supplierInvoice/checkReport/:reportKey')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  public async supplierinvoiceCheckUUID(@Param('reportKey') reportKey: string) {
+  public async supplierinvoiceCheckUUID(
+    @Param('reportKey') reportKey: string,
+  ) {
     return await V1WebReportCodService.getuuidString(reportKey);
-  }
-
-  @Post('supplierInvoice/noncodfee/stream/print')
-  @HttpCode(HttpStatus.OK)
-  @ResponseSerializerOptions({ disable: true })
-  public async supplierInvoiceStreamNonCodFeePrint(
-    @Body() payload: ReportBaseMetaPayloadVm,
-    @Res() outgoingHTTP,
-  ) {
-    return await V1WebReportCodStreamService.printNonCodSupplierInvoice(
-      payload.filters,
-      outgoingHTTP,
-    );
-  }
-
-  @Post('supplierInvoice/stream/print')
-  @HttpCode(HttpStatus.OK)
-  @ResponseSerializerOptions({ disable: true })
-  public async supplierInvoiceStreamPrint(
-    @Body() payload: ReportBaseMetaPayloadVm,
-    @Res() outgoingHTTP,
-  ) {
-    return await V1WebReportCodStreamService.printCodSupplierInvoice(
-      payload.filters,
-      outgoingHTTP,
-    );
   }
 
   // #endregion report COD
@@ -471,31 +328,4 @@ export class V1WebAwbCodController {
   //   await V1WebAwbCodService.syncData();
   //   return { status: 'ok' };
   // }
-  @Post('insertCodPayment')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebInsertCodPaymentResponseVm })
-  public async insertCodPayment(@Body() payload: WebInsertCodPaymentPayloadVm) {
-    return V1WebAwbCodService.insertCodPayment(payload);
-  }
-
-  @Post('transaction/reject')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebCodTransactionUpdateResponseVm })
-  public async transactionReject(
-    @Body() payload: WebCodTransactionRejectPayloadVm,
-  ) {
-    return V1WebAwbCodService.transactionReject(payload);
-  }
-
-  @Post('transaction/delete')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebCodTransactionUpdateResponseVm })
-  public async transactionDelete(
-    @Body() payload: WebCodTransactionRejectPayloadVm,
-  ) {
-    return V1WebAwbCodService.transactionDelete(payload);
-  }
 }

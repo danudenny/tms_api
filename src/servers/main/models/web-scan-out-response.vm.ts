@@ -72,15 +72,6 @@ export class WebScanInResponseVm {
 
   @ApiModelProperty()
   url: string;
-
-  @ApiModelProperty()
-  branchFrom: string;
-
-  @ApiModelProperty()
-  branchIdFrom: string;
-
-  @ApiModelProperty()
-  nikDriver: string;
 }
 
 export class WebScanTransitResponseVm {
@@ -107,18 +98,6 @@ export class WebScanTransitResponseVm {
 
   @ApiModelProperty()
   partnerLogisticName: string;
-
-  @ApiModelProperty()
-  branchIdFrom: number;
-
-  @ApiModelProperty()
-  branchFrom: string;
-
-  @ApiModelProperty()
-  nikDriver: string;
-
-  @ApiModelProperty()
-  vehicleNumber: string;
 }
 
 export class WebScanTransitAwbResponseVm {
@@ -387,7 +366,7 @@ export class WebScanOutAwbResponseVm {
 export class ScanBagVm {
   @ApiModelProperty()
   bagNumber: string;
-  
+
   @ApiModelProperty()
   status: string;
 
@@ -519,9 +498,4 @@ export class WebAwbThirdPartyResponseVm {
 export class WebAwbThirdPartyListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [WebAwbThirdPartyResponseVm] })
   data: WebAwbThirdPartyResponseVm[];
-}
-
-export class WebScanOutReportVm {
-  @ApiModelProperty()
-  id: string;
 }
