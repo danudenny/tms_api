@@ -11,6 +11,7 @@ import { User } from './user';
 import { Representative } from './representative';
 import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { PickupRequestDetail } from './pickup-request-detail';
+import { Partner } from './partner';
 
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
@@ -777,6 +778,10 @@ export class Awb extends BaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'userId' })
   userCreated: User;
+
+  @OneToOne(() => Partner)
+  @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerAccountId' })
+  partner: Partner;
 
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)

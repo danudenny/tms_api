@@ -77,6 +77,9 @@ export class DropCashLessResponseVM {
 
   @ApiModelProperty()
   recipient_phone: string;
+
+  @ApiModelProperty()
+  pickup_processed: boolean;
 }
 
 export class DropPickupRequestResponseVM {
@@ -171,6 +174,9 @@ export class DropPickupRequestResponseVM {
 
   @ApiModelProperty()
   pickupRequestStatus: number;
+
+  @ApiModelProperty()
+  pickupProcessed: boolean;
 }
 
 export class DropCreateWorkOrderPayloadVM {
