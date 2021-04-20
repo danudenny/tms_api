@@ -310,6 +310,107 @@ export class WebAwbFilterService {
           res.message = `Resi ${awbNumber} sudah tersortir`;
           res.districtId = awbItemAttr.awbItem.awb.toId;
         } else {
+          // check payload.podFilterDetailId is valid or not
+          let awbTroubleId = null;
+          let podFilterDetail = await this.getPodFilterDetail(
+            payload.podFilterId,
+            awbItemAttr.bagItemIdLast,
+          );
+
+          // NOTE: check awb include on bag item
+          if (podFilterDetail) {
+            // no error, this awb is fine
+            res.status = 'success';
+            res.trouble = false;
+            res.message = `Resi ${awbNumber} berhasil tersortir`;
+            res.districtId = awbItemAttr.awbItem.awb.toId;
+          } else {
+            // check payload.podFilterDetailId current
+            podFilterDetail = await this.getCurrentPodFilterDetail(
+              payload.podFilterDetailId,
+            );
+
+            // response error, but still process sortir, just announce for CT this awb have a trouble package combine
+            res.status = 'success';
+            res.trouble = true;
+            if (!!awbItemAttr.awbItem.awb.toId) {
+              // NOTE: get data district
+              const getDistrict = await District.findOne({
+                // cache: true,
+                where: {
+                  districtId: awbItemAttr.awbItem.awb.toId,
+                  isDeleted: false,
+                },
+              });
+
+              res.districtId = awbItemAttr.awbItem.awb.toId;
+              res.districtName = getDistrict ? getDistrict.districtName : '';
+              res.message = `Resi ${awbNumber} berhasil tersortir, tetapi tidak ada pada Gabung Paket`;
+            } else {
+              res.message = `Resi ${awbNumber} tidak memiliki tujuan, harap di lengkapi`;
+              res.districtId = null;
+            }
+            // announce for CT using table awb_trouble and the category of trouble is awb_filter
+            // save data to awb_trouble
+            awbTroubleId = await this.createAwbTrouble(
+              awbNumber,
+              res.message,
+              podFilterDetail.bagItem.bag.branchId,
+            );
+          }
+          // bag number
+          bagNumberSeq =
+            `${podFilterDetail.bagItem.bag.bagNumber}` +
+            `${podFilterDetail.bagItem.bagSeq.toString().padStart(3, '0')}`;
+
+          // Update total_awb_filtered, total_awb_item, total_awb_not_in_bag
+          const keyRedis = `hold:awbfiltered:${
+            podFilterDetail.podFilterDetailId
+          }`;
+          const holdRedis = await RedisService.locking(keyRedis, 'locking');
+          if (holdRedis) {
+            // save to pod_filter_detail_item
+            await this.createPodFilterDetailItem(
+              podFilterDetail.podFilterDetailId,
+              awbItemAttr,
+              awbTroubleId,
+            );
+
+            // NOTE:: update awb_item_attr last to IN
+            // await AwbItemAttr.update(awbItemAttr.awbItemAttrId, {
+            //   isDistrictFiltered: true,
+            // });
+
+            await DeliveryService.updateAwbAttr(
+              awbItemAttr.awbItemId,
+              awbItemAttr.branchIdNext,
+              AWB_STATUS.IN_BRANCH,
+            );
+
+            podFilterDetail.totalAwbItem = podFilterDetail.totalAwbItem + 1;
+            if (awbItemAttr.bagItemIdLast) {
+              podFilterDetail.totalAwbFiltered =
+                podFilterDetail.totalAwbFiltered + 1;
+            } else {
+              podFilterDetail.totalAwbNotInBag =
+                podFilterDetail.totalAwbNotInBag + 1;
+            }
+            podFilterDetail.endDateTime = moment().toDate();
+            podFilterDetail.updatedTime = moment().toDate();
+            podFilterDetail.userIdUpdated = authMeta.userId;
+            await RepositoryService.podFilterDetail.save(podFilterDetail);
+
+            // remove key holdRedis
+            RedisService.del(keyRedis);
+          }
+
+          // after scan filter done at all. do posting status last awb
+          // NOTE: posting to awb_history, awb_item_summary
+          DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+            awbItemAttr.awbItemId,
+            permissonPayload.branchId,
+            authMeta.userId,
+          );
         }
       } else {
         res.status = 'error';

@@ -199,8 +199,3 @@ export class WebScanInBranchLoadResponseVm {
   @ApiModelProperty({ type: [ScanInBagLoadVm] })
   data: ScanInBagLoadVm[];
 }
-
-export class HubDeliveryInExcelExecuteVm {
-  @ApiModelProperty()
-  id: string;
-}

@@ -8,6 +8,6 @@ export class PosindonesiaPayloadVm {
   branch_code: number;
 
   @ApiModelPropertyOptional()
-  partner_id: number;
+  partner_id: string;
 
 }

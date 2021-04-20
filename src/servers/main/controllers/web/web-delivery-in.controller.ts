@@ -1,5 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Get, Post, UseGuards, Query, Response } from '@nestjs/common';
-import express = require('express');
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
@@ -8,12 +7,11 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { WebScanInBagResponseVm } from '../../models/web-scanin-awb.response.vm';
 import { WebScanInBagVm } from '../../models/web-scanin-bag.vm';
 import { WebScanInListResponseVm, WebScanInBagListResponseVm, WebScanInBranchListResponseVm, WebScanInHubSortListResponseVm, WebScanInBranchListBagResponseVm, WebScanInBranchListAwbResponseVm, WebScanInHubListResponseVm } from '../../models/web-scanin-list.response.vm';
-import { WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInBranchLoadResponseVm, HubDeliveryInExcelExecuteVm } from '../../models/web-scanin.vm';
+import { WebScanInBranchResponseVm, WebScanInValidateBranchVm, WebScanInBagBranchVm, WebScanInBranchLoadResponseVm } from '../../models/web-scanin.vm';
 import { WebDeliveryInService } from '../../services/web/web-delivery-in.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { LastMileDeliveryInService } from '../../services/web/last-mile/last-mile-delivery-in.service';
-import { WebDeliveryInReportService } from '../../services/web/web-delivery-in-report.service';
 
 @ApiUseTags('Web Delivery In')
 @Controller('web/pod/scanIn')
@@ -71,16 +69,6 @@ export class WebDeliveryInController {
   // @ResponseSerializerOptions({ disable: true })
   public async findAllBranchListBag(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryService.findAllBranchListBag(payload);
-  }
-
-  @Post('branchListBagTagSeal')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanInBranchListBagResponseVm })
-  // @ResponseSerializerOptions({ disable: true })
-  public async findAllBranchListBagTagSeal(@Body() payload: BaseMetaPayloadVm) {
-    return this.webDeliveryService.findAllBranchListBagTagSeal(payload);
   }
 
   @Post('branchListAwb')
@@ -216,21 +204,5 @@ export class WebDeliveryInController {
   @ApiOkResponse({ type: WebScanInHubListResponseVm })
   public async scanInHubList(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryService.hubScanInList(payload);
-  }
-
-  @Post('excel/hub-store')
-  @ApiBearerAuth()
-  @ApiOkResponse({ type: HubDeliveryInExcelExecuteVm })
-  @ResponseSerializerOptions({ disable: true })
-  public async storePayloadExcel(@Body() payloadBody: any) {
-    return WebDeliveryInReportService.storeHubDeliveryInPayload(payloadBody);
-  }
-
-  @Get('excel/hub-execute')
-  public async exportExcelMonitoringKorwil(
-    @Query() queryParams: HubDeliveryInExcelExecuteVm,
-    @Response() serverResponse: express.Response,
-  ) {
-    return WebDeliveryInReportService.generateHubDeliveryInCSV(serverResponse, queryParams);
   }
 }

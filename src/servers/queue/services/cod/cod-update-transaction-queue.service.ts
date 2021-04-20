@@ -7,7 +7,6 @@ import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-sta
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { User } from '../../../../shared/orm-entity/user';
 import moment = require('moment');
-import { getConnection } from 'typeorm';
 
 export class CodUpdateTransactionQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -39,30 +38,18 @@ export class CodUpdateTransactionQueueService {
     this.queue.process(async job => {
       const data = job.data;
 
-      let dataTransaction: CodTransactionDetail[];
-      const masterDataTransactionQueryRunner = getConnection().createQueryRunner(
-        'master',
-      );
-      try {
-        dataTransaction = await getConnection()
-          .createQueryBuilder(CodTransactionDetail, 'ctd')
-          .setQueryRunner(masterDataTransactionQueryRunner)
-          .select([
-            'ctd.awbNumber',
-            'ctd.awbItemId',
-          ])
-          .where(
-            'ctd.codTransactionId = :codTransactionId AND ctd.isDeleted = false',
-            { codTransactionId: data.codTransactionId },
-          )
-          .getMany();
-      } finally {
-        await masterDataTransactionQueryRunner.release();
-      }
+      const dataTransaction = await CodTransactionDetail.find({
+        select: ['awbNumber', 'awbItemId'],
+        where: {
+          codTransactionId: data.codTransactionId,
+          isDeleted: false,
+        },
+      });
       console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
 
       if (dataTransaction.length) {
         for (const item of dataTransaction) {
+
           // update awb_item_attr transaction status 3500
           if (Number(data.transactionStatusId) == TRANSACTION_STATUS.TRF) {
             await AwbItemAttr.update(

@@ -28,9 +28,6 @@
     bagNumber: string;
 
     @ApiModelProperty()
-    totalSealNumberScan: string;
-
-    @ApiModelProperty()
     totalBagScan: string;
 
     @ApiModelProperty()
@@ -82,9 +79,6 @@
 
     @ApiModelProperty()
     weight: string;
-
-    @ApiModelProperty()
-    sealNumber: string;
   }
 
   export class WebScanInBranchAwbResponseVm {
@@ -164,9 +158,6 @@
 
     @ApiModelProperty()
     representativeCode: string;
-
-    @ApiModelProperty()
-    sealNumber: string;
   }
 
   export class WebScanInBagResponseVm {

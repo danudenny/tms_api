@@ -87,11 +87,6 @@ export class MobileDeliveryVm {
   deliveryHistory: MobileDeliveryHistoryVm[];
 }
 
-export class MobileDeliveryV2Vm extends MobileDeliveryVm {
-  @ApiModelProperty()
-  isHighValue: boolean;
-}
-
 export class ScanValidateBranchVm {
   @ApiModelProperty()
   bagNumber: string;

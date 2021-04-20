@@ -1,4 +1,4 @@
-import { ApiModelProperty, ApiModelPropertyOptional} from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty} from '../../../shared/external/nestjs-swagger';
 
 export class WebReturUpdateListPayloadVm {
   @ApiModelProperty()
@@ -9,7 +9,4 @@ export class WebReturUpdateListPayloadVm {
 
   @ApiModelProperty()
   partnerLogisticId: string;
-
-  @ApiModelPropertyOptional()
-  userIdDriver: number;
 }

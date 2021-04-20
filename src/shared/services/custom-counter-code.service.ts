@@ -42,12 +42,6 @@ export class CustomCounterCode {
     return prefix + randomCode;
   }
 
-  public static async doPodDeliverMobile(dateTime: Date, digit: number = 8) {
-    const prefix = `DOPM/${moment(dateTime).format('YYMM/DD/')}`;
-    const randomCode = this.randomCode(digit);
-    return prefix + randomCode;
-  }
-
   public static async awbTrouble(dateTime: Date, digit: number = 8) {
     const prefix = `ATR/${moment(dateTime).format('YYMM/DD/')}`;
     const randomCode = this.randomCode(digit);
@@ -87,7 +81,7 @@ export class CustomCounterCode {
 
   // #region SMD
   public static async receivedBagCodeRandom(dateTime: Date, digit: number = 8) {
-    const prefix = `TB/${moment(dateTime).format('YYMMDD')}/`;
+    const prefix = `TB/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
   }

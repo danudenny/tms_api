@@ -1,7 +1,6 @@
 import { User } from '../orm-entity/user';
 import { OrionRepositoryService } from './orion-repository.service';
 import { Branch } from '../orm-entity/branch';
-import { AwbStatus } from '../orm-entity/awb-status';
 
 export class SharedService {
   constructor() {}
@@ -47,33 +46,4 @@ export class SharedService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     return await q.exec();
   }
-
-  static async getDataAwbStatus(awbStatusId: number): Promise<AwbStatus> {
-    const awbStatus = await AwbStatus.findOne({
-      where: {
-        awbStatusId,
-        isDeleted: false,
-      },
-      cache: true,
-    });
-    return awbStatus;
-  }
-
-  // string inject array
-  static stringInject(str: string, arr: string[]) {
-    if (typeof str !== 'string' || !(arr instanceof Array)) {
-        return '';
-    }
-
-    return str.replace(/({\d})/g, function(i) {
-        return arr[i.replace(/{/, '').replace(/}/, '')];
-    });
-  }
-
-  static stringInjectObj(str: string, obj: Object) {
-    const regex = /:(\w+)/g;
-    return str.replace(regex, function(match, p1) {
-        return obj[p1] || ':' + p1;
-    });
-}
 }
