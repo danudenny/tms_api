@@ -1,5 +1,4 @@
 import * as moment from 'moment';
-import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
