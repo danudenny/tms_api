@@ -1,5 +1,4 @@
 import * as moment from 'moment';
-import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
@@ -51,7 +50,7 @@ export class V2WebCodReportService {
         ['rep.representative_code', 'perwakilan'],
         ['t3.parcel_content', 'parcelContent'],
         ['t5.package_type_code', 'packageTypeCode'],
-        ['t1.updated_time', 'awbStatusDate'],
+        ['t1.awb_history_date_last', 'awbStatusDate'],
         ['ctd.updated_time', 'updatedTime'],
         [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
         [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
@@ -136,7 +135,7 @@ export class V2WebCodReportService {
       response.write(`${this.CodNONFeeTransactionHeader.join(',')}\n`);
 
       // mapping field
-      payload.fieldResolverMap['statusDate'] = 't1.updated_time';
+      payload.fieldResolverMap['statusDate'] = 't1.awb_history_date_last';
       payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
       payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
       payload.fieldResolverMap['supplier'] = 't6.partner_id';
@@ -171,7 +170,7 @@ export class V2WebCodReportService {
         ['t9.district_name', 'destination'],
         ['t3.parcel_content', 'parcelContent'],
         ['t5.package_type_code', 'packageTypeCode'],
-        ['t1.updated_time', 'awbStatusDate'],
+        ['t1.awb_history_date_last', 'awbStatusDate'],
         ['ctd.updated_time', 'updatedTime'],
         [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
         ['t3.notes', 'parcelNote'],
@@ -242,7 +241,7 @@ export class V2WebCodReportService {
       response.write(`${this.CodNONFeeHeader.join(',')}\n`);
 
       // mapping field
-      payload.fieldResolverMap['statusDate'] = 't1.updated_time';
+      payload.fieldResolverMap['statusDate'] = 't1.awb_history_date_last';
       payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
       payload.fieldResolverMap['awbStatusId'] = 't1.awb_status_id_last';
       payload.fieldResolverMap['branchLastId'] = 't7.branch_id';
@@ -275,7 +274,7 @@ export class V2WebCodReportService {
         ['rep.representative_code', 'perwakilan'],
         ['t3.parcel_content', 'parcelContent'],
         ['t5.package_type_code', 'packageTypeCode'],
-        ['t1.updated_time', 'awbStatusDate'],
+        ['t1.awb_history_date_last', 'awbStatusDate'],
         ['ctd.updated_time', 'updatedTime'],
         [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
         [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
@@ -356,7 +355,7 @@ export class V2WebCodReportService {
       payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
       payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
       payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-      payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+      payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
       payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
       payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
       payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
@@ -387,7 +386,7 @@ export class V2WebCodReportService {
       q.selectRaw(
         ['t1.awb_number', 'awbNumber'],
         ['t1.awb_item_id', 'awbItemId'],
-        ['t1.updated_time', 'transactionDate'],
+        ['t1.awb_history_date_last', 'transactionDate'],
         ['t1.awb_status_id_last', 'awbStatusIdLast'],
         ['t7.awb_status_title', 'awbStatusLast'],
         ['t1.awb_status_id_final', 'awbStatusIdFinal'],
@@ -579,7 +578,7 @@ export class V2WebCodReportService {
         // ['t9.district_name', 'destination'],
         ['t3.parcel_content', 'parcelContent'],
         ['t5.package_type_code', 'packageTypeCode'],
-        ['t1.updated_time', 'awbStatusDate'],
+        ['t1.awb_history_date_last', 'awbStatusDate'],
         ['cbs.transfer_datetime', 'transferDate'],
         ['ctd.updated_time', 'updatedTime'],
       );
