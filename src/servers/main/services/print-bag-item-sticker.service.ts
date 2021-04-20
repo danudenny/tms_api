@@ -5,6 +5,7 @@ import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm'
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { RawQueryService } from '../../../shared/services/raw-query.service';
+import moment = require('moment');
 
 export class PrintBagItemStickerService {
   public static async printBagItemStickerByRequest(
@@ -92,6 +93,7 @@ export class PrintBagItemStickerService {
       `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${
         meta.bagItemAwbsTotal
       } resi"\n` +
+      `TEXT 30,380,"3",0,1,1,"Tanggal : ${moment().format('YYYY-MM-DD HH:mm')}"\n` +
       `TEXT 30,460,"4",0,1,1,0,"${branchCode}"\n` +
       `TEXT 30,510,"5",0,1,1,0,"${branchName}"\n` +
       `PRINT 1\n` +
