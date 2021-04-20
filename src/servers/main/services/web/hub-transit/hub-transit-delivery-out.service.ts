@@ -156,7 +156,7 @@ export class HubTransitDeliveryOutService {
         doPodId: payload.doPodId,
         isDeleted: false,
       },
-      lock: { mode: 'pessimistic_write' },
+      // lock: { mode: 'pessimistic_write' },
     });
 
     for (const awbNumber of payload.awbNumber) {
@@ -203,7 +203,7 @@ export class HubTransitDeliveryOutService {
               },
             });
 
-            if(!existDoPodDetail){
+            if (!existDoPodDetail) {
               const doPodDetail = DoPodDetail.create();
               doPodDetail.doPodId = payload.doPodId;
               doPodDetail.awbId = awb.awbId;
@@ -258,7 +258,7 @@ export class HubTransitDeliveryOutService {
 
               totalSuccess += 1;
               // #endregion after scanout
-            }else{
+            } else {
               totalError += 1;
               response.status = 'error';
               response.message = `Resi ${awbNumber} sudah discan sebelumnya.`;

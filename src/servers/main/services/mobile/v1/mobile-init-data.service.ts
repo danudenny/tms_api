@@ -10,6 +10,7 @@ import { MobileCheckInResponseVm } from '../../../models/mobile-check-in-respons
 import {
     MobileInitDataDeliveryResponseVm, MobileInitDataResponseVm,
 } from '../../../models/mobile-init-data-response.vm';
+import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 
 export class V1MobileInitDataService {
 
@@ -145,6 +146,7 @@ export class V1MobileInitDataService {
   }
 
   private static async getAwbStatus(fromDate?: string) {
+    const permissonPayload = AuthService.getPermissionTokenPayload();
     const repository = new OrionRepositoryService(AwbStatus);
     const q = repository.findAllRaw();
     q.selectRaw(
@@ -168,7 +170,28 @@ export class V1MobileInitDataService {
       });
     }
 
-    return await q.exec();
+    const result = await q.exec();
+
+    // NOTE: add status RTC if role Ops - Sigesit Transit
+    if (Number(permissonPayload.roleId) == 50) {
+      const statusRTC = await repository
+        .findAllRaw()
+        .selectRaw(
+          ['awb_status_id', 'awbStatusId'],
+          ['awb_status_name', 'awbStatusCode'],
+          ['awb_status_title', 'awbStatusName'],
+          ['is_deleted', 'isDeleted'],
+        )
+        .andWhere(e => e.awbStatusId, w => w.equals(AWB_STATUS.RTC))
+        .take(1)
+        .exec();
+
+      if (statusRTC.length) {
+        result.push(statusRTC[0]);
+      }
+    }
+
+    return result;
   }
 
   private static async getDelivery(fromDate?: string) {

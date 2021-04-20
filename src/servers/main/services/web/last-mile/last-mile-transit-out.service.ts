@@ -154,7 +154,7 @@ export class LastMileTransitOutService {
         doPodId: payload.doPodId,
         isDeleted: false,
       },
-      lock: { mode: 'pessimistic_write' },
+      // lock: { mode: 'pessimistic_write' },
     });
 
     for (const awbNumber of payload.awbNumber) {

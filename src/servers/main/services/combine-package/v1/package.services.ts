@@ -476,6 +476,7 @@ export class V1PackageService {
         userIdCreated: authMeta.userId,
         userIdUpdated: authMeta.userId,
         isSortir: true,
+        isManual: true,
       });
 
       const bag = await Bag.save(bagDetail);

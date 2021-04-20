@@ -19,6 +19,7 @@ export const AWB_STATUS = {
   DONE_HO: 30100,
   BROKE: 24000,
   RTN: 24500,
+  RTC: 24550,
   RTS: 25000,
   THP: 28500,
   IN_SORTIR: 13000,
