@@ -34,10 +34,8 @@ import { MobileDeliveryInController } from './mobile/mobile-delivery-in.controll
 import { MobileDeliveryOutController } from './mobile/mobile-delivery-out.controller';
 import { MobileKorwilController } from './mobile/mobile-korwil.controller';
 import { PaymentProviderController } from './mobile/mobile-payment-provider.controller';
-import { MobileSyncController } from './mobile/mobile-sync.controller';
 import { V1MobileAttendanceController } from './mobile/v1/mobile-attendance.controller';
 import { V1MobileInitController } from './mobile/v1/mobile-init.controller';
-import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
 import { V2CodPaymentController } from './mobile/v2/mobile-cod-payment.controller';
 import { V2MobileSyncController } from './mobile/v2/mobile-sync.controller';
 import { PrintByStoreController } from './print-by-store.controller';
@@ -69,7 +67,8 @@ import { V1WebAwbHighValueController } from './web/v1/web-awb-high-value.control
 import { V2MobileInitController } from './mobile/v2/mobile-init.controller';
 import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
-import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller'; 
+import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller';
+import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -95,7 +94,6 @@ import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller
     RolePermissionController,
     MobileCheckInController,
     MobileCheckOutController,
-    MobileSyncController,
     WebAwbFilterController,
     WebAwbPodController,
     WebBagPodController,
