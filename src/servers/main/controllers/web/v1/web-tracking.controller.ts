@@ -41,6 +41,7 @@ export class V1WebTrackingController {
     return V1WebTrackingService.bag(payload);
   }
 
+  // TODO: to be removed
   @Post('awbSubstitute')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
@@ -60,7 +61,9 @@ export class V1WebTrackingController {
   @Post('bagRepresentative')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: TrackingBagRepresentativeResponseVm })
-  public async bagRepresentative(@Body() payload: TrackingBagRepresentativePayloadVm) {
+  public async bagRepresentative(
+    @Body() payload: TrackingBagRepresentativePayloadVm,
+  ) {
     return V1WebTrackingService.bagRepresentative(payload);
   }
 
@@ -75,14 +78,18 @@ export class V1WebTrackingController {
   @Post('bagRepresentativeAwb')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: TrackingBagRepresentativeAwbResponseVm })
-  public async bagRepresentativeAwb(@Body() payload: TrackingBagRepresentativeAwbPayloadVm) {
+  public async bagRepresentativeAwb(
+    @Body() payload: TrackingBagRepresentativeAwbPayloadVm,
+  ) {
     return V1WebTrackingService.bagRepresentativeAwb(payload);
   }
 
   @Post('bagRepresentativeDetail')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: TrackingBagRepresentativeDetailResponseVm })
-  public async bagRepresentativeDetail(@Body() payload: TrackingBagRepresentativeDetailPayloadVm) {
+  public async bagRepresentativeDetail(
+    @Body() payload: TrackingBagRepresentativeDetailPayloadVm,
+  ) {
     return V1WebTrackingService.bagRepresentativeDetail(payload);
   }
 }
