@@ -73,6 +73,16 @@ export class WebDeliveryInController {
     return this.webDeliveryService.findAllBranchListBag(payload);
   }
 
+  @Post('branchListBagTagSeal')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanInBranchListBagResponseVm })
+  // @ResponseSerializerOptions({ disable: true })
+  public async findAllBranchListBagTagSeal(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryService.findAllBranchListBagTagSeal(payload);
+  }
+
   @Post('branchListAwb')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

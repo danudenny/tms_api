@@ -372,6 +372,12 @@ export class WebAwbDeliverService {
           updatedTime: moment().toDate(),
       });
       await AwbReturn.insert(awbReturnData);
+    } else {
+      AwbReturn.update(awbReturnData.awbReturnId, {
+          branchId,
+          userIdUpdated: userId,
+          updatedTime: moment().toDate(),
+      });
     }
     return true;
   }
