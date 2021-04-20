@@ -1280,9 +1280,12 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
     payload.fieldResolverMap['representativeFrom'] =
       't2.ref_representative_code';
-    // payload.fieldResolverMap['bagNumberCode'] = 't2.bag_number';
+    payload.fieldResolverMap['representativeCode'] =
+      't2.ref_representative_code';
+    payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
     payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -1304,13 +1307,7 @@ export class WebDeliveryInService {
 
     q.selectRaw(
       [
-        `CASE LENGTH (CAST(t3.bag_seq AS varchar(10)))
-          WHEN 1 THEN
-            CONCAT (t2.bag_number,'00',t3.bag_seq)
-          WHEN 2 THEN
-            CONCAT (t2.bag_number,'0',t3.bag_seq)
-          ELSE
-            CONCAT (t2.bag_number,t3.bag_seq) END`,
+        `CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, '0'))`,
         'bagNumberCode',
       ],
       ['t2.bag_number', 'bagNumber'],
@@ -1343,7 +1340,7 @@ export class WebDeliveryInService {
       t2.ref_representative_code,
       t3.weight,
       t5.branch_name
-      `);
+    `);
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();

@@ -1,10 +1,4 @@
-import {
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-  OneToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { AttachmentTms } from './attachment-tms';
 import { User } from './user';
@@ -67,10 +61,7 @@ export class CodAwbRevision extends TmsBaseEntity {
   isDeleted: boolean;
 
   @OneToOne(() => AttachmentTms)
-  @JoinColumn({
-    name: 'attachment_id',
-    referencedColumnName: 'attachmentTmsId',
-  })
+  @JoinColumn({ name: 'attachment_id', referencedColumnName: 'attachmentTmsId' })
   attachment: AttachmentTms;
 
   @OneToOne(() => User)

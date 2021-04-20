@@ -47,6 +47,7 @@ import { SmsTrackingController } from './web/sms-tracking.controller';
 import { V1CombinePackageController } from './web/v1/combine-package.controller';
 import { V1WebAwbCodVoucherController } from './web/v1/web-awb-cod-voucher.controller';
 import { V1WebAwbCodController } from './web/v1/web-awb-cod.controller';
+import { V2WebAwbCodController } from './web/v2/web-awb-cod.controller';
 import { V1WebTrackingController } from './web/v1/web-tracking.controller';
 import { V2WebCodReportController } from './web/v2/web-cod-report.controller';
 import { WebAwbCountController } from './web/web-awb-count.controller';
@@ -68,6 +69,7 @@ import { V1WebAwbHighValueController } from './web/v1/web-awb-high-value.control
 import { V2MobileInitController } from './mobile/v2/mobile-init.controller';
 import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
+import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -131,6 +133,7 @@ import { MobileDeviceInfoController } from './mobile/mobile-device-info.controll
     V2CodPaymentController,
     V1CombinePackageController,
     V1WebAwbCodController,
+    V2WebAwbCodController,
     V1WebAwbCodVoucherController,
     V2WebCodReportController,
     TransactionStatusController,
@@ -141,6 +144,7 @@ import { MobileDeviceInfoController } from './mobile/mobile-device-info.controll
     V1WebAwbHighValueController,
     EmployeePenalty,
     MobileDeviceInfoController,
+    V1WebAwbHandoverController,
   ],
 })
 export class MainServerControllersModule {}

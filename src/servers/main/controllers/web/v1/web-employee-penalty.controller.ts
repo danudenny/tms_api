@@ -9,11 +9,17 @@ import { PermissionTokenGuard } from '../../../../../shared/guards/permission-to
 import { 
   EmployeePenaltyListResponseVM, 
   EmployeePenaltyPayloadVm, 
-  PenaltyCategoryListResponseVm, 
   PenaltyEmployeeRoleNameListResponseVm,
   EmployeePenaltyFindAllResponseVm 
 } from '../../../models/employee-penalty.vm';
+import { 
+  PenaltyCategoryPayloadVm, 
+  PenaltyCategoryFeePayloadVm,
+  PenaltyCategoryListResponseVm, 
+  PenaltyCategoryFeeListResponseVm 
+} from '../../../models/penalty-category.vm';
 import { EmployeePenaltyService } from '../../../services/web/v1/web-employee-penalty.service';
+import { PenaltyCategoryService } from '../../../services/web/v1/web-penalty-category.service';
 
 @ApiUseTags('Web Employee Penalty')
 @Controller('web/v1/employee/penalty')
@@ -24,7 +30,83 @@ export class EmployeePenalty {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PenaltyCategoryListResponseVm })
   public async getCategoryPenalty(@Body() payload: BaseMetaPayloadVm) {
-    return EmployeePenaltyService.findPenaltyCategories(payload);
+    return PenaltyCategoryService.findPenaltyCategories(payload);
+  }
+
+  @Post('category/create')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async createCategory(@Body() payload: PenaltyCategoryPayloadVm) {
+    return PenaltyCategoryService.createPenaltyCategory(payload);
+  }
+
+  @Post('category/edit')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async editCategory(@Body() payload: PenaltyCategoryPayloadVm) {
+    return PenaltyCategoryService.editPenaltyCategory(payload);
+  }
+
+  @Delete('category/delete/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async deleteCategory(@Param('id') penaltyCategoryId: string) {
+    return PenaltyCategoryService.deletePenaltyCategory(penaltyCategoryId);
+  }
+
+  @Post('category/report/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async penaltyCategoryDownload(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await PenaltyCategoryService.exportPenaltyCategory(
+      payload,
+      outgoingHTTP,
+    );
+  }
+
+  @Post('category/fee/list')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: PenaltyCategoryFeeListResponseVm })
+  public async getCategoryPenaltyFee(@Body() payload: BaseMetaPayloadVm) {
+    return PenaltyCategoryService.findPenaltyCategorieFeeList(payload);
+  }
+
+  @Post('category/fee/create')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async createCategoryFee(@Body() payload: PenaltyCategoryFeePayloadVm) {
+    return PenaltyCategoryService.createPenaltyCategoryFee(payload);
+  }
+
+  @Post('category/fee/edit')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async editCategoryFee(@Body() payload: PenaltyCategoryFeePayloadVm) {
+    return PenaltyCategoryService.editPenaltyCategoryFee(payload);
+  }
+
+  @Delete('category/fee/delete/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async deleteCategoryFee(@Param('id') penaltyCategoryFeeId: string) {
+    return PenaltyCategoryService.deletePenaltyCategoryFee(penaltyCategoryFeeId);
+  }
+
+  @Post('category/fee/report/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async penaltyCategoryFeeDownload(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await PenaltyCategoryService.exportPenaltyCategoryFee(
+      payload,
+      outgoingHTTP,
+    );
   }
 
   @Post('list')
@@ -59,7 +141,7 @@ export class EmployeePenalty {
   @Post('report/stream')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
-  public async awbCodFinanceDownload(
+  public async employeePenaltyDownload(
     @Body() payload: BaseMetaPayloadVm,
     @Res() outgoingHTTP,
   ) {

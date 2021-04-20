@@ -2,17 +2,14 @@ import fs = require('fs');
 import * as moment from 'moment';
 import * as path from 'path';
 import _ = require('lodash');
-import { DateHelper } from '../../../../../shared/helpers/date-helpers';
-import { BaseMetaPayloadFilterVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AwsS3Service } from '../../../../../shared/services/aws-s3.service';
 import { ConfigService } from '../../../../../shared/services/config.service';
 import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
 import { BadRequestException } from '@nestjs/common';
-import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { CodExportMongoQueueService } from '../../../../queue/services/cod/cod-export-queue.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
-import * as csv from 'csv';
+import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 
 export class V1WebReportCodStreamService {
   static expireOnSeconds = 600; // 5 minute
@@ -1465,7 +1462,7 @@ export class V1WebReportCodStreamService {
       }
     }
 
-    filterList.push({ supplierInvoiceStatusId: { $eq: 45000 } });
+    filterList.push({ supplierInvoiceStatusId: { $eq: TRANSACTION_STATUS.PAIDHO } });
 
     const queryParam = [
       {
