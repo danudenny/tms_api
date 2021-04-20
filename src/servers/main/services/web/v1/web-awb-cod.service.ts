@@ -68,7 +68,7 @@ export class V1WebAwbCodService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     // mapping field
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
     payload.fieldResolverMap['branchIdFinal'] = 'cp.branch_id';
@@ -154,7 +154,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
@@ -191,7 +191,7 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t1.updated_time', 'transactionDate'],
+      ['t1.awb_history_date_last', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
@@ -303,7 +303,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
@@ -340,7 +340,7 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t1.updated_time', 'transactionDate'],
+      ['t1.awb_history_date_last', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
