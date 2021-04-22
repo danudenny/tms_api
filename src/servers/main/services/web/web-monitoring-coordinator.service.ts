@@ -179,6 +179,7 @@ export class WebMonitoringCoordinatorService {
       [`MIN(d.check_in_date)`, 'checkInDatetime'],
       [`MAX(d.check_out_date)`, 'checkOutDatetime'],
       ['b.ref_user_id', 'userId'],
+      ['b.position', 'position'],
     );
     q.innerJoin(e => e.userToBranch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
