@@ -162,6 +162,7 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['coordinatorName'] = '"coordinatorName"';
     payload.fieldResolverMap['representativeId'] = 'f.representative_id';
     payload.fieldResolverMap['representativeCode'] = 'f.representative_code';
+    payload.fieldResolverMap['position'] = 'b.position';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 'a');
     const q = repo.findAllRaw();
@@ -331,6 +332,7 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['branchName'] = '"branchName"';
     payload.fieldResolverMap['representativeId'] = 't4.representative_id';
     payload.fieldResolverMap['representativeCode'] = 't4.representative_code';
+    payload.fieldResolverMap['position'] = 't5.position';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const q = repo.findAllRaw();
@@ -350,6 +352,9 @@ export class WebMonitoringCoordinatorService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branches.representative, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.userToBranch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     const data = await q.exec();
