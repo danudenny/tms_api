@@ -196,7 +196,7 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.branches.representative, 'f', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('b.ref_user_id, "coordinatorName"');
+    q.groupByRaw('b.ref_user_id, "coordinatorName", b.position');
     q.orderByRaw('"checkInDatetime"', 'ASC');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
