@@ -32,6 +32,7 @@ import { BranchSortir } from '../../../../shared/orm-entity/branch-sortir';
 import { AwbService } from '../../../main/services/v1/awb.service';
 import { BagService } from '../../../main/services/v1/bag.service';
 import { CreateBagNumberResponseVM } from '../../../main/models/package-payload.vm';
+import { RedisService } from '../../../../shared/services/redis.service';
 // //#endregion
 
 export class HubMachineService {
@@ -122,23 +123,38 @@ export class HubMachineService {
               }
             }
             // Process Create GS
-            for(let i = 0; i < payload.reference_numbers.length; i++) {
-              scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
-              if(scanResultMachine) {
-                paramBagItemId = scanResultMachine.bagItemId;
-                paramBagNumber = scanResultMachine.bagNumber;
-                paramPodScanInHubId = scanResultMachine.podScanInHubId;
+            const redlock = await RedisService.redlock(
+              `redlock:createMachineGS:${payload.sorting_branch_id}-${payload.chute_number}`, 10
+            );
+            if (redlock) { 
+              for(let i = 0; i < payload.reference_numbers.length; i++) {
+                scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
+                if(scanResultMachine) {
+                  paramBagItemId = scanResultMachine.bagItemId;
+                  paramBagNumber = scanResultMachine.bagNumber;
+                  paramPodScanInHubId = scanResultMachine.podScanInHubId;
+                }
               }
-            }
-            if(scanResultMachine) {
+              if(scanResultMachine) {
+                const data = [];
+                data.push({
+                  state: 0,
+                  no_gabung_sortir: scanResultMachine.bagNumber,
+                });
+                result.statusCode = HttpStatus.OK;
+                result.message = `Success Upload`;
+                result.data = data;
+              }
+            } else {
               const data = [];
-              data.push({
-                state: 0,
-                no_gabung_sortir: scanResultMachine.bagNumber,
-              });
-              result.statusCode = HttpStatus.OK;
-              result.message = `Success Upload`;
-              result.data = data;
+                data.push({
+                  state: 1,
+                  no_gabung_sortir: null,
+                });
+                result.statusCode = HttpStatus.BAD_REQUEST;
+                result.message = `Nomor resi sedang di PROSESS !`;
+                result.data = data;
+                return result;
             }
           }
 
