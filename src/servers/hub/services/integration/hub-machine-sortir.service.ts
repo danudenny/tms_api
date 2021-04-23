@@ -54,7 +54,40 @@ export class HubMachineSortirService {
       } else {
         is_cod = false;
       }
+      if(!district_id) {
+        data.push({
+          state: 1,
+          tracking_number: payload.tracking_number,
+        });
+        result.statusCode = HttpStatus.BAD_REQUEST;
+        result.message = `District NULL for AWB: ` + payload.tracking_number;
+        result.data = data;
 
+        await this.upsertBranchSortirLog(
+          result.message,
+          dateNow,
+          1,
+          payload.sorting_branch_id,
+          payload.tracking_number,
+          null,
+          null,
+          false,
+          1,
+        );
+
+        branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+          result.message,
+          0,
+          dateNow,
+          payload.sorting_branch_id,
+          payload.tracking_number,
+          null,
+          null,
+          is_cod,
+        );
+
+        return result;
+      }
       const rawQuerySubDistrict = `
         SELECT
           branch_id
