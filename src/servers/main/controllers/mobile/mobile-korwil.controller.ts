@@ -45,7 +45,7 @@ export class MobileKorwilController {
   @Get('branchList')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: BranchListKorwilResponseVm })
   public async branchList() {
     return MobileKorwilService.getBranchList();
@@ -54,7 +54,7 @@ export class MobileKorwilController {
   @Post('doneProcess')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileUpdateProcessKorwilResponseVm })
   public async updateDoneKorwil(
     @Body() payload: MobileUpdateProcessKorwilPayloadVm,
@@ -65,7 +65,7 @@ export class MobileKorwilController {
   @Post('submitProcess')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileUpdateProcessKorwilResponseVm })
   public async updateSubmitProses(
     @Body() payload: MobileUpdateProcessKorwilPayloadVm,
@@ -85,7 +85,7 @@ export class MobileKorwilController {
   @Get('itemDetail/:korwilTransactionDetailId')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: DetailPhotoKorwilResponseVm })
   public async itemDetail(
     @Param('korwilTransactionDetailId') korwilTransactionDetailId: string,
@@ -120,7 +120,7 @@ export class MobileKorwilController {
   @Post('history')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: KorwilHistoryResponseVm })
   public async getListTransactionHistory(
     @Body() payload: KorwilHistoryPayloadVm,
@@ -131,7 +131,7 @@ export class MobileKorwilController {
   @Get('detailPDF/:korwilTransactionId')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: DetailHistoryKorwilResponseVm })
   public async detailPDF(
     @Param('korwilTransactionId') korwilTransactionId: string,

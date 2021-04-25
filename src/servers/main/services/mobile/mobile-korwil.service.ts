@@ -668,7 +668,7 @@ export class MobileKorwilService {
     );
     qb.addSelect('ktd.is_done', 'isDone');
     qb.addSelect('ktd.status', 'statusItem');
-    qb.addSelect("COALESCE(ktd.note, '')", 'note');
+    qb.addSelect('COALESCE(ktd.note, \'\')', 'note');
     qb.addSelect('COALESCE(ej.check_in_date, null)', 'checkInDate');
     qb.addSelect('COALESCE(ej.check_out_date, null)', 'checkOutDate');
     qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
@@ -1046,8 +1046,17 @@ export class MobileKorwilService {
       throw new BadRequestException('Lokasi tidak ditemukan!');
     }
 
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const roleId = permissonPayload.roleId;
+    const korwilConfig = await this.getKorwilConfig();
     const lata = parseFloat(lat);
     const longa = parseFloat(long);
+
+    if (roleId == korwilConfig.adminHrdRoleId) {
+      // ADMIN HRD ALWAYS CHECK COORDINATE TO KANTOR PUSAT
+      branchId = 1;
+    }
+
     const radius = [0.5, 0.5]; // in kilometer
     const data = [];
     const response = new ValidateBranchCoordinateResponseVm();
@@ -1070,6 +1079,10 @@ export class MobileKorwilService {
       response.status = true;
     }
     return response;
+  }
+
+  static async getKorwilConfig() {
+    return ConfigService.get('korwil');
   }
 
   static async getNearby(lat, long, radius) {
