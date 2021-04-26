@@ -91,7 +91,7 @@ export class HubMachineSortirService {
       const rawQuerySubDistrict = `
         SELECT
           branch_id
-        FROM branch_district
+        FROM district_mapping_detail
         WHERE
           district_id = '${escape(district_id)}' AND
           is_deleted = FALSE
