@@ -24,7 +24,7 @@ export class ItemReturResponseVm {
   branchId: string;
 
   @ApiModelProperty()
-  branchFrom: string;
+  branchTo: string;
 
   @ApiModelProperty()
   branchName: string;
@@ -55,6 +55,16 @@ export class ItemReturResponseVm {
 
   @ApiModelProperty()
   userIdDriver: number;
+
+  @ApiModelProperty()
+  branchFrom: string;
+
+  @ApiModelProperty()
+  branchFromId: string;
+
+  @ApiModelProperty()
+  consignerName: number;
+
 }
 
 export class WebReturListResponseVm extends BaseMetaResponseVm {

@@ -27,9 +27,11 @@ export class WebAwbReturnService {
     'Tanggal Retur',
     'Gerai Manifest',
     'Gerai Asal Retur',
+    'Gerai Tujuan',
     'Partner',
     'Resi Retur',
     'Jenis Return',
+    'Pengirim',
   ];
 
   private static strReplaceFunc = str => {
@@ -49,9 +51,11 @@ export class WebAwbReturnService {
       d.createdTime ?  moment(d.createdTime).format('YYYY-MM-DD') : '-',
       WebAwbReturnService.strReplaceFunc(d.branchManifest),
       WebAwbReturnService.strReplaceFunc(d.branchFrom),
+      WebAwbReturnService.strReplaceFunc(d.branchTo),
       WebAwbReturnService.strReplaceFunc(d.partnerName),
       d.returnAwbNumber ? WebAwbReturnService.strReplaceFunc(`'${d.returnAwbNumber}`) : '-',
       d.userIdDriver ? 'Manual' : (d.isPartnerLogistic ? d.partnerLogisticName : 'Internal'),
+      WebAwbReturnService.strReplaceFunc(d.consignerName),
     ];
     return `${values.join(',')} \n`;
   }
@@ -383,7 +387,7 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['isPartnerLogistic'] = 't1.is_partner_logistic';
     payload.fieldResolverMap['partnerLogisticName'] = 't1.partner_logistic_name';
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
-    payload.fieldResolverMap['branchFrom'] = 't3.branch_name';
+    payload.fieldResolverMap['branchTo'] = 't3.branch_name';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
     payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
@@ -392,6 +396,9 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['branchIdManifest'] = 't4.branch_id';
     payload.fieldResolverMap['partnerName'] = 't5.partner_name';
     payload.fieldResolverMap['partnerId'] = 't5.partner_id';
+    payload.fieldResolverMap['branchFromId'] = 't6.branch_id';
+    payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
+    payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
@@ -420,7 +427,7 @@ export class WebAwbReturnService {
       ['t1.return_awb_number', 'returnAwbNumber'],
       ['t1.branch_id', 'branchId'],
       ['t1.created_time', 'createdTime'],
-      ['t3.branch_name', 'branchFrom'],
+      ['t3.branch_name', 'branchTo'],
       ['t2.awb_status_name', 'awbStatus'],
       ['t2.awb_status_id', 'awbStatusId'],
       ['t4.branch_id', 'branchIdManifest'],
@@ -428,9 +435,15 @@ export class WebAwbReturnService {
       ['t5.partner_id', 'partnerId'],
       ['t5.partner_name', 'partnerName'],
       ['t1.user_id_driver', 'userIdDriver'],
+      ['t6.branch_id', 'branchFromId'],
+      ['t6.branch_name', 'branchFrom'],
+      [`COALESCE(t7.ref_prev_customer_account_id, '')`, 'consignerName'],
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.originAwb.awb, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.innerJoin(e => e.branch, 't3', j =>
@@ -440,6 +453,9 @@ export class WebAwbReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.originAwb.awb.partner, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branchFrom, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -540,7 +556,7 @@ export class WebAwbReturnService {
       payload.fieldResolverMap['isPartnerLogistic'] = 't1.is_partner_logistic';
       payload.fieldResolverMap['partnerLogisticName'] = 't1.partner_logistic_name';
       payload.fieldResolverMap['branchId'] = 't1.branch_id';
-      payload.fieldResolverMap['branchFrom'] = 't3.branch_name';
+      payload.fieldResolverMap['branchTo'] = 't3.branch_name';
       payload.fieldResolverMap['createdTime'] = 't1.created_time';
       payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
       payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
@@ -549,6 +565,9 @@ export class WebAwbReturnService {
       payload.fieldResolverMap['branchIdManifest'] = 't4.branch_id';
       payload.fieldResolverMap['partnerName'] = 't5.partner_name';
       payload.fieldResolverMap['partnerId'] = 't5.partner_id';
+      payload.fieldResolverMap['branchFromId'] = 't6.branch_id';
+      payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
+      payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
 
       payload.globalSearchFields = [
         {
@@ -573,7 +592,7 @@ export class WebAwbReturnService {
       ['t1.return_awb_number', 'returnAwbNumber'],
       ['t1.branch_id', 'branchId'],
       ['t1.created_time', 'createdTime'],
-      ['t3.branch_name', 'branchFrom'],
+      ['t3.branch_name', 'branchTo'],
       ['t2.awb_status_name', 'awbStatus'],
       ['t2.awb_status_id', 'awbStatusId'],
       ['t4.branch_id', 'branchIdManifest'],
@@ -581,20 +600,29 @@ export class WebAwbReturnService {
       ['t5.partner_id', 'partnerId'],
       ['t5.partner_name', 'partnerName'],
       ['t1.user_id_driver', 'userIdDriver'],
-    );
+      ['t6.branch_id', 'branchFromId'],
+      ['t6.branch_name', 'branchFrom'],
+      [`COALESCE(t7.ref_prev_customer_account_id, '')`, 'consignerName'],
+      );
 
       q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.innerJoin(e => e.originAwb.awb, 't7', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
       q.innerJoin(e => e.branch, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
       q.innerJoin(e => e.originAwb.awb.branchLast, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
       q.leftJoin(e => e.originAwb.awb.partner, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.leftJoin(e => e.branchFrom, 't6', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
 
       q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
 
