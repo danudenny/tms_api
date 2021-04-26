@@ -1052,10 +1052,10 @@ export class MobileKorwilService {
     const lata = parseFloat(lat);
     const longa = parseFloat(long);
 
-    if (roleId == korwilConfig.korwilHrdRoleId) {
-      // KORWIL HRD ALWAYS CHECK COORDINATE TO KANTOR PUSAT
-      branchId = 1;
-    }
+    // if (roleId == korwilConfig.korwilHrdRoleId) {
+    //   // KORWIL HRD ALWAYS CHECK COORDINATE TO KANTOR PUSAT
+    //   branchId = 1;
+    // }
 
     const radius = [0.5, 0.5]; // in kilometer
     const data = [];
