@@ -21,7 +21,7 @@ export class ItemReturResponseVm {
   createdTime: string;
 
   @ApiModelProperty()
-  branchId: string;
+  branchIdTo: string;
 
   @ApiModelProperty()
   branchTo: string;
@@ -60,7 +60,7 @@ export class ItemReturResponseVm {
   branchFrom: string;
 
   @ApiModelProperty()
-  branchFromId: string;
+  branchIdFrom: string;
 
   @ApiModelProperty()
   consignerName: number;
