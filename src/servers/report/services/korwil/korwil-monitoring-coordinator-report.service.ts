@@ -11,7 +11,8 @@ import { MonitoringCoordinatorExcelExecuteResponseVm, WebMonitoringCoordinatorTa
 import { MonitoringCoordinatorExcelExecutePayloadVm, WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload } from '../../../main/models/web-monitoring-coordinator-payload.vm';
 import { CsvHelper } from '../../../../shared/helpers/csv-helpers';
 import { createQueryBuilder } from 'typeorm';
-import {PdfHelper} from '../../../../shared/helpers/pdf-helpers';
+import { PdfHelper } from '../../../../shared/helpers/pdf-helpers';
+import { MobileKorwilService } from '../../../main/services/mobile/mobile-korwil.service';
 
 @Injectable()
 export class KorwilMonitoringCoordinatorReportService {
@@ -34,9 +35,17 @@ export class KorwilMonitoringCoordinatorReportService {
     return result;
   }
 
+  static async storeMonitoringHrdPayload(
+    payload: any,
+  ): Promise<MonitoringCoordinatorExcelExecuteResponseVm> {
+    const result = this.storeMonitoringPayload(payload);
+    return result;
+  }
+
   static async generateMonitoringKorwilCSV(
     res: express.Response,
     queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
+    isKorwilHrd: boolean = false,
   ): Promise<any> {
     const payload = await this.retrieveGenericData<any>(
       'monitoring-coordinator',
@@ -54,14 +63,25 @@ export class KorwilMonitoringCoordinatorReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.limit = null;
 
-    const data = await this.getDataCsvMonitoringKorwil(p);
+    const data = await this.getDataCsvMonitoringKorwil(p, isKorwilHrd);
 
     const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.csv';
 
     await CsvHelper.generateCSV(res, data, fileName);
   }
 
-  static async getDataCsvMonitoringKorwil(payload: BaseMetaPayloadVm): Promise<any> {
+  static async generateMonitoringKorwilHrdCSV(
+    res: express.Response,
+    queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
+  ): Promise<any> {
+    const result = await this.generateMonitoringKorwilCSV(res, queryParams, true);
+    return result;
+  }
+
+  static async getDataCsvMonitoringKorwil(payload: BaseMetaPayloadVm, isKorwilHrd: boolean = false): Promise<any> {
+    const operatorQueryHrdKorwil = isKorwilHrd ? '=' : '<>';
+    const korwilConfig = await MobileKorwilService.getKorwilConfig();
+
     // mapping field
     payload.fieldResolverMap['date'] = 'a.date';
     payload.fieldResolverMap['userId'] = 'b.ref_user_id';
@@ -71,6 +91,7 @@ export class KorwilMonitoringCoordinatorReportService {
     payload.fieldResolverMap['coordinatorName'] = '"Nama Karyawan"';
     payload.fieldResolverMap['representativeId'] = 'f.representative_id';
     payload.fieldResolverMap['representativeCode'] = 'f.representative_code';
+    payload.fieldResolverMap['position'] = 'b.position';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 'a');
     const q = repo.findAllRaw();
@@ -99,6 +120,14 @@ export class KorwilMonitoringCoordinatorReportService {
     q.innerJoin(e => e.branches.representative, 'f', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.users, 'g', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.users.roles, 'h', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhereRaw(`h.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
+
     q.groupByRaw('b.ref_user_id, "Nama Karyawan"');
     q.orderByRaw('"Check In"', 'ASC');
     const data = await q.exec();
@@ -109,6 +138,7 @@ export class KorwilMonitoringCoordinatorReportService {
   static async generateMonitoringBranchCSV(
     res: express.Response,
     queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
+    isKorwilHrd: boolean = false,
   ): Promise<any> {
     const payload = await this.retrieveGenericData<any>(
       'monitoring-coordinator',
@@ -127,14 +157,25 @@ export class KorwilMonitoringCoordinatorReportService {
     p.filters = payload.filters ? payload.filters : payload;
     p.limit = null;
 
-    const data = await this.getDataCsvMonitoringBranch(p);
+    const data = await this.getDataCsvMonitoringBranch(p, isKorwilHrd);
 
     const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.csv';
 
     await CsvHelper.generateCSV(res, data, fileName);
   }
 
-  static async getDataCsvMonitoringBranch(payload: BaseMetaPayloadVm): Promise<any> {
+  static async generateMonitoringBranchHrdCSV(
+    res: express.Response,
+    queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
+  ): Promise<any> {
+    const result = await this.generateMonitoringBranchCSV(res, queryParams, true);
+    return result;
+  }
+
+  static async getDataCsvMonitoringBranch(payload: BaseMetaPayloadVm, isKorwilHrd: boolean = false): Promise<any> {
+    const operatorQueryHrdKorwil = isKorwilHrd ? '=' : '<>';
+    const korwilConfig = await MobileKorwilService.getKorwilConfig();
+
     // mapping field
     payload.fieldResolverMap['countTask'] = 't1.total_task';
     payload.fieldResolverMap['branchId'] = 't2.branch_id';
@@ -176,7 +217,21 @@ export class KorwilMonitoringCoordinatorReportService {
     q.innerJoin(e => e.branches.representative, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('t2.branch_id, t2.branch_name, t1.total_task, t4.check_in_date, t4.check_out_date, t1.date, t1.korwil_transaction_id, t1.user_id, t1.status');
+    q.innerJoin(e => e.users.roles, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhereRaw(`t7.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
+    q.groupByRaw(`
+      t2.branch_id,
+      t2.branch_name,
+      t1.total_task,
+      t4.check_in_date,
+      t4.check_out_date,
+      t1.date,
+      t1.korwil_transaction_id,
+      t1.user_id,
+      t1.status
+    `);
     const data = await q.exec();
 
     return data;

@@ -199,39 +199,45 @@ export class MobileKorwilService {
   ): Promise<any> {
     // item list korwil
     const qb = createQueryBuilder();
-    qb.addSelect('ki.korwil_item_name', 'korwilItemName');
-    qb.addSelect('ktd.korwil_item_id', 'korwilItemId');
-    qb.addSelect(
+    const subQb = qb.subQuery();
+    subQb.addSelect('ki.korwil_item_name', 'korwilItemName');
+    subQb.addSelect('ktd.korwil_item_id', 'korwilItemId');
+    subQb.addSelect(
       'ktd.korwil_transaction_detail_id',
       'korwilTransactionDetailId',
     );
-    qb.addSelect('ktd.is_done', 'isDone');
-    qb.addSelect('ktd.status', 'status');
-    qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
-    qb.addSelect('kt.status', 'statusTransaction');
-    qb.addSelect('ktd.note', 'note');
-    qb.from('korwil_transaction', 'kt');
-    qb.addSelect('ki.is_required', 'isRequired');
-    qb.innerJoin(
+    subQb.addSelect('ktd.is_done', 'isDone');
+    subQb.addSelect('ktd.status', 'status');
+    subQb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
+    subQb.addSelect('kt.status', 'statusTransaction');
+    subQb.addSelect('', 'note');
+    subQb.addSelect('ki.is_required', 'isRequired');
+    subQb.addSelect('(RANK () OVER (PARTITION BY ktd.korwil_item_id ORDER BY ktd.created_time DESC))', 'ranks');
+    subQb.from('korwil_transaction', 'kt');
+    subQb.innerJoin(
       'korwil_transaction_detail',
       'ktd',
       'ktd.korwil_transaction_id = kt.korwil_transaction_id AND ktd.is_deleted = false',
     );
-    qb.innerJoin(
+    subQb.innerJoin(
       'korwil_item',
       'ki',
       'ki.korwil_item_id = ktd.korwil_item_id AND ki.is_deleted = false',
     );
-    qb.andWhere('kt.is_deleted = false');
-    qb.andWhere('kt.branch_id = :branchIdTemp', {
+    subQb.andWhere('kt.is_deleted = false');
+    subQb.andWhere('kt.branch_id = :branchIdTemp', {
       branchIdTemp: branchId,
     });
-    qb.andWhere('kt.korwil_transaction_id = :korwilId', {
+    subQb.andWhere('kt.korwil_transaction_id = :korwilId', {
       korwilId: id,
     });
-    qb.orderBy('ki.sort_order', 'ASC');
-    const data = await qb.getRawMany();
+    subQb.orderBy('ki.sort_order', 'ASC');
+    subQb.addOrderBy('ktd.created_time', 'DESC');
 
+    qb.from(() => subQb, 't');
+    qb.andWhere('t.ranks = 1');
+
+    const data = await qb.getRawMany();
     return data;
   }
 
@@ -317,27 +323,35 @@ export class MobileKorwilService {
         korwilId = korwil.korwilTransactionId;
       }
 
-      // Create Korwil Item
-      for (const item of korwilItem) {
-        const korwilTransactionDetail = KorwilTransactionDetail.create();
-        korwilTransactionDetail.korwilItemId = item.korwilItemId;
-        korwilTransactionDetail.korwilTransactionId = korwilId;
-        korwilTransactionDetail.latChecklist = '';
-        korwilTransactionDetail.longChecklist = '';
-        korwilTransactionDetail.note = '';
-        korwilTransactionDetail.status = 0;
-        korwilTransactionDetail.isDone = false;
-        korwilTransactionDetail.date = moment().toDate();
-        korwilTransactionDetail.photoCount = 0;
-        korwilTransactionDetail.userIdCreated = authMeta.userId;
-        korwilTransactionDetail.createdTime = moment().toDate();
-        korwilTransactionDetail.updatedTime = moment().toDate();
-        korwilTransactionDetail.userIdUpdated = authMeta.userId;
-        await KorwilTransactionDetail.save(korwilTransactionDetail);
-        itemList.push({
-          ...item,
-          ...korwilTransactionDetail,
-        });
+      qb = createQueryBuilder();
+      qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilDetailId');
+      qb.from('korwil_transaction_detail', 'ktd');
+      qb.andWhere('ktd.korwil_transaction_id = :id', {id: korwilId});
+      const korwilDetail = await qb.getRawOne();
+
+      if (!korwilDetail) {
+        // Create Korwil Item
+        for (const item of korwilItem) {
+          const korwilTransactionDetail = KorwilTransactionDetail.create();
+          korwilTransactionDetail.korwilItemId = item.korwilItemId;
+          korwilTransactionDetail.korwilTransactionId = korwilId;
+          korwilTransactionDetail.latChecklist = '';
+          korwilTransactionDetail.longChecklist = '';
+          korwilTransactionDetail.note = '';
+          korwilTransactionDetail.status = 0;
+          korwilTransactionDetail.isDone = false;
+          korwilTransactionDetail.date = moment().toDate();
+          korwilTransactionDetail.photoCount = 0;
+          korwilTransactionDetail.userIdCreated = authMeta.userId;
+          korwilTransactionDetail.createdTime = moment().toDate();
+          korwilTransactionDetail.updatedTime = moment().toDate();
+          korwilTransactionDetail.userIdUpdated = authMeta.userId;
+          await KorwilTransactionDetail.save(korwilTransactionDetail);
+          itemList.push({
+            ...item,
+            ...korwilTransactionDetail,
+          });
+        }
       }
     } else {
       throw new BadRequestException('Gerai tidak ditemukan');
