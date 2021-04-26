@@ -28,6 +28,7 @@ export class WebMonitoringCoordinatorService {
 
   static async findListAllBranch(
     payload: BaseMetaPayloadVm,
+    isKorwilHrd: boolean = false,
   ): Promise<WebMonitoringCoordinatorResponse> {
     // mapping field
     payload.fieldResolverMap['countTask'] = 't1.total_task';
@@ -479,6 +480,13 @@ export class WebMonitoringCoordinatorService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebMonitoringCoordinatorBranchResponse> {
     const result = this.findListBranchCoordinator(payload, true);
+    return result;
+  }
+
+  static async findListHrdAllBranch(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebMonitoringCoordinatorResponse> {
+    const result = this.findListAllBranch(payload, true);
     return result;
   }
 }

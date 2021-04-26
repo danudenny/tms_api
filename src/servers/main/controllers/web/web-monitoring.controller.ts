@@ -34,6 +34,15 @@ export class WebMonitoringController {
     return WebMonitoringCoordinatorService.findListAllBranch(payload);
   }
 
+  @Post('coordinator-hrd/branch')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebMonitoringCoordinatorResponse })
+  public async monitoringCoordinatorHrdList(@Body() payload: BaseMetaPayloadVm) {
+    return WebMonitoringCoordinatorService.findListHrdAllBranch(payload);
+  }
+
   @Post('coordinator/branch/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
