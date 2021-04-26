@@ -123,7 +123,6 @@ export class WebMonitoringCoordinatorService {
     subQb.where('a.korwil_transaction_id = :korwilTransactionId', { korwilTransactionId: payload.korwilTransactionId });
     subQb.andWhere('a.is_done = true');
     subQb.andWhere('a.is_deleted = false');
-    subQb.andWhere(`h.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
     qb = createQueryBuilder();
     qb = qb.addFrom(() => subQb, 't');
     qb.andWhere('t.ranks = 1');
