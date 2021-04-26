@@ -97,7 +97,7 @@ module.exports = {
     korwilRoleId: 38,
     smdRoleId: 117,
     palkurRoleId: [40, 41],
-    adminHrdRoleId: 154,
+    korwilHrdRoleId: 154,
   },
   masterData: {
     apiKey:

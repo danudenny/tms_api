@@ -1052,8 +1052,8 @@ export class MobileKorwilService {
     const lata = parseFloat(lat);
     const longa = parseFloat(long);
 
-    if (roleId == korwilConfig.adminHrdRoleId) {
-      // ADMIN HRD ALWAYS CHECK COORDINATE TO KANTOR PUSAT
+    if (roleId == korwilConfig.korwilHrdRoleId) {
+      // KORWIL HRD ALWAYS CHECK COORDINATE TO KANTOR PUSAT
       branchId = 1;
     }
 
