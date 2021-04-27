@@ -298,7 +298,7 @@ export class BagService {
 
   static async findOneBySealNumber(sealNumber: string): Promise<BagItem> {
     const regexNumber = /^[0-9]+$/;
-    if (sealNumber.length === 7 && regexNumber.test(sealNumber)) {
+    if ((sealNumber.length == 7 || sealNumber.length == 13) && regexNumber.test(sealNumber)) {
       const bagRepository = new OrionRepositoryService(BagItem);
       const q = bagRepository.findAll();
       // Manage relation (default inner join)
