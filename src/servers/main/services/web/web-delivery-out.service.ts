@@ -742,7 +742,7 @@ export class WebDeliveryOutService {
           } else {
             totalError += 1;
             response.status = 'error';
-            response.message = `Surat Jalan ${wordingBagNumberOrSeal} ${bagNumber} tidak valid.`;
+            response.message = `Surat Jalan ${wordingBagNumberOrSeal}${bagNumber} tidak valid.`;
           }
           // remove key holdRedis
           RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
@@ -750,7 +750,7 @@ export class WebDeliveryOutService {
         } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Gabung paket ${wordingBagNumberOrSeal} ${bagNumber} sudah di proses`;
+          response.message = `Gabung paket ${wordingBagNumberOrSeal}${bagNumber} sudah di proses`;
           // if (bagData.bagItemStatusIdLast == 1000) {
           //   response.message = `Gabung paket belum scan in, mohon untuk melakukan scan in terlebih dahulu`;
           // }
@@ -758,7 +758,7 @@ export class WebDeliveryOutService {
       } else {
         totalError += 1;
         response.status = 'error';
-        response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
+        response.message = `Gabung paket ${wordingBagNumberOrSeal}${bagNumber} Tidak di Temukan`;
       }
 
       // push item

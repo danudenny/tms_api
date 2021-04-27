@@ -69,6 +69,8 @@ export class LastMileDeliveryInService {
     }
 
     for (let inputNumber of payload.scanValue) {
+      let bagData;
+      let isSealNumber = false;
       // Check type scan value number
       inputNumber = inputNumber.trim();
       if (inputNumber.length == 12 && regexNumber.test(inputNumber)) {
@@ -86,30 +88,12 @@ export class LastMileDeliveryInService {
         data.push(dataItem);
 
         dataBag = resultAwb.dataBag;
-      } else if (
-        (inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))) ||
-        (inputNumber.length == 7 && regexNumber.test(inputNumber))
-      ) {
+      } else if (inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))) {
         // check valid bag
-        let bagData;
-        let isSealNumber = false;
-        if (inputNumber.length == 7) {
-          bagData = await BagService.findOneBySealNumber(inputNumber);
-          isSealNumber = true;
-        } else {
-          bagData = await BagService.validBagNumber(inputNumber);
-        }
-        const resultBag = await this.scanInBagBranch(
-          bagData,
-          inputNumber,
-          payload.podScanInBranchId,
-          isSealNumber,
-        );
-        if (resultBag) {
-          isBag = true;
-          data = resultBag.data;
-          dataBag = resultBag.dataBag;
-        }
+        bagData = await BagService.validBagNumber(inputNumber);
+      } else if ((inputNumber.length == 7 || inputNumber.length == 13) && regexNumber.test(inputNumber)) {
+        bagData = await BagService.findOneBySealNumber(inputNumber);
+        isSealNumber = true;
       } else {
         const dataItem = new ScanInputNumberBranchVm();
         dataItem.awbNumber = inputNumber;
@@ -118,6 +102,18 @@ export class LastMileDeliveryInService {
         dataItem.trouble = true;
         data.push(dataItem);
       }
+
+      const resultBag = await this.scanInBagBranch(
+          bagData,
+          inputNumber,
+          payload.podScanInBranchId,
+          isSealNumber,
+        );
+      if (resultBag) {
+          isBag = true;
+          data = resultBag.data;
+          dataBag = resultBag.dataBag;
+        }
     }
 
     // get bag number
@@ -333,6 +329,10 @@ export class LastMileDeliveryInService {
       totalError += 1;
       response.status = 'error';
       response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
+      if (isSealNumber) {
+        response.message = `Gabung paket dengan nomor tagseal ${bagNumber} Tidak di Temukan`;
+      }
+
     }
 
     // TODO: refactoring
