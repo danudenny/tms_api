@@ -4,7 +4,8 @@ import { Representative } from './representative';
 import { Branch } from './branch';
 import { DoSmdDetail } from './do_smd_detail';
 import { DoSmdVehicle } from './do_smd_vehicle';
-import {Vendor} from './vendor';
+import { Vendor } from './vendor';
+import { User } from './user';
 
 @Entity('do_smd', { schema: 'public' })
 // @Index('bag_bag_date_idx', ['bagDate'])
@@ -218,7 +219,7 @@ export class DoSmd extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
-
+  userUpdatedName;
   @OneToMany(() => DoSmdDetail, e => e.doSmd)
   doSmdDetails: DoSmdDetail[];
 
@@ -229,4 +230,8 @@ export class DoSmd extends TmsBaseEntity {
   @ManyToOne(() => Vendor)
   @JoinColumn({ name: 'vendor_id', referencedColumnName: 'vendorId' })
   vendor: Vendor;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id_updated' })
+  admin: User;
 }

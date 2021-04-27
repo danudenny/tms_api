@@ -28,6 +28,7 @@ import { ServiceUnavailableException } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
 // #endregion
 
+// TODO: to be removed
 export class V1MobileSyncService {
 
   public static async syncByRequest(
