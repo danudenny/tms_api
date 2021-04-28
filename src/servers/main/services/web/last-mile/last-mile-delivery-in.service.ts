@@ -29,7 +29,6 @@ import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
 import moment = require('moment');
 import { getManager } from 'typeorm';
-import { Awb } from 'src/shared/orm-entity/awb';
 // #endregion
 export class LastMileDeliveryInService {
   private static async resultBag(
