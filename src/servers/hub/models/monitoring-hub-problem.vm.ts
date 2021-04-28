@@ -43,6 +43,18 @@ export class MonitoringHubTotalProblemDataVm {
 
   @ApiModelProperty()
   machineSortir: string;
+
+  @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelProperty()
+  cityName: string;
+
+  @ApiModelProperty()
+  scanOut: string;
+
+  @ApiModelProperty()
+  notScanOut: string;
 }
 
 export class MonitoringHubTotalProblemVm extends BaseMetaResponseVm {

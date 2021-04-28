@@ -155,30 +155,38 @@ export class MonitoringProblemListService {
     payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
       [`br.branch_name`, 'branchName'],
+      [`br.branch_code`, 'branchCode'],
+      [`c.city_name`, 'cityName'],
       [`COUNT(
           DISTINCT CASE
             WHEN (bag_sortir.awb_id IS NULL OR scan_out.awb_id IS NULL) THEN dohd.awb_number
           END
-        )
-      `, 'problem'],
+        )`, 'problem'],
       [`COUNT(
           DISTINCT dohd.awb_number)`, 'doHub'],
       [`COUNT(
           DISTINCT CASE
             WHEN (is_manual = true AND bag_sortir.awb_id IS NOT NULL) THEN dohd.awb_number
-        END)
-      `, 'manualSortir'],
+        END)`, 'manualSortir'],
       [`COUNT(
           DISTINCT CASE WHEN (is_manual = false AND bag_sortir.awb_id IS NOT NULL)
             THEN dohd.awb_number
-        END)
-      `, 'machineSortir'],
+        END)`, 'machineSortir'],
+      [`COUNT(
+          DISTINCT scan_out.awb_id
+        )`, 'scanOut'],
+      [`COUNT(
+          DISTINCT CASE
+            WHEN (scan_out.awb_id IS NULL) THEN dohd.awb_number
+        END)`, 'notScanOut'],
     );
     q.innerJoinRaw(
       'branch',
       'br',
       `
         br.branch_id = doh.branch_id AND br.is_deleted = FALSE
+        INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
+        INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL AND (is_sortir IS NULL OR is_sortir = FALSE)
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
@@ -215,15 +223,20 @@ export class MonitoringProblemListService {
           INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
           INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
           WHERE
-          dp2.is_deleted = FALSE
-          AND dp2.do_pod_type = 3010
-          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
+            dp2.is_deleted = FALSE
+            AND dp2.do_pod_type = 3010
+            AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON true
     `);
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhereRaw('doh.branch_id IS NOT NULL');
 
-    q.groupByRaw(`br.branch_name`);
+    q.groupByRaw(`
+      br.branch_name,
+      br.branch_code,
+      c.city_name
+    `);
+    const subQuery = q.getQuery();
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
