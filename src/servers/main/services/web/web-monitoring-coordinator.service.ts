@@ -30,9 +30,6 @@ export class WebMonitoringCoordinatorService {
     payload: BaseMetaPayloadVm,
     isKorwilHrd: boolean = false,
   ): Promise<WebMonitoringCoordinatorResponse> {
-    const operatorQueryHrdKorwil = isKorwilHrd ? '=' : '<>';
-    const korwilConfig = await MobileKorwilService.getKorwilConfig();
-
     // mapping field
     payload.fieldResolverMap['countTask'] = 't1.total_task';
     payload.fieldResolverMap['branchId'] = 't2.branch_id';
@@ -78,10 +75,6 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.branches.representative, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.users.roles, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.andWhereRaw(`t7.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
     q.groupByRaw(`
       t2.branch_id,
       t2.branch_name,
@@ -111,6 +104,8 @@ export class WebMonitoringCoordinatorService {
     payload: WebMonitoringCoordinatorTaskPayload,
     isKorwilHrd: boolean = false,
   ): Promise<WebMonitoringCoordinatorTaskResponse> {
+    const operatorQueryHrdKorwil = isKorwilHrd ? '=' : '<>';
+    const korwilConfig = await MobileKorwilService.getKorwilConfig();
     let qb = createQueryBuilder();
     const subQb = qb.subQuery();
     subQb.addSelect('a.korwil_transaction_detail_id', 'korwilTransactionDetailId');
