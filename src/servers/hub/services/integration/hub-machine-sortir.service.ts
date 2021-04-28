@@ -192,7 +192,6 @@ export class HubMachineSortirService {
           const rawQuery = `
             SELECT bs.*
             FROM branch_sortir bs
-            INNER JOIN branch_sub_district d ON bs.branch_id_lastmile  = d.branch_id AND d.is_deleted = FALSE
             WHERE
               bs.is_deleted = FALSE AND
               bs.branch_id_lastmile=${resultDataSubDistrict[0].branch_id} AND
@@ -200,6 +199,7 @@ export class HubMachineSortirService {
               bs.branch_id = ${payload.sorting_branch_id}
             ;
           `;
+          console.log(rawQuery);
           const resultData = await RawQueryService.query(rawQuery);
           // console.log(rawQuery);
           if (resultData.length > 0 ) {
