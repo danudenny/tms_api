@@ -105,6 +105,7 @@ export class HubMachineSortirService {
             FROM branch_sortir bs
             WHERE
               bs.is_deleted = FALSE AND
+              bs.branch_id_lastmile=${resultDataSubDistrict[0].branch_id} AND
               bs.is_cod = ${escape(is_cod)} AND
               bs.branch_id = ${payload.sorting_branch_id}
             ;
