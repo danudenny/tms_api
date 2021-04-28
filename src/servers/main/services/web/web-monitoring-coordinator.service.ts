@@ -381,17 +381,8 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.userToBranch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.users, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
     q.innerJoin(e => e.users.roles, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.users.userRoles, 't8', j =>
-      (
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-        j.andWhereRaw('t8.branch_id = t5.ref_branch_id')
-      ),
     );
     q.andWhereRaw(`t7.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
 
