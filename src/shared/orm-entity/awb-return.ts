@@ -53,6 +53,12 @@ export class AwbReturn extends TmsBaseEntity {
   })
   branchId: number;
 
+  @Column('bigint', {
+    nullable: false,
+    name: 'branch_from_id',
+  })
+  branchFromId: number;
+
   @Column('character varying', {
     nullable: false,
     length: 255,
@@ -90,6 +96,10 @@ export class AwbReturn extends TmsBaseEntity {
   @ManyToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
+
+  @ManyToOne(() => Branch)
+  @JoinColumn({ name: 'branch_from_id' })
+  branchFrom: Branch;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_driver', referencedColumnName: 'userId' })

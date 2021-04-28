@@ -34,6 +34,15 @@ export class WebMonitoringController {
     return WebMonitoringCoordinatorService.findListAllBranch(payload);
   }
 
+  @Post('coordinator-hrd/branch')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebMonitoringCoordinatorResponse })
+  public async monitoringCoordinatorHrdList(@Body() payload: BaseMetaPayloadVm) {
+    return WebMonitoringCoordinatorService.findListHrdAllBranch(payload);
+  }
+
   @Post('coordinator/branch/list')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -43,6 +52,15 @@ export class WebMonitoringController {
     return WebMonitoringCoordinatorService.findListBranchCoordinator(payload);
   }
 
+  @Post('coordinator-hrd/branch/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebMonitoringCoordinatorBranchResponse })
+  public async monitoringHrdBranchCoordinatorList(@Body() payload: BaseMetaPayloadVm) {
+    return WebMonitoringCoordinatorService.findListHrdBranchCoordinator(payload);
+  }
+
   @Post('coordinator')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -50,6 +68,15 @@ export class WebMonitoringController {
   @ApiOkResponse({ type: WebMonitoringCoordinatorListResponse })
   public async monitoringCoordinator(@Body() payload: BaseMetaPayloadVm) {
     return WebMonitoringCoordinatorService.findListCoordinator(payload);
+  }
+
+  @Post('coordinator-hrd')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebMonitoringCoordinatorListResponse })
+  public async monitoringCoordinatorHrd(@Body() payload: BaseMetaPayloadVm) {
+    return WebMonitoringCoordinatorService.findListHrdCoordinator(payload);
   }
 
   @Post('coordinator/task')
