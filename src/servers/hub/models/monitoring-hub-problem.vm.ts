@@ -17,6 +17,9 @@ export class MonitoringHubProblemDataVm {
 
   @ApiModelProperty()
   out: string;
+
+  @ApiModelProperty()
+  awbStatusName: string;
 }
 
 export class MonitoringHubProblemVm extends BaseMetaResponseVm {
