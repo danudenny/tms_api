@@ -190,7 +190,7 @@ export class WebMonitoringCoordinatorService {
       [`MIN(d.check_in_date)`, 'checkInDatetime'],
       [`MAX(d.check_out_date)`, 'checkOutDatetime'],
       ['b.ref_user_id', 'userId'],
-      ['b.position', 'position'],
+      isKorwilHrd ? null : ['b.position', 'position '],
     );
     q.innerJoin(e => e.userToBranch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -215,7 +215,7 @@ export class WebMonitoringCoordinatorService {
     );
     q.andWhereRaw(`h.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
 
-    q.groupByRaw('b.ref_user_id, "coordinatorName", b.position');
+    q.groupByRaw(`b.ref_user_id, "coordinatorName" ${isKorwilHrd ? '' : ', b.position'}`);
     q.orderByRaw('"checkInDatetime"', 'ASC');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
