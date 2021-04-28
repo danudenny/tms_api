@@ -70,7 +70,7 @@ export class LastMileDeliveryInService {
 
     for (let inputNumber of payload.scanValue) {
       let bagData;
-      let isSealNumber = false;
+      let resultBag;
       // Check type scan value number
       inputNumber = inputNumber.trim();
       if (inputNumber.length == 12 && regexNumber.test(inputNumber)) {
@@ -91,9 +91,20 @@ export class LastMileDeliveryInService {
       } else if (inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))) {
         // check valid bag
         bagData = await BagService.validBagNumber(inputNumber);
+        resultBag = await this.scanInBagBranch(
+          bagData,
+          inputNumber,
+          payload.podScanInBranchId,
+          false,
+        );
       } else if ((inputNumber.length == 7 || inputNumber.length == 13) && regexNumber.test(inputNumber)) {
         bagData = await BagService.findOneBySealNumber(inputNumber);
-        isSealNumber = true;
+        resultBag = await this.scanInBagBranch(
+          bagData,
+          inputNumber,
+          payload.podScanInBranchId,
+          true,
+        );
       } else {
         const dataItem = new ScanInputNumberBranchVm();
         dataItem.awbNumber = inputNumber;
@@ -102,13 +113,6 @@ export class LastMileDeliveryInService {
         dataItem.trouble = true;
         data.push(dataItem);
       }
-
-      const resultBag = await this.scanInBagBranch(
-          bagData,
-          inputNumber,
-          payload.podScanInBranchId,
-          isSealNumber,
-        );
       if (resultBag) {
           isBag = true;
           data = resultBag.data;
