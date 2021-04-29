@@ -12,14 +12,16 @@ import { RolePermissionUpdateResponseVm } from '../../models/role-permission-upd
 export class RolePermissionService {
   public static async rolePermissionListByRequest({
     roleId,
+    appName,
   }: RolePermissionListPayloadVm): Promise<RolePermissionListResponseVm> {
     const q = RepositoryService.rolePermission.findAll();
-
+    appName = appName ? appName : 'POD'; // set appName role permission
     const rolePermissions = await q
       .select({
         name: true,
       })
       .where(e => e.role_id, w => w.equals(roleId))
+      .andWhere(e => e.app_name, w => w.equals(appName))
       .exec();
 
     const rolePermissionNames = rolePermissions.map(
@@ -34,6 +36,7 @@ export class RolePermissionService {
 
   public static async rolePermissionUpdateByRequest({
     roleId,
+    appName,
     rolesAccessPermissions,
   }: RolePermissionUpdatePayloadVm): Promise<RolePermissionUpdateResponseVm> {
     const role = await RepositoryService.role.loadById(roleId);
@@ -47,7 +50,7 @@ export class RolePermissionService {
     }
 
     const rolePermissions: RolePermission[] = [];
-    const appName = 'POD'; // set appName role permission
+    appName = appName ? appName : 'POD'; // set appName role permission
 
     for (const rolePermissionName of rolesAccessPermissions) {
       const rolePermission = RepositoryService.rolePermission.manager.create(RolePermission, {

@@ -768,6 +768,14 @@ export class WebCodNominalUpdateResponseVm {
   status: boolean;
 }
 
+export class WebCodPaymentDeleteResponseVm {
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  status: boolean;
+}
+
 export class WebCodNominalCheckResponseVm {
   @ApiModelProperty()
   message: string;

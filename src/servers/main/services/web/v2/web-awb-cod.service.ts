@@ -19,6 +19,7 @@ import {
   WebCodTransferPayloadVm,
   WebCodNominalUpdatePayloadVm,
   WebCodNominalCheckPayloadVm,
+  WebCodPaymentDeletePayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
   PrintCodTransferBranchVm,
@@ -30,6 +31,7 @@ import {
   WebCodNominalUpdateResponseVm,
   WebCodNominalCheckResponseVm,
   WebUpdateNominalCodListResponseVm,
+  WebCodPaymentDeleteResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { PrintByStoreService } from '../../print-by-store.service';
 
@@ -49,6 +51,7 @@ import { CodAwbRevision } from '../../../../../shared/orm-entity/cod-awb-revisio
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
+import { CodPaymentRevision } from '../../../../../shared/orm-entity/cod-payment-revision';
 
 export class V2WebAwbCodService {
   static async transferBranch(
@@ -328,8 +331,6 @@ export class V2WebAwbCodService {
               await masterRevisionQueryRunner.release();
             }
 
-            console.log('testt', revision);
-
             if (revision) {
               await transactionManager.update(
                 CodAwbRevision,
@@ -423,6 +424,62 @@ export class V2WebAwbCodService {
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
+    return result;
+  }
+
+  static async paymentDelete(
+    payload: WebCodPaymentDeletePayloadVm,
+  ): Promise<WebCodPaymentDeleteResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const uuidv1 = require('uuid/v1');
+    const uuidString = uuidv1();
+
+    let codPayment: CodPayment;
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      codPayment = await getConnection()
+        .createQueryBuilder(CodPayment, 'cp')
+        .setQueryRunner(masterQueryRunner)
+        .where('cp.awbNumber = :awbNumber AND cp.isDeleted = false', {
+          awbNumber: payload.awbNumber,
+        })
+        .getOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
+
+    if (!codPayment) {
+      throw new BadRequestException(
+        'Resi tidak ditemukan atau status resi belum Deliver!',
+      );
+    }
+
+    await getManager().transaction(async transactionManager => {
+      await transactionManager.update(
+        CodPayment,
+        {
+          awbNumber: payload.awbNumber,
+          isDeleted: false,
+        },
+        {
+          isDeleted: true,
+        },
+      );
+
+      await transactionManager.insert(CodPaymentRevision, {
+        codPaymentRevisionId: uuidString,
+        awbNumber: payload.awbNumber,
+        note: payload.note,
+        userIdCreated: authMeta.userId,
+        userIdUpdated: authMeta.userId,
+        createdTime: moment().toDate(),
+        updatedTime: moment().toDate(),
+      });
+    });
+
+    const result = new WebCodPaymentDeleteResponseVm();
+    result.message = 'Resi COD yang sudah deliver berhasil didelete';
+    result.status = true;
     return result;
   }
 
