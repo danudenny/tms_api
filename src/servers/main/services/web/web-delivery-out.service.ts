@@ -644,7 +644,7 @@ export class WebDeliveryOutService {
         const holdRedis = await RedisService.lockingWithExpire(
           `hold:bagscanout:${bagData.bagItemId}`,
           'locking',
-          15,
+          30,
         );
         // NOTE: validate bag branch id last
         // TODO: validation need improvement
