@@ -506,7 +506,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
@@ -539,7 +539,7 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t8.updated_time', 'transactionDate'],
+      ['t1.awb_history_date_last', 'transactionDate'],
       ['t1.awb_status_id_final', 'awbStatusIdLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
@@ -632,7 +632,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
@@ -663,7 +663,7 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t8.updated_time', 'transactionDate'],
+      ['t1.awb_history_date_last', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
