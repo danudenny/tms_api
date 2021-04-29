@@ -641,6 +641,11 @@ export class WebDeliveryOutService {
         wordingBagNumberOrSeal = 'dengan nomor seal ';
       }
       if (bagData) {
+        const holdRedis = await RedisService.lockingWithExpire(
+          `hold:bagscanout:${bagData.bagItemId}`,
+          'locking',
+          15,
+        );
         // NOTE: validate bag branch id last
         // TODO: validation need improvement
         // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
@@ -648,11 +653,7 @@ export class WebDeliveryOutService {
         let additionMinutes = 0;
         const transactionStatusId = 300; // OUT HUB
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
-        const holdRedis = await RedisService.lockingWithExpire(
-          `hold:bagscanout:${bagData.bagItemId}`,
-          'locking',
-          10,
-        );
+
         if (notScan && holdRedis) {
           if (doPod) {
             // create bag trouble
