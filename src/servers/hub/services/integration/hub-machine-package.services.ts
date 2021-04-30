@@ -32,6 +32,7 @@ import { BranchSortir } from '../../../../shared/orm-entity/branch-sortir';
 import { AwbService } from '../../../main/services/v1/awb.service';
 import { BagService } from '../../../main/services/v1/bag.service';
 import { CreateBagNumberResponseVM } from '../../../main/models/package-payload.vm';
+import { RedisService } from '../../../../shared/services/redis.service';
 // //#endregion
 
 export class HubMachineService {
@@ -79,49 +80,39 @@ export class HubMachineService {
       });
       if(branch){
         if (branchSortir) {
-          // Jagain COD Tidak boleh buat GS
-          if(branchSortir.isCod == true) {
-
-            const data = [];
+          for(let i = 0; i < payload.reference_numbers.length; i++) {
+            const awbItemAttr = await AwbService.validAwbNumber(payload.reference_numbers[i]);
+            // NOTE: check destination awb with awb.toId
+            const awb = await Awb.findOne({
+              where: { awbNumber: payload.reference_numbers[i], isDeleted: false },
+            });
+            if (!awbItemAttr || !awb) {
+              const data = [];
               data.push({
-                state: 0,
+                state: 1,
                 no_gabung_sortir: null,
               });
-              result.statusCode = HttpStatus.OK;
-              result.message = `Success Not Generate GS For COD`;
+              result.statusCode = HttpStatus.BAD_REQUEST;
+              result.message = `No resi tidak ditemukan / tidak valid`;
               result.data = data;
               return result;
-
-          } else {
-            for(let i = 0; i < payload.reference_numbers.length; i++) {
-              const awbItemAttr = await AwbService.validAwbNumber(payload.reference_numbers[i]);
-              // NOTE: check destination awb with awb.toId
-              const awb = await Awb.findOne({
-                where: { awbNumber: payload.reference_numbers[i], isDeleted: false },
+            } else if (awbItemAttr.isPackageCombined) {
+              const data = [];
+              data.push({
+                state: 1,
+                no_gabung_sortir: null,
               });
-              if (!awbItemAttr || !awb) {
-                const data = [];
-                data.push({
-                  state: 1,
-                  no_gabung_sortir: null,
-                });
-                result.statusCode = HttpStatus.BAD_REQUEST;
-                result.message = `No resi tidak ditemukan / tidak valid`;
-                result.data = data;
-                return result;
-              } else if (awbItemAttr.isPackageCombined) {
-                const data = [];
-                data.push({
-                  state: 1,
-                  no_gabung_sortir: null,
-                });
-                result.statusCode = HttpStatus.BAD_REQUEST;
-                result.message = `Nomor resi sudah digabung sortir`;
-                result.data = data;
-                return result;
-              }
+              result.statusCode = HttpStatus.BAD_REQUEST;
+              result.message = `Nomor resi sudah digabung sortir`;
+              result.data = data;
+              return result;
             }
-            // Process Create GS
+          }
+          // Process Create GS
+          const redlock = await RedisService.redlock(
+            `redlock:createMachineGS:${payload.sorting_branch_id}-${payload.chute_number}`, 10
+          );
+          if (redlock) { 
             for(let i = 0; i < payload.reference_numbers.length; i++) {
               scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
               if(scanResultMachine) {
@@ -140,6 +131,16 @@ export class HubMachineService {
               result.message = `Success Upload`;
               result.data = data;
             }
+          } else {
+            const data = [];
+              data.push({
+                state: 1,
+                no_gabung_sortir: null,
+              });
+              result.statusCode = HttpStatus.BAD_REQUEST;
+              result.message = `Nomor resi sedang di PROSESS !`;
+              result.data = data;
+              return result;
           }
 
         } else {
