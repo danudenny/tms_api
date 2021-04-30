@@ -366,6 +366,7 @@ export class WebAwbDeliverService {
           originAwbId: awbId,
           originAwbNumber: awbNumber,
           branchId,
+          branchFromId: branchId,
           userIdCreated: userId,
           userIdUpdated: userId,
           createdTime: moment().toDate(),

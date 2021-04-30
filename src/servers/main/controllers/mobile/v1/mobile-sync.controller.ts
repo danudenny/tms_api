@@ -34,15 +34,16 @@ import { Transactional } from '../../../../../shared/external/typeorm-transactio
 @ApiUseTags('Mobile Sync Data')
 @Controller('mobile/v1/sync')
 export class V1MobileSyncController {
-  @Post()
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ResponseSerializerOptions({ disable: true })
-  @ApiOkResponse({ type: MobileSyncDataResponseVm })
-  public async sync(@Body() payload: MobileSyncPayloadVm) {
-    return V1MobileSyncService.syncByRequest(payload);
-  }
+  //  TODO: to be removed
+  // @Post()
+  // @HttpCode(HttpStatus.OK)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  // @ResponseSerializerOptions({ disable: true })
+  // @ApiOkResponse({ type: MobileSyncDataResponseVm })
+  // public async sync(@Body() payload: MobileSyncPayloadVm) {
+  //   return V1MobileSyncService.syncByRequest(payload);
+  // }
 
   // TODO: to be removed
   // @Post('image')
