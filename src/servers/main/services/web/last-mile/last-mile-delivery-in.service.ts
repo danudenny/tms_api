@@ -31,6 +31,24 @@ import moment = require('moment');
 import { getManager } from 'typeorm';
 // #endregion
 export class LastMileDeliveryInService {
+  private static async resultBag(
+    inputNumber: string,
+    podScanInBranchId: string,
+    isSealNumber: boolean,
+  ): Promise<WebScanInBagBranchResponseVm> {
+    let bagData;
+    if (isSealNumber) {
+      bagData = await BagService.findOneBySealNumber(inputNumber); // check valid sealNumber
+    } else {
+      bagData = await BagService.validBagNumber(inputNumber); // check valid bagNumber
+    }
+    return await this.scanInBagBranch(
+        bagData,
+        inputNumber,
+        podScanInBranchId,
+        isSealNumber,
+      );
+  }
 
   // NOTE: scan in package on branch
   // 1. scan bag number / scan awb number
@@ -43,8 +61,6 @@ export class LastMileDeliveryInService {
     let data: ScanInputNumberBranchVm[] = [];
     let dataBag = new ScanBranchBagVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-
-    const regexNumber = /^[0-9]+$/;
 
     // find and create pod_scan_in_branch
     let podScanInBranch = await PodScanInBranch.findOne({
@@ -69,9 +85,10 @@ export class LastMileDeliveryInService {
     }
 
     for (let inputNumber of payload.scanValue) {
+      let resultBag;
       // Check type scan value number
       inputNumber = inputNumber.trim();
-      if (inputNumber.length == 12 && regexNumber.test(inputNumber)) {
+      if (await AwbService.isAwbNumberLenght(inputNumber)) {
         // awb number
         const resultAwb = await this.scanInAwbBranch(
           inputNumber,
@@ -86,30 +103,10 @@ export class LastMileDeliveryInService {
         data.push(dataItem);
 
         dataBag = resultAwb.dataBag;
-      } else if (
-        (inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))) ||
-        (inputNumber.length == 7 && regexNumber.test(inputNumber))
-      ) {
-        // check valid bag
-        let bagData;
-        let isSealNumber = false;
-        if (inputNumber.length == 7) {
-          bagData = await BagService.findOneBySealNumber(inputNumber);
-          isSealNumber = true;
-        } else {
-          bagData = await BagService.validBagNumber(inputNumber);
-        }
-        const resultBag = await this.scanInBagBranch(
-          bagData,
-          inputNumber,
-          payload.podScanInBranchId,
-          isSealNumber,
-        );
-        if (resultBag) {
-          isBag = true;
-          data = resultBag.data;
-          dataBag = resultBag.dataBag;
-        }
+      } else if (await BagService.isBagNumberLenght(inputNumber)) {
+        resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId, false);
+      } else if (await BagService.isSealNumberLenght(inputNumber)) {
+        resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId, true);
       } else {
         const dataItem = new ScanInputNumberBranchVm();
         dataItem.awbNumber = inputNumber;
@@ -118,6 +115,11 @@ export class LastMileDeliveryInService {
         dataItem.trouble = true;
         data.push(dataItem);
       }
+      if (resultBag) {
+          isBag = true;
+          data = resultBag.data;
+          dataBag = resultBag.dataBag;
+        }
     }
 
     // get bag number
@@ -333,6 +335,10 @@ export class LastMileDeliveryInService {
       totalError += 1;
       response.status = 'error';
       response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
+      if (isSealNumber) {
+        response.message = `Gabung paket dengan nomor tagseal ${bagNumber} Tidak di Temukan`;
+      }
+
     }
 
     // TODO: refactoring

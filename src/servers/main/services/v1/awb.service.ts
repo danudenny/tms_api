@@ -278,4 +278,9 @@ export class AwbService {
     return awbCancel ? true : false;
   }
 
+  public static async isAwbNumberLenght(inputNumber: string): Promise<boolean> {
+    const regexNumber = /^[0-9]+$/;
+    return (inputNumber.length == 12 && regexNumber.test(inputNumber)) ? true : false;
+  }
+
 }

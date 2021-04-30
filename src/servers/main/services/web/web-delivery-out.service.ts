@@ -641,6 +641,11 @@ export class WebDeliveryOutService {
         wordingBagNumberOrSeal = 'dengan nomor seal ';
       }
       if (bagData) {
+        const holdRedis = await RedisService.lockingWithExpire(
+          `hold:bagscanout:${bagData.bagItemId}`,
+          'locking',
+          30,
+        );
         // NOTE: validate bag branch id last
         // TODO: validation need improvement
         // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
@@ -648,11 +653,7 @@ export class WebDeliveryOutService {
         let additionMinutes = 0;
         const transactionStatusId = 300; // OUT HUB
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
-        const holdRedis = await RedisService.lockingWithExpire(
-          `hold:bagscanout:${bagData.bagItemId}`,
-          'locking',
-          10,
-        );
+
         if (notScan && holdRedis) {
           if (doPod) {
             // create bag trouble
@@ -742,7 +743,7 @@ export class WebDeliveryOutService {
           } else {
             totalError += 1;
             response.status = 'error';
-            response.message = `Surat Jalan ${wordingBagNumberOrSeal} ${bagNumber} tidak valid.`;
+            response.message = `Surat Jalan ${wordingBagNumberOrSeal}${bagNumber} tidak valid.`;
           }
           // remove key holdRedis
           RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
@@ -750,7 +751,7 @@ export class WebDeliveryOutService {
         } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Gabung paket ${wordingBagNumberOrSeal} ${bagNumber} sudah di proses`;
+          response.message = `Gabung paket ${wordingBagNumberOrSeal}${bagNumber} sudah di proses`;
           // if (bagData.bagItemStatusIdLast == 1000) {
           //   response.message = `Gabung paket belum scan in, mohon untuk melakukan scan in terlebih dahulu`;
           // }
@@ -758,7 +759,7 @@ export class WebDeliveryOutService {
       } else {
         totalError += 1;
         response.status = 'error';
-        response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
+        response.message = `Gabung paket ${wordingBagNumberOrSeal}${bagNumber} Tidak di Temukan`;
       }
 
       // push item
