@@ -41,7 +41,7 @@ export function IsBagNumber(validationOptions?: ValidationOptions) {
         validate(value: any, args: ValidationArguments) {
           let check = 0;
           for (const awbNumber of value) {
-            if (awbNumber.length !== 10 && awbNumber.length !== 7) {
+            if (awbNumber.length !== 10 && awbNumber.length !== 7 && awbNumber.length !== 13) {
               check = 1;
               break;
             }
