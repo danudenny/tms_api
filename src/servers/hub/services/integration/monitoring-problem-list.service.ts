@@ -262,7 +262,10 @@ export class MonitoringProblemListService {
     q.groupByRaw(`
       br.branch_name,
       br.branch_code,
-      c.city_name
+      c.city_name,
+      dohd.created_time,
+      doh.branch_id,
+      dohd.awb_number
     `);
 
     const data = await q.exec();
