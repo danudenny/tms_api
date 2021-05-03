@@ -164,7 +164,7 @@ export class MonitoringProblemListService {
   ): Promise<MonitoringHubTotalProblemVm> {
     const statusProblemStr = (await this.getListStatusAwbProblem()).join(',');
 
-    payload.fieldResolverMap['createdTime'] = '"ai"."created_time"::DATE';
+    payload.fieldResolverMap['createdTime'] = '"doh"."created_time"::DATE';
     payload.fieldResolverMap['scanDate'] = 'doh.created_time';
     payload.fieldResolverMap['branchIdFrom'] = 'doh.branch_id';
     payload.fieldResolverMap['branchNameFrom'] = 'doh.branch_name';
