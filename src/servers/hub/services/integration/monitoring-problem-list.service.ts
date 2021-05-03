@@ -130,6 +130,7 @@ export class MonitoringProblemListService {
       bag_sortir.bag_number,
       bag_sortir.bag_seq,
       doh.bag_number,
+      dohd.created_time,
       -- br.branch_name,
       bag_sortir.awb_id,
       scan_out.awb_id,
