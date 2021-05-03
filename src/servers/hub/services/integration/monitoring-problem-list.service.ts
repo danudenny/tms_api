@@ -23,6 +23,7 @@ export class MonitoringProblemListService {
     payload.fieldResolverMap['branchTo'] = 'scan_out.branch_name';
     payload.fieldResolverMap['awbNumber'] = 'dohd.awb_number';
     payload.fieldResolverMap['bagNumber'] = '"bagNumber"';
+    payload.fieldResolverMap['cityId'] = 'c.city_id';
 
     payload.globalSearchFields = [
       {
@@ -46,7 +47,7 @@ export class MonitoringProblemListService {
             THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
           ELSE doh.bag_number
         END`, 'bagNumber'],
-      ['Yes', 'do'],
+      ['\'Yes\'', 'do'],
       [`CASE WHEN bag_sortir.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
@@ -77,6 +78,8 @@ export class MonitoringProblemListService {
       `
         br.branch_id = doh.branch_id AND br.is_deleted = FALSE
         INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL AND (is_sortir IS NULL OR is_sortir = FALSE)
+        INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
+        INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
@@ -135,7 +138,8 @@ export class MonitoringProblemListService {
       scan_out.branch_name,
       bag.is_manual,
       last_status.awb_status_name,
-      last_status.awb_status_id
+      last_status.awb_status_id,
+      c.city_id
     `);
 
     const data = await q.exec();
@@ -162,6 +166,7 @@ export class MonitoringProblemListService {
     payload.fieldResolverMap['branchNameTo'] = 'scan_out.branch_name';
     payload.fieldResolverMap['awbNumber'] = 'dohd.awb_number';
     payload.fieldResolverMap['bagNumber'] = '"bagNumber"';
+    payload.fieldResolverMap['cityId'] = 'c.city_id';
 
     payload.globalSearchFields = [
       {

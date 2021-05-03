@@ -13,6 +13,9 @@ export class MonitoringHubProblemDataVm {
   bagNumber: string;
 
   @ApiModelProperty()
+  do: string;
+
+  @ApiModelProperty()
   in: string;
 
   @ApiModelProperty()
