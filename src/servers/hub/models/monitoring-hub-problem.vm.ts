@@ -61,6 +61,9 @@ export class MonitoringHubTotalProblemDataVm {
 
   @ApiModelProperty()
   notScanOut: string;
+
+  @ApiModelProperty()
+  lebihSortir: string;
 }
 
 export class MonitoringHubTotalProblemVm extends BaseMetaResponseVm {
