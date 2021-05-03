@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { BaseMetaPayloadVm, BaseMetaPayloadFilterVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DropoffHub } from '../../../../shared/orm-entity/dropoff_hub';
@@ -22,7 +22,9 @@ export class MonitoringProblemListService {
     payload.fieldResolverMap['branchIdTo'] = 'scan_out.branch_id';
     payload.fieldResolverMap['branchTo'] = 'scan_out.branch_name';
     payload.fieldResolverMap['awbNumber'] = 'dohd.awb_number';
-    payload.fieldResolverMap['bagNumber'] = '"bagNumber"';
+    payload.fieldResolverMap['bagNumber'] = 'doh.bag_number';
+    payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
+    payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
     payload.fieldResolverMap['cityId'] = 'c.city_id';
 
     payload.globalSearchFields = [
@@ -34,6 +36,8 @@ export class MonitoringProblemListService {
     if (!payload.sortBy) {
       payload.sortBy = 'createdTime';
     }
+
+    payload = this.formatPayloadFiltersAwbProblem(payload);
 
     const repo = new OrionRepositoryService(DropoffHub, 'doh');
     const q = repo.findAllRaw();
@@ -159,14 +163,16 @@ export class MonitoringProblemListService {
   ): Promise<MonitoringHubTotalProblemVm> {
     const statusProblemStr = (await this.getListStatusAwbProblem()).join(',');
 
-    payload.fieldResolverMap['createdTime'] = 'dohd.created_time';
+    payload.fieldResolverMap['createdTime'] = '"dohd"."created_time"::DATE';
     payload.fieldResolverMap['scanDate'] = 'dohd.created_time';
     payload.fieldResolverMap['branchIdFrom'] = 'doh.branch_id';
     payload.fieldResolverMap['branchNameFrom'] = 'doh.branch_name';
     payload.fieldResolverMap['branchIdTo'] = 'scan_out.branch_id';
     payload.fieldResolverMap['branchNameTo'] = 'scan_out.branch_name';
     payload.fieldResolverMap['awbNumber'] = 'dohd.awb_number';
-    payload.fieldResolverMap['bagNumber'] = '"bagNumber"';
+    payload.fieldResolverMap['bagNumber'] = 'doh.bag_number';
+    payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
+    payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
     payload.fieldResolverMap['cityId'] = 'c.city_id';
 
     payload.globalSearchFields = [
@@ -174,6 +180,7 @@ export class MonitoringProblemListService {
         field: 'scan_out.branch_name',
       },
     ];
+    payload = this.formatPayloadFiltersAwbProblem(payload);
 
     const repo = new OrionRepositoryService(DropoffHub, 'doh');
     const q = repo.findAllRaw();
@@ -264,9 +271,8 @@ export class MonitoringProblemListService {
       br.branch_name,
       br.branch_code,
       c.city_name,
-      dohd.created_time,
-      doh.branch_id,
-      dohd.awb_number
+      dohd.created_time::DATE,
+      doh.branch_id
     `);
 
     const data = await q.exec();
@@ -278,6 +284,24 @@ export class MonitoringProblemListService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  static formatPayloadFiltersAwbProblem(payload: BaseMetaPayloadVm) {
+    const isFilterBagNumber = false;
+    let isFilterBagSortir = false;
+
+    // tslint:disable-next-line: prefer-for-of
+    for (let i = 0; i < payload.filters.length; i++) {
+      if (payload.filters[i].field == 'bagSortir') {
+        isFilterBagSortir = true;
+
+        const bagSortir = payload.filters[i].value.substr( 0 , 7);
+        const bagSeq = payload.filters[i].value.substr(7 , 10);
+        payload.filters[i].value = bagSortir;
+        payload.filters.push({field: 'bagSeqSortir', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
+      }
+    }
+    return payload;
   }
 
   static async getAwbManualSortir(
