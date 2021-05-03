@@ -181,6 +181,7 @@ export class MonitoringProblemListService {
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
       [`br.branch_name`, 'branchName'],
+      [`MAX(dohd.created_time)`, 'scanDate'],
       [`br.branch_code`, 'branchCode'],
       [`c.city_name`, 'cityName'],
       [`COUNT(
