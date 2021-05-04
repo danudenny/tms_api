@@ -549,12 +549,12 @@ export class V1WebTrackingService {
     qb.innerJoin(
       'users',
       't4',
-      't1.user_id_created = t4.user_id AND t3.is_deleted = false',
+      't1.user_id_created = t4.user_id',
     );
     qb.innerJoin(
       'employee',
       't5',
-      't4.employee_id = t5.employee_id AND t5.is_deleted = false',
+      't4.employee_id = t5.employee_id',
     );
     qb.where('t1.awb_item_id = :awbItemId AND t1.is_deleted = false', {
       awbItemId,
