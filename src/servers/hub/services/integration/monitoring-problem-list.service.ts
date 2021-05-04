@@ -101,40 +101,43 @@ export class MonitoringProblemListService {
             br1.branch_code,
             br1.branch_id
           FROM bag_item_awb bia1
-          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND ai.awb_id = ai1.awb_id
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
           INNER JOIN branch br1 ON br1.branch_id = b1.branch_id_to AND br1.is_deleted = FALSE
           INNER JOIN district d1 ON d1.district_id = br1.district_id AND d1.is_deleted = FALSE
           INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
-          WHERE bia1.is_deleted = FALSE
+          WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
           SELECT
             ai2.awb_id,
             dpdb2.bag_number,
             br2.branch_id,
-            br2.branch_name
+            dpdb2.created_time
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
-          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
-          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
-          INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
           WHERE
-          dp2.is_deleted = FALSE
-          AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
-          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
+            dp2.is_deleted = FALSE
+            AND dp2.do_pod_type = 3010
+            AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON true
-        LEFT JOIN LATERAL
-        (
-          SELECT ah3.awb_status_id, as3.awb_status_name
-          FROM awb_history ah3
-          INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id AND as3.is_deleted = FALSE
-          WHERE ah3.awb_item_id = bia.awb_item_id
-          ORDER BY ah3.history_date DESC
+        LEFT JOIN LATERAL (
+          SELECT
+            ah3.awb_status_id,
+            as3.awb_status_name
+          FROM
+            awb_history ah3
+          INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
+          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = dohd.awb_number AND bia3.is_deleted = FALSE
+            AND bia3.is_deleted = FALSE
+          ORDER BY
+            ah3.history_date DESC
           LIMIT 1
-        ) AS last_status ON true
+        ) AS last_status ON TRUE
     `);
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhereRaw('doh.branch_id IS NOT NULL');
@@ -182,7 +185,7 @@ export class MonitoringProblemListService {
     payload.fieldResolverMap['bagNumber'] = 'doh.bag_number';
     payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
     payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
-    payload.fieldResolverMap['cityId'] = 'bag_sortir.city_name';
+    payload.fieldResolverMap['cityId'] = 'bag_sortir.city_id';
 
     payload.globalSearchFields = [
       {
@@ -250,13 +253,13 @@ export class MonitoringProblemListService {
             br1.branch_code,
             br1.branch_id
           FROM bag_item_awb bia1
-          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND ai.awb_id = ai1.awb_id
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
           INNER JOIN branch br1 ON br1.branch_id = b1.branch_id_to AND br1.is_deleted = FALSE
           INNER JOIN district d1 ON d1.district_id = br1.district_id AND d1.is_deleted = FALSE
           INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
-          WHERE bia1.is_deleted = FALSE
+          WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
           SELECT
@@ -267,22 +270,24 @@ export class MonitoringProblemListService {
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
-          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
-          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND ai.awb_id = ai2.awb_id
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
           WHERE
             dp2.is_deleted = FALSE
             AND dp2.do_pod_type = 3010
             AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON true
-        LEFT JOIN LATERAL
-        (
-          SELECT ah3.awb_status_id
-          FROM awb_history ah3
-          -- INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id AND as3.is_deleted = FALSE
-          WHERE ah3.awb_item_id = bia.awb_item_id
-          ORDER BY ah3.history_date DESC
+        LEFT JOIN LATERAL (
+          SELECT
+            ah3.awb_status_id
+          FROM
+            awb_history ah3
+          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = dohd.awb_number
+            AND bia3.is_deleted = FALSE
+          ORDER BY
+            ah3.history_date DESC
           LIMIT 1
-        ) AS last_status ON true
+        ) AS last_status ON TRUE
     `);
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhereRaw('bag.branch_id IS NOT NULL AND (bag.is_sortir IS NULL OR bag.is_sortir = FALSE)');
@@ -373,13 +378,13 @@ export class MonitoringProblemListService {
             br1.branch_code,
             br1.branch_id
           FROM bag_item_awb bia1
-          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND ai.awb_id = ai1.awb_id
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
           INNER JOIN branch br1 ON br1.branch_id = b1.branch_id_to AND br1.is_deleted = FALSE
           INNER JOIN district d1 ON d1.district_id = br1.district_id AND d1.is_deleted = FALSE
           INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
-          WHERE bia1.is_deleted = FALSE
+          WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
           SELECT
@@ -390,22 +395,24 @@ export class MonitoringProblemListService {
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
-          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
-          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND ai.awb_id = ai2.awb_id
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
           WHERE
             dp2.is_deleted = FALSE
             AND dp2.do_pod_type = 3010
             AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON true
-        LEFT JOIN LATERAL
-        (
-          SELECT ah3.awb_status_id
-          FROM awb_history ah3
-          -- INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id AND as3.is_deleted = FALSE
-          WHERE ah3.awb_item_id = bia.awb_item_id
-          ORDER BY ah3.history_date DESC
+        LEFT JOIN LATERAL (
+          SELECT
+            ah3.awb_status_id
+          FROM
+            awb_history ah3
+          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = dohd.awb_number
+            AND bia3.is_deleted = FALSE
+          ORDER BY
+            ah3.history_date DESC
           LIMIT 1
-        ) AS last_status ON true
+        ) AS last_status ON TRUE
     `);
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhereRaw('bag.branch_id IS NOT NULL AND (bag.is_sortir IS NULL OR bag.is_sortir = FALSE) AND dohd.awb_number IS NULL');
