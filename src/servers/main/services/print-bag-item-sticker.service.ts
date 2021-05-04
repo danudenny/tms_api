@@ -95,7 +95,7 @@ export class PrintBagItemStickerService {
       } resi"\n` +
       `TEXT 30,460,"3",0,1,1,"Tanggal : ${moment().format('YYYY-MM-DD HH:mm')}"\n` +
       `TEXT 30,500,"4",0,1,1,0,"${branchCode}"\n` +
-      `TEXT 30,550,"4",0,1,1,0,"${branchName}"\n` +
+      `TEXT 30,550,"5",0,1,1,0,"${branchName}"\n` +
       `PRINT 1\n` +
       `EOP`;
 
