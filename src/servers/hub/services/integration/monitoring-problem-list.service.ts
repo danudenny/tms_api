@@ -191,6 +191,7 @@ export class MonitoringProblemListService {
       [`bag_sortir.branch_name`, 'branchName'],
       [`doh.created_time::DATE`, 'scanDate'],
       [`bag_sortir.branch_code`, 'branchCode'],
+      [`bag_sortir.branchId`, 'branchId'],
       [`bag_sortir.city_name`, 'cityName'],
       [`COUNT(
           DISTINCT CASE
@@ -238,7 +239,8 @@ export class MonitoringProblemListService {
             c1.city_name,
             c1.city_id,
             br1.branch_name,
-            br1.branch_code
+            br1.branch_code,
+            br1.branch_id
           FROM bag_item_awb bia1
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND ai.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
@@ -280,6 +282,7 @@ export class MonitoringProblemListService {
     q.groupByRaw(`
       bag_sortir.branch_name,
       bag_sortir.branch_code,
+      bag_sortir.branch_id,
       bag_sortir.city_name,
       doh.created_time::DATE,
       doh.branch_id

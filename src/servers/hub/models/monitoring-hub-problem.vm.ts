@@ -54,6 +54,9 @@ export class MonitoringHubTotalProblemDataVm {
   branchCode: string;
 
   @ApiModelProperty()
+  branchId: string;
+
+  @ApiModelProperty()
   cityName: string;
 
   @ApiModelProperty()
