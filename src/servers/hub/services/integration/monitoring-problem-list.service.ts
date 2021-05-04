@@ -114,6 +114,7 @@ export class MonitoringProblemListService {
             ai2.awb_id,
             dpdb2.bag_number,
             br2.branch_id,
+            br2.branch_name,
             dpdb2.created_time
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
@@ -122,10 +123,10 @@ export class MonitoringProblemListService {
           INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
           WHERE
             dp2.is_deleted = FALSE
-            AND dp2.do_pod_type = 3010
+            AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
             AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON true
-        LEFT JOIN LATERAL (
+        INNER JOIN LATERAL (
           SELECT
             ah3.awb_status_id,
             as3.awb_status_name
@@ -228,7 +229,7 @@ export class MonitoringProblemListService {
         END)`, 'notScanOut'],
       [`COUNT(
           DISTINCT CASE
-            WHEN (dohd.awb_id IS NULL AND scan_out.awb_id IS NOT NULL) THEN ai.awb_id
+            WHEN (dohd.awb_number IS NULL AND scan_out.awb_id IS NOT NULL) THEN ai.awb_id
         END)`, 'lebihSortir'],
     );
     q.innerJoinRaw(
@@ -274,10 +275,10 @@ export class MonitoringProblemListService {
           INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
           WHERE
             dp2.is_deleted = FALSE
-            AND dp2.do_pod_type = 3010
+            AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
             AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON true
-        LEFT JOIN LATERAL (
+        INNER JOIN LATERAL (
           SELECT
             ah3.awb_status_id
           FROM
@@ -341,18 +342,18 @@ export class MonitoringProblemListService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
-      [`MAX(doh.created_time)`, 'scanDate'],
+      [`MAX(dohd.created_time)`, 'scanDate'],
       [`dohd.awb_number`, 'awbNumber'],
       [`CASE
-          WHEN bag_sortir.awb_id IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
+          WHEN bag_sortir.bag_number IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
             THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
           ELSE doh.bag_number
         END`, 'bagNumber'],
       [`CASE WHEN
-          dohd.awb_number IS NULL THEN 'Yes'
-          ELSE 'No'
+        dohd.awb_number IS NULL THEN 'Yes'
+        ELSE 'No'
         END`, 'do'],
-      [`CASE WHEN bag_sortir.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
+      [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
     );
@@ -386,11 +387,12 @@ export class MonitoringProblemListService {
           INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
           WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
         ) AS bag_sortir ON true
-        LEFT JOIN LATERAL (
+        INNER JOIN LATERAL (
           SELECT
             ai2.awb_id,
             dpdb2.bag_number,
             br2.branch_id,
+            br2.branch_name,
             dpdb2.created_time
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
@@ -399,15 +401,17 @@ export class MonitoringProblemListService {
           INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
           WHERE
             dp2.is_deleted = FALSE
-            AND dp2.do_pod_type = 3010
+            AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
             AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON true
-        LEFT JOIN LATERAL (
+        INNER JOIN LATERAL (
           SELECT
-            ah3.awb_status_id
+            ah3.awb_status_id,
+            as3.awb_status_name
           FROM
             awb_history ah3
           INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = dohd.awb_number
+          INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
             AND bia3.is_deleted = FALSE
           ORDER BY
             ah3.history_date DESC
@@ -418,12 +422,20 @@ export class MonitoringProblemListService {
     q.andWhereRaw('bag.branch_id IS NOT NULL AND (bag.is_sortir IS NULL OR bag.is_sortir = FALSE) AND dohd.awb_number IS NULL');
 
     q.groupByRaw(`
-      bag_sortir.branch_name,
-      bag_sortir.branch_code,
-      bag_sortir.branch_id,
-      bag_sortir.city_name,
-      doh.created_time::DATE,
-      doh.branch_id
+      dohd.awb_number,
+      bag_sortir.bag_number,
+      bag_sortir.bag_seq,
+      doh.bag_number,
+      doh.created_time,
+      -- br.branch_name,
+      scan_out.awb_id,
+      doh.branch_id,
+      scan_out.branch_id,
+      scan_out.branch_name,
+      bag.is_manual,
+      last_status.awb_status_name,
+      last_status.awb_status_id,
+      bag_sortir.city_id
     `);
 
     const data = await q.exec();
