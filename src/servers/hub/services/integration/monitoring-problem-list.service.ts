@@ -191,7 +191,7 @@ export class MonitoringProblemListService {
       [`bag_sortir.branch_name`, 'branchName'],
       [`doh.created_time::DATE`, 'scanDate'],
       [`bag_sortir.branch_code`, 'branchCode'],
-      [`bag_sortir.branchId`, 'branchId'],
+      [`bag_sortir.branch_id`, 'branchId'],
       [`bag_sortir.city_name`, 'cityName'],
       [`COUNT(
           DISTINCT CASE
@@ -219,6 +219,126 @@ export class MonitoringProblemListService {
           DISTINCT CASE
             WHEN (dohd.awb_id IS NULL AND scan_out.awb_id IS NOT NULL) THEN ai.awb_id
         END)`, 'lebihSortir'],
+    );
+    q.innerJoinRaw(
+      'bag_item',
+      'bi',
+      `
+        bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
+        LEFT JOIN dropoff_hub doh ON doh.bag_id = bag.bag_id AND doh.is_deleted = FALSE and doh.branch_id IS NOT NULL
+        LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+        INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
+        INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+        LEFT JOIN LATERAL
+        (
+          SELECT
+            bi1.bag_seq,
+            ai1.awb_id,
+            b1.bag_number,
+            bi1.created_time,
+            c1.city_name,
+            c1.city_id,
+            br1.branch_name,
+            br1.branch_code,
+            br1.branch_id
+          FROM bag_item_awb bia1
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND ai.awb_id = ai1.awb_id
+          INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
+          INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
+          INNER JOIN branch br1 ON br1.branch_id = b1.branch_id_to AND br1.is_deleted = FALSE
+          INNER JOIN district d1 ON d1.district_id = br1.district_id AND d1.is_deleted = FALSE
+          INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
+          WHERE bia1.is_deleted = FALSE
+        ) AS bag_sortir ON true
+        LEFT JOIN LATERAL (
+          SELECT
+            ai2.awb_id,
+            dpdb2.bag_number,
+            br2.branch_id,
+            dpdb2.created_time
+          FROM do_pod dp2
+          INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
+          INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND ai.awb_id = ai2.awb_id
+          WHERE
+            dp2.is_deleted = FALSE
+            AND dp2.do_pod_type = 3010
+            AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
+        ) AS scan_out ON true
+        LEFT JOIN LATERAL
+        (
+          SELECT ah3.awb_status_id
+          FROM awb_history ah3
+          -- INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id AND as3.is_deleted = FALSE
+          WHERE ah3.awb_item_id = bia.awb_item_id
+          ORDER BY ah3.history_date DESC
+          LIMIT 1
+        ) AS last_status ON true
+    `);
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhereRaw('bag.branch_id IS NOT NULL AND (bag.is_sortir IS NULL OR bag.is_sortir = FALSE)');
+
+    q.groupByRaw(`
+      bag_sortir.branch_name,
+      bag_sortir.branch_code,
+      bag_sortir.branch_id,
+      bag_sortir.city_name,
+      doh.created_time::DATE,
+      doh.branch_id
+    `);
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new MonitoringHubTotalProblemVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async getLebihSortir(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubTotalProblemVm> {
+    const statusProblemStr = (await this.getListStatusAwbProblem()).join(',');
+
+    payload.fieldResolverMap['createdTime'] = '"doh"."created_time"::DATE';
+    payload.fieldResolverMap['scanDate'] = 'doh.created_time';
+    payload.fieldResolverMap['branchIdFrom'] = 'doh.branch_id';
+    payload.fieldResolverMap['branchNameFrom'] = 'doh.branch_name';
+    payload.fieldResolverMap['branchIdTo'] = 'scan_out.branch_id';
+    payload.fieldResolverMap['branchNameTo'] = 'scan_out.branch_name';
+    payload.fieldResolverMap['awbNumber'] = 'dohd.awb_number';
+    payload.fieldResolverMap['bagNumber'] = 'doh.bag_number';
+    payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
+    payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
+    payload.fieldResolverMap['cityId'] = 'c.city_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'scan_out.branch_name',
+      },
+    ];
+    payload = this.formatPayloadFiltersAwbProblem(payload);
+
+    const repo = new OrionRepositoryService(Bag, 'bag');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(
+      [`MAX(doh.created_time)`, 'scanDate'],
+      [`dohd.awb_number`, 'awbNumber'],
+      [`CASE
+          WHEN bag_sortir.awb_id IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
+            THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
+          ELSE doh.bag_number
+        END`, 'bagNumber'],
+      ['\'Yes\'', 'do'],
+      [`CASE WHEN bag_sortir.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
+      [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
+      [`last_status.awb_status_name`, 'awbStatusName'],
     );
     q.innerJoinRaw(
       'bag_item',
