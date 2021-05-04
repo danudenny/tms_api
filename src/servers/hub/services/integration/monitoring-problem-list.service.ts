@@ -49,12 +49,12 @@ export class MonitoringProblemListService {
       [`MAX(dohd.created_time)`, 'scanDate'],
       [`dohd.awb_number`, 'awbNumber'],
       [`CASE
-          WHEN bag_sortir.awb_id IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
+          WHEN bag_sortir.bag_number IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
             THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
           ELSE doh.bag_number
         END`, 'bagNumber'],
       ['\'Yes\'', 'do'],
-      [`CASE WHEN bag_sortir.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
+      [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
     );
@@ -146,7 +146,6 @@ export class MonitoringProblemListService {
       doh.bag_number,
       doh.created_time,
       -- br.branch_name,
-      bag_sortir.awb_id,
       scan_out.awb_id,
       doh.branch_id,
       scan_out.branch_id,
@@ -183,7 +182,7 @@ export class MonitoringProblemListService {
     payload.fieldResolverMap['bagNumber'] = 'doh.bag_number';
     payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
     payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
-    payload.fieldResolverMap['cityId'] = 'c.city_id';
+    payload.fieldResolverMap['cityId'] = 'bag_sortir.city_name';
 
     payload.globalSearchFields = [
       {
