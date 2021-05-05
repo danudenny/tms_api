@@ -5,6 +5,7 @@ import { Branch } from './branch';
 import { AwbItemAttr } from './awb-item-attr';
 import { User } from './user';
 import { DoPodDetail } from './do-pod-detail';
+import { Awb } from './awb';
 
 @Entity('awb_return', { schema: 'public' })
 export class AwbReturn extends TmsBaseEntity {
@@ -104,4 +105,8 @@ export class AwbReturn extends TmsBaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_driver', referencedColumnName: 'userId' })
   userDriver: User;
+
+  @OneToOne(() => Awb)
+  @JoinColumn({ name: 'origin_awb_id', referencedColumnName: 'awbId'})
+  awb: Awb;
 }
