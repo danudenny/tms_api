@@ -86,12 +86,12 @@ export class PrintBagItemStickerService {
     let printBranchName = '';
     // handle branch name
     if (branchName.length) {
-      // get only 25 char and split with space
-      arrBranch = branchName.substring(0, 25).split(' ');
+      // get only 40 char and split with space
+      arrBranch = branchName.substring(0, 40).split(' ');
       arrBranch = chunk(arrBranch, 2);
       // wrap text
       for (const [index, item] of arrBranch.entries()) {
-        const position = index * 40 + 550;
+        const position = index * 60 + 550;
         const branch = item.join(' ');
         printBranchName += `TEXT 30,${position},"5",0,1,1,0,"${branch}"\n`;
       }
