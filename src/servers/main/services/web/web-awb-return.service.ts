@@ -443,19 +443,19 @@ export class WebAwbReturnService {
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.originAwb.awb, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.originAwb.awb.branchLast, 't4', j =>
+    q.leftJoin(e => e.originAwb.awb.branchLast, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.originAwb.awb.partner, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.branchFrom, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
