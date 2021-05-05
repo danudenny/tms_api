@@ -204,3 +204,11 @@ export class WebCodNominalUpdatePayloadVm {
   @ApiModelProperty()
   nominal: number;
 }
+
+export class WebCodPaymentDeletePayloadVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  note: string;
+}

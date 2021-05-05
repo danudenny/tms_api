@@ -17,6 +17,14 @@ export class KorwilMonitoringCoordinatorReportController {
     return KorwilMonitoringCoordinatorReportService.storeMonitoringPayload(payloadBody);
   }
 
+  @Post('coordinator-hrd/excel/store')
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: MonitoringCoordinatorExcelExecuteResponseVm })
+  @ResponseSerializerOptions({ disable: true })
+  public async storePayloadExcelHrd(@Body() payloadBody: any) {
+    return KorwilMonitoringCoordinatorReportService.storeMonitoringHrdPayload(payloadBody);
+  }
+
   @Get('coordinator/excel/korwil-execute')
   public async exportExcelMonitoringKorwil(
     @Query() queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
@@ -25,12 +33,28 @@ export class KorwilMonitoringCoordinatorReportController {
     return KorwilMonitoringCoordinatorReportService.generateMonitoringKorwilCSV(serverResponse, queryParams);
   }
 
+  @Get('coordinator-hrd/excel/korwil-execute')
+  public async exportExcelMonitoringKorwilHrd(
+    @Query() queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return KorwilMonitoringCoordinatorReportService.generateMonitoringKorwilHrdCSV(serverResponse, queryParams);
+  }
+
   @Get('coordinator/excel/branch-execute')
   public async exportExcelMonitoringBranch(
     @Query() queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
     @Response() serverResponse: express.Response,
   ) {
     return KorwilMonitoringCoordinatorReportService.generateMonitoringBranchCSV(serverResponse, queryParams);
+  }
+
+  @Get('coordinator-hrd/excel/branch-execute')
+  public async exportExcelMonitoringHrdBranch(
+    @Query() queryParams: MonitoringCoordinatorExcelExecutePayloadVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return KorwilMonitoringCoordinatorReportService.generateMonitoringBranchHrdCSV(serverResponse, queryParams);
   }
 
   @Get('coordinator/taskReport')

@@ -298,7 +298,7 @@ export class BagService {
 
   static async findOneBySealNumber(sealNumber: string): Promise<BagItem> {
     const regexNumber = /^[0-9]+$/;
-    if (sealNumber.length === 7 && regexNumber.test(sealNumber)) {
+    if ((sealNumber.length == 7 || sealNumber.length == 13) && regexNumber.test(sealNumber)) {
       const bagRepository = new OrionRepositoryService(BagItem);
       const q = bagRepository.findAll();
       // Manage relation (default inner join)
@@ -333,5 +333,15 @@ export class BagService {
       return null;
     }
 
+  }
+
+  static async isSealNumberLenght(inputNumber: string): Promise<boolean> {
+    const regexNumber = /^[0-9]+$/;
+    return ((inputNumber.length == 7 || inputNumber.length == 13) && regexNumber.test(inputNumber)) ? true : false;
+  }
+
+  static async isBagNumberLenght(inputNumber: string): Promise<boolean> {
+    const regexNumber = /^[0-9]+$/;
+    return (inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))) ? true : false;
   }
 }
