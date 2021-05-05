@@ -437,7 +437,10 @@ export class WebAwbReturnService {
       ['t1.user_id_driver', 'userIdDriver'],
       ['t6.branch_id', 'branchIdFrom'],
       ['t6.branch_name', 'branchFrom'],
-      [`COALESCE(t7.ref_prev_customer_account_id, '')`, 'consignerName'],
+      [
+        `COALESCE(t7.ref_prev_customer_account_id, t7.ref_customer_account_id,'')`,
+        'consignerName',
+      ],
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
@@ -582,28 +585,31 @@ export class WebAwbReturnService {
       payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
-      ['t1.awb_return_id', 'awbReturnId'],
-      ['t1.origin_awb_id', 'originAwbId'],
-      ['t1.partner_logistic_awb', 'partnerLogisticAwb'],
-      ['t1.origin_awb_number', 'originAwbNumber'],
-      ['t1.return_awb_id', 'returnAwbId'],
-      ['t1.is_partner_logistic', 'isPartnerLogistic'],
-      ['t1.partner_logistic_name', 'partnerLogisticName'],
-      ['t1.partner_logistic_id', 'partnerLogisticId'],
-      ['t1.return_awb_number', 'returnAwbNumber'],
-      ['t1.branch_id', 'branchIdTo'],
-      ['t1.created_time', 'createdTime'],
-      ['t3.branch_name', 'branchTo'],
-      ['t2.awb_status_name', 'awbStatus'],
-      ['t2.awb_status_id', 'awbStatusId'],
-      ['t4.branch_id', 'branchIdManifest'],
-      ['t4.branch_name', 'branchManifest'],
-      ['t5.partner_id', 'partnerId'],
-      ['t5.partner_name', 'partnerName'],
-      ['t1.user_id_driver', 'userIdDriver'],
-      ['t6.branch_id', 'branchIdFrom'],
-      ['t6.branch_name', 'branchFrom'],
-      [`COALESCE(t7.ref_prev_customer_account_id, '')`, 'consignerName'],
+        ['t1.awb_return_id', 'awbReturnId'],
+        ['t1.origin_awb_id', 'originAwbId'],
+        ['t1.partner_logistic_awb', 'partnerLogisticAwb'],
+        ['t1.origin_awb_number', 'originAwbNumber'],
+        ['t1.return_awb_id', 'returnAwbId'],
+        ['t1.is_partner_logistic', 'isPartnerLogistic'],
+        ['t1.partner_logistic_name', 'partnerLogisticName'],
+        ['t1.partner_logistic_id', 'partnerLogisticId'],
+        ['t1.return_awb_number', 'returnAwbNumber'],
+        ['t1.branch_id', 'branchIdTo'],
+        ['t1.created_time', 'createdTime'],
+        ['t3.branch_name', 'branchTo'],
+        ['t2.awb_status_name', 'awbStatus'],
+        ['t2.awb_status_id', 'awbStatusId'],
+        ['t4.branch_id', 'branchIdManifest'],
+        ['t4.branch_name', 'branchManifest'],
+        ['t5.partner_id', 'partnerId'],
+        ['t5.partner_name', 'partnerName'],
+        ['t1.user_id_driver', 'userIdDriver'],
+        ['t6.branch_id', 'branchIdFrom'],
+        ['t6.branch_name', 'branchFrom'],
+        [
+          `COALESCE(t7.ref_prev_customer_account_id, t7.ref_customer_account_id,'')`,
+          'consignerName',
+        ],
       );
 
       q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
