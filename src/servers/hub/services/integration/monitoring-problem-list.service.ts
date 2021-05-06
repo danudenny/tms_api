@@ -88,7 +88,6 @@ export class MonitoringProblemListService {
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-        INNER JOIN branch br ON br.branch_id = dohd.branch_id AND br.is_deleted = FALSE
         INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
         INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         LEFT JOIN LATERAL
@@ -98,7 +97,6 @@ export class MonitoringProblemListService {
             ai1.awb_id,
             b1.bag_number,
             bi1.created_time
-            br1.branch_id
           FROM bag_item_awb bia1
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
@@ -174,15 +172,15 @@ export class MonitoringProblemListService {
 
     payload.fieldResolverMap['createdTime'] = '"doh"."created_time"::DATE';
     payload.fieldResolverMap['scanDate'] = 'doh.created_time';
-    payload.fieldResolverMap['branchIdFrom'] = 'bag_sortir.branch_id';
-    payload.fieldResolverMap['branchNameFrom'] = 'bag_sortir.branch_name';
+    payload.fieldResolverMap['branchIdFrom'] = 'br.branch_id';
+    payload.fieldResolverMap['branchNameFrom'] = 'br.branch_name';
     payload.fieldResolverMap['branchIdTo'] = 'scan_out.branch_id';
     payload.fieldResolverMap['branchNameTo'] = 'scan_out.branch_name';
     payload.fieldResolverMap['awbNumber'] = 'dohd.awb_number';
     payload.fieldResolverMap['bagNumber'] = 'doh.bag_number';
     payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
     payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
-    payload.fieldResolverMap['cityId'] = 'bag_sortir.city_id';
+    payload.fieldResolverMap['cityId'] = 'c.city_id';
 
     payload.globalSearchFields = [
       {
