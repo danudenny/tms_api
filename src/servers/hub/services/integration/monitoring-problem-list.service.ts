@@ -246,12 +246,7 @@ export class MonitoringProblemListService {
             bi1.bag_seq,
             ai1.awb_id,
             b1.bag_number,
-            bi1.created_time,
-            c1.city_name,
-            c1.city_id,
-            br1.branch_name,
-            br1.branch_code,
-            br1.branch_id
+            bi1.created_time
           FROM bag_item_awb bia1
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
@@ -371,19 +366,11 @@ export class MonitoringProblemListService {
             bi1.bag_seq,
             ai1.awb_id,
             b1.bag_number,
-            bi1.created_time,
-            c1.city_name,
-            c1.city_id,
-            br1.branch_name,
-            br1.branch_code,
-            br1.branch_id
+            bi1.created_time
           FROM bag_item_awb bia1
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          INNER JOIN branch br1 ON br1.branch_id = b1.branch_id_to AND br1.is_deleted = FALSE
-          INNER JOIN district d1 ON d1.district_id = br1.district_id AND d1.is_deleted = FALSE
-          INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
           WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
         ) AS bag_sortir ON true
         INNER JOIN LATERAL (
