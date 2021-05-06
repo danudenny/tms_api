@@ -390,6 +390,8 @@ export class MonitoringProblemListService {
           SELECT
             ai2.awb_id,
             dpdb2.bag_number,
+            br2.branch_id,
+            br2.branch_name,
             dpdb2.created_time
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
