@@ -88,7 +88,7 @@ export class MonitoringProblemListService {
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-        INNER JOIN branch br ON br.branch_id = dohd.branch_id_to AND br.is_deleted = FALSE
+        INNER JOIN branch br ON br.branch_id = dohd.branch_id AND br.is_deleted = FALSE
         INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
         INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         LEFT JOIN LATERAL
@@ -237,7 +237,7 @@ export class MonitoringProblemListService {
         LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-        INNER JOIN branch br ON br.branch_id = dohd.branch_id_to AND br.is_deleted = FALSE
+        INNER JOIN branch br ON br.branch_id = dohd.branch_id AND br.is_deleted = FALSE
         INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
         INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         LEFT JOIN LATERAL
@@ -362,7 +362,7 @@ export class MonitoringProblemListService {
         LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-        INNER JOIN branch br ON br.branch_id = dohd.branch_id_to AND br.is_deleted = FALSE
+        INNER JOIN branch br ON br.branch_id = dohd.branch_id AND br.is_deleted = FALSE
         INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
         INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         LEFT JOIN LATERAL
