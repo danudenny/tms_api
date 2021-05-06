@@ -19,15 +19,15 @@ export class MonitoringProblemListService {
 
     payload.fieldResolverMap['createdTime'] = 'doh.created_time';
     payload.fieldResolverMap['scanDate'] = 'doh.created_time';
-    payload.fieldResolverMap['branchIdFrom'] = 'bag_sortir.branch_id';
-    payload.fieldResolverMap['branchNameFrom'] = 'bag_sortir.branch_name';
+    payload.fieldResolverMap['branchIdFrom'] = 'br.branch_id';
+    payload.fieldResolverMap['branchNameFrom'] = 'br.branch_name';
     payload.fieldResolverMap['branchIdTo'] = 'scan_out.branch_id';
     payload.fieldResolverMap['branchTo'] = 'scan_out.branch_name';
     payload.fieldResolverMap['awbNumber'] = 'dohd.awb_number';
     payload.fieldResolverMap['bagNumber'] = 'doh.bag_number';
     payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
     payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
-    payload.fieldResolverMap['cityId'] = 'bag_sortir.city_id';
+    payload.fieldResolverMap['cityId'] = 'c.city_id';
 
     payload.globalSearchFields = [
       {
@@ -88,25 +88,21 @@ export class MonitoringProblemListService {
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+        INNER JOIN branch br ON br.branch_id = dohd.branch_id_to AND br.is_deleted = FALSE
+        INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
+        INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         LEFT JOIN LATERAL
         (
           SELECT
             bi1.bag_seq,
             ai1.awb_id,
             b1.bag_number,
-            bi1.created_time,
-            c1.city_name,
-            c1.city_id,
-            br1.branch_name,
-            br1.branch_code,
+            bi1.created_time
             br1.branch_id
           FROM bag_item_awb bia1
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          INNER JOIN branch br1 ON br1.branch_id = b1.branch_id_to AND br1.is_deleted = FALSE
-          INNER JOIN district d1 ON d1.district_id = br1.district_id AND d1.is_deleted = FALSE
-          INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
           WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
@@ -157,7 +153,7 @@ export class MonitoringProblemListService {
       bag.is_manual,
       last_status.awb_status_name,
       last_status.awb_status_id,
-      bag_sortir.city_id
+      c.city_id
     `);
 
     const data = await q.exec();
@@ -200,11 +196,11 @@ export class MonitoringProblemListService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
-      [`bag_sortir.branch_name`, 'branchName'],
+      [`br.branch_name`, 'branchName'],
       [`doh.created_time::DATE`, 'scanDate'],
-      [`bag_sortir.branch_code`, 'branchCode'],
-      [`bag_sortir.branch_id`, 'branchId'],
-      [`bag_sortir.city_name`, 'cityName'],
+      [`br.branch_code`, 'branchCode'],
+      [`br.branch_id`, 'branchId'],
+      [`c.city_name`, 'cityName'],
       [`COUNT(
           DISTINCT CASE
             WHEN (bag_sortir.awb_id IS NULL OR scan_out.awb_id IS NULL OR last_status.awb_status_id IN (${statusProblemStr})) THEN dohd.awb_number
@@ -241,6 +237,9 @@ export class MonitoringProblemListService {
         LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+        INNER JOIN branch br ON br.branch_id = dohd.branch_id_to AND br.is_deleted = FALSE
+        INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
+        INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         LEFT JOIN LATERAL
         (
           SELECT
@@ -257,9 +256,6 @@ export class MonitoringProblemListService {
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          INNER JOIN branch br1 ON br1.branch_id = b1.branch_id_to AND br1.is_deleted = FALSE
-          INNER JOIN district d1 ON d1.district_id = br1.district_id AND d1.is_deleted = FALSE
-          INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
           WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
@@ -294,10 +290,10 @@ export class MonitoringProblemListService {
     q.andWhereRaw('bag.branch_id IS NOT NULL AND (bag.is_sortir IS NULL OR bag.is_sortir = FALSE)');
 
     q.groupByRaw(`
-      bag_sortir.branch_name,
-      bag_sortir.branch_code,
-      bag_sortir.branch_id,
-      bag_sortir.city_name,
+      br.branch_name,
+      br.branch_code,
+      br.branch_id,
+      c.city_name,
       doh.created_time::DATE,
       doh.branch_id
     `);
@@ -320,15 +316,15 @@ export class MonitoringProblemListService {
 
     payload.fieldResolverMap['createdTime'] = '"doh"."created_time"::DATE';
     payload.fieldResolverMap['scanDate'] = 'doh.created_time';
-    payload.fieldResolverMap['branchIdFrom'] = 'bag_sortir.branch_id';
-    payload.fieldResolverMap['branchNameFrom'] = 'bag_sortir.branch_name';
+    payload.fieldResolverMap['branchIdFrom'] = 'br.branch_id';
+    payload.fieldResolverMap['branchNameFrom'] = 'br.branch_name';
     payload.fieldResolverMap['branchIdTo'] = 'scan_out.branch_id';
     payload.fieldResolverMap['branchNameTo'] = 'scan_out.branch_name';
     payload.fieldResolverMap['awbNumber'] = 'dohd.awb_number';
     payload.fieldResolverMap['bagNumber'] = 'doh.bag_number';
     payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
     payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
-    payload.fieldResolverMap['cityId'] = 'bag_sortir.city_id';
+    payload.fieldResolverMap['cityId'] = 'c.city_id';
 
     payload.globalSearchFields = [
       {
@@ -366,6 +362,9 @@ export class MonitoringProblemListService {
         LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
         INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+        INNER JOIN branch br ON br.branch_id = dohd.branch_id_to AND br.is_deleted = FALSE
+        INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
+        INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         LEFT JOIN LATERAL
         (
           SELECT
@@ -391,8 +390,6 @@ export class MonitoringProblemListService {
           SELECT
             ai2.awb_id,
             dpdb2.bag_number,
-            br2.branch_id,
-            br2.branch_name,
             dpdb2.created_time
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
@@ -435,7 +432,7 @@ export class MonitoringProblemListService {
       bag.is_manual,
       last_status.awb_status_name,
       last_status.awb_status_id,
-      bag_sortir.city_id
+      c.city_id
     `);
 
     const data = await q.exec();
