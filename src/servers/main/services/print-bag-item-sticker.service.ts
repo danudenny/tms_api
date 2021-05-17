@@ -5,6 +5,8 @@ import { PrintBagItemPayloadQueryVm } from '../models/print-bag-item-payload.vm'
 import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { RawQueryService } from '../../../shared/services/raw-query.service';
+import moment = require('moment');
+import { chunk } from 'lodash';
 
 export class PrintBagItemStickerService {
   public static async printBagItemStickerByRequest(
@@ -79,6 +81,22 @@ export class PrintBagItemStickerService {
     const branchName = data.bag.branch
       ? data.bag.branch.branchName
       : data.bag.branchTo.branchName;
+
+    let arrBranch = [];
+    let printBranchName = '';
+    // handle branch name
+    if (branchName.length) {
+      // get only 40 char and split with space
+      arrBranch = branchName.substring(0, 40).split(' ');
+      arrBranch = chunk(arrBranch, 2);
+      // wrap text
+      for (const [index, item] of arrBranch.entries()) {
+        const position = index * 60 + 550;
+        const branch = item.join(' ');
+        printBranchName += `TEXT 30,${position},"5",0,1,1,0,"${branch}"\n`;
+      }
+    }
+
     const rawTsplPrinterCommands =
       `SIZE 80 mm, 100 mm\n` +
       `SPEED 3\n` +
@@ -92,8 +110,9 @@ export class PrintBagItemStickerService {
       `TEXT 30,420,"3",0,1,1,"Berat : ${finalWeightRounded2Decimal} Isi : ${
         meta.bagItemAwbsTotal
       } resi"\n` +
-      `TEXT 30,460,"4",0,1,1,0,"${branchCode}"\n` +
-      `TEXT 30,510,"5",0,1,1,0,"${branchName}"\n` +
+      `TEXT 30,460,"3",0,1,1,"Tanggal : ${moment().format('YYYY-MM-DD HH:mm')}"\n` +
+      `TEXT 30,500,"4",0,1,1,0,"${branchCode}"\n` +
+      `${printBranchName}` +
       `PRINT 1\n` +
       `EOP`;
 

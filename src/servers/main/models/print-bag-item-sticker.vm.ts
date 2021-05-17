@@ -1,24 +1,16 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger/decorators';
 
-// export class PrintBagItemStickerDataBagDistrictVm {
-//   @ApiModelProperty()
-//   districtName: boolean;
-
-//   @ApiModelProperty()
-//   districtCode: boolean;
-// }
-
 export class PrintBagItemStickerDataBagBranchVm {
   @ApiModelProperty()
-  branchName: boolean;
+  branchName: string;
 
   @ApiModelProperty()
-  branchCode: boolean;
+  branchCode: string;
 }
 
 export class PrintBagItemStickerDataBagVm {
   @ApiModelProperty()
-  bagNumber: boolean;
+  bagNumber: string;
 
   // @ApiModelProperty({ type: () => PrintBagItemStickerDataBagDistrictVm })
   // district: PrintBagItemStickerDataBagDistrictVm;

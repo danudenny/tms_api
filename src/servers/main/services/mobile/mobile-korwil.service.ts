@@ -32,7 +32,7 @@ import { RequestErrorService } from '../../../../shared/services/request-error.s
 import { BadRequestException, HttpStatus } from '@nestjs/common';
 
 export class MobileKorwilService {
-  constructor() { }
+  constructor() {}
   static E_RADIUS = 6372.8;
   static configKorwil = ConfigService.get('korwil');
 
@@ -92,9 +92,7 @@ export class MobileKorwilService {
       result.status = 'Korwil tidak ditemukan';
       return result;
     }
-    const task = await this.getTotalTask(
-      payload.korwilTransactionId,
-    );
+    const task = await this.getTotalTask(payload.korwilTransactionId);
     korwilTransaction.totalTask = task[0];
     korwilTransaction.userIdUpdated = authMeta.userId;
     korwilTransaction.updatedTime = timeNow;
@@ -144,9 +142,7 @@ export class MobileKorwilService {
       result.status = 'Korwil tidak ditemukan';
       return result;
     }
-    const task = await this.getTotalTask(
-      payload.korwilTransactionId,
-    );
+    const task = await this.getTotalTask(payload.korwilTransactionId);
     korwilTransaction.totalTask = task[0];
     korwilTransaction.totalTaskDone = task[1];
     korwilTransaction.userIdUpdated = authMeta.userId;
@@ -158,7 +154,13 @@ export class MobileKorwilService {
     return result;
   }
 
-  public static async getKorwilIdByrequestDate(userId, branchId, fromDate, toDate, status = null) {
+  public static async getKorwilIdByrequestDate(
+    userId,
+    branchId,
+    fromDate,
+    toDate,
+    status = null,
+  ) {
     if (isNull(Number(branchId)) || isNull(Number(userId))) {
       throw new BadRequestException('Branch I tidak ditemukan atau User ID');
     }
@@ -181,50 +183,61 @@ export class MobileKorwilService {
     );
     qb.andWhere('kt.is_deleted = false');
     if (!isNull(status)) {
-      qb.andWhere('kt.status = :status', {status});
+      qb.andWhere('kt.status = :status', { status });
     }
-    qb.orderBy('created_time', 'DESC');
+    qb.orderBy('kt.created_time', 'DESC');
     const dataKorwil = await qb.getRawOne();
 
     return dataKorwil ? dataKorwil.id : null;
   }
 
-  public static async getDataListItem(branchId, userId, id, roleId): Promise<any> {
+  public static async getDataListItem(
+    branchId,
+    userId,
+    id,
+    roleId,
+  ): Promise<any> {
     // item list korwil
     const qb = createQueryBuilder();
-    qb.addSelect('ki.korwil_item_name', 'korwilItemName');
-    qb.addSelect('ktd.korwil_item_id', 'korwilItemId');
-    qb.addSelect(
+    const subQb = qb.subQuery();
+    subQb.addSelect('ki.korwil_item_name', 'korwilItemName');
+    subQb.addSelect('ktd.korwil_item_id', 'korwilItemId');
+    subQb.addSelect(
       'ktd.korwil_transaction_detail_id',
       'korwilTransactionDetailId',
     );
-    qb.addSelect('ktd.is_done', 'isDone');
-    qb.addSelect('ktd.status', 'status');
-    qb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
-    qb.addSelect('kt.status', 'statusTransaction');
-    qb.addSelect('ktd.note', 'note');
-    qb.from('korwil_transaction', 'kt');
-    qb.addSelect('ki.is_required', 'isRequired');
-    qb.innerJoin(
+    subQb.addSelect('ktd.is_done', 'isDone');
+    subQb.addSelect('ktd.status', 'status');
+    subQb.addSelect('kt.korwil_transaction_id', 'korwilTransactionId');
+    subQb.addSelect('kt.status', 'statusTransaction');
+    subQb.addSelect('', 'note');
+    subQb.addSelect('ki.is_required', 'isRequired');
+    subQb.addSelect('(RANK () OVER (PARTITION BY ktd.korwil_item_id ORDER BY ktd.created_time DESC))', 'ranks');
+    subQb.from('korwil_transaction', 'kt');
+    subQb.innerJoin(
       'korwil_transaction_detail',
       'ktd',
       'ktd.korwil_transaction_id = kt.korwil_transaction_id AND ktd.is_deleted = false',
     );
-    qb.innerJoin(
+    subQb.innerJoin(
       'korwil_item',
       'ki',
       'ki.korwil_item_id = ktd.korwil_item_id AND ki.is_deleted = false',
     );
-    qb.andWhere('kt.is_deleted = false');
-    qb.andWhere('kt.branch_id = :branchIdTemp', {
+    subQb.andWhere('kt.is_deleted = false');
+    subQb.andWhere('kt.branch_id = :branchIdTemp', {
       branchIdTemp: branchId,
     });
-    qb.andWhere('kt.korwil_transaction_id = :korwilId', {
+    subQb.andWhere('kt.korwil_transaction_id = :korwilId', {
       korwilId: id,
     });
-    qb.orderBy('ki.sort_order', 'ASC');
-    const data = await qb.getRawMany();
+    subQb.orderBy('ki.sort_order', 'ASC');
+    subQb.addOrderBy('ktd.created_time', 'DESC');
 
+    qb.from(() => subQb, 't');
+    qb.andWhere('t.ranks = 1');
+
+    const data = await qb.getRawMany();
     return data;
   }
 
@@ -284,11 +297,23 @@ export class MobileKorwilService {
           createdTime: 'DESC',
         },
       });
-      const employeeJourneyId = await this.insertEmployeeJourney(authMeta.employeeId, korwilBranchUser.latitude, korwilBranchUser.longitude, authMeta.userId);
+      const employeeJourneyId = await this.insertEmployeeJourney(
+        authMeta.employeeId,
+        korwilBranchUser.latitude,
+        korwilBranchUser.longitude,
+        authMeta.userId,
+      );
 
       // Upsert Korwil Transaction
       if (!korwil) {
-        korwilId = await this.insertKorwilTransaction(authMeta.userId, branchId, employeeJourneyId, totalTask, totalTaskDone, korwilBranchUser.userToBranchId);
+        korwilId = await this.insertKorwilTransaction(
+          authMeta.userId,
+          branchId,
+          employeeJourneyId,
+          totalTask,
+          totalTaskDone,
+          korwilBranchUser.userToBranchId,
+        );
       } else {
         korwil.date = moment().toDate();
         korwil.employeeJourneyId = employeeJourneyId;
@@ -298,27 +323,35 @@ export class MobileKorwilService {
         korwilId = korwil.korwilTransactionId;
       }
 
-      // Create Korwil Item
-      for (const item of korwilItem) {
-        const korwilTransactionDetail = KorwilTransactionDetail.create();
-        korwilTransactionDetail.korwilItemId = item.korwilItemId;
-        korwilTransactionDetail.korwilTransactionId = korwilId;
-        korwilTransactionDetail.latChecklist = '';
-        korwilTransactionDetail.longChecklist = '';
-        korwilTransactionDetail.note = '';
-        korwilTransactionDetail.status = 0;
-        korwilTransactionDetail.isDone = false;
-        korwilTransactionDetail.date = moment().toDate();
-        korwilTransactionDetail.photoCount = 0;
-        korwilTransactionDetail.userIdCreated = authMeta.userId;
-        korwilTransactionDetail.createdTime = moment().toDate();
-        korwilTransactionDetail.updatedTime = moment().toDate();
-        korwilTransactionDetail.userIdUpdated = authMeta.userId;
-        await KorwilTransactionDetail.save(korwilTransactionDetail);
-        itemList.push({
-          ...item,
-          ...korwilTransactionDetail,
-        });
+      qb = createQueryBuilder();
+      qb.addSelect('ktd.korwil_transaction_detail_id', 'korwilDetailId');
+      qb.from('korwil_transaction_detail', 'ktd');
+      qb.andWhere('ktd.korwil_transaction_id = :id', {id: korwilId});
+      const korwilDetail = await qb.getRawOne();
+
+      if (!korwilDetail) {
+        // Create Korwil Item
+        for (const item of korwilItem) {
+          const korwilTransactionDetail = KorwilTransactionDetail.create();
+          korwilTransactionDetail.korwilItemId = item.korwilItemId;
+          korwilTransactionDetail.korwilTransactionId = korwilId;
+          korwilTransactionDetail.latChecklist = '';
+          korwilTransactionDetail.longChecklist = '';
+          korwilTransactionDetail.note = '';
+          korwilTransactionDetail.status = 0;
+          korwilTransactionDetail.isDone = false;
+          korwilTransactionDetail.date = moment().toDate();
+          korwilTransactionDetail.photoCount = 0;
+          korwilTransactionDetail.userIdCreated = authMeta.userId;
+          korwilTransactionDetail.createdTime = moment().toDate();
+          korwilTransactionDetail.updatedTime = moment().toDate();
+          korwilTransactionDetail.userIdUpdated = authMeta.userId;
+          await KorwilTransactionDetail.save(korwilTransactionDetail);
+          itemList.push({
+            ...item,
+            ...korwilTransactionDetail,
+          });
+        }
       }
     } else {
       throw new BadRequestException('Gerai tidak ditemukan');
@@ -353,24 +386,48 @@ export class MobileKorwilService {
         .format('YYYY-MM-DD 06:00:00');
     }
 
-    let id = await this.getKorwilIdByrequestDate(authMeta.userId, branchId, fromDate, toDate);
+    let id = await this.getKorwilIdByrequestDate(
+      authMeta.userId,
+      branchId,
+      fromDate,
+      toDate,
+    );
     if (!id) {
       const subtractOneDay = {
-        fromDate: moment(fromDate).subtract(1, 'days').format('YYYY-MM-DD HH:mm:ss'),
-        toDate: moment(toDate).subtract(1, 'days').format('YYYY-MM-DD HH:mm:ss'),
+        fromDate: moment(fromDate)
+          .subtract(1, 'days')
+          .format('YYYY-MM-DD HH:mm:ss'),
+        toDate: moment(toDate)
+          .subtract(1, 'days')
+          .format('YYYY-MM-DD HH:mm:ss'),
       };
-      id = await this.getKorwilIdByrequestDate(authMeta.userId, branchId, subtractOneDay.fromDate, subtractOneDay.toDate, 0);
+      id = await this.getKorwilIdByrequestDate(
+        authMeta.userId,
+        branchId,
+        subtractOneDay.fromDate,
+        subtractOneDay.toDate,
+        0,
+      );
     }
 
     // get data item list
-    const data = await this.getDataListItem(branchId, authMeta.userId, id, permissonPayload.roleId);
+    const data = await this.getDataListItem(
+      branchId,
+      authMeta.userId,
+      id,
+      permissonPayload.roleId,
+    );
     let result = new ItemListKorwilResponseVm();
     if (data.length != 0) {
       result.itemList = data;
       result.korwilTransactionId = data[0].korwilTransactionId;
       result.status = data[0].statusTransaction;
     } else {
-      result = await this.insertAndGetKorwilTransactionDetail(branchId, permissonPayload.roleId, id);
+      result = await this.insertAndGetKorwilTransactionDetail(
+        branchId,
+        permissonPayload.roleId,
+        id,
+      );
     }
     return result;
   }
@@ -570,7 +627,9 @@ export class MobileKorwilService {
         w => w.lessThanOrEqual(checkInDateTo),
       );
     }
-    q.groupByRaw('t1.korwil_transaction_id, t1.user_id, t2.check_in_date, t2.check_out_date, t3.branch_id, t3.branch_name');
+    q.groupByRaw(
+      't1.korwil_transaction_id, t1.user_id, t2.check_in_date, t2.check_out_date, t3.branch_id, t3.branch_name',
+    );
     if (sortDir == 'DESC') {
       q.orderBy({
         createdTime: 'DESC',
@@ -902,7 +961,10 @@ export class MobileKorwilService {
   private static async getTotalTask(korwilTransactionId) {
     const qb = createQueryBuilder();
     qb.addSelect('COUNT(ktd.korwil_transaction_detail_id)', 'totalTask');
-    qb.addSelect('COUNT(CASE WHEN ktd.is_done = true then 1 END)', 'totalTaskDone');
+    qb.addSelect(
+      'COUNT(CASE WHEN ktd.is_done = true then 1 END)',
+      'totalTaskDone',
+    );
     qb.from('korwil_item', 'ki');
     qb.innerJoin(
       'korwil_transaction_detail',
@@ -998,8 +1060,17 @@ export class MobileKorwilService {
       throw new BadRequestException('Lokasi tidak ditemukan!');
     }
 
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const roleId = permissonPayload.roleId;
+    const korwilConfig = await this.getKorwilConfig();
     const lata = parseFloat(lat);
     const longa = parseFloat(long);
+
+    // if (roleId == korwilConfig.korwilHrdRoleId) {
+    //   // KORWIL HRD ALWAYS CHECK COORDINATE TO KANTOR PUSAT
+    //   branchId = 1;
+    // }
+
     const radius = [0.5, 0.5]; // in kilometer
     const data = [];
     const response = new ValidateBranchCoordinateResponseVm();
@@ -1012,16 +1083,20 @@ export class MobileKorwilService {
       AND longitude IS NOT NULL AND latitude IS NOT NULL
       AND latitude::float >= ${nearby_branch[0]} AND latitude::float <= ${
       nearby_branch[2]
-      }
+    }
       AND longitude::float >= ${nearby_branch[1]} AND longitude::float <= ${
       nearby_branch[3]
-      }
+    }
       AND branch_id = ${branchId}`);
     if (res.length != 0) {
       response.message = 'Lokasi branch valid';
       response.status = true;
     }
     return response;
+  }
+
+  static async getKorwilConfig() {
+    return ConfigService.get('korwil');
   }
 
   static async getNearby(lat, long, radius) {

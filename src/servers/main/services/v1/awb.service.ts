@@ -46,7 +46,6 @@ export class AwbService {
         branchName: true,
       },
     });
-    // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
     q.where(e => e.awbNumber, w => w.equals(awbNumber));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.take(1);
@@ -178,6 +177,11 @@ export class AwbService {
   }
 
   public static async awbStatusGroup(awbStatusId: number): Promise<string> {
+    // awbStatusId validation if the param is not number or null
+    if (isNaN(awbStatusId) || !awbStatusId) {
+      awbStatusId = 0;
+    }
+
     const awbRepository = new OrionRepositoryService(AwbStatusGroupItem);
     const q = awbRepository.findOne();
     // Manage relation (default inner join)
@@ -272,6 +276,11 @@ export class AwbService {
       },
     });
     return awbCancel ? true : false;
+  }
+
+  public static async isAwbNumberLenght(inputNumber: string): Promise<boolean> {
+    const regexNumber = /^[0-9]+$/;
+    return (inputNumber.length == 12 && regexNumber.test(inputNumber)) ? true : false;
   }
 
 }

@@ -295,4 +295,53 @@ export class BagService {
     }
     return true;
   }
+
+  static async findOneBySealNumber(sealNumber: string): Promise<BagItem> {
+    const regexNumber = /^[0-9]+$/;
+    if ((sealNumber.length == 7 || sealNumber.length == 13) && regexNumber.test(sealNumber)) {
+      const bagRepository = new OrionRepositoryService(BagItem);
+      const q = bagRepository.findAll();
+      // Manage relation (default inner join)
+      q.innerJoin(e => e.bag, null, join => join.andWhere(e => e.isDeleted, w => w.isFalse()));
+
+      q.select({
+        bagItemId: true,
+        bagItemStatusIdLast: true,
+        branchIdLast: true,
+        branchIdNext: true,
+        bagSeq: true,
+        bagId: true,
+        bag: {
+          representativeIdTo: true,
+          refRepresentativeCode: true,
+          bagId: true,
+          bagNumber: true,
+          sealNumber: true,
+          createdTime: true,
+        },
+        weight: true,
+      });
+      q.where(e => e.bag.sealNumber, w => w.equals(sealNumber));
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+      q.orderByRaw('bag_item_bag.created_time' , 'ASC');
+      q.take(1);
+      const bagDatas = await q.exec();
+      if (bagDatas && bagDatas.length > 0) {
+        return bagDatas[0];
+      }
+    } else {
+      return null;
+    }
+
+  }
+
+  static async isSealNumberLenght(inputNumber: string): Promise<boolean> {
+    const regexNumber = /^[0-9]+$/;
+    return ((inputNumber.length == 7 || inputNumber.length == 13) && regexNumber.test(inputNumber)) ? true : false;
+  }
+
+  static async isBagNumberLenght(inputNumber: string): Promise<boolean> {
+    const regexNumber = /^[0-9]+$/;
+    return (inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))) ? true : false;
+  }
 }

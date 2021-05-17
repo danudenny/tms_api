@@ -21,6 +21,7 @@ import { AwbService } from '../v1/awb.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { V1MobileInitDataService } from './v1/mobile-init-data.service';
 
+// TODO: to be removed
 export class MobileSyncService {
   public static async syncByRequest(payload: MobileSyncPayloadVm) {
     for (const delivery of payload.deliveries) {

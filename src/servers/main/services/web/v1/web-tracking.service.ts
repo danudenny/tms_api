@@ -66,7 +66,7 @@ export class V1WebTrackingService {
       result.doReturnAwb               = data.doReturnAwb;
       result.isDoReturnPartner         = data.isDoReturnPartner;
       result.isHighValue               = data.isHighValue;
-
+      result.awbSubstituteNumber       = data.awbSubstituteNumber;
       // TODO: partial load data
       const history = await this.getRawAwbHistory(data.awbItemId);
       if (history && history.length) {
@@ -109,6 +109,7 @@ export class V1WebTrackingService {
     return result;
   }
 
+  // TODO: to be removed
   static async getAwbSubstitute(payload: BaseMetaPayloadVm): Promise <AwbSubstituteResponseVm> {
     payload.fieldResolverMap['awbSubstitute']     = 't1.awb_substitute';
     payload.fieldResolverMap['awbNumber']         = 't1.awb_number';
@@ -141,7 +142,7 @@ export class V1WebTrackingService {
     q.andWhereRaw('t1.awb_substitute IS NOT NULL');
 
     const data   = await q.exec();
-    const total  = await q.countWithoutTakeAndSkip();
+    const total  = data.length; // await q.countWithoutTakeAndSkip();
 
     const result = new AwbSubstituteResponseVm();
     result.data  = data;
@@ -165,13 +166,18 @@ export class V1WebTrackingService {
       'attachments',
       'attachments.attachment_tms_id = dpda.attachment_tms_id ',
     );
-    qq.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
-      doPodDeliverDetailId: payload.doPodDeliverDetailId,
-    });
+    qq.where(
+      'dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId AND dpda.is_deleted = false',
+      {
+        doPodDeliverDetailId: payload.doPodDeliverDetailId,
+      },
+    );
 
     if (payload.attachmentType) {
       qq.andWhere('dpda.type = :attachmentType', { attachmentType: payload.attachmentType });
     }
+    qq.orderBy('dpda.created_time', 'DESC');
+    qq.limit(3); // only get 3 data file (photo, signature, photoCod)
 
     const result = new PhotoResponseVm();
     result.data = await qq.getRawMany();
@@ -304,7 +310,8 @@ export class V1WebTrackingService {
             WHEN ai.doreturn_new_awb_3pl IS NOT NULL THEN true
             ELSE false
         END as "isDoReturnPartner",
-        COALESCE(ai.is_high_value, prd.is_high_value) as "isHighValue"
+        COALESCE(ai.is_high_value, prd.is_high_value) as "isHighValue",
+        asub.awb_substitute_number AS "awbSubstituteNumber"
       FROM awb a
         INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
@@ -327,6 +334,7 @@ export class V1WebTrackingService {
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id
           AND dpd.awb_status_id_last <> 14000 AND dpd.is_deleted = false
         LEFT JOIN awb_return ar ON ar.origin_awb_id = ai.awb_id AND ar.is_deleted = false
+        LEFT JOIN awb_substitute asub ON asub.awb_number = a.awb_number
       WHERE a.awb_number = :awbNumber
       AND a.is_deleted = false LIMIT 1;
     `;
@@ -541,12 +549,12 @@ export class V1WebTrackingService {
     qb.innerJoin(
       'users',
       't4',
-      't1.user_id_created = t4.user_id AND t3.is_deleted = false',
+      't1.user_id_created = t4.user_id',
     );
     qb.innerJoin(
       'employee',
       't5',
-      't4.employee_id = t5.employee_id AND t5.is_deleted = false',
+      't4.employee_id = t5.employee_id',
     );
     qb.where('t1.awb_item_id = :awbItemId AND t1.is_deleted = false', {
       awbItemId,

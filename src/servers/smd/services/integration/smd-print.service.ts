@@ -433,6 +433,7 @@ export class SmdPrintService {
         doSmdId: true, // needs to be selected due to do_smd relations are being included
         doSmdCode: true,
         doSmdNote: true,
+        branchToNameList: true,
         doSmdVehicle: {
           doSmdVehicleId: true,
           vehicleNumber: true,
@@ -684,6 +685,11 @@ export class SmdPrintService {
           totalBagging: true,
           totalBagRepresentative: true,
         },
+        admin: {
+          userId: true,
+          firstName: true,
+          lastName: true,
+        },
       })
       .where(e => e.doSmdId, w => w.equals(queryParams.id))
       .andWhere(e => e.isDeleted, w => w.isFalse());
@@ -767,12 +773,14 @@ export class SmdPrintService {
 
     dataVm.doSmdDetails = dataSmdDetailsVm;
     response.data = dataVm;
+    const adminName = doSmd.admin.firstName + ' ' + doSmd.admin.lastName;
     this.printVendorAndQueryMeta(
       res,
       dataVm as any,
       {
         userId: queryParams.userId,
         branchId: queryParams.branchId,
+        adminName,
       },
       {
         printCopy: queryParams.printCopy,
@@ -786,6 +794,7 @@ export class SmdPrintService {
     metaQuery: {
       userId: number;
       branchId: number;
+      adminName: string;
     },
     templateConfig: {
       printCopy?: number;
@@ -829,6 +838,7 @@ export class SmdPrintService {
         currentBranchName: currentBranch.branchName,
         date: moment(data.doSmdTime).format('DD/MM/YY'),
         time: moment(data.doSmdTime).format('HH:mm'),
+        adminName: metaQuery.adminName,
       },
       templateConfig,
     );
@@ -842,6 +852,7 @@ export class SmdPrintService {
       currentBranchName: string;
       date: string;
       time: string;
+      adminName: string;
     },
     templateConfig: {
       printCopy?: number;

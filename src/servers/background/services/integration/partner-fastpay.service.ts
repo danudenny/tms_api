@@ -9,6 +9,7 @@ import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-reques
 import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-history';
 import { In } from 'typeorm';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 
 export class PartnerFastpayService {
 
@@ -32,6 +33,20 @@ export class PartnerFastpayService {
           'Status Resi Cancel - Tidak dapat melakukan Drop!',
         );
       } else {
+        let pickupProcessed = false;
+        const resultPickupProcessed = await AwbHistory.findOne({
+          select: ['refAwbNumber', 'awbStatusId'],
+          where: {
+            refAwbNumber: payload.awb_number,
+            awbStatusId: In([1800, 1810, 7100, 1200]),
+            isDeleted: false,
+          },
+        });
+        if (resultPickupProcessed) {
+          pickupProcessed = true;
+        }
+
+        pickupRequest.pickupProcessed = pickupProcessed;
         return this.handleResult(pickupRequest);
       }
     } else {
@@ -211,6 +226,7 @@ export class PartnerFastpayService {
       recipient_province: pickupRequest.recipientProvince,
       recipient_zip: pickupRequest.recipientZip,
       recipient_phone: pickupRequest.recipientPhone,
+      pickup_processed: pickupRequest.pickupProcessed,
     };
   }
 

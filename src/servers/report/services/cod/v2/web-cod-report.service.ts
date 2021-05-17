@@ -1,382 +1,13 @@
 import * as moment from 'moment';
-import { ServiceUnavailableException } from '@nestjs/common/exceptions/service-unavailable.exception';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-transaction-detail';
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { AuthService } from '../../../../../shared/services/auth.service';
+import { CodAwbRevision } from '../../../../../shared/orm-entity/cod-awb-revision';
 
 export class V2WebCodReportService {
-  static CodHeader = [
-    'Partner',
-    'Awb Date',
-    'Awb',
-    'Package Amount',
-    'Cod Amount',
-    'Cod Fee',
-    'Amount Transfer',
-    'Pod Datetime',
-    'Recipient',
-    'Tipe Pembayaran',
-    'Status Internal',
-    'Tracking Status',
-    'Cust Package',
-    'Pickup Source',
-    'Current Position',
-    'Destination Code',
-    'Destination',
-    'Perwakilan',
-    'Sigesit',
-    'Package Detail',
-    'Services',
-    'Note',
-    'Submitted Date',
-    'Submitted Number',
-    'Date Updated',
-    'User Updated',
-  ];
-
-  static CodNONFeeTransactionHeader = [
-    'Partner',
-    'Awb Date',
-    'Awb',
-    'Package Amount',
-    'Cod Amount',
-    'Cod Fee',
-    'Amount Transfer',
-    'Pod Datetime',
-    'Recipient',
-    'Tipe Pembayaran',
-    'Status Internal',
-    'Status Invoice',
-    'Tracking Status',
-    'Cust Package',
-    'Pickup Source',
-    'Current Position',
-    'Destination Code',
-    'Destination',
-    'Package Detail',
-    'Services',
-    'Note',
-    'Submitted Date',
-    'Submitted Number',
-    'Date Updated',
-    'User Updated',
-  ];
-
-  static CodNONFeeHeader = [
-    'Partner',
-    'Awb Date',
-    'Awb',
-    'Package Amount',
-    'Cod Amount',
-    'Amount Transfer',
-    'Pod Datetime',
-    'Recipient',
-    'Tipe Pembayaran',
-    'Status Internal',
-    'Status Invoice',
-    'Tracking Status',
-    'Cust Package',
-    'Pickup Source',
-    'Current Position',
-    'Destination Code',
-    'Destination',
-    'Perwakilan',
-    'Sigesit',
-    'Package Detail',
-    'Services',
-    'Note',
-    'Submitted Date',
-    'Submitted Number',
-    'Date Updated',
-    'User Updated',
-  ];
-
-  static CodAwbHeader = [
-    'No Resi',
-    'Tgl Manifested',
-    'Tgl Status',
-    'Penerima',
-    'Layanan',
-    'Tipe Pembayaran',
-    'Gerai Terakhir',
-    'Gerai Final',
-    'Nilai COD',
-    'Sigesit',
-    'Status Terakhir',
-    'Status Final',
-    'Status Transaksi',
-  ];
-
-  static SupplierInvoiceHeader = [
-    'Partner',
-    'Awb Date',
-    'Awb',
-    'Package Amount',
-    'Cod Amount',
-    'Cod Fee',
-    'Amount Transfer',
-    'Pod Datetime',
-    'Recipient',
-    'Status Internal',
-    'Tracking Status',
-    'Cust Package',
-    'Pickup Source',
-    'Current Position',
-    'Destination Code',
-    'Destination',
-    'Package Detail',
-    'Services',
-    'Note',
-  ];
-
-  static CodHeaderFinance = [
-    'Partner',
-    'Awb Date',
-    'Awb',
-    'Package Amount',
-    'Cod Amount',
-    // 'Cod Fee',
-    'Amount Transfer',
-    'Pod Datetime',
-    'Recipient',
-    'Tipe Pembayaran',
-    'Status Internal',
-    'Tracking Status',
-    'Cust Package',
-    // 'Pickup Source',
-    'Current Position',
-    'Destination Code',
-    // 'Destination',
-    // 'Perwakilan',
-    // 'Sigesit',
-    'Package Detail',
-    'Services',
-    'Note',
-    'Submitted Date',
-    'Submitted Number',
-    'Transfer Date',
-    'Date Updated',
-    // 'User Updated',
-    'Awb Status Date',
-  ];
-
-  static strReplaceFunc = str => {
-    return str
-      ? str
-          .replace(/\n/g, ' ')
-          .replace(/\r/g, ' ')
-          .replace(/;/g, '|')
-          .replace(/,/g, '.')
-      : null;
-  }
-
-  static streamTransformCodFee(d) {
-    const values = [
-      [
-        V2WebCodReportService.strReplaceFunc(d.partnerName),
-        d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
-        `'${d.awbNumber}`,
-        d.parcelValue,
-        d.codValue,
-        d.codFee ? d.codFee : '-',
-        d.codValue,
-        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
-        V2WebCodReportService.strReplaceFunc(d.consigneeName),
-        V2WebCodReportService.strReplaceFunc(d.paymentMethod),
-        'PAID',
-        'DLV',
-        V2WebCodReportService.strReplaceFunc(
-          d.custPackage ? d.custPackage : '-',
-        ),
-        V2WebCodReportService.strReplaceFunc(d.pickupSource),
-        V2WebCodReportService.strReplaceFunc(d.currentPosition),
-        V2WebCodReportService.strReplaceFunc(d.destinationCode),
-        V2WebCodReportService.strReplaceFunc(d.destination),
-        V2WebCodReportService.strReplaceFunc(d.perwakilan),
-        d.driver ? V2WebCodReportService.strReplaceFunc(d.driver) : '-',
-        V2WebCodReportService.strReplaceFunc(d.parcelContent),
-        V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
-        V2WebCodReportService.strReplaceFunc(d.parcelNote),
-        '-',
-        '-',
-        d.updatedTime ? moment(d.updatedTime).format('YYYY-MM-DD HH:mm') : null,
-        d.updUser ? d.updUser : '-',
-      ],
-    ];
-
-    return `${values.join(',')} \n`;
-  }
-
-  static streamTransformTransaction(doc) {
-    const values = [
-      V2WebCodReportService.strReplaceFunc(doc.partnerName),
-      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
-      `'${doc.awbNumber}`,
-      doc.parcelValue,
-      doc.codValue,
-      doc.codFee ? doc.codFee : '-',
-      doc.codValue,
-      doc.podDate ? moment(doc.podDate).format('YYYY-MM-DD HH:mm') : null,
-      V2WebCodReportService.strReplaceFunc(doc.consigneeName),
-      doc.paymentMethod,
-      doc.transactionStatus,
-      doc.supplierInvoiceStatus,
-      doc.trackingStatus,
-      V2WebCodReportService.strReplaceFunc(
-        doc.custPackage ? doc.custPackage : '-',
-      ),
-      V2WebCodReportService.strReplaceFunc(doc.pickupSource),
-      V2WebCodReportService.strReplaceFunc(doc.currentPosition),
-      V2WebCodReportService.strReplaceFunc(doc.destinationCode),
-      V2WebCodReportService.strReplaceFunc(doc.destination),
-      V2WebCodReportService.strReplaceFunc(doc.parcelContent),
-      V2WebCodReportService.strReplaceFunc(doc.packageTypeCode),
-      V2WebCodReportService.strReplaceFunc(doc.parcelNote),
-      '-',
-      '-',
-      doc.updatedTime
-        ? moment(doc.updatedTime).format('YYYY-MM-DD HH:mm')
-        : null,
-      doc.updUser ? doc.updUser : '-',
-    ];
-
-    return `${values.join(',')} \n`;
-  }
-
-  static streamTransform(doc) {
-    const values = [
-      V2WebCodReportService.strReplaceFunc(doc.partnerName),
-      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
-      `'${doc.awbNumber}`,
-      doc.parcelValue,
-      doc.codValue,
-      doc.codValue,
-      doc.podDate ? moment(doc.podDate).format('YYYY-MM-DD HH:mm') : null,
-      V2WebCodReportService.strReplaceFunc(doc.consigneeName),
-      doc.paymentMethod,
-      doc.transactionStatus,
-      doc.supplierInvoiceStatus,
-      doc.trackingStatus,
-      V2WebCodReportService.strReplaceFunc(
-        doc.custPackage ? doc.custPackage : '-',
-      ),
-      V2WebCodReportService.strReplaceFunc(doc.pickupSource),
-      V2WebCodReportService.strReplaceFunc(doc.currentPosition),
-      V2WebCodReportService.strReplaceFunc(doc.destinationCode),
-      V2WebCodReportService.strReplaceFunc(doc.destination),
-      V2WebCodReportService.strReplaceFunc(doc.perwakilan),
-      doc.driver ? V2WebCodReportService.strReplaceFunc(doc.driver) : '-',
-      V2WebCodReportService.strReplaceFunc(doc.parcelContent),
-      V2WebCodReportService.strReplaceFunc(doc.packageTypeCode),
-      V2WebCodReportService.strReplaceFunc(doc.parcelNote),
-      '-',
-      '-',
-      doc.updatedTime
-        ? moment(doc.updatedTime).format('YYYY-MM-DD HH:mm')
-        : null,
-      doc.updUser ? doc.updUser : '-',
-    ];
-
-    return `${values.join(',')} \n`;
-  }
-
-  static streamTransformAwb(d) {
-    const values = [
-      [
-        `'${d.awbNumber}`,
-        d.manifestedDate ? moment(d.manifestedDate).format('YYYY-MM-DD') : null,
-        d.transactionDate
-          ? moment(d.transactionDate).format('YYYY-MM-DD HH:mm')
-          : null,
-        d.consigneeName
-          ? V2WebCodReportService.strReplaceFunc(d.consigneeName)
-          : '-',
-        V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
-        V2WebCodReportService.strReplaceFunc(d.codPaymentMethod),
-        V2WebCodReportService.strReplaceFunc(d.branchNameLast),
-        V2WebCodReportService.strReplaceFunc(d.branchNameFinal),
-        d.codValue ? `Rp. ${Number(d.codValue)}` : '-',
-        d.driverName ? V2WebCodReportService.strReplaceFunc(d.driverName) : '-',
-        V2WebCodReportService.strReplaceFunc(d.awbStatusLast),
-        V2WebCodReportService.strReplaceFunc(d.awbStatusFinal),
-        d.transactionStatusName
-          ? V2WebCodReportService.strReplaceFunc(d.transactionStatusName)
-          : '-',
-      ],
-    ];
-
-    return `${values.join(',')} \n`;
-  }
-
-  static streamTransformSupplierInvoice(d) {
-    const values = [
-      [
-        V2WebCodReportService.strReplaceFunc(d.partnerName),
-        d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD') : null,
-        V2WebCodReportService.strReplaceFunc(d.awbNumber),
-        d.parcelValue,
-        d.codValue,
-        d.codFee,
-        d.codValue,
-        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
-        V2WebCodReportService.strReplaceFunc(d.consigneeName),
-        'DRAFT INVOICE', // supplier invoice status
-        'DLV',
-        V2WebCodReportService.strReplaceFunc(d.custPackage),
-        V2WebCodReportService.strReplaceFunc(d.pickupSource),
-        V2WebCodReportService.strReplaceFunc(d.currentPosition),
-        V2WebCodReportService.strReplaceFunc(d.destinationCode),
-        V2WebCodReportService.strReplaceFunc(d.destination),
-        V2WebCodReportService.strReplaceFunc(d.parcelContent),
-        V2WebCodReportService.strReplaceFunc(d.packageType),
-        V2WebCodReportService.strReplaceFunc(d.parcelNote),
-      ],
-    ];
-
-    return `${values.join(',')} \n`;
-  }
-
-  static streamTransformCodFinance(d) {
-    const values = [
-      [
-        V2WebCodReportService.strReplaceFunc(d.partnerName),
-        d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
-        `'${d.awbNumber}`,
-        d.parcelValue,
-        d.codValue,
-        // d.codFee ? d.codFee : '-',
-        d.codValue,
-        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
-        V2WebCodReportService.strReplaceFunc(d.consigneeName),
-        V2WebCodReportService.strReplaceFunc(d.paymentMethod),
-        V2WebCodReportService.strReplaceFunc(d.transactionStatus),
-        V2WebCodReportService.strReplaceFunc(d.awbStatusName),
-        V2WebCodReportService.strReplaceFunc(
-          d.custPackage ? d.custPackage : '-',
-        ),
-        // V2WebCodReportService.strReplaceFunc(d.pickupSource),
-        V2WebCodReportService.strReplaceFunc(d.currentPosition),
-        V2WebCodReportService.strReplaceFunc(d.destinationCode),
-        // V2WebCodReportService.strReplaceFunc(d.destination),
-        // V2WebCodReportService.strReplaceFunc(d.perwakilan),
-        // d.driver ? V2WebCodReportService.strReplaceFunc(d.driver) : '-',
-        V2WebCodReportService.strReplaceFunc(d.parcelContent),
-        V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
-        V2WebCodReportService.strReplaceFunc(d.parcelNote),
-        '-',
-        '-',
-        d.transferDate ? moment(d.transferDate).format('YYYY-MM-DD HH:mm') : null,
-        d.updatedTime ? moment(d.updatedTime).format('YYYY-MM-DD HH:mm') : null,
-        d.awbStatusDate ? moment(d.awbStatusDate).format('YYYY-MM-DD HH:mm') : null,
-      ],
-    ];
-
-    return `${values.join(',')} \n`;
-  }
-
   static async printCodSupplierInvoice(payload: BaseMetaPayloadVm, response) {
     try {
       const fileName = `COD_fee_${new Date().getTime()}.csv`;
@@ -419,7 +50,7 @@ export class V2WebCodReportService {
         ['rep.representative_code', 'perwakilan'],
         ['t3.parcel_content', 'parcelContent'],
         ['t5.package_type_code', 'packageTypeCode'],
-        ['t1.updated_time', 'awbStatusDate'],
+        ['t1.awb_history_date_last', 'awbStatusDate'],
         ['ctd.updated_time', 'updatedTime'],
         [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
         [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
@@ -504,7 +135,7 @@ export class V2WebCodReportService {
       response.write(`${this.CodNONFeeTransactionHeader.join(',')}\n`);
 
       // mapping field
-      payload.fieldResolverMap['statusDate'] = 't1.updated_time';
+      payload.fieldResolverMap['statusDate'] = 't1.awb_history_date_last';
       payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
       payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
       payload.fieldResolverMap['supplier'] = 't6.partner_id';
@@ -539,7 +170,7 @@ export class V2WebCodReportService {
         ['t9.district_name', 'destination'],
         ['t3.parcel_content', 'parcelContent'],
         ['t5.package_type_code', 'packageTypeCode'],
-        ['t1.updated_time', 'awbStatusDate'],
+        ['t1.awb_history_date_last', 'awbStatusDate'],
         ['ctd.updated_time', 'updatedTime'],
         [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
         ['t3.notes', 'parcelNote'],
@@ -610,7 +241,7 @@ export class V2WebCodReportService {
       response.write(`${this.CodNONFeeHeader.join(',')}\n`);
 
       // mapping field
-      payload.fieldResolverMap['statusDate'] = 't1.updated_time';
+      payload.fieldResolverMap['statusDate'] = 't1.awb_history_date_last';
       payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
       payload.fieldResolverMap['awbStatusId'] = 't1.awb_status_id_last';
       payload.fieldResolverMap['branchLastId'] = 't7.branch_id';
@@ -643,7 +274,7 @@ export class V2WebCodReportService {
         ['rep.representative_code', 'perwakilan'],
         ['t3.parcel_content', 'parcelContent'],
         ['t5.package_type_code', 'packageTypeCode'],
-        ['t1.updated_time', 'awbStatusDate'],
+        ['t1.awb_history_date_last', 'awbStatusDate'],
         ['ctd.updated_time', 'updatedTime'],
         [`CONCAT(edriveruser.nik, ' - ', edriveruser.fullname)`, 'driver'],
         [`CONCAT(eupduser.nik, ' - ', eupduser.fullname)`, 'updUser'],
@@ -724,7 +355,7 @@ export class V2WebCodReportService {
       payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
       payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
       payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-      payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+      payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
       payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
       payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
       payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
@@ -755,7 +386,7 @@ export class V2WebCodReportService {
       q.selectRaw(
         ['t1.awb_number', 'awbNumber'],
         ['t1.awb_item_id', 'awbItemId'],
-        ['t1.updated_time', 'transactionDate'],
+        ['t1.awb_history_date_last', 'transactionDate'],
         ['t1.awb_status_id_last', 'awbStatusIdLast'],
         ['t7.awb_status_title', 'awbStatusLast'],
         ['t1.awb_status_id_final', 'awbStatusIdFinal'],
@@ -916,7 +547,8 @@ export class V2WebCodReportService {
 
       // mapping field
       payload.fieldResolverMap['transferDate'] = 'cbs.transfer_datetime';
-      payload.fieldResolverMap['transactionStatus'] = 'ctd.transaction_status_id';
+      payload.fieldResolverMap['transactionStatus'] =
+        'ctd.transaction_status_id';
       payload.fieldResolverMap['branchLast'] = 'ctd.current_position_id';
 
       const repo = new OrionRepositoryService(AwbItemAttr, 't1');
@@ -946,14 +578,13 @@ export class V2WebCodReportService {
         // ['t9.district_name', 'destination'],
         ['t3.parcel_content', 'parcelContent'],
         ['t5.package_type_code', 'packageTypeCode'],
-        ['t1.updated_time', 'awbStatusDate'],
+        ['t1.awb_history_date_last', 'awbStatusDate'],
         ['cbs.transfer_datetime', 'transferDate'],
         ['ctd.updated_time', 'updatedTime'],
       );
 
       q.innerJoin(e => e.codTransactionDetail, 'ctd', j =>
-        j
-          .andWhere(e => e.isDeleted, w => w.isFalse()),
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
       q.innerJoin(e => e.awb, 't2', j =>
@@ -968,7 +599,10 @@ export class V2WebCodReportService {
 
       // Data Jika sudah ada transaksi & Transaction Status
       q.innerJoin(e => e.codTransactionDetail.codTransaction, 'ct');
-      q.innerJoin(e => e.codTransactionDetail.codTransaction.bankStatement, 'cbs');
+      q.innerJoin(
+        e => e.codTransactionDetail.codTransaction.bankStatement,
+        'cbs',
+      );
       // Data Jika sudah dilakukan DLV - COD
       q.innerJoin(e => e.codPayment, 'cp');
       q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 't4');
@@ -996,5 +630,451 @@ export class V2WebCodReportService {
       console.error(err);
       throw err;
     }
+  }
+
+  static async nominalStream(payload: BaseMetaPayloadVm, response) {
+    try {
+      const fileName = `COD_update_nominal_${new Date().getTime()}.csv`;
+
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+      response.flushHeaders();
+      response.write(`${this.CodHeaderNominal.join(',')}\n`);
+
+      // mapping field
+      payload.fieldResolverMap['requestorId'] = 'car.request_user_id';
+      payload.fieldResolverMap['updateDate'] = 'car.created_time';
+
+      const repo = new OrionRepositoryService(CodAwbRevision, 'car');
+      const q = repo.findAllRaw();
+
+      payload.applyToOrionRepositoryQuery(q, true);
+
+      q.selectRaw(
+        ['car.awb_number', 'awbNumber'],
+        ['car.created_time', 'updateDate'],
+        ['car.request_user_id', 'requestorId'],
+        ['userreq.first_name', 'requestorName'],
+        ['car.cod_value', 'codValue'],
+        ['car.cod_value_current', 'codValueCurrent'],
+        ['at.url', 'attachmentUrl'],
+      );
+
+      q.innerJoin(e => e.attachment, 'at', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.leftJoin(e => e.requestor, 'userreq', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      await q.stream(response, this.streamTransformCodNominal);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  // ==================================== private ===================================
+  private static CodHeader = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
+    'Cod Fee',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Tipe Pembayaran',
+    'Status Internal',
+    'Tracking Status',
+    'Cust Package',
+    'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    'Destination',
+    'Perwakilan',
+    'Sigesit',
+    'Package Detail',
+    'Services',
+    'Note',
+    'Submitted Date',
+    'Submitted Number',
+    'Date Updated',
+    'User Updated',
+  ];
+
+  private static CodNONFeeTransactionHeader = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
+    'Cod Fee',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Tipe Pembayaran',
+    'Status Internal',
+    'Status Invoice',
+    'Tracking Status',
+    'Cust Package',
+    'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    'Destination',
+    'Package Detail',
+    'Services',
+    'Note',
+    'Submitted Date',
+    'Submitted Number',
+    'Date Updated',
+    'User Updated',
+  ];
+
+  private static CodNONFeeHeader = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Tipe Pembayaran',
+    'Status Internal',
+    'Status Invoice',
+    'Tracking Status',
+    'Cust Package',
+    'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    'Destination',
+    'Perwakilan',
+    'Sigesit',
+    'Package Detail',
+    'Services',
+    'Note',
+    'Submitted Date',
+    'Submitted Number',
+    'Date Updated',
+    'User Updated',
+  ];
+
+  private static CodAwbHeader = [
+    'No Resi',
+    'Tgl Manifested',
+    'Tgl Status',
+    'Penerima',
+    'Layanan',
+    'Tipe Pembayaran',
+    'Gerai Terakhir',
+    'Gerai Final',
+    'Nilai COD',
+    'Sigesit',
+    'Status Terakhir',
+    'Status Final',
+    'Status Transaksi',
+  ];
+
+  private static SupplierInvoiceHeader = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
+    'Cod Fee',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Status Internal',
+    'Tracking Status',
+    'Cust Package',
+    'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    'Destination',
+    'Package Detail',
+    'Services',
+    'Note',
+  ];
+
+  private static CodHeaderFinance = [
+    'Partner',
+    'Awb Date',
+    'Awb',
+    'Package Amount',
+    'Cod Amount',
+    // 'Cod Fee',
+    'Amount Transfer',
+    'Pod Datetime',
+    'Recipient',
+    'Tipe Pembayaran',
+    'Status Internal',
+    'Tracking Status',
+    'Cust Package',
+    // 'Pickup Source',
+    'Current Position',
+    'Destination Code',
+    // 'Destination',
+    // 'Perwakilan',
+    // 'Sigesit',
+    'Package Detail',
+    'Services',
+    'Note',
+    'Submitted Date',
+    'Submitted Number',
+    'Transfer Date',
+    'Date Updated',
+    // 'User Updated',
+    'Awb Status Date',
+  ];
+
+  private static CodHeaderNominal = [
+    'Awb Number',
+    'Requestor Name',
+    'Cod Value',
+    'Cod Value Current',
+    'Attachment Url',
+    'Update Date',
+  ];
+
+  private static strReplaceFunc = str => {
+    return str
+      ? str
+          .replace(/\n/g, ' ')
+          .replace(/\r/g, ' ')
+          .replace(/;/g, '|')
+          .replace(/,/g, '.')
+      : null;
+  }
+
+  private static streamTransformCodFee(d) {
+    const values = [
+      [
+        V2WebCodReportService.strReplaceFunc(d.partnerName),
+        d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
+        `'${d.awbNumber}`,
+        d.parcelValue,
+        d.codValue,
+        d.codFee ? d.codFee : '-',
+        d.codValue,
+        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        V2WebCodReportService.strReplaceFunc(d.consigneeName),
+        V2WebCodReportService.strReplaceFunc(d.paymentMethod),
+        'PAID',
+        'DLV',
+        V2WebCodReportService.strReplaceFunc(
+          d.custPackage ? d.custPackage : '-',
+        ),
+        V2WebCodReportService.strReplaceFunc(d.pickupSource),
+        V2WebCodReportService.strReplaceFunc(d.currentPosition),
+        V2WebCodReportService.strReplaceFunc(d.destinationCode),
+        V2WebCodReportService.strReplaceFunc(d.destination),
+        V2WebCodReportService.strReplaceFunc(d.perwakilan),
+        d.driver ? V2WebCodReportService.strReplaceFunc(d.driver) : '-',
+        V2WebCodReportService.strReplaceFunc(d.parcelContent),
+        V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
+        V2WebCodReportService.strReplaceFunc(d.parcelNote),
+        '-',
+        '-',
+        d.updatedTime ? moment(d.updatedTime).format('YYYY-MM-DD HH:mm') : null,
+        d.updUser ? d.updUser : '-',
+      ],
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  private static streamTransformTransaction(doc) {
+    const values = [
+      V2WebCodReportService.strReplaceFunc(doc.partnerName),
+      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      `'${doc.awbNumber}`,
+      doc.parcelValue,
+      doc.codValue,
+      doc.codFee ? doc.codFee : '-',
+      doc.codValue,
+      doc.podDate ? moment(doc.podDate).format('YYYY-MM-DD HH:mm') : null,
+      V2WebCodReportService.strReplaceFunc(doc.consigneeName),
+      doc.paymentMethod,
+      doc.transactionStatus,
+      doc.supplierInvoiceStatus,
+      doc.trackingStatus,
+      V2WebCodReportService.strReplaceFunc(
+        doc.custPackage ? doc.custPackage : '-',
+      ),
+      V2WebCodReportService.strReplaceFunc(doc.pickupSource),
+      V2WebCodReportService.strReplaceFunc(doc.currentPosition),
+      V2WebCodReportService.strReplaceFunc(doc.destinationCode),
+      V2WebCodReportService.strReplaceFunc(doc.destination),
+      V2WebCodReportService.strReplaceFunc(doc.parcelContent),
+      V2WebCodReportService.strReplaceFunc(doc.packageTypeCode),
+      V2WebCodReportService.strReplaceFunc(doc.parcelNote),
+      '-',
+      '-',
+      doc.updatedTime
+        ? moment(doc.updatedTime).format('YYYY-MM-DD HH:mm')
+        : null,
+      doc.updUser ? doc.updUser : '-',
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  private static streamTransform(doc) {
+    const values = [
+      V2WebCodReportService.strReplaceFunc(doc.partnerName),
+      doc.awbDate ? moment(doc.awbDate).format('YYYY-MM-DD HH:mm') : null,
+      `'${doc.awbNumber}`,
+      doc.parcelValue,
+      doc.codValue,
+      doc.codValue,
+      doc.podDate ? moment(doc.podDate).format('YYYY-MM-DD HH:mm') : null,
+      V2WebCodReportService.strReplaceFunc(doc.consigneeName),
+      doc.paymentMethod,
+      doc.transactionStatus,
+      doc.supplierInvoiceStatus,
+      doc.trackingStatus,
+      V2WebCodReportService.strReplaceFunc(
+        doc.custPackage ? doc.custPackage : '-',
+      ),
+      V2WebCodReportService.strReplaceFunc(doc.pickupSource),
+      V2WebCodReportService.strReplaceFunc(doc.currentPosition),
+      V2WebCodReportService.strReplaceFunc(doc.destinationCode),
+      V2WebCodReportService.strReplaceFunc(doc.destination),
+      V2WebCodReportService.strReplaceFunc(doc.perwakilan),
+      doc.driver ? V2WebCodReportService.strReplaceFunc(doc.driver) : '-',
+      V2WebCodReportService.strReplaceFunc(doc.parcelContent),
+      V2WebCodReportService.strReplaceFunc(doc.packageTypeCode),
+      V2WebCodReportService.strReplaceFunc(doc.parcelNote),
+      '-',
+      '-',
+      doc.updatedTime
+        ? moment(doc.updatedTime).format('YYYY-MM-DD HH:mm')
+        : null,
+      doc.updUser ? doc.updUser : '-',
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  private static streamTransformAwb(d) {
+    const values = [
+      [
+        `'${d.awbNumber}`,
+        d.manifestedDate ? moment(d.manifestedDate).format('YYYY-MM-DD') : null,
+        d.transactionDate
+          ? moment(d.transactionDate).format('YYYY-MM-DD HH:mm')
+          : null,
+        d.consigneeName
+          ? V2WebCodReportService.strReplaceFunc(d.consigneeName)
+          : '-',
+        V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
+        V2WebCodReportService.strReplaceFunc(d.codPaymentMethod),
+        V2WebCodReportService.strReplaceFunc(d.branchNameLast),
+        V2WebCodReportService.strReplaceFunc(d.branchNameFinal),
+        d.codValue ? `Rp. ${Number(d.codValue)}` : '-',
+        d.driverName ? V2WebCodReportService.strReplaceFunc(d.driverName) : '-',
+        V2WebCodReportService.strReplaceFunc(d.awbStatusLast),
+        V2WebCodReportService.strReplaceFunc(d.awbStatusFinal),
+        d.transactionStatusName
+          ? V2WebCodReportService.strReplaceFunc(d.transactionStatusName)
+          : '-',
+      ],
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  private static streamTransformSupplierInvoice(d) {
+    const values = [
+      [
+        V2WebCodReportService.strReplaceFunc(d.partnerName),
+        d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD') : null,
+        V2WebCodReportService.strReplaceFunc(d.awbNumber),
+        d.parcelValue,
+        d.codValue,
+        d.codFee,
+        d.codValue,
+        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        V2WebCodReportService.strReplaceFunc(d.consigneeName),
+        'DRAFT INVOICE', // supplier invoice status
+        'DLV',
+        V2WebCodReportService.strReplaceFunc(d.custPackage),
+        V2WebCodReportService.strReplaceFunc(d.pickupSource),
+        V2WebCodReportService.strReplaceFunc(d.currentPosition),
+        V2WebCodReportService.strReplaceFunc(d.destinationCode),
+        V2WebCodReportService.strReplaceFunc(d.destination),
+        V2WebCodReportService.strReplaceFunc(d.parcelContent),
+        V2WebCodReportService.strReplaceFunc(d.packageType),
+        V2WebCodReportService.strReplaceFunc(d.parcelNote),
+      ],
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  private static streamTransformCodFinance(d) {
+    const values = [
+      [
+        V2WebCodReportService.strReplaceFunc(d.partnerName),
+        d.awbDate ? moment(d.awbDate).format('YYYY-MM-DD HH:mm') : null,
+        `'${d.awbNumber}`,
+        d.parcelValue,
+        d.codValue,
+        // d.codFee ? d.codFee : '-',
+        d.codValue,
+        d.podDate ? moment(d.podDate).format('YYYY-MM-DD HH:mm') : null,
+        V2WebCodReportService.strReplaceFunc(d.consigneeName),
+        V2WebCodReportService.strReplaceFunc(d.paymentMethod),
+        V2WebCodReportService.strReplaceFunc(d.transactionStatus),
+        V2WebCodReportService.strReplaceFunc(d.awbStatusName),
+        V2WebCodReportService.strReplaceFunc(
+          d.custPackage ? d.custPackage : '-',
+        ),
+        // V2WebCodReportService.strReplaceFunc(d.pickupSource),
+        V2WebCodReportService.strReplaceFunc(d.currentPosition),
+        V2WebCodReportService.strReplaceFunc(d.destinationCode),
+        // V2WebCodReportService.strReplaceFunc(d.destination),
+        // V2WebCodReportService.strReplaceFunc(d.perwakilan),
+        // d.driver ? V2WebCodReportService.strReplaceFunc(d.driver) : '-',
+        V2WebCodReportService.strReplaceFunc(d.parcelContent),
+        V2WebCodReportService.strReplaceFunc(d.packageTypeCode),
+        V2WebCodReportService.strReplaceFunc(d.parcelNote),
+        '-',
+        '-',
+        d.transferDate
+          ? moment(d.transferDate).format('YYYY-MM-DD HH:mm')
+          : null,
+        d.updatedTime ? moment(d.updatedTime).format('YYYY-MM-DD HH:mm') : null,
+        d.awbStatusDate
+          ? moment(d.awbStatusDate).format('YYYY-MM-DD HH:mm')
+          : null,
+      ],
+    ];
+
+    return `${values.join(',')} \n`;
+  }
+
+  private static streamTransformCodNominal(d) {
+    const values = [
+      [
+        `'${d.awbNumber}`,
+        d.requestorName ? V2WebCodReportService.strReplaceFunc(d.requestorName) : '',
+        d.codValue,
+        d.codValueCurrent,
+        d.attachmentUrl,
+        d.updateDate ? moment(d.updateDate).format('YYYY-MM-DD HH:mm') : null,
+      ],
+    ];
+
+    return `${values.join(',')} \n`;
   }
 }

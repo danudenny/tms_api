@@ -9,8 +9,9 @@ import { TmsBaseEntity } from './tms-base';
 export class Partner extends TmsBaseEntity {
   @PrimaryGeneratedColumn({
     type: 'bigint',
+    name: 'partner_id',
   })
-  partner_id: string;
+  partnerId: number;
 
   @Column('character varying', {
     nullable: true,

@@ -2,9 +2,7 @@
 import {
   createQueryBuilder,
   getManager,
-  In,
   getConnection,
-  Not,
 } from 'typeorm';
 
 import {
@@ -53,9 +51,10 @@ import {
 import { PrintByStoreService } from '../../print-by-store.service';
 
 import moment = require('moment');
-import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
+import {
+  TRANSACTION_STATUS,
+} from '../../../../../shared/constants/transaction-status.constant';
 import { CodSyncTransactionQueueService } from '../../../../queue/services/cod/cod-sync-transaction-queue.service';
-import { MongoDbConfig } from '../../../config/database/mongodb.config';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { AuthLoginMetadata } from '../../../../../shared/models/auth-login-metadata.model';
@@ -69,7 +68,7 @@ export class V1WebAwbCodService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     // mapping field
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
     payload.fieldResolverMap['branchIdFinal'] = 'cp.branch_id';
@@ -119,7 +118,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -133,8 +132,10 @@ export class V1WebAwbCodService {
       branch.branch_id, rep.representative_id
     `);
 
+    q.orderByRaw('SUM(cp.cod_value)', 'DESC');
+
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const total = 0;
 
     const result = new WebAwbCodSummaryResponseVm();
 
@@ -153,7 +154,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
@@ -190,7 +191,7 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t1.updated_time', 'transactionDate'],
+      ['t1.awb_history_date_last', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
@@ -269,7 +270,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -302,7 +303,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
@@ -339,7 +340,7 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t1.updated_time', 'transactionDate'],
+      ['t1.awb_history_date_last', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t7.awb_status_title', 'awbStatusLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
@@ -416,7 +417,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -464,7 +465,11 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.awbItemAttr, 't2', j => {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
       j.andWhere(e => e.transactionStatusId, w => w.isNull());
-      j.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+      j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
+    });
+
+    q.innerJoin(e => e.awbItemAttr.pickupRequestDetail, 'prd', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
     });
 
     q.innerJoin(e => e.userDriver, 't3', j =>
@@ -501,7 +506,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
@@ -534,7 +539,7 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t8.updated_time', 'transactionDate'],
+      ['t1.awb_history_date_last', 'transactionDate'],
       ['t1.awb_status_id_final', 'awbStatusIdLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
@@ -594,7 +599,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -605,7 +610,7 @@ export class V1WebAwbCodService {
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
 
     const data = await q.exec();
     const total = 0;
@@ -627,7 +632,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
+    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
     payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
@@ -658,7 +663,7 @@ export class V1WebAwbCodService {
     q.selectRaw(
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
-      ['t8.updated_time', 'transactionDate'],
+      ['t1.awb_history_date_last', 'transactionDate'],
       ['t1.awb_status_id_last', 'awbStatusIdLast'],
       ['t1.awb_status_id_final', 'awbStatusIdFinal'],
       ['t7.awb_status_title', 'awbStatusLast'],
@@ -714,7 +719,7 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(
         e => e.codPayment.branchId,
         w => w.equals(permissonPayload.branchId),
@@ -725,7 +730,7 @@ export class V1WebAwbCodService {
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
-    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(30000));
+    q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
 
     const total = await q.countWithoutTakeAndSkip();
 
@@ -926,7 +931,7 @@ export class V1WebAwbCodService {
       );
     }
 
-    if (permissonPayload.roleName === 'Ops - Admin COD') {
+    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
       q.andWhere(e => e.branchId, w => w.equals(permissonPayload.branchId));
     }
     //#endregion
@@ -984,12 +989,24 @@ export class V1WebAwbCodService {
     let totalSuccess = 0;
     let totalCodValue = 0;
 
-    const transaction = await CodTransaction.findOne({
-      where: {
-        codTransactionId: payload.transactionId,
-        isDeleted: false,
-      },
-    });
+    let transaction: CodTransaction;
+    const masterTransactionQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      transaction = await getConnection()
+        .createQueryBuilder(CodTransaction, 'ct')
+        .setQueryRunner(masterTransactionQueryRunner)
+        .where(
+          'ct.codTransactionId = :codTransactionId AND ct.isDeleted = false',
+          {
+            codTransactionId: payload.transactionId,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterTransactionQueryRunner.release();
+    }
 
     if (!transaction) {
       throw new BadRequestException('Data transaction tidak valid!');
@@ -1000,19 +1017,32 @@ export class V1WebAwbCodService {
       // NOTE: loop data awb and update transaction detail
       for (const awb of payload.awbNumber) {
         // cancel all transaction status
-        const transactionDetail = await CodTransactionDetail.findOne({
-          select: [
-            'codTransactionDetailId',
-            'awbNumber',
-            'codValue',
-            'awbItemId',
-          ],
-          where: {
-            awbNumber: awb,
-            codTransactionId: payload.transactionId,
-            isDeleted: false,
-          },
-        });
+        let transactionDetail: CodTransactionDetail;
+        const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+          'master',
+        );
+        try {
+          transactionDetail = await getConnection()
+            .createQueryBuilder(CodTransactionDetail, 'ctd')
+            .setQueryRunner(masterTransactionDetailQueryRunner)
+            .select([
+              'ctd.codTransactionDetailId',
+              'ctd.awbNumber',
+              'ctd.codValue',
+              'ctd.awbItemId',
+            ])
+            .where(
+              'ctd.awbNumber = :awbNumber AND ctd.codTransactionId = :codTransactionId AND ctd.isDeleted = false',
+              {
+                awbNumber: awb,
+                codTransactionId: payload.transactionId,
+              },
+            )
+            .getOne();
+        } finally {
+          await masterTransactionDetailQueryRunner.release();
+        }
+
         if (transactionDetail) {
           await AwbItemAttr.update(
             {
@@ -1030,7 +1060,7 @@ export class V1WebAwbCodService {
             },
             {
               codTransactionId: null,
-              transactionStatusId: 30000,
+              transactionStatusId: TRANSACTION_STATUS.SIGESIT,
               updatedTime: timestamp,
               userIdUpdated: authMeta.userId,
             },
@@ -1097,10 +1127,24 @@ export class V1WebAwbCodService {
     const dataPrint: WebCodAwbPrintVm[] = [];
     let printId = null;
 
-    const transaction = await CodTransaction.findOne({
-      codTransactionId,
-      isDeleted: false,
-    });
+    let transaction: CodTransaction;
+    const masterTransactionQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      transaction = await getConnection()
+        .createQueryBuilder(CodTransaction, 'ct')
+        .setQueryRunner(masterTransactionQueryRunner)
+        .where(
+          'ct.codTransactionId = :codTransactionId AND ct.isDeleted = false',
+          {
+            codTransactionId,
+          },
+        )
+        .getOne();
+    } finally {
+      await masterTransactionQueryRunner.release();
+    }
 
     if (transaction) {
       // generate header print
@@ -1114,13 +1158,26 @@ export class V1WebAwbCodService {
       );
 
       // get data
-      const data = await CodTransactionDetail.find({
-        select: ['awbNumber', 'codValue', 'paymentService'],
-        where: {
-          codTransactionId,
-          isDeleted: false,
-        },
-      });
+      let data: CodTransactionDetail[];
+      const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+        'master',
+      );
+      try {
+        data = await getConnection()
+          .createQueryBuilder(CodTransactionDetail, 'ctd')
+          .setQueryRunner(masterTransactionDetailQueryRunner)
+          .select(['ctd.awbNumber', 'ctd.codValue', 'ctd.paymentService'])
+          .where(
+            'ctd.codTransactionId = :codTransactionId AND ctd.isDeleted = false',
+            {
+              codTransactionId,
+            },
+          )
+          .getMany();
+      } finally {
+        await masterTransactionDetailQueryRunner.release();
+      }
+
       if (data.length) {
         const transactionType = transaction.transactionType.toLowerCase();
         let totalCodValueCash = 0;
@@ -1163,45 +1220,67 @@ export class V1WebAwbCodService {
     const timestamp = moment().toDate();
 
     // Validate cod receipt
-    const qb = createQueryBuilder();
-    qb.addSelect('dpdd.do_pod_deliver_detail_id', 'doPodDeliverDetailId');
-    qb.addSelect('dpdd.awb_number', 'awbNumber');
-    qb.addSelect('awb.total_cod_value', 'totalCodValue');
-    qb.addSelect('dpdd.is_deleted', 'isDeleted');
-    qb.addSelect('dpdd.awb_item_id', 'awbItemId');
-    qb.addSelect('dpd.user_id_driver', 'userIdDriver');
-    qb.addSelect('dpd.branch_id', 'branchId');
-    qb.from('do_pod_deliver_detail', 'dpdd');
-    qb.innerJoin(
-      'awb',
-      'awb',
-      'dpdd.awb_id = awb.awb_id AND awb.is_deleted = false AND awb.is_cod = true',
-    );
-    qb.innerJoin(
-      'do_pod_deliver',
-      'dpd',
-      'dpdd.do_pod_deliver_id = dpd.do_pod_deliver_id',
-    );
-    qb.where('dpdd.is_deleted = false');
-    qb.andWhere('dpdd.awb_status_id_last = 30000');
-    qb.andWhere('dpdd.awb_number = :awbNumber', {
-      awbNumber: payload.awbNumber,
-    });
+    let resiCod;
+    const masterQueryRunner = getConnection().createQueryRunner('master');
+    try {
+      const qb = await getConnection()
+        .createQueryBuilder()
+        .setQueryRunner(masterQueryRunner);
 
-    const resiCod = await qb.getRawOne();
+      qb.addSelect('dpdd.do_pod_deliver_detail_id', 'doPodDeliverDetailId');
+      qb.addSelect('dpdd.awb_number', 'awbNumber');
+      qb.addSelect('awb.total_cod_value', 'totalCodValue');
+      qb.addSelect('dpdd.is_deleted', 'isDeleted');
+      qb.addSelect('dpdd.awb_item_id', 'awbItemId');
+      qb.addSelect('dpd.user_id_driver', 'userIdDriver');
+      qb.addSelect('dpd.branch_id', 'branchId');
+      qb.from('do_pod_deliver_detail', 'dpdd');
+      qb.innerJoin(
+        'awb',
+        'awb',
+        'dpdd.awb_id = awb.awb_id AND awb.is_deleted = false AND awb.is_cod = true',
+      );
+      qb.innerJoin(
+        'do_pod_deliver',
+        'dpd',
+        'dpdd.do_pod_deliver_id = dpd.do_pod_deliver_id',
+      );
+      qb.where('dpdd.is_deleted = false');
+      qb.andWhere('dpdd.awb_status_id_last = 30000');
+      qb.andWhere('dpdd.awb_number = :awbNumber', {
+        awbNumber: payload.awbNumber,
+      });
+
+      resiCod = await qb.getRawOne();
+    } finally {
+      await masterQueryRunner.release();
+    }
+
     if (!resiCod) {
       throw new BadRequestException('Resi tidak dapat diproses!');
     }
 
     // Validate cod receipt
-    const qbCodPayment = createQueryBuilder();
-    qbCodPayment.select('*');
-    qbCodPayment.from('cod_payment', 'cp');
-    qbCodPayment.where('cp.awb_number = :awbNumber', {
-      awbNumber: resiCod.awbNumber,
-    });
+    let validateCodPayment;
+    const masterCodPaymentQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      const qbCodPayment = await getConnection()
+        .createQueryBuilder()
+        .setQueryRunner(masterCodPaymentQueryRunner);
 
-    const validateCodPayment = await qbCodPayment.getRawOne();
+      qbCodPayment.select('*');
+      qbCodPayment.from('cod_payment', 'cp');
+      qbCodPayment.where('cp.awb_number = :awbNumber', {
+        awbNumber: resiCod.awbNumber,
+      });
+
+      validateCodPayment = await qbCodPayment.getRawOne();
+    } finally {
+      await masterCodPaymentQueryRunner.release();
+    }
+
     if (validateCodPayment) {
       throw new BadRequestException(
         'AWB Number already Exists in COD_Payment!',
@@ -1240,25 +1319,57 @@ export class V1WebAwbCodService {
     const dataError = [];
     let totalSuccess = 0;
 
-    const transaction = await CodTransaction.findOne({
-      where: {
-        codTransactionId: payload.transactionId,
-        isDeleted: false,
-        transactionStatusId: In(['31000', '32500']),
-      },
-    });
+    let transaction: CodTransaction;
+    const masterTransactionQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      transaction = await getConnection()
+        .createQueryBuilder(CodTransaction, 'ct')
+        .setQueryRunner(masterTransactionQueryRunner)
+        .where(
+          'ct.codTransactionId = :codTransactionId AND ct.transactionStatusId IN (:...transactionStatusIds) AND ct.isDeleted = false',
+          {
+            codTransactionId: payload.transactionId,
+            transactionStatusIds: [
+              TRANSACTION_STATUS.TRM,
+              TRANSACTION_STATUS.CANHO,
+            ],
+          },
+        )
+        .getOne();
+    } finally {
+      await masterTransactionQueryRunner.release();
+    }
 
     if (!transaction) {
       throw new BadRequestException('Data transaction tidak valid!');
     }
 
-    const transactionDetails = await CodTransactionDetail.find({
-      select: ['codTransactionDetailId', 'awbNumber', 'codValue', 'awbItemId'],
-      where: {
-        codTransactionId: payload.transactionId,
-        isDeleted: false,
-      },
-    });
+    let transactionDetails: CodTransactionDetail[];
+    const masterTransactionDetailBranchQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      transactionDetails = await getConnection()
+        .createQueryBuilder(CodTransactionDetail, 'ctd')
+        .setQueryRunner(masterTransactionDetailBranchQueryRunner)
+        .select([
+          'ctd.codTransactionDetailId',
+          'ctd.awbNumber',
+          'ctd.codValue',
+          'ctd.awbItemId',
+        ])
+        .where(
+          'ctd.codTransactionId = :codTransactionId AND ctd.isDeleted = false',
+          {
+            codTransactionId: payload.transactionId,
+          },
+        )
+        .getMany();
+    } finally {
+      await masterTransactionDetailBranchQueryRunner.release();
+    }
 
     if (transactionDetails.length <= 0) {
       throw new BadRequestException('Tidak ada resi pada transaksi ini!');
@@ -1290,7 +1401,7 @@ export class V1WebAwbCodService {
               },
               {
                 codTransactionId: null,
-                transactionStatusId: 30000,
+                transactionStatusId: TRANSACTION_STATUS.SIGESIT,
                 updatedTime: timestamp,
                 userIdUpdated: authMeta.userId,
               },
@@ -1361,53 +1472,114 @@ export class V1WebAwbCodService {
     const dataError = [];
     let totalSuccess = 0;
 
-    const transaction = await CodTransaction.findOne({
-      where: {
-        codTransactionId: payload.transactionId,
-        isDeleted: false,
-        transactionStatusId: In(['31000', '32500']),
-      },
-    });
+    let transaction: CodTransaction;
+    const masterTransactionQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      transaction = await getConnection()
+        .createQueryBuilder(CodTransaction, 'ct')
+        .setQueryRunner(masterTransactionQueryRunner)
+        .where(
+          'ct.codTransactionId = :codTransactionId AND ct.transactionStatusId IN (:...transactionStatusIds) AND ct.isDeleted = false',
+          {
+            codTransactionId: payload.transactionId,
+            transactionStatusIds: [
+              TRANSACTION_STATUS.TRM,
+              TRANSACTION_STATUS.CANHO,
+            ],
+          },
+        )
+        .getOne();
+    } finally {
+      await masterTransactionQueryRunner.release();
+    }
 
     if (!transaction) {
       throw new BadRequestException('Data transaction tidak valid!');
     }
 
-    const transactionDetails = await CodTransactionDetail.find({
-      select: ['codTransactionDetailId', 'awbNumber', 'codValue', 'awbItemId'],
-      where: {
-        codTransactionId: payload.transactionId,
-        isDeleted: false,
-      },
-    });
+    let transactionDetails: CodTransactionDetail[];
+    const masterTransactionDetailBranchQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      transactionDetails = await getConnection()
+        .createQueryBuilder(CodTransactionDetail, 'ctd')
+        .setQueryRunner(masterTransactionDetailBranchQueryRunner)
+        .select([
+          'ctd.codTransactionDetailId',
+          'ctd.awbNumber',
+          'ctd.codValue',
+          'ctd.awbItemId',
+        ])
+        .where(
+          'ctd.codTransactionId = :codTransactionId AND ctd.isDeleted = false',
+          {
+            codTransactionId: payload.transactionId,
+          },
+        )
+        .getMany();
+    } finally {
+      await masterTransactionDetailBranchQueryRunner.release();
+    }
 
     if (transactionDetails.length <= 0) {
       throw new BadRequestException('Tidak ada resi pada transaksi ini!');
     }
 
     // Get duplicate resi in other transaction
-    const transactionDuplicates = await CodTransactionDetail.find({
-      select: ['codTransactionId', 'awbNumber', 'codValue', 'awbItemId'],
-      where: {
-        codTransactionId: Not(payload.transactionId),
-        awbNumber: transactionDetails[0].awbNumber,
-        isDeleted: false,
-      },
-    });
+    let transactionDuplicates: CodTransactionDetail[];
+    const masterTransactionDuplicatesBranchQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+    try {
+      transactionDuplicates = await getConnection()
+        .createQueryBuilder(CodTransactionDetail, 'ctd')
+        .setQueryRunner(masterTransactionDuplicatesBranchQueryRunner)
+        .select([
+          'ctd.codTransactionId',
+          'ctd.awbNumber',
+          'ctd.codValue',
+          'ctd.awbItemId',
+        ])
+        .where(
+          'ctd.codTransactionId <> :codTransactionId AND ctd.awbNumber = :awbNumber AND ctd.isDeleted = false',
+          {
+            codTransactionId: payload.transactionId,
+            awbNumber: transactionDetails[0].awbNumber,
+          },
+        )
+        .getMany();
+    } finally {
+      await masterTransactionDuplicatesBranchQueryRunner.release();
+    }
 
     if (transactionDuplicates.length) {
-      const validationRow = await CodTransactionDetail.find({
-        select: [
-          'codTransactionDetailId',
-          'awbNumber',
-          'codValue',
-          'awbItemId',
-        ],
-        where: {
-          codTransactionId: transactionDuplicates[0].codTransactionId,
-          isDeleted: false,
-        },
-      });
+      let validationRow: CodTransactionDetail[];
+      const mastervalidationRowBranchQueryRunner = getConnection().createQueryRunner(
+        'master',
+      );
+      try {
+        validationRow = await getConnection()
+          .createQueryBuilder(CodTransactionDetail, 'ctd')
+          .setQueryRunner(mastervalidationRowBranchQueryRunner)
+          .select([
+            'ctd.codTransactionDetailId',
+            'ctd.awbNumber',
+            'ctd.codValue',
+            'ctd.awbItemId',
+          ])
+          .where(
+            'ctd.codTransactionId = :codTransactionId AND ctd.isDeleted = false',
+            {
+              codTransactionId: transactionDuplicates[0].codTransactionId,
+            },
+          )
+          .getMany();
+      } finally {
+        await mastervalidationRowBranchQueryRunner.release();
+      }
 
       if (validationRow.length !== transactionDetails.length) {
         throw new BadRequestException(
@@ -1520,7 +1692,7 @@ export class V1WebAwbCodService {
       firstTransaction.awbItemId = item.awbItemId;
       firstTransaction.awbNumber = item.awbNumber;
       firstTransaction.codTransactionId = transctiontId;
-      firstTransaction.transactionStatusId = 31000;
+      firstTransaction.transactionStatusId = TRANSACTION_STATUS.TRM;
       firstTransaction.supplierInvoiceStatusId = null;
       firstTransaction.codSupplierInvoiceId = null;
       firstTransaction.paymentMethod = item.paymentMethod;
@@ -1575,20 +1747,6 @@ export class V1WebAwbCodService {
     } finally {
       await masterQueryRunner.release();
     }
-
-    // const awbValid = await AwbItemAttr.findOne({
-    //   select: ['awbItemAttrId', 'awbItemId', 'awbStatusIdFinal'],
-    //   where: {
-    //     awbItemId,
-    //     awbStatusIdFinal: AWB_STATUS.DLV,
-    //     isDeleted: false,
-    //   },
-    // });
-    // if (awbValid) {
-    //   return true;
-    // } else {
-    //   return false;
-    // }
   }
 
   // handle data store for printing
@@ -1733,7 +1891,7 @@ export class V1WebAwbCodService {
       codBranchCash.codTransactionId = uuidString;
       codBranchCash.transactionCode = randomCode;
       codBranchCash.transactionDate = timestamp;
-      codBranchCash.transactionStatusId = 31000;
+      codBranchCash.transactionStatusId = TRANSACTION_STATUS.TRM;
       codBranchCash.transactionType = 'CASH';
       codBranchCash.totalCodValue = totalCodValueCash;
       codBranchCash.totalAwb = totalAwbCash;
@@ -1829,7 +1987,7 @@ export class V1WebAwbCodService {
       codBranchCashless.codTransactionId = uuidString;
       codBranchCashless.transactionCode = randomCode;
       codBranchCashless.transactionDate = timestamp;
-      codBranchCashless.transactionStatusId = 35000;
+      codBranchCashless.transactionStatusId = TRANSACTION_STATUS.TRF;
       codBranchCashless.transactionType = 'CASHLESS';
       codBranchCashless.totalCodValue = totalCodValueCashless;
       codBranchCashless.totalAwb = totalAwbCashless;

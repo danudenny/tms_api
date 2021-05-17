@@ -498,9 +498,10 @@ export class WebDeliveryOutService {
           case 'IN':
             if (awb.branchIdLast == permissonPayload.branchId) {
               // Add Locking setnx redis
-              const holdRedis = await RedisService.locking(
+              const holdRedis = await RedisService.lockingWithExpire(
                 `hold:scanout:${awb.awbItemId}`,
                 'locking',
+                10,
               );
               if (holdRedis) {
                 // NOTE: create data do pod detail per awb number
@@ -607,6 +608,7 @@ export class WebDeliveryOutService {
   ): Promise<WebScanOutBagResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
+    const regexNumber = /^[0-9]+$/;
 
     const dataItem = [];
     const timeNow = moment().toDate();
@@ -621,28 +623,36 @@ export class WebDeliveryOutService {
         doPodId: payload.doPodId,
         isDeleted: false,
       },
-      lock: { mode: 'pessimistic_write' },
+      // lock: { mode: 'pessimistic_write' },
     });
 
+    // TODO:bagNumbers changes to Values,cause list of value can the bagNumber or sealNumber
     for (const bagNumber of payload.bagNumber) {
       const response = new ScanBagVm();
       response.status = 'ok';
       response.message = 'success';
-
-      const bagData = await BagService.validBagNumber(bagNumber);
+      let bagData;
+      let wordingBagNumberOrSeal;
+      if (bagNumber.length == 10 && regexNumber.test(bagNumber.substring(7, 10))) {
+        bagData = await BagService.validBagNumber(bagNumber);
+        wordingBagNumberOrSeal = 'dengan nomor bag ';
+      } else {
+        bagData = await BagService.findOneBySealNumber(bagNumber);
+        wordingBagNumberOrSeal = 'dengan nomor seal ';
+      }
       if (bagData) {
+        const holdRedis = await RedisService.lockingWithExpire(
+          `hold:bagscanout:${bagData.bagItemId}`,
+          'locking',
+          30,
+        );
         // NOTE: validate bag branch id last
         // TODO: validation need improvement
         // bag status scan out by doPodType (3005 Branch/ 3010 and 3020 HUB)
         const bagStatus = BAG_STATUS.OUT_HUB;
         let additionMinutes = 0;
         const transactionStatusId = 300; // OUT HUB
-
         const notScan = bagData.bagItemStatusIdLast != bagStatus ? true : false;
-        const holdRedis = await RedisService.locking(
-          `hold:bagscanout:${bagData.bagItemId}`,
-          'locking',
-        );
 
         if (notScan && holdRedis) {
           if (doPod) {
@@ -663,7 +673,6 @@ export class WebDeliveryOutService {
                 transactionStatusId,
               );
             }
-
             // TODO: need refactoring ??
             // NOTE: create DoPodDetailBag
             const doPodDetailBag = DoPodDetailBag.create();
@@ -673,18 +682,16 @@ export class WebDeliveryOutService {
             doPodDetailBag.bagItemId = bagData.bagItemId;
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
             await DoPodDetailBag.insert(doPodDetailBag);
-
             // Assign print metadata
             response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
             response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
             response.printDoPodDetailBagMetadata.bagItem.weight = bagData.weight;
             response.printDoPodDetailBagMetadata.bagItem.bag.bagNumber = bagData.bag.bagNumber;
+            response.printDoPodDetailBagMetadata.bagItem.bag.sealNumber = bagData.bag.sealNumber;
             response.printDoPodDetailBagMetadata.bagItem.bag.refRepresentativeCode = bagData.bag.refRepresentativeCode;
-
             // AFTER Scan OUT ===============================================
             // #region after scanout
             // Update bag_item set bag_item_status_id = 1000
-
             await BagItem.update({ bagItemId: bagData.bagItemId }, {
               bagItemStatusIdLast: bagStatus,
               branchIdLast: doPod.branchId,
@@ -692,7 +699,6 @@ export class WebDeliveryOutService {
               updatedTime: timeNow,
               userIdUpdated: authMeta.userId,
             });
-
             // NOTE: Loop data bag_item_awb for update status awb
             // and create do_pod_detail (data awb on bag)
             // TODO: need to refactor send to background job
@@ -707,7 +713,6 @@ export class WebDeliveryOutService {
               permissonPayload.branchId,
               doPod.doPodType,
             );
-
             // TODO: if isTransit auto IN
             if (doPod.doPodType == 3020) {
               // NOTE: background job for insert bag item history
@@ -718,13 +723,11 @@ export class WebDeliveryOutService {
                 authMeta.userId,
               );
             }
-
             // NOTE: handle sorting status OUT AND IN HUB
             // force OUT_HUB created after IN_HUB in history bag (queue)
             if (bagStatus == BAG_STATUS.OUT_HUB) {
               additionMinutes = 1;
             }
-
             // TODO: need refactoring
             // NOTE: background job for insert bag item history
             BagItemHistoryQueueService.addData(
@@ -734,13 +737,13 @@ export class WebDeliveryOutService {
               authMeta.userId,
               additionMinutes,
             );
-            // #endregion after scanout
+              // #endregion after scanout
 
             totalSuccess += 1;
           } else {
             totalError += 1;
             response.status = 'error';
-            response.message = `Surat Jalan Bag ${bagNumber} tidak valid.`;
+            response.message = `Surat Jalan ${wordingBagNumberOrSeal}${bagNumber} tidak valid.`;
           }
           // remove key holdRedis
           RedisService.del(`hold:bagscanout:${bagData.bagItemId}`);
@@ -748,7 +751,7 @@ export class WebDeliveryOutService {
         } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Gabung paket ${bagNumber} sudah di proses`;
+          response.message = `Gabung paket ${wordingBagNumberOrSeal}${bagNumber} sudah di proses`;
           // if (bagData.bagItemStatusIdLast == 1000) {
           //   response.message = `Gabung paket belum scan in, mohon untuk melakukan scan in terlebih dahulu`;
           // }
@@ -756,7 +759,7 @@ export class WebDeliveryOutService {
       } else {
         totalError += 1;
         response.status = 'error';
-        response.message = `Gabung paket ${bagNumber} Tidak di Temukan`;
+        response.message = `Gabung paket ${wordingBagNumberOrSeal}${bagNumber} Tidak di Temukan`;
       }
 
       // push item

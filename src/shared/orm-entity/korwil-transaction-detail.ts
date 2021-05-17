@@ -12,6 +12,7 @@ import {
 import { Branch } from './branch';
 import { User } from './user';
 import { KorwilTransaction } from './korwil-transaction';
+import {KorwilItem} from './korwil-item';
 
 @Entity('korwil_transaction_detail', { schema: 'public' })
 export class KorwilTransactionDetail extends BaseEntity {
@@ -113,5 +114,9 @@ export class KorwilTransactionDetail extends BaseEntity {
 
   @ManyToOne(() => KorwilTransaction, e => e.korwilTransactionDetail)
   @JoinColumn({ name: 'korwil_transaction_id', referencedColumnName: 'korwilTransactionId' })
-    korwilTransaction: KorwilTransaction;
+  korwilTransaction: KorwilTransaction;
+
+  @OneToOne(() => KorwilItem)
+  @JoinColumn({ name: 'korwil_item_id' })
+  korwilItem: KorwilItem;
 }

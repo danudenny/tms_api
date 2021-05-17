@@ -89,6 +89,9 @@ export class WebMonitoringCoordinatorListData {
 
   @ApiModelProperty()
   representativeCode: string;
+
+  @ApiModelProperty()
+  position: string;
 }
 
 export class WebMonitoringCoordinatorListResponse extends BaseMetaResponseVm {

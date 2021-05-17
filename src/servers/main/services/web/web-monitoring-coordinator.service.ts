@@ -1,16 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { WebMonitoringCoordinatorResponse, WebMonitoringCoordinatorTaskResponse, WebMonitoringCoordinatorPhotoResponse, WebMonitoringCoordinatorListResponse, WebMonitoringCoordinatorDetailResponse, CreateTransactionCoordinatorResponse, WebMonitoringCoordinatorTaskReportResponse, WebMonitoringCoordinatorBranchResponse } from '../../models/web-monitoring-coordinator.response.vm';
+import {
+  WebMonitoringCoordinatorResponse,
+  WebMonitoringCoordinatorTaskResponse,
+  WebMonitoringCoordinatorPhotoResponse,
+  WebMonitoringCoordinatorListResponse,
+  WebMonitoringCoordinatorDetailResponse,
+  CreateTransactionCoordinatorResponse,
+  WebMonitoringCoordinatorTaskReportResponse,
+  WebMonitoringCoordinatorBranchResponse,
+} from '../../models/web-monitoring-coordinator.response.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { KorwilTransaction } from '../../../../shared/orm-entity/korwil-transaction';
 import { WebMonitoringCoordinatorTaskPayload, WebMonitoringCoordinatorPhotoPayload, WebMonitoringCoordinatorDetailPayload } from '../../models/web-monitoring-coordinator-payload.vm';
-import { createQueryBuilder, Raw } from 'typeorm';
+import { createQueryBuilder, Raw, SelectQueryBuilder, Not, Equal } from 'typeorm';
 import { KorwilTransactionDetailPhoto } from '../../../../shared/orm-entity/korwil-transaction-detail-photo';
 import { UserToBranch } from '../../../../shared/orm-entity/user-to-branch';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import moment = require('moment');
 import { assign } from 'lodash';
+import { MobileKorwilService } from '../mobile/mobile-korwil.service';
 
 @Injectable()
 export class WebMonitoringCoordinatorService {
@@ -18,6 +28,7 @@ export class WebMonitoringCoordinatorService {
 
   static async findListAllBranch(
     payload: BaseMetaPayloadVm,
+    isKorwilHrd: boolean = false,
   ): Promise<WebMonitoringCoordinatorResponse> {
     // mapping field
     payload.fieldResolverMap['countTask'] = 't1.total_task';
@@ -40,7 +51,7 @@ export class WebMonitoringCoordinatorService {
       ['t2.branch_name', 'branchName'],
       ['t2.branch_id', 'branchId'],
       ['t1.date', 'date'],
-      [`COUNT(t3.is_done = true OR NULL)`, 'countChecklist'],
+      [`COUNT(DISTINCT CASE WHEN (t3.is_done = true OR NULL) THEN t3.korwil_item_id END)`, 'countChecklist'],
       ['t4.check_in_date', 'checkInDatetime'],
       ['t4.check_out_date', 'checkOutDatetime'],
       [`CONCAT(t5.first_name, ' ', t5.last_name)`, 'coordinatorName'],
@@ -64,7 +75,21 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.branches.representative, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('t2.branch_id, t2.branch_name, t1.total_task, t4.check_in_date, t4.check_out_date, t1.date, t1.korwil_transaction_id, "coordinatorName", t1.user_id, t1.status, t6.representative_id, t6.representative_code');
+    q.groupByRaw(`
+      t2.branch_id,
+      t2.branch_name,
+      t1.total_task,
+      t4.check_in_date,
+      t4.check_out_date,
+      t1.date,
+      t1.korwil_transaction_id,
+      "coordinatorName",
+      t1.user_id,
+      t1.status,
+      t6.representative_id,
+      t6.representative_code
+    `);
+
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebMonitoringCoordinatorResponse();
@@ -77,24 +102,31 @@ export class WebMonitoringCoordinatorService {
 
   static async listTask(
     payload: WebMonitoringCoordinatorTaskPayload,
+    isKorwilHrd: boolean = false,
   ): Promise<WebMonitoringCoordinatorTaskResponse> {
-    const qb = createQueryBuilder();
-    qb.addSelect('a.korwil_transaction_detail_id', 'korwilTransactionDetailId');
-    qb.addSelect('b.korwil_item_name', 'task');
-    qb.addSelect('a.note', 'note');
-    qb.addSelect('a.photo_count', 'countPhoto');
-    qb.addSelect(`CASE
+    const operatorQueryHrdKorwil = isKorwilHrd ? '=' : '<>';
+    const korwilConfig = await MobileKorwilService.getKorwilConfig();
+    let qb = createQueryBuilder();
+    const subQb = qb.subQuery();
+    subQb.addSelect('a.korwil_transaction_detail_id', 'korwilTransactionDetailId');
+    subQb.addSelect('b.korwil_item_name', 'task');
+    subQb.addSelect('a.note', 'note');
+    subQb.addSelect('a.photo_count', 'countPhoto');
+    subQb.addSelect(`CASE
                     WHEN a.status = 1 THEN 'Belum dikerjakan'
                     WHEN a.status = 2 THEN 'Sudah dikerjakan'
                     ELSE ''
                   END`, 'status');
-    qb.from('korwil_transaction_detail', 'a');
-    qb.innerJoin('korwil_item', 'b', 'b.korwil_item_id = a.korwil_item_id AND b.is_deleted = false');
-    qb.addOrderBy('b.sort_order', 'ASC');
-    qb.where('a.korwil_transaction_id = :korwilTransactionId', { korwilTransactionId: payload.korwilTransactionId });
-    qb.andWhere('a.is_done = true');
-    qb.andWhere('a.is_deleted = false');
-
+    subQb.addSelect('RANK () OVER (PARTITION BY a.korwil_item_id ORDER BY a.created_time DESC)', 'ranks');
+    subQb.from('korwil_transaction_detail', 'a');
+    subQb.innerJoin('korwil_item', 'b', 'b.korwil_item_id = a.korwil_item_id AND b.is_deleted = false');
+    subQb.addOrderBy('b.sort_order', 'ASC');
+    subQb.where('a.korwil_transaction_id = :korwilTransactionId', { korwilTransactionId: payload.korwilTransactionId });
+    subQb.andWhere('a.is_done = true');
+    subQb.andWhere('a.is_deleted = false');
+    qb = createQueryBuilder();
+    qb = qb.addFrom(() => subQb, 't');
+    qb.andWhere('t.ranks = 1');
     const data = await qb.getRawMany();
     const result = new WebMonitoringCoordinatorTaskResponse();
     result.data = data;
@@ -109,9 +141,15 @@ export class WebMonitoringCoordinatorService {
     const qb = createQueryBuilder();
     qb.addSelect('url');
     qb.addFrom('korwil_transaction_detail_photo', 'a');
-    qb.innerJoin('attachment_tms', 'b', 'a.photo_id = b.attachment_tms_id AND b.is_deleted = false');
+    qb.innerJoin(
+      'attachment_tms',
+      'b',
+      'a.photo_id = b.attachment_tms_id AND b.is_deleted = false',
+    );
     qb.where('a.is_deleted = false');
-    qb.andWhere('a.korwil_transaction_detail_id = :korwilTransactionDetailId', { korwilTransactionDetailId: payload.korwilTransactionDetailId });
+    qb.andWhere('a.korwil_transaction_detail_id = :korwilTransactionDetailId', {
+      korwilTransactionDetailId: payload.korwilTransactionDetailId,
+    });
     const data = await qb.getRawMany();
     for (const dataDetail of data) {
       url.push(dataDetail.url);
@@ -122,6 +160,7 @@ export class WebMonitoringCoordinatorService {
 
   static async findListCoordinator(
     payload: BaseMetaPayloadVm,
+    isKorwilHrd: boolean = false,
   ): Promise<WebMonitoringCoordinatorListResponse> {
     // mapping field
     payload.fieldResolverMap['date'] = 'a.date';
@@ -132,19 +171,26 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['coordinatorName'] = '"coordinatorName"';
     payload.fieldResolverMap['representativeId'] = 'f.representative_id';
     payload.fieldResolverMap['representativeCode'] = 'f.representative_code';
+    payload.fieldResolverMap['position'] = 'b.position';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 'a');
     const q = repo.findAllRaw();
+    const korwilConfig = await MobileKorwilService.getKorwilConfig();
+    const operatorQueryHrdKorwil = isKorwilHrd ? '=' : '<>';
 
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
       [`CONCAT(c.first_name, ' ', c.last_name)`, 'coordinatorName'],
       [`COUNT(DISTINCT a.branch_id)`, 'countBranch'],
-      [`COUNT(*) FILTER (WHERE a.employee_journey_id IS NOT NULL)`, 'countVisit'],
+      [
+        `COUNT(DISTINCT a.korwil_transaction_id) FILTER (WHERE a.employee_journey_id IS NOT NULL)`,
+        'countVisit',
+      ],
       [`MIN(d.check_in_date)`, 'checkInDatetime'],
       [`MAX(d.check_out_date)`, 'checkOutDatetime'],
       ['b.ref_user_id', 'userId'],
+      isKorwilHrd ? null : ['b.position', 'position '],
     );
     q.innerJoin(e => e.userToBranch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -161,7 +207,15 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.branches.representative, 'f', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('b.ref_user_id, "coordinatorName"');
+    q.innerJoin(e => e.users, 'g', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.users.roles, 'h', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhereRaw(`h.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
+
+    q.groupByRaw(`b.ref_user_id, "coordinatorName" ${isKorwilHrd ? '' : ', b.position'}`);
     q.orderByRaw('"checkInDatetime"', 'ASC');
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -186,27 +240,60 @@ export class WebMonitoringCoordinatorService {
     qb.addSelect('e.check_out_date', 'checkOutDatetime');
     qb.addSelect(`COUNT(f.is_done = true OR NULL)`, 'countChecklist');
     qb.addFrom('korwil_transaction', 'a');
-    qb.innerJoin('user_to_branch', 'b', 'b.user_to_branch_id = a.user_to_branch_id AND b.is_deleted = false');
-    qb.innerJoin('branch', 'c', 'c.branch_id = b.ref_branch_id AND c.is_deleted = false');
-    qb.innerJoin('representative', 'd', 'd.representative_id = c.representative_id AND d.is_deleted = false');
-    qb.innerJoin('employee_journey', 'e', 'e.employee_journey_id = a.employee_journey_id AND e.is_deleted = false');
-    qb.innerJoin('korwil_transaction_detail', 'f', 'f.korwil_transaction_id = a.korwil_transaction_id AND f.is_deleted = false');
+    qb.innerJoin(
+      'user_to_branch',
+      'b',
+      'b.user_to_branch_id = a.user_to_branch_id AND b.is_deleted = false',
+    );
+    qb.innerJoin(
+      'branch',
+      'c',
+      'c.branch_id = b.ref_branch_id AND c.is_deleted = false',
+    );
+    qb.innerJoin(
+      'representative',
+      'd',
+      'd.representative_id = c.representative_id AND d.is_deleted = false',
+    );
+    qb.innerJoin(
+      'employee_journey',
+      'e',
+      'e.employee_journey_id = a.employee_journey_id AND e.is_deleted = false',
+    );
+    qb.innerJoin(
+      'korwil_transaction_detail',
+      'f',
+      'f.korwil_transaction_id = a.korwil_transaction_id AND f.is_deleted = false',
+    );
     qb.where('a.is_deleted = false');
-    qb.andWhere('a.korwil_transaction_id = :korwilTransactionId', { korwilTransactionId: payload.korwilTransactionId });
-    qb.groupBy(' a.korwil_transaction_id, d.representative_name, a.date, c.branch_name, e.check_in_date, e.check_out_date, d.representative_code');
+    qb.andWhere('a.korwil_transaction_id = :korwilTransactionId', {
+      korwilTransactionId: payload.korwilTransactionId,
+    });
+    qb.groupBy(
+      ' a.korwil_transaction_id, d.representative_name, a.date, c.branch_name, e.check_in_date, e.check_out_date, d.representative_code',
+    );
 
     const taskHeader = await qb.getRawOne();
     if (taskHeader) {
       result.transactionHeader = taskHeader;
       const qbDetail = createQueryBuilder();
-      qbDetail.addSelect('a.korwil_transaction_detail_id', 'korwilTransactionDetailId');
+      qbDetail.addSelect(
+        'a.korwil_transaction_detail_id',
+        'korwilTransactionDetailId',
+      );
       qbDetail.addSelect('b.korwil_item_name', 'task');
       qbDetail.addSelect('a.note', 'note');
       qbDetail.addFrom('korwil_transaction_detail', 'a');
-      qbDetail.innerJoin('korwil_item', 'b', 'b.korwil_item_id = a.korwil_item_id AND b.is_deleted = false');
+      qbDetail.innerJoin(
+        'korwil_item',
+        'b',
+        'b.korwil_item_id = a.korwil_item_id AND b.is_deleted = false',
+      );
       qbDetail.where('a.is_deleted = false');
       qbDetail.andWhere('a.is_done = true');
-      qbDetail.andWhere('a.korwil_transaction_id = :korwilTransactioId', { korwilTransactioId: payload.korwilTransactionId });
+      qbDetail.andWhere('a.korwil_transaction_id = :korwilTransactioId', {
+        korwilTransactioId: payload.korwilTransactionId,
+      });
       const taskDetail = await qbDetail.getRawMany();
 
       if (taskDetail) {
@@ -226,13 +313,16 @@ export class WebMonitoringCoordinatorService {
   static async detailCoordinator(
     payload: WebMonitoringCoordinatorDetailPayload,
   ): Promise<WebMonitoringCoordinatorDetailResponse> {
-
     const qb = createQueryBuilder();
     qb.addSelect('b.user_id', 'userId');
     qb.addSelect(`CONCAT(b.first_name, ' ', b.last_name)`, 'coordinatorName');
     qb.addSelect('a.ref_branch_id', 'branchId');
     qb.from('user_to_branch', 'a');
-    qb.innerJoin('users', 'b', 'a.ref_user_id = b.user_id AND b.is_deleted = false');
+    qb.innerJoin(
+      'users',
+      'b',
+      'a.ref_user_id = b.user_id AND b.is_deleted = false',
+    );
     qb.where('a.ref_user_id = :userId', { userId: payload.userId });
     qb.andWhere('a.is_deleted = false');
 
@@ -244,7 +334,7 @@ export class WebMonitoringCoordinatorService {
 
     const branch = [];
     for (const dataDetail of data) {
-        branch.push(Number(dataDetail.branchId));
+      branch.push(Number(dataDetail.branchId));
     }
     result.branch = branch;
     result.userId = payload.userId;
@@ -254,7 +344,11 @@ export class WebMonitoringCoordinatorService {
 
   static async findListBranchCoordinator(
     payload: BaseMetaPayloadVm,
+    isKorwilHrd: boolean = false,
   ): Promise<WebMonitoringCoordinatorBranchResponse> {
+    const korwilConfig = await MobileKorwilService.getKorwilConfig();
+    const operatorQueryHrdKorwil = isKorwilHrd ? '=' : '<>';
+
     // mapping field
     payload.fieldResolverMap['branchId'] = 't1.branch_id';
     payload.fieldResolverMap['date'] = 't1.date';
@@ -262,6 +356,7 @@ export class WebMonitoringCoordinatorService {
     payload.fieldResolverMap['branchName'] = '"branchName"';
     payload.fieldResolverMap['representativeId'] = 't4.representative_id';
     payload.fieldResolverMap['representativeCode'] = 't4.representative_code';
+    payload.fieldResolverMap['position'] = 't5.position';
 
     const repo = new OrionRepositoryService(KorwilTransaction, 't1');
     const q = repo.findAllRaw();
@@ -273,8 +368,7 @@ export class WebMonitoringCoordinatorService {
       t2.branch_name AS "branchName",
       t4.representative_code AS "representativeCode",
       t4.representative_id AS "representativeId"
-    `,
-    );
+    `);
     q.innerJoin(e => e.branches, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -284,6 +378,14 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.branches.representative, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.userToBranch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.users.roles, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhereRaw(`t7.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
+
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
     const result = new WebMonitoringCoordinatorBranchResponse();
@@ -294,17 +396,26 @@ export class WebMonitoringCoordinatorService {
     return result;
   }
 
-  static async createCoordinatorTrans(): Promise<CreateTransactionCoordinatorResponse> {
-      const timeNow = moment().format();
-      const userId = 3; // super admin;
-      const qb = createQueryBuilder();
-      qb.from('user_to_branch', 'utb');
-      qb.leftJoin('korwil_transaction', 'b', `b.user_to_branch_id = utb.user_to_branch_id AND b.date::date = '${moment().format('YYYY-MM-DD')}' AND b.is_deleted = false`);
-      qb.where('utb.is_deleted = false');
-      qb.andWhere('b.korwil_transaction_id IS NULL');
-      const count = await qb.getCount();
+  static async createCoordinatorTrans(): Promise<
+    CreateTransactionCoordinatorResponse
+  > {
+    const timeNow = moment().format();
+    const userId = 3; // super admin;
+    const qb = createQueryBuilder();
+    qb.from('user_to_branch', 'utb');
+    qb.leftJoin(
+      'korwil_transaction',
+      'b',
+      `b.user_to_branch_id = utb.user_to_branch_id AND b.date::date = '${moment().format(
+        'YYYY-MM-DD',
+      )}' AND b.is_deleted = false`,
+    );
+    qb.where('utb.is_deleted = false');
+    qb.andWhere('b.korwil_transaction_id IS NULL');
+    const count = await qb.getCount();
 
-      const execute = await RawQueryService.query(`INSERT INTO korwil_transaction
+    const execute = await RawQueryService.query(
+      `INSERT INTO korwil_transaction
         (
           date,
           branch_id,
@@ -329,21 +440,44 @@ export class WebMonitoringCoordinatorService {
             '${userId}' as user_id_updated,
             a.user_to_branch_id
             FROM user_to_branch a
-            LEFT JOIN korwil_transaction b ON b.user_to_branch_id = a.user_to_branch_id AND b.date::date = '${moment().format('YYYY-MM-DD')}' AND b.is_deleted = false
+            LEFT JOIN korwil_transaction b ON b.user_to_branch_id = a.user_to_branch_id AND b.date::date = '${moment().format(
+              'YYYY-MM-DD',
+            )}' AND b.is_deleted = false
             WHERE b.korwil_transaction_id IS NULL AND a.is_deleted = false
         )`,
-        null,
-        false,
-      );
+      null,
+      false,
+    );
 
-      const result = new CreateTransactionCoordinatorResponse();
-      if (execute) {
-        result.status = true;
-        result.message = `${count} Data has been inserted at ${timeNow}`;
-      } else {
-        result.status = false;
-        result.message = 'Data failed inserted';
-      }
-      return result;
+    const result = new CreateTransactionCoordinatorResponse();
+    if (execute) {
+      result.status = true;
+      result.message = `${count} Data has been inserted at ${timeNow}`;
+    } else {
+      result.status = false;
+      result.message = 'Data failed inserted';
+    }
+    return result;
+  }
+
+  static async findListHrdCoordinator(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebMonitoringCoordinatorListResponse> {
+    const result = await this.findListCoordinator(payload, true);
+    return result;
+  }
+
+  static async findListHrdBranchCoordinator(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebMonitoringCoordinatorBranchResponse> {
+    const result = this.findListBranchCoordinator(payload, true);
+    return result;
+  }
+
+  static async findListHrdAllBranch(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebMonitoringCoordinatorResponse> {
+    const result = this.findListAllBranch(payload, true);
+    return result;
   }
 }

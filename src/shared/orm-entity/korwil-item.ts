@@ -40,6 +40,12 @@ export class KorwilItem extends TmsBaseEntity {
   })
   sortOrder: number | null;
 
+  @Column('integer', {
+    nullable: false,
+    name: 'role_id',
+  })
+  roleId: number;
+
   @Column('timestamp without time zone', {
     nullable: true,
     name: 'created_time',

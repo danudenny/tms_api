@@ -188,7 +188,7 @@ export class WebDeliveryOutController {
   @Transactional()
   public async findAllBag(@Body() payload: WebScanOutBagVm) {
     // TODO: open bag and loop awb for update awb history
-    return this.webDeliveryOutService.scanOutBag(payload);
+    return await this.webDeliveryOutService.scanOutBag(payload);
   }
 
   @Post('awbList')

@@ -21,10 +21,10 @@ export class ItemReturResponseVm {
   createdTime: string;
 
   @ApiModelProperty()
-  branchId: string;
+  branchIdTo: string;
 
   @ApiModelProperty()
-  branchFrom: string;
+  branchTo: string;
 
   @ApiModelProperty()
   branchName: string;
@@ -40,6 +40,31 @@ export class ItemReturResponseVm {
 
   @ApiModelProperty()
   awbStatus: string;
+
+  @ApiModelProperty()
+  branchIdManifest: string;
+
+  @ApiModelProperty()
+  branchManifest: string;
+
+  @ApiModelProperty()
+  partnerId: number;
+
+  @ApiModelProperty()
+  partnerName: string;
+
+  @ApiModelProperty()
+  userIdDriver: number;
+
+  @ApiModelProperty()
+  branchFrom: string;
+
+  @ApiModelProperty()
+  branchIdFrom: string;
+
+  @ApiModelProperty()
+  consignerName: number;
+
 }
 
 export class WebReturListResponseVm extends BaseMetaResponseVm {

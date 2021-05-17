@@ -760,3 +760,57 @@ export class WebItemAwbCodSummaryResponseVm {
   @ApiModelProperty()
   countAwb: number;
 }
+export class WebCodNominalUpdateResponseVm {
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  status: boolean;
+}
+
+export class WebCodPaymentDeleteResponseVm {
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  status: boolean;
+}
+
+export class WebCodNominalCheckResponseVm {
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  status: boolean;
+}
+
+export class WebItemUpdateNominalCodResponseVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  requestorId: number;
+
+  @ApiModelProperty()
+  requestorName: string;
+
+  @ApiModelProperty()
+  codValue: number;
+
+  @ApiModelProperty()
+  codValueCurrent: number;
+
+  @ApiModelProperty()
+  attachmentId: number;
+
+  @ApiModelProperty()
+  attachmentUrl: string;
+
+  @ApiModelProperty({ format: 'date-time' })
+  updateDate: string;
+}
+
+export class WebUpdateNominalCodListResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [WebItemUpdateNominalCodResponseVm] })
+  data: WebItemUpdateNominalCodResponseVm[];
+}

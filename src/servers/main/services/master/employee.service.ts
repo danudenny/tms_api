@@ -45,6 +45,14 @@ export class EmployeeService {
     q.innerJoin(u => u.user.userRoles, 'user_role', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    // 10 active, 20 inactive
+    q.andWhere(e => e.statusEmployee, w => w.equals(10));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    // cache in milliseconds
+    q.queryBuilder.cache(360000); // 6 minute
+
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -95,7 +103,13 @@ export class EmployeeService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.user.userRoles.branchId, w => w.equals(Number(branchId)));
+
+    // 10 active, 20 inactive
+    q.andWhere(e => e.statusEmployee, w => w.equals(10));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    // cache in milliseconds
+    q.queryBuilder.cache(360000); // 6 minute
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
