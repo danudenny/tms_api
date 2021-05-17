@@ -62,3 +62,10 @@ export class UpdateTaxVm {
   @ApiModelProperty()
   total_fee: double;
 }
+export class ExportHandoverSigesitResponseVM {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+}
