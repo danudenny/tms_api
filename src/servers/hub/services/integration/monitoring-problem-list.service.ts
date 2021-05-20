@@ -60,7 +60,6 @@ export class MonitoringProblemListService {
       [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
-      [`RANK() OVER(PARTITION BY dohd.awb_number ORDER BY bag_sortir.bag_number ASC)`, 'rank'],
     );
 
     // ignore filter isManual = null
@@ -125,7 +124,6 @@ export class MonitoringProblemListService {
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          INNER JOIN users u1 ON u1.user_id = bi1.user_id_created AND u1.is_deleted = FALSE
           WHERE bia1.is_deleted = FALSE
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
@@ -172,10 +170,6 @@ export class MonitoringProblemListService {
       bag_sortir.created_time,
       -- br.branch_name,
       scan_out.awb_id,
-      doh.branch_id,
-      scan_out.branch_id,
-      scan_out.branch_name,
-      bag.is_manual,
       last_status.awb_status_name,
       last_status.awb_status_id,
       c.city_id
@@ -235,10 +229,10 @@ export class MonitoringProblemListService {
           DISTINCT dohd.awb_number)`, 'doHub'],
       [`COUNT(
           DISTINCT CASE
-            WHEN (is_manual = true AND bag_sortir.awb_id IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})) THEN dohd.awb_number
+            WHEN (bag.is_manual = true AND bag_sortir.awb_id IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})) THEN dohd.awb_number
         END)`, 'manualSortir'],
       [`COUNT(
-          DISTINCT CASE WHEN (is_manual = false AND bag_sortir.awb_id IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr}))
+          DISTINCT CASE WHEN (bag.is_manual = false AND bag_sortir.awb_id IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr}))
             THEN dohd.awb_number
         END)`, 'machineSortir'],
       [`COUNT(
@@ -286,7 +280,6 @@ export class MonitoringProblemListService {
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          INNER JOIN users u1 ON u1.user_id = bi1.user_id_created AND u1.is_deleted = FALSE
           WHERE bia1.is_deleted = FALSE
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
@@ -450,12 +443,9 @@ export class MonitoringProblemListService {
       bag_sortir.bag_seq,
       doh.bag_number,
       doh.created_time,
+      bag_sortir.created_time,
       -- br.branch_name,
       scan_out.awb_id,
-      doh.branch_id,
-      scan_out.branch_id,
-      scan_out.branch_name,
-      bag.is_manual,
       last_status.awb_status_name,
       last_status.awb_status_id,
       c.city_id
@@ -508,6 +498,7 @@ export class MonitoringProblemListService {
     payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
       [`doh.created_time`, 'scanDate'],
+      [`bag_sortir.created_time`, 'scanDateInHub'],
       [`dohd.awb_number`, 'awbNumber'],
       [`CASE
           WHEN bag_sortir.bag_number IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
@@ -521,7 +512,6 @@ export class MonitoringProblemListService {
       [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
-      [`RANK() OVER(PARTITION BY dohd.awb_number ORDER BY bag_sortir.bag_number ASC)`, 'rank'],
     );
 
     // ignore isScanOut = null
@@ -593,12 +583,9 @@ export class MonitoringProblemListService {
       bag_sortir.bag_seq,
       doh.bag_number,
       doh.created_time,
+      bag_sortir.created_time,
       -- br.branch_name,
       scan_out.awb_id,
-      doh.branch_id,
-      scan_out.branch_id,
-      scan_out.branch_name,
-      bag.is_manual,
       last_status.awb_status_name,
       last_status.awb_status_id,
       c.city_id
