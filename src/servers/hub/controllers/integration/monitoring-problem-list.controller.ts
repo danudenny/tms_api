@@ -46,6 +46,20 @@ export class MonitoringProblemListController {
     return MonitoringProblemListService.getLebihSortir(payload);
   }
 
+  @Post('scan-out/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: MonitoringHubProblemVm })
+  public async getScanOutList(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemListService.getAwbScanOut(payload);
+  }
+
+  @Post('not-scan-out/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: MonitoringHubProblemVm })
+  public async getNotScanOutList(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemListService.getAwbNotScanOut(payload);
+  }
+
   @Post('total/list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubTotalProblemVm })

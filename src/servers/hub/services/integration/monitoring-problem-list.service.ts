@@ -7,6 +7,7 @@ import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
 import { MonitoringHubProblemVm, MonitoringHubTotalProblemVm } from '../../models/monitoring-hub-problem.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { Bag } from '../../../../shared/orm-entity/bag';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 @Injectable()
 export class MonitoringProblemListService {
@@ -14,6 +15,7 @@ export class MonitoringProblemListService {
     payload: BaseMetaPayloadVm,
     isManual = null,
     isProblem = null,
+    isScanOut = null,
   ): Promise<MonitoringHubProblemVm> {
     const statusProblemStr = (await this.getListStatusAwbProblem()).join(',');
 
@@ -44,21 +46,23 @@ export class MonitoringProblemListService {
     const repo = new OrionRepositoryService(DropoffHub, 'doh');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
-      [`MAX(dohd.created_time)`, 'scanDate'],
+      [`doh.created_time`, 'scanDate'],
       [`dohd.awb_number`, 'awbNumber'],
       [`CASE
           WHEN bag_sortir.bag_number IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
             THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
           ELSE doh.bag_number
         END`, 'bagNumber'],
-      ['\'Yes\'', 'do'],
+      ['\'Yes\'::text', 'do'],
       [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
+      [`RANK() OVER(PARTITION BY dohd.awb_number ORDER BY bag_sortir.bag_number ASC)`, 'rank'],
     );
 
+    // ignore filter isManual = null
     if (isManual === false) {
       q.andWhereRaw(`bag.is_manual = FALSE
       AND bag_sortir.awb_id IS NOT NULL
@@ -71,6 +75,7 @@ export class MonitoringProblemListService {
       AND last_status.awb_status_id NOT IN (${statusProblemStr})`);
     }
 
+    // ignore filter isProblem = null or isProblem = false
     if (isProblem === true) {
       q.andWhereIsolated(qw => {
         qw.whereRaw(`bag_sortir.awb_id IS NULL
@@ -78,6 +83,14 @@ export class MonitoringProblemListService {
         OR last_status.awb_status_id IN (${statusProblemStr})`);
       });
     }
+
+    // ignore isScanOut = null
+    if (isScanOut === false) { // NOT SCAN OUT
+      q.andWhereRaw(`scan_out.awb_id IS NULL AND (bag_sortir.awb_id IS NULL OR dohd.awb_number IS NULL)`);
+    } else if (isScanOut === true) {
+      q.andWhereRaw(`scan_out.awb_id IS NOT NULL`);
+    }
+
     q.innerJoinRaw(
       'branch',
       'br',
@@ -154,13 +167,56 @@ export class MonitoringProblemListService {
       c.city_id
     `);
 
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const map = {
+      scanDate: '"scanDate"',
+      awbNumber: '"awbNumber"',
+      bagNumber: '"bagNumber"',
+      do: '"do"',
+      in: '"in"',
+      out: '"out"',
+      awbStatusName: '"awbStatusName"',
+    };
+
+    const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
+    const order = map[payload.sortBy] ? `ORDER BY ${map[payload.sortBy]} ${payload.sortDir}` : '';
+    const page = payload.limit ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : '';
+    const group = `GROUP BY
+      "scanDate",
+      "awbNumber",
+      "bagNumber",
+      "do",
+      "in",
+      "out",
+      "awbStatusName",
+      "rank"`;
+    const subQuery = q.getQuery();
+    const queryData = `
+      SELECT * FROM (
+        ${subQuery}
+      ) t
+      WHERE rank = 1
+      ${group}
+      ${order}
+      ${limit}
+      ${page}
+    `;
+    const queryTotal = `
+      select COUNT(*) AS total FROM (
+        SELECT * FROM (
+          ${subQuery}
+        ) t
+        WHERE rank = 1
+        ${group}
+      ) t
+    `;
+
+    const data = await RawQueryService.query(queryData);
+    const total = await RawQueryService.query(queryTotal);
 
     const result = new MonitoringHubProblemVm();
 
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+    result.paging = MetaService.set(payload.page, payload.limit, total[0].total);
 
     return result;
   }
@@ -455,6 +511,20 @@ export class MonitoringProblemListService {
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringHubProblemVm> {
     const data = this.getDoHub(payload, true);
+    return data;
+  }
+
+  static async getAwbScanOut(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubProblemVm> {
+    const data = this.getDoHub(payload, null, null, true);
+    return data;
+  }
+
+  static async getAwbNotScanOut(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubProblemVm> {
+    const data = this.getDoHub(payload, null, null, false);
     return data;
   }
 
