@@ -49,6 +49,7 @@ export class MonitoringProblemListService {
     payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
       [`doh.created_time`, 'scanDate'],
+      [`bag_sortir.created_time`, 'scanDateInHub'],
       [`dohd.awb_number`, 'awbNumber'],
       [`CASE
           WHEN bag_sortir.bag_number IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
@@ -86,7 +87,7 @@ export class MonitoringProblemListService {
 
     // ignore isScanOut = null
     if (isScanOut === false) { // NOT SCAN OUT
-      q.andWhereRaw(`scan_out.awb_id IS NULL AND (bag_sortir.awb_id IS NULL OR dohd.awb_number IS NULL)`);
+      q.andWhereRaw(`scan_out.awb_id IS NULL`);
     } else if (isScanOut === true) {
       q.andWhereRaw(`scan_out.awb_id IS NOT NULL`);
     }
@@ -98,7 +99,17 @@ export class MonitoringProblemListService {
         br.branch_id = doh.branch_id AND br.is_deleted = FALSE
         INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL AND (is_sortir IS NULL OR is_sortir = FALSE)
         INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
-        INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
+        INNER JOIN LATERAL (
+          SELECT
+            *
+          FROM
+            bag_item_awb bia00
+          WHERE bia00.bag_item_id = bi.bag_item_id
+            AND bia00.is_deleted = false
+          ORDER BY
+            bia00.bag_item_awb_id ASC
+          LIMIT 1
+        ) AS bia ON TRUE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
         INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
         INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
@@ -111,10 +122,11 @@ export class MonitoringProblemListService {
             b1.bag_number,
             bi1.created_time
           FROM bag_item_awb bia1
-          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
+          INNER JOIN users u1 ON u1.user_id = bi1.user_id_created AND u1.is_deleted = FALSE
+          WHERE bia1.is_deleted = FALSE
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
           SELECT
@@ -126,12 +138,13 @@ export class MonitoringProblemListService {
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
-          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
-          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
+          INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
           WHERE
-            dp2.is_deleted = FALSE
-            AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
-            AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
+          dp2.is_deleted = FALSE
+          AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
+          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON true
         INNER JOIN LATERAL (
           SELECT
@@ -156,6 +169,7 @@ export class MonitoringProblemListService {
       bag_sortir.bag_seq,
       doh.bag_number,
       doh.created_time,
+      bag_sortir.created_time,
       -- br.branch_name,
       scan_out.awb_id,
       doh.branch_id,
@@ -167,56 +181,13 @@ export class MonitoringProblemListService {
       c.city_id
     `);
 
-    const map = {
-      scanDate: '"scanDate"',
-      awbNumber: '"awbNumber"',
-      bagNumber: '"bagNumber"',
-      do: '"do"',
-      in: '"in"',
-      out: '"out"',
-      awbStatusName: '"awbStatusName"',
-    };
-
-    const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
-    const order = map[payload.sortBy] ? `ORDER BY ${map[payload.sortBy]} ${payload.sortDir}` : '';
-    const page = payload.limit ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : '';
-    const group = `GROUP BY
-      "scanDate",
-      "awbNumber",
-      "bagNumber",
-      "do",
-      "in",
-      "out",
-      "awbStatusName",
-      "rank"`;
-    const subQuery = q.getQuery();
-    const queryData = `
-      SELECT * FROM (
-        ${subQuery}
-      ) t
-      WHERE rank = 1
-      ${group}
-      ${order}
-      ${limit}
-      ${page}
-    `;
-    const queryTotal = `
-      select COUNT(*) AS total FROM (
-        SELECT * FROM (
-          ${subQuery}
-        ) t
-        WHERE rank = 1
-        ${group}
-      ) t
-    `;
-
-    const data = await RawQueryService.query(queryData);
-    const total = await RawQueryService.query(queryTotal);
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new MonitoringHubProblemVm();
 
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total[0].total);
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
@@ -289,11 +260,21 @@ export class MonitoringProblemListService {
         bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
         LEFT JOIN dropoff_hub doh ON doh.bag_id = bag.bag_id AND doh.is_deleted = FALSE and doh.branch_id IS NOT NULL
         LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-        INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
+        INNER JOIN LATERAL (
+          SELECT
+            *
+          FROM
+            bag_item_awb bia00
+          WHERE bia00.bag_item_id = bi.bag_item_id
+            AND bia00.is_deleted = false
+          ORDER BY
+            bia00.bag_item_awb_id ASC
+          LIMIT 1
+        ) AS bia ON TRUE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-        INNER JOIN branch br ON br.branch_id = dohd.branch_id AND br.is_deleted = FALSE
-        INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
-        INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
+        LEFT JOIN branch br ON br.branch_id = dohd.branch_id AND br.is_deleted = FALSE
+        LEFT JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
+        LEFT JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
         LEFT JOIN LATERAL
         (
           SELECT
@@ -302,10 +283,11 @@ export class MonitoringProblemListService {
             b1.bag_number,
             bi1.created_time
           FROM bag_item_awb bia1
-          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
+          INNER JOIN users u1 ON u1.user_id = bi1.user_id_created AND u1.is_deleted = FALSE
+          WHERE bia1.is_deleted = FALSE
         ) AS bag_sortir ON true
         LEFT JOIN LATERAL (
           SELECT
@@ -316,12 +298,13 @@ export class MonitoringProblemListService {
           FROM do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
-          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
-          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
+          INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
           WHERE
-            dp2.is_deleted = FALSE
-            AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
-            AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
+          dp2.is_deleted = FALSE
+          AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
+          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON true
         INNER JOIN LATERAL (
           SELECT
@@ -489,15 +472,197 @@ export class MonitoringProblemListService {
     return result;
   }
 
+  static async getScanOut(
+    payload: BaseMetaPayloadVm,
+    isScanOut = null,
+  ): Promise<MonitoringHubProblemVm> {
+    const statusProblemStr = (await this.getListStatusAwbProblem()).join(',');
+
+    payload.fieldResolverMap['createdTime'] = 'doh.created_time';
+    payload.fieldResolverMap['scanDate'] = 'doh.created_time';
+    payload.fieldResolverMap['branchIdFrom'] = 'br.branch_id';
+    payload.fieldResolverMap['branchNameFrom'] = 'br.branch_name';
+    payload.fieldResolverMap['branchIdTo'] = 'scan_out.branch_id';
+    payload.fieldResolverMap['branchTo'] = 'scan_out.branch_name';
+    payload.fieldResolverMap['awbNumber'] = 'dohd.awb_number';
+    payload.fieldResolverMap['bagNumber'] = 'doh.bag_number';
+    payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
+    payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
+    payload.fieldResolverMap['cityId'] = 'c.city_id';
+
+    payload.globalSearchFields = [
+      {
+        field: 'scan_out.branch_name',
+      },
+    ];
+
+    if (!payload.sortBy) {
+      payload.sortBy = 'createdTime';
+    }
+
+    payload = this.formatPayloadFiltersAwbProblem(payload);
+
+    const repo = new OrionRepositoryService(Bag, 'bag');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q);
+    q.selectRaw(
+      [`doh.created_time`, 'scanDate'],
+      [`dohd.awb_number`, 'awbNumber'],
+      [`CASE
+          WHEN bag_sortir.bag_number IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
+            THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
+          ELSE doh.bag_number
+        END`, 'bagNumber'],
+      [`CASE WHEN
+        dohd.awb_number IS NULL THEN 'Yes'
+        ELSE 'No'
+        END`, 'do'],
+      [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
+      [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
+      [`last_status.awb_status_name`, 'awbStatusName'],
+      [`RANK() OVER(PARTITION BY dohd.awb_number ORDER BY bag_sortir.bag_number ASC)`, 'rank'],
+    );
+
+    // ignore isScanOut = null
+    if (isScanOut === false) { // NOT SCAN OUT
+      q.andWhereRaw(`scan_out.awb_id IS NULL`);
+    } else if (isScanOut === true) {
+      q.andWhereRaw(`scan_out.awb_id IS NOT NULL`);
+    }
+
+    q.innerJoinRaw(
+      'bag_item',
+      'bi',
+      `
+        bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
+        LEFT JOIN dropoff_hub doh ON doh.bag_id = bag.bag_id AND doh.is_deleted = FALSE and doh.branch_id IS NOT NULL
+        LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+        INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
+        INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+        INNER JOIN branch br ON br.branch_id = dohd.branch_id AND br.is_deleted = FALSE
+        INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
+        INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
+        LEFT JOIN LATERAL
+        (
+          SELECT
+            bi1.bag_seq,
+            ai1.awb_id,
+            b1.bag_number,
+            bi1.created_time
+          FROM bag_item_awb bia1
+          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
+          INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
+          INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
+          WHERE bia1.is_deleted = FALSE AND bia1.awb_number = bia.awb_number
+        ) AS bag_sortir ON true
+        LEFT JOIN LATERAL (
+          SELECT
+            ai2.awb_id,
+            dpdb2.bag_number,
+            br2.branch_id,
+            dpdb2.created_time
+          FROM do_pod dp2
+          INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
+          INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
+          WHERE
+            dp2.is_deleted = FALSE
+            AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
+            AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
+        ) AS scan_out ON true
+        INNER JOIN LATERAL (
+          SELECT
+            ah3.awb_status_id
+          FROM
+            awb_history ah3
+          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = dohd.awb_number
+            AND bia3.is_deleted = FALSE
+          ORDER BY
+            ah3.history_date DESC
+          LIMIT 1
+        ) AS last_status ON TRUE
+    `);
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhereRaw('bag.branch_id IS NOT NULL AND (bag.is_sortir IS NULL OR bag.is_sortir = FALSE)');
+
+    q.groupByRaw(`
+      dohd.awb_number,
+      bag_sortir.bag_number,
+      bag_sortir.bag_seq,
+      doh.bag_number,
+      doh.created_time,
+      -- br.branch_name,
+      scan_out.awb_id,
+      doh.branch_id,
+      scan_out.branch_id,
+      scan_out.branch_name,
+      bag.is_manual,
+      last_status.awb_status_name,
+      last_status.awb_status_id,
+      c.city_id
+    `);
+
+    const map = {
+      scanDate: '"scanDate"',
+      awbNumber: '"awbNumber"',
+      bagNumber: '"bagNumber"',
+      do: '"do"',
+      in: '"in"',
+      out: '"out"',
+      awbStatusName: '"awbStatusName"',
+    };
+
+    const limit = payload.limit ? `LIMIT ${payload.limit}` : 'LIMIT 10';
+    const order = map[payload.sortBy] ? `ORDER BY ${map[payload.sortBy]} ${payload.sortDir}` : '';
+    const page = payload.limit ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : '';
+    const group = `GROUP BY
+      "scanDate",
+      "awbNumber",
+      "bagNumber",
+      "do",
+      "in",
+      "out",
+      "awbStatusName",
+      "rank"`;
+    const subQuery = q.getQuery();
+    const queryData = `
+      SELECT * FROM (
+        ${subQuery}
+      ) t
+      WHERE rank = 1
+      ${group}
+      ${order}
+      ${limit}
+      ${page}
+    `;
+    const queryTotal = `
+      select COUNT(*) AS total FROM (
+        SELECT * FROM (
+          ${subQuery}
+        ) t
+        WHERE rank = 1
+        ${group}
+      ) t
+    `;
+
+    const data = await RawQueryService.query(queryData);
+    const total = await RawQueryService.query(queryTotal);
+
+    const result = new MonitoringHubProblemVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total[0].total);
+
+    return result;
+  }
+
   static formatPayloadFiltersAwbProblem(payload: BaseMetaPayloadVm) {
-    const isFilterBagNumber = false;
-    let isFilterBagSortir = false;
 
     // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < payload.filters.length; i++) {
       if (payload.filters[i].field == 'bagSortir') {
-        isFilterBagSortir = true;
-
         const bagSortir = payload.filters[i].value.substr( 0 , 7);
         const bagSeq = payload.filters[i].value.substr(7 , 10);
         payload.filters[i].value = bagSortir;
