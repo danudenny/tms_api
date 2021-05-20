@@ -11,6 +11,9 @@ import { In } from 'typeorm';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { BranchPartner } from '../../../../shared/orm-entity/branch-partner';
+import { BranchChildPartner } from '../../../../shared/orm-entity/branch-child-partner';
+
 
 export class PartnerFastpayService {
 
@@ -444,4 +447,90 @@ export class PartnerFastpayService {
     return branchPartner.length ? branchPartner[0] : null;
   }
 
+static async getBranchList(
+  ): Promise<ListSuccessResponseVm> {
+    const partner = AuthService.getPartnerTokenPayload();
+    const data = [];
+    const branchPartner = await BranchPartner.findOne({
+      where: {
+        partnerId: partner.partnerId,
+        isDeleted: false,
+      },
+    });
+    
+    if(branchPartner) {
+      const branchPartnerHeader = await this.getDataBranchPartner(partner.partnerId);
+      if(branchPartnerHeader) {
+        for (const itemBranchPartner of branchPartnerHeader) {
+          const dataChild = [];
+          const branchChildartner = await BranchChildPartner.find({
+            where: {
+              branchPartnerId: itemBranchPartner.branch_partner_id,
+              isActive: true,
+              isDeleted: false,
+            },
+          });
+
+          if(branchChildartner && branchChildartner.length) {
+            for(const itemBranchChild of branchChildartner) {
+              dataChild.push({
+                branch_child_partner_code: itemBranchChild.branchChildPartnerCode,
+                branch_child_partner_name: itemBranchChild.branchChildPartnerName,
+              });
+            }
+          } else {
+            dataChild.push({
+              branch_child_partner_code: null,
+              branch_child_partner_name: null,
+            });
+          }
+
+          data.push({
+            branch_sicepat_code: itemBranchPartner.branch_code,
+            branch_sicepat_name: itemBranchPartner.branch_name,
+            branch_partner_code: itemBranchPartner.branch_partner_code,
+            branch_partner_name: itemBranchPartner.branch_partner_name,
+            branch_child: dataChild,
+          });
+        }
+        const result = new ListSuccessResponseVm();
+        result.message = 'Get List Success';
+        result.status_code = 200;
+        result.data = data;
+        return result;
+      }
+      else {
+        throw new BadRequestException('List Data Gerai tidak ditemukan!');
+      }
+    } else {
+      throw new BadRequestException('List Data Gerai tidak ditemukan!');
+    }
+    // return await this.dropPartnerProcess(payload, partner.partnerId, 'CASH');
+  }
+
+  private static async getDataBranchPartner(partnerId: number) {
+    // find data Branch Child Partner and Branch Partner
+    const query = `
+      SELECT
+        bp.branch_partner_id,
+        bp.branch_partner_code,
+        bp.branch_partner_name,
+        b.branch_code,
+        b.branch_name
+      FROM branch_partner bp
+      LEFT JOIN branch b ON bp.branch_id = b.branch_id AND b.is_deleted = FALSE
+      WHERE 
+        bp.partner_id = :partnerId AND
+        bp.is_active = TRUE AND
+        bp.is_deleted = FALSE
+      `;
+
+    const branchPartner = await RawQueryService.queryWithParams(query, {
+      partnerId,
+    });
+
+    return branchPartner.length ? branchPartner : null;
+  }
+
 }
+
