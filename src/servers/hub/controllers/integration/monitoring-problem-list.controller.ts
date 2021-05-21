@@ -39,13 +39,6 @@ export class MonitoringProblemListController {
     return MonitoringProblemListService.getAwbMachineSortir(payload);
   }
 
-  @Post('lebih-sortir/list')
-  @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: MonitoringHubProblemVm })
-  public async getLebihSortir(@Body() payload: BaseMetaPayloadVm) {
-    return MonitoringProblemListService.getLebihSortir(payload);
-  }
-
   @Post('scan-out/list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubProblemVm })
