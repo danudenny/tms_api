@@ -3,7 +3,7 @@ import {
     ApiOkResponse, ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { MonitoringHubProblemVm } from '../../models/monitoring-hub-problem.vm';
+import { MonitoringHubProblemLebihSortirVm, MonitoringHubProblemVm } from '../../models/monitoring-hub-problem.vm';
 import { MonitoringProblemLebihSortirListService } from '../../services/integration/monitoring-problem-lebih-sortir-list.service';
 
 @ApiUseTags('Monitoring Problem')
@@ -13,7 +13,7 @@ export class MonitoringProblemLebihSortirListController {
 
   @Post('lebih-sortir/list')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: MonitoringHubProblemVm })
+  @ApiOkResponse({ type: MonitoringHubProblemLebihSortirVm })
   public async getLebihSortir(@Body() payload: BaseMetaPayloadVm) {
     return MonitoringProblemLebihSortirListService.getLebihSortir(payload);
   }

@@ -73,3 +73,31 @@ export class MonitoringHubTotalProblemVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [MonitoringHubTotalProblemDataVm] })
   data: MonitoringHubTotalProblemDataVm[];
 }
+
+export class MonitoringHubProblemLebihSortirDataVm {
+  @ApiModelProperty()
+  scanDateInHub: string;
+
+  @ApiModelProperty()
+  cityName: string;
+
+  @ApiModelProperty()
+  cityId: string;
+
+  @ApiModelProperty()
+  branchName: string;
+
+  @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelProperty()
+  branchId: string;
+
+  @ApiModelProperty()
+  lebihSortir: string;
+}
+
+export class MonitoringHubProblemLebihSortirVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [MonitoringHubProblemLebihSortirDataVm] })
+  data: MonitoringHubProblemLebihSortirDataVm[];
+}
