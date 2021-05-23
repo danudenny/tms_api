@@ -17,11 +17,13 @@ export class MonitoringProblemLebihSortirListService {
 
     payload.fieldResolverMap['scanDate'] = '"bi"."created_time"::DATE';
     payload.fieldResolverMap['scanDateInHub'] = '"bi"."created_time"::DATE';
+    payload.fieldResolverMap['createdTime'] = '"bi"."created_time"::DATE';
     payload.fieldResolverMap['branchIdFrom'] = 'bag_sortir.branch_id';
     payload.fieldResolverMap['branchNameFrom'] = 'bag_sortir.branch_name';
     payload.fieldResolverMap['branchId'] = 'bag_sortir.branch_id';
     payload.fieldResolverMap['branchName'] = 'bag_sortir.branch_name';
     payload.fieldResolverMap['awbNumber'] = 'bag_sortir.awb_number';
+    payload.fieldResolverMap['bagNumber'] = 'bag_sortir.bag_number';
     payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
     payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
     payload.fieldResolverMap['cityId'] = 'bag_sortir.city_id';
@@ -122,6 +124,7 @@ export class MonitoringProblemLebihSortirListService {
     `);
     q.groupByRaw(`
       bag_sortir.awb_number,
+      bi.created_time::DATE,
       bag_sortir.bag_number,
       bag_sortir.bag_seq,
       bag_sortir.bag_number,
@@ -154,6 +157,7 @@ export class MonitoringProblemLebihSortirListService {
     payload.fieldResolverMap['branchId'] = 'bag_sortir.branch_id';
     payload.fieldResolverMap['branchName'] = 'bag_sortir.branch_name';
     payload.fieldResolverMap['awbNumber'] = 'bag_sortir.awb_number';
+    payload.fieldResolverMap['bagNumber'] = 'bag_sortir.bag_number';
     payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
     payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
     payload.fieldResolverMap['cityId'] = 'bag_sortir.city_id';
@@ -234,7 +238,8 @@ export class MonitoringProblemLebihSortirListService {
       bag_sortir.branch_id,
       bag_sortir.city_name,
       bag_sortir.city_id,
-      bi.created_time::DATE
+      bi.created_time::DATE,
+      bag_sortir.awb_number
     `);
 
     const data = await q.exec();
