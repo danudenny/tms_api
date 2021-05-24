@@ -231,8 +231,7 @@ export class MonitoringProblemLebihSortirListService {
       bag_sortir.branch_id,
       bag_sortir.city_name,
       bag_sortir.city_id,
-      bi.created_time::DATE,
-      bag_sortir.awb_number
+      bi.created_time::DATE
     `);
 
     const data = await q.exec();
