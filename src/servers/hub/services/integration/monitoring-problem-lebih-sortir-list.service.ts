@@ -50,7 +50,7 @@ export class MonitoringProblemLebihSortirListService {
     );
     q.innerJoinRaw(
       'bag_item',
-      'bi', 
+      'bi',
       `
         bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
         LEFT JOIN dropoff_hub doh ON doh.bag_id = bag.bag_id AND doh.is_deleted = FALSE
@@ -61,7 +61,7 @@ export class MonitoringProblemLebihSortirListService {
           FROM bag_item_awb bia00
           WHERE bia00.bag_item_id = bi.bag_item_id
             AND bia00.is_deleted = FALSE
-          ORDER BY bia00.bag_item_awb_id ASC
+          ORDER BY bia00.bag_item_awb_id DESC
           LIMIT 1
         ) AS bia ON TRUE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
@@ -198,7 +198,7 @@ export class MonitoringProblemLebihSortirListService {
         FROM bag_item_awb bia00
         WHERE bia00.bag_item_id = bi.bag_item_id
           AND bia00.is_deleted = FALSE
-        ORDER BY bia00.bag_item_awb_id ASC
+        ORDER BY bia00.bag_item_awb_id DESC
         LIMIT 1
       ) AS bia ON TRUE
       INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE

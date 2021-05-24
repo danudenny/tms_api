@@ -50,7 +50,7 @@ export class MonitoringProblemListService {
       [`bag_sortir.created_time`, 'scanDateInHub'],
       [`dohd.awb_number`, 'awbNumber'],
       [`CASE
-          WHEN bag_sortir.bag_number IS NOT NULL AND scan_out.awb_id IS NOT NULL AND last_status.awb_status_id NOT IN (${statusProblemStr})
+          WHEN bag_sortir.bag_number IS NOT NULL
             THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
           ELSE doh.bag_number
         END`, 'bagNumber'],
@@ -62,9 +62,9 @@ export class MonitoringProblemListService {
 
     // ignore filter isManual = null
     if (isManual === false) {
-      q.andWhereRaw(`bag.is_manual = FALSE`);
+      q.andWhereRaw(`bag.is_manual = FALSE AND bag_sortir.awb_id IS NOT NULL`);
     } else if (isManual === true) {
-      q.andWhereRaw(`bag.is_manual = TRUE`);
+      q.andWhereRaw(`bag.is_manual = TRUE AND bag_sortir.awb_id IS NOT NULL`);
     }
 
     // ignore filter isProblem = null or isProblem = false
@@ -99,7 +99,7 @@ export class MonitoringProblemListService {
             bia00.bag_item_id = bi.bag_item_id
           AND bia00.is_deleted = FALSE
           ORDER BY
-            bia00.bag_item_awb_id ASC
+            bia00.bag_item_awb_id DESC
           LIMIT 1
         ) AS bia ON TRUE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
@@ -253,7 +253,7 @@ export class MonitoringProblemListService {
           bia00.bag_item_id = bi.bag_item_id
         AND bia00.is_deleted = FALSE
         ORDER BY
-          bia00.bag_item_awb_id ASC
+          bia00.bag_item_awb_id DESC
         LIMIT 1
       ) AS bia ON TRUE
       INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
