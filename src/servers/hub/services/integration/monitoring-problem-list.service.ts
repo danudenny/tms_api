@@ -62,9 +62,9 @@ export class MonitoringProblemListService {
 
     // ignore filter isManual = null
     if (isManual === false) {
-      q.andWhereRaw(`bag_sortir.is_manual = FALSE AND bag_sortir.awb_id IS NOT NULL`);
+      q.andWhereRaw(`bag_sortir.is_manual = FALSE`);
     } else if (isManual === true) {
-      q.andWhereRaw(`bag_sortir.is_manual = TRUE AND bag_sortir.awb_id IS NOT NULL`);
+      q.andWhereRaw(`bag_sortir.is_manual = TRUE`);
     }
 
     // ignore filter isProblem = null or isProblem = false
@@ -119,7 +119,7 @@ export class MonitoringProblemListService {
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
           WHERE bia1.is_deleted = FALSE
-        ) AS bag_sortir ON true
+        ) AS bag_sortir ON TRUE
         LEFT JOIN LATERAL (
           SELECT
             ai2.awb_id,
@@ -137,7 +137,7 @@ export class MonitoringProblemListService {
           dp2.is_deleted = FALSE
           AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
           AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
-        ) AS scan_out ON true
+        ) AS scan_out ON TRUE
         INNER JOIN LATERAL (
           SELECT
             ah3.awb_status_id,

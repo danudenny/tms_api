@@ -54,8 +54,7 @@ export class MonitoringProblemLebihSortirListService {
       `
         bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
         LEFT JOIN dropoff_hub doh ON doh.bag_id = bag.bag_id AND doh.is_deleted = FALSE
-        -- AND doh.branch_id IS NOT NULL
-        LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+        LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE AND dohd.awb_number = null
         INNER JOIN LATERAL (
           SELECT *
           FROM bag_item_awb bia00
@@ -89,19 +88,19 @@ export class MonitoringProblemLebihSortirListService {
             AND bia1.awb_number = bia.awb_number
         ) AS bag_sortir ON TRUE
         LEFT JOIN LATERAL (
-         	SELECT
-         		ai2.awb_id,
-         		dpdb2.bag_number,
-         		br2.branch_id,
-         		dpdb2.created_time
-         	FROM do_pod dp2
-         	INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
-        	INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
-         	INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
-         	INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
-         	WHERE dp2.is_deleted = FALSE AND dp2.do_pod_type = 3010
-         		AND dp2.user_id_driver IS NOT NULL
-         		AND dp2.branch_id_to IS NOT NULL
+          SELECT
+            ai2.awb_id,
+            dpdb2.bag_number,
+            br2.branch_id,
+            dpdb2.created_time
+          FROM do_pod dp2
+          INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
+          INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
+          WHERE dp2.is_deleted = FALSE AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
+            AND dp2.user_id_driver IS NOT NULL
+            AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON TRUE
         LEFT JOIN LATERAL (
           SELECT
@@ -119,9 +118,6 @@ export class MonitoringProblemLebihSortirListService {
     `);
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhereRaw(`
-      dohd.awb_number is null
-    `);
     q.groupByRaw(`
       bag_sortir.awb_number,
       bi.created_time::DATE,
@@ -191,8 +187,7 @@ export class MonitoringProblemLebihSortirListService {
       `
       bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
       LEFT JOIN dropoff_hub doh ON doh.bag_id = bag.bag_id AND doh.is_deleted = FALSE
-      -- AND doh.branch_id IS NOT NULL
-      LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+      LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE AND dohd.awb_number = NULL
       INNER JOIN LATERAL (
         SELECT *
         FROM bag_item_awb bia00
@@ -228,9 +223,6 @@ export class MonitoringProblemLebihSortirListService {
     `);
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhereRaw(`
-      dohd.awb_number is null
-    `);
 
     q.groupByRaw(`
       bag_sortir.branch_name,
