@@ -50,7 +50,7 @@ export class MonitoringProblemLebihSortirListService {
     );
     q.innerJoinRaw(
       'bag_item',
-      'bi',
+      'bi', 
       `
         bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
         LEFT JOIN dropoff_hub doh ON doh.bag_id = bag.bag_id AND doh.is_deleted = FALSE
