@@ -13,14 +13,14 @@ export class MonitoringProblemLebihSortirListController {
 
   @Post('lebih-sortir/list')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: MonitoringHubProblemLebihSortirVm })
+  @ApiOkResponse({ type: MonitoringHubProblemVm })
   public async getLebihSortir(@Body() payload: BaseMetaPayloadVm) {
     return MonitoringProblemLebihSortirListService.getLebihSortir(payload);
   }
 
   @Post('lebih-sortir-total/list')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: MonitoringHubProblemVm })
+  @ApiOkResponse({ type: MonitoringHubProblemLebihSortirVm })
   public async getAwbtotalLebihSortir(@Body() payload: BaseMetaPayloadVm) {
     return MonitoringProblemLebihSortirListService.getAwbtotalLebihSortir(payload);
   }

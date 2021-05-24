@@ -148,6 +148,7 @@ export class MonitoringProblemLebihSortirListService {
 
     payload.fieldResolverMap['scanDate'] = '"bi"."created_time"::DATE';
     payload.fieldResolverMap['scanDateInHub'] = '"bi"."created_time"::DATE';
+    payload.fieldResolverMap['createdTime'] = '"bi"."created_time"::DATE';
     payload.fieldResolverMap['branchIdFrom'] = 'bag_sortir.branch_id';
     payload.fieldResolverMap['branchNameFrom'] = 'bag_sortir.branch_name';
     payload.fieldResolverMap['branchId'] = 'bag_sortir.branch_id';
