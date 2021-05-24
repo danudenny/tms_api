@@ -101,7 +101,7 @@ export class KorwilMonitoringCoordinatorReportService {
     q.selectRaw(
       [`CONCAT(c.first_name, ' ', c.last_name)`, 'Nama Karyawan'],
       [`COUNT(DISTINCT a.branch_id)`, 'Jumlah Gerai'],
-      [`COUNT(*) FILTER (WHERE a.employee_journey_id IS NOT NULL)`, 'Jumlah Kunjungan'],
+      [`COUNT(DISTINCT a.korwil_transaction_id) FILTER (WHERE a.employee_journey_id IS NOT NULL)`, 'Jumlah Kunjungan'],
       [`TO_CHAR(MIN(d.check_in_date), \'DD Mon YYYY HH24:MI\')`, 'Check In'],
       [`TO_CHAR(MAX(d.check_out_date), \'DD Mon YYYY HH24:MI\')`, 'Check Out'],
     );
@@ -128,7 +128,7 @@ export class KorwilMonitoringCoordinatorReportService {
     );
     q.andWhereRaw(`h.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
 
-    q.groupByRaw('b.ref_user_id, "Nama Karyawan"');
+    q.groupByRaw(`b.ref_user_id, "Nama Karyawan" ${isKorwilHrd ? '' : ', b.position'}`);
     q.orderByRaw('"Check In"', 'ASC');
     const data = await q.exec();
 
