@@ -110,7 +110,7 @@ export class MonitoringProblemLebihSortirListService {
           FROM
             awb_history ah3
           INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
-          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = dohd.awb_number AND bia3.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = bia.awb_number AND bia3.is_deleted = FALSE
             AND bia3.is_deleted = FALSE
           ORDER BY
             ah3.history_date DESC
