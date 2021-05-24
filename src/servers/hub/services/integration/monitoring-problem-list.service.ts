@@ -62,9 +62,9 @@ export class MonitoringProblemListService {
 
     // ignore filter isManual = null
     if (isManual === false) {
-      q.andWhereRaw(`bag.is_manual = FALSE AND bag_sortir.awb_id IS NOT NULL`);
+      q.andWhereRaw(`bag_sortir.is_manual = FALSE AND bag_sortir.awb_id IS NOT NULL`);
     } else if (isManual === true) {
-      q.andWhereRaw(`bag.is_manual = TRUE AND bag_sortir.awb_id IS NOT NULL`);
+      q.andWhereRaw(`bag_sortir.is_manual = TRUE AND bag_sortir.awb_id IS NOT NULL`);
     }
 
     // ignore filter isProblem = null or isProblem = false
@@ -112,7 +112,8 @@ export class MonitoringProblemListService {
             bi1.bag_seq,
             ai1.awb_id,
             b1.bag_number,
-            bi1.created_time
+            bi1.created_time,
+            b1.is_manual
           FROM bag_item_awb bia1
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
@@ -224,10 +225,10 @@ export class MonitoringProblemListService {
           DISTINCT dohd.awb_number)`, 'doHub'],
       [`COUNT(
           DISTINCT CASE
-            WHEN bag.is_manual = TRUE THEN dohd.awb_number
+            WHEN bag_sortir.is_manual = TRUE THEN dohd.awb_number
         END)`, 'manualSortir'],
       [`COUNT(
-          DISTINCT CASE WHEN bag.is_manual = FALSE THEN dohd.awb_number
+          DISTINCT CASE WHEN bag_sortir.is_manual = FALSE THEN dohd.awb_number
         END)`, 'machineSortir'],
       [`COUNT(
           DISTINCT scan_out.awb_id
@@ -266,7 +267,8 @@ export class MonitoringProblemListService {
           bi1.bag_seq,
           ai1.awb_id,
           b1.bag_number,
-          bi1.created_time
+          bi1.created_time,
+          b1.is_manual
         FROM bag_item_awb bia1
         INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
         INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
