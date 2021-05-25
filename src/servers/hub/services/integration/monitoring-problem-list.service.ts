@@ -138,7 +138,7 @@ export class MonitoringProblemListService {
           -- INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
           WHERE
           dp2.is_deleted = FALSE
-          AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
+          AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT})
           AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
         ) AS scan_out ON TRUE
         INNER JOIN LATERAL (
@@ -294,7 +294,7 @@ export class MonitoringProblemListService {
         INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
         WHERE
         dp2.is_deleted = FALSE
-        AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
+        AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT})
         AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
       ) AS scan_out ON true
       INNER JOIN LATERAL (

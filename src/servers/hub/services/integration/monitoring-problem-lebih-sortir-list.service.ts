@@ -6,6 +6,7 @@ import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
 import { MonitoringHubProblemVm, MonitoringHubTotalProblemVm, MonitoringHubProblemLebihSortirVm } from '../../models/monitoring-hub-problem.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { MonitoringProblemListService } from './monitoring-problem-list.service';
+import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub-monitoring.service';
 
 @Injectable()
 export class MonitoringProblemLebihSortirListService {
@@ -15,36 +16,68 @@ export class MonitoringProblemLebihSortirListService {
   ): Promise<MonitoringHubProblemVm> {
     const statusProblemStr = (await MonitoringProblemListService.getListStatusAwbProblem()).join(',');
 
-    payload.fieldResolverMap['scanDate'] = '"bi"."created_time"::DATE';
-    payload.fieldResolverMap['scanDateInHub'] = '"bi"."created_time"::DATE';
-    payload.fieldResolverMap['createdTime'] = '"bi"."created_time"::DATE';
-    payload.fieldResolverMap['branchIdFrom'] = 'bag_sortir.branch_id';
-    payload.fieldResolverMap['branchNameFrom'] = 'bag_sortir.branch_name';
-    payload.fieldResolverMap['branchId'] = 'bag_sortir.branch_id';
-    payload.fieldResolverMap['branchName'] = 'bag_sortir.branch_name';
-    payload.fieldResolverMap['awbNumber'] = 'bag_sortir.awb_number';
-    payload.fieldResolverMap['bagNumber'] = 'bag_sortir.bag_number';
-    payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
-    payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
-    payload.fieldResolverMap['cityId'] = 'bag_sortir.city_id';
+    payload = this.formatPayloadFiltersAwbProblem(payload);
+
+    // Mapping order by key
+    const mappingSortBy = {
+      scanDate:  '"bi"."created_time"::DATE',
+      scanDateInHub: '"bi"."created_time"::DATE',
+      createdTime : '"bi"."created_time"::DATE',
+      branchIdFrom : 'br.branch_id',
+      branchNameFrom : 'br.branch_name',
+      branchId : 'br.branch_id',
+      branchName : 'br.branch_name',
+      awbNumber : 'bia.awb_number',
+      bagNumber : 'bag.bag_number',
+      bagSortir : 'bag.bag_number',
+      bagSeqSortir : 'bi.bag_seq',
+      cityId : 'c.city_id',
+    };
+
+    // replace fieldResolverMap in Orion as Query Raw
+    const mappingFilter = {
+      scanDate:  'bi.created_time',
+      scanDateInHub: 'bi.created_time',
+      createdTime : 'bi.created_time',
+      branchIdFrom : 'br.branch_id',
+      branchNameFrom : 'br.branch_name',
+      branchId : 'br.branch_id',
+      branchName : 'br.branch_name',
+      awbNumber : 'bia.awb_number',
+      bagNumber : 'bag.bag_number',
+      bagSortir : 'bag.bag_number',
+      bagSeqSortir : 'bi.bag_seq',
+      cityId : 'c.city_id',
+    };
+
+    const whereSubQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereQueryBagItemAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia00.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dohd.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
+
+    payload.filters = [];
 
     payload.globalSearchFields = [
       {
-        field: 'bag_sortir.branch_name',
+        field: 'br.branch_name',
       },
     ];
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    let sortByRaw = '';
+    if (payload.sortBy) {
+      sortByRaw = 'ORDER BY ' + mappingSortBy[payload.sortBy] + ' ' + payload.sortDir.toUpperCase();
+    }
+    payload.sortBy = '';
 
     const repo = new OrionRepositoryService(Bag, 'bag');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q);
     q.selectRaw(
-      [`bag_sortir.created_time`, 'scanDateInHub'],
-      [`bag_sortir.awb_number`, 'awbNumber'],
-      [`CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))`, 'bagNumber'],
+      [`bi.created_time`, 'scanDateInHub'],
+      [`bia.awb_number`, 'awbNumber'],
+      [`CONCAT(bag.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bagNumber'],
       ['\'No\'::text', 'do'],
-      [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
+      [`CASE WHEN bag.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
     );
@@ -53,54 +86,36 @@ export class MonitoringProblemLebihSortirListService {
       'bi',
       `
         bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
-        LEFT JOIN dropoff_hub doh ON doh.bag_id = bag.bag_id AND doh.is_deleted = FALSE
-        LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE AND dohd.awb_number = null
         INNER JOIN LATERAL (
           SELECT *
           FROM bag_item_awb bia00
           WHERE bia00.bag_item_id = bi.bag_item_id
             AND bia00.is_deleted = FALSE
+            ${'AND ' + whereQueryBagItemAwb}
           ORDER BY bia00.bag_item_awb_id DESC
           LIMIT 1
         ) AS bia ON TRUE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-        INNER JOIN LATERAL (
-          SELECT
-            bi1.bag_seq,
-            ai1.awb_id,
-            b1.bag_number,
-            bi1.created_time,
-            br1.branch_code,
-            br1.branch_name,
-            br1.branch_id,
-            c1.city_name,
-            c1.city_id,
-            bia.awb_number
-          FROM bag_item_awb bia1
-          INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
-          INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
-          INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE
-          -- AND b1.branch_id_to IS NOT NULL
-          INNER JOIN branch br1 ON br1.branch_id = b1.branch_id AND br1.is_deleted = FALSE
-          INNER JOIN district d1 ON d1.district_id = br1.district_id AND d1.is_deleted = FALSE
-          INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
-          WHERE bia1.is_deleted = FALSE
-            AND bia1.awb_number = bia.awb_number
-        ) AS bag_sortir ON TRUE
+        INNER JOIN branch br ON br.branch_id = bag.branch_id AND br.is_deleted = FALSE
+        INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
+        INNER JOIN city c ON c.city_id = d.city_id
+        AND c.is_deleted = FALSE
         LEFT JOIN LATERAL (
           SELECT
             ai2.awb_id,
             dpdb2.bag_number,
             br2.branch_id,
             dpdb2.created_time
-          FROM do_pod dp2
+          FROM
+            do_pod dp2
           INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
           INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
           INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
-          WHERE dp2.is_deleted = FALSE AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
-            AND dp2.user_id_driver IS NOT NULL
-            AND dp2.branch_id_to IS NOT NULL
+          WHERE dp2.is_deleted = FALSE AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB},${POD_TYPE.OUT_HUB_TRANSIT})
+          AND dp2.user_id_driver IS NOT NULL
+          AND dp2.branch_id_to IS NOT NULL
+          ${'AND ' + whereSubQueryScanOut}
         ) AS scan_out ON TRUE
         LEFT JOIN LATERAL (
           SELECT
@@ -109,25 +124,34 @@ export class MonitoringProblemLebihSortirListService {
           FROM
             awb_history ah3
           INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
-          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = dohd.awb_number AND bia3.is_deleted = FALSE
-            AND bia3.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = bia.awb_number AND bia3.is_deleted = FALSE AND bia3.is_deleted = FALSE
           ORDER BY
             ah3.history_date DESC
           LIMIT 1
         ) AS last_status ON TRUE
     `);
-
+    if (whereQuery) {
+      q.andWhereRaw(whereQuery);
+    }
+    q.andWhereRaw(
+      `NOT EXISTS (
+        SELECT * FROM dropoff_hub_detail dohd
+        WHERE dohd.awb_number = bia.awb_number
+        AND dohd.is_deleted = FALSE
+        ${'AND ' + whereQueryDropOffHub}
+      )`,
+    );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.groupByRaw(`
-      bag_sortir.awb_number,
+      bia.awb_number,
       bi.created_time::DATE,
-      bag_sortir.bag_number,
-      bag_sortir.bag_seq,
-      bag_sortir.bag_number,
-      bag_sortir.created_time,
+      bag.bag_number,
+      bi.bag_seq,
+      bi.created_time,
       last_status.awb_status_name,
-      bag_sortir.city_id,
+      c.city_id,
       scan_out.awb_id
+    ${sortByRaw}
     `);
 
     const data = await q.exec();
@@ -146,24 +170,58 @@ export class MonitoringProblemLebihSortirListService {
   ): Promise<MonitoringHubProblemLebihSortirVm> {
     const statusProblemStr = (await MonitoringProblemListService.getListStatusAwbProblem()).join(',');
 
-    payload.fieldResolverMap['scanDate'] = '"bi"."created_time"::DATE';
-    payload.fieldResolverMap['scanDateInHub'] = '"bi"."created_time"::DATE';
-    payload.fieldResolverMap['createdTime'] = '"bi"."created_time"::DATE';
-    payload.fieldResolverMap['branchIdFrom'] = 'bag_sortir.branch_id';
-    payload.fieldResolverMap['branchNameFrom'] = 'bag_sortir.branch_name';
-    payload.fieldResolverMap['branchId'] = 'bag_sortir.branch_id';
-    payload.fieldResolverMap['branchName'] = 'bag_sortir.branch_name';
-    payload.fieldResolverMap['awbNumber'] = 'bag_sortir.awb_number';
-    payload.fieldResolverMap['bagNumber'] = 'bag_sortir.bag_number';
-    payload.fieldResolverMap['bagSortir'] = 'bag_sortir.bag_number';
-    payload.fieldResolverMap['bagSeqSortir'] = 'bag_sortir.bag_seq';
-    payload.fieldResolverMap['cityId'] = 'bag_sortir.city_id';
+    payload = this.formatPayloadFiltersAwbProblem(payload);
+
+    // Mapping order by key
+    const mappingSortBy = {
+      scanDate:  '"bi"."created_time"::DATE',
+      scanDateInHub: '"bi"."created_time"::DATE',
+      createdTime : '"bi"."created_time"::DATE',
+      branchIdFrom : 'br.branch_id',
+      branchNameFrom : 'br.branch_name',
+      branchId : 'br.branch_id',
+      branchName : 'br.branch_name',
+      awbNumber : 'bia.awb_number',
+      bagNumber : 'bag.bag_number',
+      bagSortir : 'bag.bag_number',
+      bagSeqSortir : 'bi.bag_seq',
+      cityId : 'c.city_id',
+    };
+
+    // replace fieldResolverMap in Orion as Query Raw
+    const mappingFilter = {
+      scanDate:  'bi.created_time',
+      scanDateInHub: 'bi.created_time',
+      createdTime : 'bi.created_time',
+      branchIdFrom : 'br.branch_id',
+      branchNameFrom : 'br.branch_name',
+      branchId : 'br.branch_id',
+      branchName : 'br.branch_name',
+      awbNumber : 'bia.awb_number',
+      bagNumber : 'bag.bag_number',
+      bagSortir : 'bag.bag_number',
+      bagSeqSortir : 'bi.bag_seq',
+      cityId : 'c.city_id',
+    };
+
+    const whereSubQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereQueryBagItemAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia00.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dohd.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
+
+    payload.filters = [];
 
     payload.globalSearchFields = [
       {
-        field: 'bag_sortir.branch_name',
+        field: 'br.branch_name',
       },
     ];
+    let sortByRaw = '';
+    if (payload.sortBy) {
+      sortByRaw = 'ORDER BY ' + mappingSortBy[payload.sortBy] + ' ' + payload.sortDir.toUpperCase();
+    }
+    payload.sortBy = '';
+
     payload = this.formatPayloadFiltersAwbProblem(payload);
 
     const repo = new OrionRepositoryService(Bag, 'bag');
@@ -172,11 +230,11 @@ export class MonitoringProblemLebihSortirListService {
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
       [`bi.created_time::DATE`, 'scanDateInHub'],
-      [`bag_sortir.city_name`, 'cityName'],
-      [`bag_sortir.city_id`, 'cityId'],
-      [`bag_sortir.branch_name`, 'branchName'],
-      [`bag_sortir.branch_code`, 'branchCode'],
-      [`bag_sortir.branch_id`, 'branchId'],
+      [`c.city_name`, 'cityName'],
+      [`c.city_id`, 'cityId'],
+      [`br.branch_name`, 'branchName'],
+      [`br.branch_code`, 'branchCode'],
+      [`br.branch_id`, 'branchId'],
       [`COUNT (
           DISTINCT ai.awb_id
         )`, 'lebihSortir',
@@ -187,51 +245,43 @@ export class MonitoringProblemLebihSortirListService {
       'bi',
       `
       bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
-      LEFT JOIN dropoff_hub doh ON doh.bag_id = bag.bag_id AND doh.is_deleted = FALSE
-      LEFT JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE AND dohd.awb_number = NULL
       INNER JOIN LATERAL (
         SELECT *
         FROM bag_item_awb bia00
         WHERE bia00.bag_item_id = bi.bag_item_id
           AND bia00.is_deleted = FALSE
+          ${'AND ' + whereQueryBagItemAwb}
         ORDER BY bia00.bag_item_awb_id DESC
         LIMIT 1
       ) AS bia ON TRUE
       INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-      INNER JOIN LATERAL (
-        SELECT
-          bi1.bag_seq,
-          ai1.awb_id,
-          b1.bag_number,
-          bi1.created_time,
-          br1.branch_code,
-          br1.branch_name,
-          br1.branch_id,
-          c1.city_name,
-          c1.city_id,
-          bia.awb_number
-        FROM bag_item_awb bia1
-        INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE
-        INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
-        INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE
-        -- AND b1.branch_id_to IS NOT NULL
-        INNER JOIN branch br1 ON br1.branch_id = b1.branch_id AND br1.is_deleted = FALSE
-        INNER JOIN district d1 ON d1.district_id = br1.district_id AND d1.is_deleted = FALSE
-        INNER JOIN city c1 ON c1.city_id = d1.city_id AND c1.is_deleted = FALSE
-        WHERE bia1.is_deleted = FALSE
-          AND bia1.awb_number = bia.awb_number
-      ) AS bag_sortir ON TRUE
+      INNER JOIN branch br ON br.branch_id = bag.branch_id AND br.is_deleted = FALSE
+      INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
+      INNER JOIN city c ON c.city_id = d.city_id
+      AND c.is_deleted = FALSE
     `);
+    if (whereQuery) {
+      q.andWhereRaw(whereQuery);
+    }
+    q.andWhereRaw(
+      `NOT EXISTS (
+        SELECT * FROM dropoff_hub_detail dohd
+        WHERE dohd.awb_number = bia.awb_number
+        AND dohd.is_deleted = FALSE
+        ${'AND ' + whereQueryDropOffHub}
+      )`,
+    );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     q.groupByRaw(`
-      bag_sortir.branch_name,
-      bag_sortir.branch_code,
-      bag_sortir.branch_id,
-      bag_sortir.city_name,
-      bag_sortir.city_id,
+      br.branch_name,
+      br.branch_code,
+      br.branch_id,
+      c.city_name,
+      c.city_id,
       bi.created_time::DATE
+      ${sortByRaw}
     `);
 
     const data = await q.exec();
