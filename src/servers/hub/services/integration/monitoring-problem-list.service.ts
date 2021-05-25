@@ -132,7 +132,7 @@ export class MonitoringProblemListService {
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
           INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
           INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
-          INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
+          -- INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
           WHERE
           dp2.is_deleted = FALSE
           AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
@@ -145,7 +145,8 @@ export class MonitoringProblemListService {
           FROM
             awb_history ah3
           INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
-          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = dohd.awb_number AND bia3.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id
+          INNER JOIN awb_item ai3 ON ai3.awb_item_id = bia3.awb_item_id AND ai3.is_deleted = FALSE AND dohd.awb_id = ai3.awb_id
             AND bia3.is_deleted = FALSE
           ORDER BY
             ah3.history_date DESC
