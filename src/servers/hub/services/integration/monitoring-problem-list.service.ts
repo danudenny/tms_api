@@ -64,8 +64,10 @@ export class MonitoringProblemListService {
     let filterIsManual = '';
     if (isManual === false) {
       filterIsManual = `b1.is_manual = FALSE`;
+      q.andWhereRaw(`bag_sortir.awb_id IS NOT NULL`);
     } else if (isManual === true) {
       filterIsManual = `b1.is_manual = TRUE`;
+      q.andWhereRaw(`bag_sortir.awb_id IS NOT NULL`);
     }
 
     // ignore filter isProblem = null or isProblem = false
