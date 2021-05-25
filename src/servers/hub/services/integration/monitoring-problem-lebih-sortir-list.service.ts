@@ -124,7 +124,7 @@ export class MonitoringProblemLebihSortirListService {
           FROM
             awb_history ah3
           INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
-          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = bia.awb_number AND bia3.is_deleted = FALSE AND bia3.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = bia.awb_number AND bia3.is_deleted = FALSE
           ORDER BY
             ah3.history_date DESC
           LIMIT 1
@@ -168,8 +168,6 @@ export class MonitoringProblemLebihSortirListService {
   static async getAwbtotalLebihSortir(
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringHubProblemLebihSortirVm> {
-    const statusProblemStr = (await MonitoringProblemListService.getListStatusAwbProblem()).join(',');
-
     payload = this.formatPayloadFiltersAwbProblem(payload);
 
     // Mapping order by key
@@ -204,7 +202,6 @@ export class MonitoringProblemLebihSortirListService {
       cityId : 'c.city_id',
     };
 
-    const whereSubQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
     const whereQueryBagItemAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia00.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
     const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dohd.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
@@ -257,8 +254,7 @@ export class MonitoringProblemLebihSortirListService {
       INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
       INNER JOIN branch br ON br.branch_id = bag.branch_id AND br.is_deleted = FALSE
       INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
-      INNER JOIN city c ON c.city_id = d.city_id
-      AND c.is_deleted = FALSE
+      INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
     `);
     if (whereQuery) {
       q.andWhereRaw(whereQuery);
