@@ -61,10 +61,11 @@ export class MonitoringProblemListService {
     );
 
     // ignore filter isManual = null
+    let filterIsManual = '';
     if (isManual === false) {
-      q.andWhereRaw(`bag_sortir.is_manual = FALSE`);
+      filterIsManual = `b1.is_manual = FALSE`;
     } else if (isManual === true) {
-      q.andWhereRaw(`bag_sortir.is_manual = TRUE`);
+      filterIsManual = `b1.is_manual = TRUE`;
     }
 
     // ignore filter isProblem = null or isProblem = false
@@ -118,7 +119,7 @@ export class MonitoringProblemListService {
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          WHERE bia1.is_deleted = FALSE
+          WHERE bia1.is_deleted = FALSE ${filterIsManual ? '\nAND ' + filterIsManual : ''}
         ) AS bag_sortir ON TRUE
         LEFT JOIN LATERAL (
           SELECT
