@@ -91,7 +91,7 @@ export class MonitoringProblemLebihSortirListService {
           FROM bag_item_awb bia00
           WHERE bia00.bag_item_id = bi.bag_item_id
             AND bia00.is_deleted = FALSE
-            ${'AND ' + whereQueryBagItemAwb}
+            ${whereQueryBagItemAwb ? 'AND ' + whereQueryBagItemAwb : ''}
           ORDER BY bia00.bag_item_awb_id DESC
           LIMIT 1
         ) AS bia ON TRUE
@@ -115,7 +115,7 @@ export class MonitoringProblemLebihSortirListService {
           WHERE dp2.is_deleted = FALSE AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB},${POD_TYPE.OUT_HUB_TRANSIT})
           AND dp2.user_id_driver IS NOT NULL
           AND dp2.branch_id_to IS NOT NULL
-          ${'AND ' + whereSubQueryScanOut}
+          ${whereSubQueryScanOut ? 'AND ' + whereSubQueryScanOut : ''}
         ) AS scan_out ON TRUE
         LEFT JOIN LATERAL (
           SELECT
@@ -138,7 +138,7 @@ export class MonitoringProblemLebihSortirListService {
         SELECT * FROM dropoff_hub_detail dohd
         WHERE dohd.awb_number = bia.awb_number
         AND dohd.is_deleted = FALSE
-        ${'AND ' + whereQueryDropOffHub}
+        ${whereQueryDropOffHub ? 'AND ' + whereQueryDropOffHub : ''}
       )`,
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
