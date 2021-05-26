@@ -54,9 +54,6 @@ export class MonitoringProblemListService {
     const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
-    const whereQueryScanOutAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdetail.awb_number', ['eq'], ['awbNumber']);
-    const whereQueryScanOutBag = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bag2.bag_number', ['eq'], ['bagNumber', 'bagSortir']);
-    const whereQueryScanOutBagSeq = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bi2.bag_seq', ['eq'], ['bagSeqSortir']);
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
@@ -94,7 +91,7 @@ export class MonitoringProblemListService {
       ['\'Yes\'::text', 'do'],
       [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE 
-          WHEN scan_out.awb_number IS NOT NULL THEN 'Yes'
+          WHEN scan_out.awb_id IS NOT NULL THEN 'Yes'
           WHEN last_status.awb_status_name = 'OUT_HUB' THEN 'Yes'
         ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
@@ -114,16 +111,16 @@ export class MonitoringProblemListService {
     if (isProblem === true) {
       q.andWhereIsolated(qw => {
         qw.whereRaw(`bag_sortir.awb_id IS NULL
-        OR scan_out.awb_number IS NULL
+        OR scan_out.awb_id IS NULL
         OR last_status.awb_status_id IN (${statusProblemStr})`);
       });
     }
 
     // ignore isScanOut = null
     if (isScanOut === false) { // NOT SCAN OUT
-      q.andWhereRaw(`scan_out.awb_number IS NULL`);
+      q.andWhereRaw(`scan_out.awb_id IS NULL`);
     } else if (isScanOut === true) {
-      q.andWhereRaw(`scan_out.awb_number IS NOT NULL`);
+      q.andWhereRaw(`scan_out.awb_id IS NOT NULL`);
     }
 
     q.innerJoinRaw(
@@ -162,22 +159,22 @@ export class MonitoringProblemListService {
         ) AS bag_sortir ON TRUE
         LEFT JOIN LATERAL (
           SELECT
-          dpdetail.awb_id,
-          dpdetail.awb_number
-        FROM do_pod dp2
-        INNER JOIN do_pod_detail dpdetail ON dp2.do_pod_id = dpdetail.do_pod_id AND dpdetail.is_deleted = FALSE
-        INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
-        INNER JOIN users u2 ON u2.user_id = dpdetail.user_id_created AND u2.is_deleted = FALSE
-        LEFT JOIN bag bag2 ON dpdetail.bag_id = bag2.bag_id AND bag2.is_deleted = FALSE
-        LEFT JOIN bag_item bi2 ON bi2.bag_id = bag2.bag_id AND bi2.is_deleted = FALSE
-        WHERE
-          dp2.is_deleted = FALSE
-          AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT}, ${POD_TYPE.OUT_HUB_AWB})
-          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL 
-          ${whereQueryScanOut ? '\nAND ' + whereQueryScanOut : ''}
-          ${whereQueryScanOutAwb ? '\nAND ' + whereQueryScanOutAwb : ''}
-          ${whereQueryScanOutBag ? '\nAND ' + whereQueryScanOutBag : ''}
-          ${whereQueryScanOutBagSeq ? '\nAND ' + whereQueryScanOutBagSeq : ''}
+            ai2.awb_id,
+            dpdb2.bag_number,
+            br2.branch_id,
+            br2.branch_name,
+            dpdb2.created_time
+          FROM do_pod dp2
+          INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
+          INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
+          INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
+          INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
+          -- INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
+          WHERE
+            dp2.is_deleted = FALSE
+            AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT})
+            AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
+            ${whereQueryScanOut ? '\nAND ' + whereQueryScanOut : ''}
         ) AS scan_out ON TRUE
         INNER JOIN LATERAL (
           SELECT
@@ -207,7 +204,7 @@ export class MonitoringProblemListService {
       doh.created_time,
       bag_sortir.created_time,
       -- br.branch_name,
-      scan_out.awb_number,
+      scan_out.awb_id,
       last_status.awb_status_name,
       last_status.awb_status_id,
       c.city_id
@@ -272,10 +269,6 @@ export class MonitoringProblemListService {
     const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
-    const whereQueryScanOutAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdetail.awb_number', ['eq'], ['awbNumber']);
-    const whereQueryScanOutBag = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bag2.bag_number', ['eq'], ['bagNumber', 'bagSortir']);
-    const whereQueryScanOutBagSeq = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bi2.bag_seq', ['eq'], ['bagSeqSortir']);
-
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
@@ -309,7 +302,7 @@ export class MonitoringProblemListService {
       [`c.city_name`, 'cityName'],
       [`COUNT(
           DISTINCT CASE
-            WHEN (bag_sortir.awb_id IS NULL OR scan_out.awb_number IS NULL OR last_status.awb_status_id IN (${statusProblemStr})) THEN dohd.awb_number
+            WHEN (bag_sortir.awb_id IS NULL OR scan_out.awb_id IS NULL OR last_status.awb_status_id IN (${statusProblemStr})) THEN dohd.awb_number
           END
         )`, 'problem'],
       [`COUNT(
@@ -322,11 +315,11 @@ export class MonitoringProblemListService {
           DISTINCT CASE WHEN bag_sortir.is_manual = FALSE THEN dohd.awb_number
         END)`, 'machineSortir'],
       [`COUNT(
-          DISTINCT scan_out.awb_number
+          DISTINCT scan_out.awb_id
         )`, 'scanOut'],
       [`COUNT(
           DISTINCT CASE
-            WHEN (scan_out.awb_number IS NULL) THEN scan_out.awb_number
+            WHEN (scan_out.awb_id IS NULL) THEN dohd.awb_number
         END)`, 'notScanOut'],
     );
     q.innerJoinRaw(
@@ -365,22 +358,22 @@ export class MonitoringProblemListService {
       ) AS bag_sortir ON true
       LEFT JOIN LATERAL (
         SELECT
-          dpdetail.awb_id,
-          dpdetail.awb_number
+          ai2.awb_id,
+          dpdb2.bag_number,
+          br2.branch_id,
+          br2.branch_name,
+          dpdb2.created_time
         FROM do_pod dp2
-        INNER JOIN do_pod_detail dpdetail ON dp2.do_pod_id = dpdetail.do_pod_id AND dpdetail.is_deleted = FALSE
+        INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
         INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
-        INNER JOIN users u2 ON u2.user_id = dpdetail.user_id_created AND u2.is_deleted = FALSE
-        LEFT JOIN bag bag2 ON dpdetail.bag_id = bag2.bag_id AND bag2.is_deleted = FALSE
-        LEFT JOIN bag_item bi2 ON bi2.bag_id = bag2.bag_id AND bi2.is_deleted = FALSE
+        INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
+        INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
+        INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
         WHERE
           dp2.is_deleted = FALSE
-          AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT}, ${POD_TYPE.OUT_HUB_AWB})
-          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL 
+          AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT})
+          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
           ${whereQueryScanOut ? '\nAND ' + whereQueryScanOut : ''}
-          ${whereQueryScanOutAwb ? '\nAND ' + whereQueryScanOutAwb : ''}
-          ${whereQueryScanOutBag ? '\nAND ' + whereQueryScanOutBag : ''}
-          ${whereQueryScanOutBagSeq ? '\nAND ' + whereQueryScanOutBagSeq : ''}
       ) AS scan_out ON true
       INNER JOIN LATERAL (
         SELECT
