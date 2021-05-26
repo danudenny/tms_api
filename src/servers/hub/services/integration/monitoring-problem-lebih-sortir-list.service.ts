@@ -86,15 +86,7 @@ export class MonitoringProblemLebihSortirListService {
       'bi',
       `
         bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
-        INNER JOIN LATERAL (
-          SELECT *
-          FROM bag_item_awb bia00
-          WHERE bia00.bag_item_id = bi.bag_item_id
-            AND bia00.is_deleted = FALSE
-            ${whereQueryBagItemAwb ? 'AND ' + whereQueryBagItemAwb : ''}
-          ORDER BY bia00.bag_item_awb_id DESC
-          LIMIT 1
-        ) AS bia ON TRUE
+        INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
         INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
         INNER JOIN branch br ON br.branch_id = bag.branch_id AND br.is_deleted = FALSE
         INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
@@ -242,15 +234,7 @@ export class MonitoringProblemLebihSortirListService {
       'bi',
       `
       bi.bag_id = bag.bag_id AND bi.is_deleted = FALSE
-      INNER JOIN LATERAL (
-        SELECT *
-        FROM bag_item_awb bia00
-        WHERE bia00.bag_item_id = bi.bag_item_id
-          AND bia00.is_deleted = FALSE
-          ${'AND ' + whereQueryBagItemAwb}
-        ORDER BY bia00.bag_item_awb_id DESC
-        LIMIT 1
-      ) AS bia ON TRUE
+      INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
       INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
       INNER JOIN branch br ON br.branch_id = bag.branch_id AND br.is_deleted = FALSE
       INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
