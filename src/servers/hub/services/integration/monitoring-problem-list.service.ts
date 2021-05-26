@@ -49,6 +49,7 @@ export class MonitoringProblemListService {
       cityId : 'c.city_id',
     };
 
+    let paramJoin = 'LEFT';
     let whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia1.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
@@ -57,6 +58,9 @@ export class MonitoringProblemListService {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
       whereQueryBagSortir = whereQueryBagSortir2 ? whereQueryBagSortir + '\nAND ' + whereQueryBagSortir2 : whereQueryBagSortir;
+    }
+    if (whereQueryBagSortir2) {
+      paramJoin = 'INNER';
     }
     payload.filters = [];
 
@@ -86,7 +90,10 @@ export class MonitoringProblemListService {
         END`, 'bagNumber'],
       ['\'Yes\'::text', 'do'],
       [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
-      [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
+      [`CASE 
+          WHEN scan_out.awb_id IS NOT NULL THEN 'Yes'
+          WHEN last_status.awb_status_name = 'OUT_HUB' THEN 'Yes'
+        ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
     );
 
@@ -135,7 +142,7 @@ export class MonitoringProblemListService {
         INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
         INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
         INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
-        LEFT JOIN LATERAL
+        ${paramJoin} JOIN LATERAL
         (
           SELECT
             bi1.bag_seq,
@@ -257,7 +264,7 @@ export class MonitoringProblemListService {
       bagNumber : 'doh.bag_number',
       cityId : 'c.city_id',
     };
-
+    let paramJoin = 'LEFT';
     let whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia1.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
@@ -267,6 +274,9 @@ export class MonitoringProblemListService {
     } else {
       whereQueryBagSortir = whereQueryBagSortir2 ? whereQueryBagSortir + '\nAND ' + whereQueryBagSortir2 : whereQueryBagSortir;
     }
+    if (whereQueryBagSortir2) {
+      paramJoin ='INNER'
+    } 
     payload.filters = [];
 
     payload.globalSearchFields = [
@@ -331,7 +341,7 @@ export class MonitoringProblemListService {
       INNER JOIN "public"."branch" "br" ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
       INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
       INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
-      LEFT JOIN LATERAL
+      ${paramJoin} JOIN LATERAL
       (
         SELECT
           bi1.bag_seq,
