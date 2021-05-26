@@ -94,7 +94,7 @@ export class MonitoringProblemListService {
       ['\'Yes\'::text', 'do'],
       [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE 
-          WHEN scan_out.awb_id IS NOT NULL THEN 'Yes'
+          WHEN scan_out.awb_number IS NOT NULL THEN 'Yes'
           WHEN last_status.awb_status_name = 'OUT_HUB' THEN 'Yes'
         ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
@@ -114,16 +114,16 @@ export class MonitoringProblemListService {
     if (isProblem === true) {
       q.andWhereIsolated(qw => {
         qw.whereRaw(`bag_sortir.awb_id IS NULL
-        OR scan_out.awb_id IS NULL
+        OR scan_out.awb_number IS NULL
         OR last_status.awb_status_id IN (${statusProblemStr})`);
       });
     }
 
     // ignore isScanOut = null
     if (isScanOut === false) { // NOT SCAN OUT
-      q.andWhereRaw(`scan_out.awb_id IS NULL`);
+      q.andWhereRaw(`scan_out.awb_number IS NULL`);
     } else if (isScanOut === true) {
-      q.andWhereRaw(`scan_out.awb_id IS NOT NULL`);
+      q.andWhereRaw(`scan_out.awb_number IS NOT NULL`);
     }
 
     q.innerJoinRaw(
@@ -162,7 +162,8 @@ export class MonitoringProblemListService {
         ) AS bag_sortir ON TRUE
         LEFT JOIN LATERAL (
           SELECT
-          dpdetail.awb_id
+          dpdetail.awb_id,
+          dpdetail.awb_number
         FROM do_pod dp2
         INNER JOIN do_pod_detail dpdetail ON dp2.do_pod_id = dpdetail.do_pod_id AND dpdetail.is_deleted = FALSE
         INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
@@ -308,7 +309,7 @@ export class MonitoringProblemListService {
       [`c.city_name`, 'cityName'],
       [`COUNT(
           DISTINCT CASE
-            WHEN (bag_sortir.awb_id IS NULL OR scan_out.awb_id IS NULL OR last_status.awb_status_id IN (${statusProblemStr})) THEN dohd.awb_number
+            WHEN (bag_sortir.awb_id IS NULL OR scan_out.awb_number IS NULL OR last_status.awb_status_id IN (${statusProblemStr})) THEN dohd.awb_number
           END
         )`, 'problem'],
       [`COUNT(
@@ -321,11 +322,11 @@ export class MonitoringProblemListService {
           DISTINCT CASE WHEN bag_sortir.is_manual = FALSE THEN dohd.awb_number
         END)`, 'machineSortir'],
       [`COUNT(
-          DISTINCT scan_out.awb_id
+          DISTINCT scan_out.awb_number
         )`, 'scanOut'],
       [`COUNT(
           DISTINCT CASE
-            WHEN (scan_out.awb_id IS NULL) THEN scan_out.awb_id
+            WHEN (scan_out.awb_number IS NULL) THEN scan_out.awb_id
         END)`, 'notScanOut'],
     );
     q.innerJoinRaw(
@@ -364,7 +365,8 @@ export class MonitoringProblemListService {
       ) AS bag_sortir ON true
       LEFT JOIN LATERAL (
         SELECT
-          dpdetail.awb_id
+          dpdetail.awb_id,
+          dpdetail.awb_number
         FROM do_pod dp2
         INNER JOIN do_pod_detail dpdetail ON dp2.do_pod_id = dpdetail.do_pod_id AND dpdetail.is_deleted = FALSE
         INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
