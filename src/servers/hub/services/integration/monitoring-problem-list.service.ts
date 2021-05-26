@@ -207,7 +207,7 @@ export class MonitoringProblemListService {
       doh.created_time,
       bag_sortir.created_time,
       -- br.branch_name,
-      scan_out.awb_id,
+      scan_out.awb_number,
       last_status.awb_status_name,
       last_status.awb_status_id,
       c.city_id
@@ -326,7 +326,7 @@ export class MonitoringProblemListService {
         )`, 'scanOut'],
       [`COUNT(
           DISTINCT CASE
-            WHEN (scan_out.awb_number IS NULL) THEN scan_out.awb_id
+            WHEN (scan_out.awb_number IS NULL) THEN scan_out.awb_number
         END)`, 'notScanOut'],
     );
     q.innerJoinRaw(
