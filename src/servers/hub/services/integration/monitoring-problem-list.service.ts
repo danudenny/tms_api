@@ -17,7 +17,8 @@ export class MonitoringProblemListService {
     isScanOut = null,
   ): Promise<MonitoringHubProblemVm> {
     const statusProblemStr = (await this.getListStatusAwbProblem()).join(',');
-
+    const paramPage = payload.page;
+    const paramLimit = payload.limit;
     payload = this.formatPayloadFiltersAwbProblem(payload);
 
     // Mapping order by key
@@ -209,7 +210,15 @@ export class MonitoringProblemListService {
     const result = new MonitoringHubProblemVm();
 
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+    result.paging = MetaService.set(paramPage, paramLimit, total);
+
+    // const data = await q.exec();
+    // const total = await q.countWithoutTakeAndSkip();
+
+    // const result = new MonitoringHubProblemVm();
+
+    // result.data = data;
+    // result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }
