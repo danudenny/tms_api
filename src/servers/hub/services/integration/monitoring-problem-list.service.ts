@@ -319,7 +319,7 @@ export class MonitoringProblemListService {
         )`, 'scanOut'],
       [`COUNT(
           DISTINCT CASE
-            WHEN (scan_out.awb_id IS NULL) THEN dohd.awb_number
+            WHEN (scan_out.awb_id IS NULL) THEN scan_out.awb_id
         END)`, 'notScanOut'],
     );
     q.innerJoinRaw(
@@ -358,21 +358,15 @@ export class MonitoringProblemListService {
       ) AS bag_sortir ON true
       LEFT JOIN LATERAL (
         SELECT
-          ai2.awb_id,
-          dpdb2.bag_number,
-          br2.branch_id,
-          br2.branch_name,
-          dpdb2.created_time
+          dpdetail.awb_id
         FROM do_pod dp2
-        INNER JOIN do_pod_detail_bag dpdb2 ON dpdb2.do_pod_id = dp2.do_pod_id AND dpdb2.is_deleted = FALSE
+        INNER JOIN do_pod_detail dpdetail ON dp2.do_pod_id = dpdetail.do_pod_id AND dpdetail.is_deleted = FALSE
         INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
-        INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
-        INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
-        INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
+        INNER JOIN users u2 ON u2.user_id = dpdetail.user_id_created AND u2.is_deleted = FALSE
         WHERE
           dp2.is_deleted = FALSE
           AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT})
-          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
+          AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL 
           ${whereQueryScanOut ? '\nAND ' + whereQueryScanOut : ''}
       ) AS scan_out ON true
       INNER JOIN LATERAL (
