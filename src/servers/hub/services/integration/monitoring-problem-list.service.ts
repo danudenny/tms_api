@@ -269,6 +269,7 @@ export class MonitoringProblemListService {
     const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
+    const whereQueryScanOutAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdetail.awb_number', ['eq'], ['awbNumber']);
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
@@ -368,6 +369,7 @@ export class MonitoringProblemListService {
           AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT}, ${POD_TYPE.OUT_HUB_AWB})
           AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL 
           ${whereQueryScanOut ? '\nAND ' + whereQueryScanOut : ''}
+          ${whereQueryScanOutAwb ? '\nAND ' + whereQueryScanOutAwb : ''}
       ) AS scan_out ON true
       INNER JOIN LATERAL (
         SELECT
