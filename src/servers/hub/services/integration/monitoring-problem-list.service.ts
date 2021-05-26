@@ -365,7 +365,7 @@ export class MonitoringProblemListService {
         INNER JOIN users u2 ON u2.user_id = dpdetail.user_id_created AND u2.is_deleted = FALSE
         WHERE
           dp2.is_deleted = FALSE
-          AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT})
+          AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT}, ${POD_TYPE.OUT_HUB_AWB})
           AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL 
           ${whereQueryScanOut ? '\nAND ' + whereQueryScanOut : ''}
       ) AS scan_out ON true
