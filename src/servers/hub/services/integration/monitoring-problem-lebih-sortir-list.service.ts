@@ -71,7 +71,7 @@ export class MonitoringProblemLebihSortirListService {
     const repo = new OrionRepositoryService(Bag, 'bag');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q);
+    payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
       [`bi.created_time`, 'scanDateInHub'],
       [`bia.awb_number`, 'awbNumber'],
