@@ -90,7 +90,10 @@ export class MonitoringProblemListService {
         END`, 'bagNumber'],
       ['\'Yes\'::text', 'do'],
       [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
-      [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
+      [`CASE 
+          WHEN scan_out.awb_id IS NOT NULL THEN 'Yes'
+          WHEN last_status.awb_status_name = 'OUT_HUB' THEN 'Yes'
+        ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
     );
 
