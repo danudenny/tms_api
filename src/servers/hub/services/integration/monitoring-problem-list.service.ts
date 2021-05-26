@@ -74,7 +74,7 @@ export class MonitoringProblemListService {
     const repo = new OrionRepositoryService(Bag, 'bag');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q);
+    payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
       [`doh.created_time`, 'scanDate'],
       [`bag_sortir.created_time`, 'scanDateInHub'],
