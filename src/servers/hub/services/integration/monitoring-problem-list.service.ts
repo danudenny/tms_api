@@ -56,7 +56,7 @@ export class MonitoringProblemListService {
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     const whereQueryScanOutAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdetail.awb_number', ['eq'], ['awbNumber']);
     const whereQueryScanOutBag = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bag2.bag_number', ['eq'], ['bagNumber', 'bagSortir']);
-    const whereQueryScanOutBagSeq = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bag2.bag_seq', ['eq'], ['bagSeqSortir']);
+    const whereQueryScanOutBagSeq = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bi2.bag_seq', ['eq'], ['bagSeqSortir']);
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
@@ -168,6 +168,7 @@ export class MonitoringProblemListService {
         INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
         INNER JOIN users u2 ON u2.user_id = dpdetail.user_id_created AND u2.is_deleted = FALSE
         LEFT JOIN bag bag2 ON dpdetail.bag_id = bag2.bag_id AND bag2.is_deleted = FALSE
+        LEFT JOIN bag_item bi2 ON bi2.bag_id = bag2.bag_id AND bi2.is_deleted = FALSE
         WHERE
           dp2.is_deleted = FALSE
           AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT}, ${POD_TYPE.OUT_HUB_AWB})
@@ -272,7 +273,7 @@ export class MonitoringProblemListService {
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     const whereQueryScanOutAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdetail.awb_number', ['eq'], ['awbNumber']);
     const whereQueryScanOutBag = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bag2.bag_number', ['eq'], ['bagNumber', 'bagSortir']);
-    const whereQueryScanOutBagSeq = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bag2.bag_seq', ['eq'], ['bagSeqSortir']);
+    const whereQueryScanOutBagSeq = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bi2.bag_seq', ['eq'], ['bagSeqSortir']);
 
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
@@ -369,6 +370,7 @@ export class MonitoringProblemListService {
         INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
         INNER JOIN users u2 ON u2.user_id = dpdetail.user_id_created AND u2.is_deleted = FALSE
         LEFT JOIN bag bag2 ON dpdetail.bag_id = bag2.bag_id AND bag2.is_deleted = FALSE
+        LEFT JOIN bag_item bi2 ON bi2.bag_id = bag2.bag_id AND bi2.is_deleted = FALSE
         WHERE
           dp2.is_deleted = FALSE
           AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT}, ${POD_TYPE.OUT_HUB_AWB})
