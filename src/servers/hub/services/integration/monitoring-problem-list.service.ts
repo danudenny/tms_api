@@ -35,12 +35,15 @@ export class MonitoringProblemListService {
     const mappingBagSortirFilter = {
       bagSortir : 'b1.bag_number',
       bagSeqSortir : 'bi1.bag_seq',
-      bagNumber: 'b1.bag_number',
     };
 
     const mappingForBagSortirFilter = {
       bagSortir : 'bag_sortir.bag_number',
       bagSeqSortir : 'bag_sortir.bag_seq',
+    };
+
+    const mappingForBagNumberFilter = {
+      bagNumber : 'bag_sortir.bag_number',
     };
 
     // replace fieldResolverMap in Orion as Query Raw
@@ -60,6 +63,7 @@ export class MonitoringProblemListService {
     const whereQueryScanOutSortiranTransit = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpd2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQueryForBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagSortirFilter, true);
+    const whereQueryForBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagNumberFilter, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
@@ -206,6 +210,9 @@ export class MonitoringProblemListService {
     }
     if (whereQueryForBagSortir) {
       q.andWhereRaw(whereQueryForBagSortir);
+    }
+    if (whereQueryForBagNumber) {
+      q.andWhereRaw('bag_sortir.awb_id IS NULL');
     }
     q.groupByRaw(`
       dohd.awb_number,
