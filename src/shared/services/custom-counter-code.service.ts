@@ -42,14 +42,20 @@ export class CustomCounterCode {
     return prefix + randomCode;
   }
 
-  public static async doPodReturn(dateTime: Date, digit: number = 8) {
+  public static async doPodDeliverMobile(dateTime: Date, digit: number = 8) {
+    const prefix = `DOPM/${moment(dateTime).format('YYMM/DD/')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
+  }
+
+    public static async doPodReturn(dateTime: Date, digit: number = 8) {
     const prefix = `DOPR/${moment(dateTime).format('YYMM/DD/')}`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode;
   }
 
-  public static async doPodDeliverMobile(dateTime: Date, digit: number = 8) {
-    const prefix = `DOPM/${moment(dateTime).format('YYMM/DD/')}`;
+    public static async doPodReturnMobile(dateTime: Date, digit: number = 8) {
+    const prefix = `DOPRM/${moment(dateTime).format('YYMM/DD/')}`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode;
   }

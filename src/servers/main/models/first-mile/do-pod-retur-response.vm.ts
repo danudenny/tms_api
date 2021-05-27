@@ -3,9 +3,7 @@ import {
   ApiModelPropertyOptional,
 } from '../../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../../shared/models/base-meta-response.vm';
-import { PrintDoPodBagDataVm } from '../print-do-pod-bag.vm';
 import { PrintDoPodDeliverDataDoPodDeliverDetailVm, PrintDoPodDeliverDataUserDriverVm, PrintDoPodDeliverDataVm } from '../print-do-pod-deliver.vm';
-import { PrintDoPodDataVm } from '../print-do-pod.vm';
 
 export class PrintDoPodReturnDataVm {
   @ApiModelProperty()
@@ -32,7 +30,7 @@ export class WebDoPodCreateReturnResponseVm {
   message: string;
 
   @ApiModelProperty()
-  doPodId: string;
+  doPodReturnId: string;
 
   // @ApiModelProperty({ type: () => PrintDoPodDataVm })
   // printDoPodMetadata: PrintDoPodDataVm = new PrintDoPodDataVm();
@@ -114,4 +112,58 @@ export class WebScanOutReturnGroupListResponseVm extends BaseMetaResponseVm {
     type: () => [WebScanInReturnGroupResponseVm],
   })
   data: WebScanInReturnGroupResponseVm[];
+
+}
+export class MobileCreateDoPodResponseVm {
+  @ApiModelProperty()
+  doPodReturnId: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class MobileScanAwbReturnVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class MobileScanAwbReturnResponseVm {
+  @ApiModelProperty()
+  service: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  consigneePhone: string;
+
+  @ApiModelProperty()
+  totalCodValue: string;
+
+  @ApiModelProperty()
+  dateTime: string;
+
+  @ApiModelProperty()
+  doPodReturnId: string;
+
+  @ApiModelProperty({ type: [MobileScanAwbReturnVm] })
+  data: MobileScanAwbReturnVm;
 }

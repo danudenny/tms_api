@@ -5,9 +5,7 @@ import { AwbService } from '../../v1/awb.service';
 import { EmployeeService } from '../../master/employee.service';
 import { DoPodReturn } from '../../../../../shared/orm-entity/do-pod-retur';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
-import { AuditHistory } from '../../../../../shared/orm-entity/audit-history';
 import {
   WebDoPodCreateReturnPayloadVm,
   WebScanAwbReturnPayloadVm,
@@ -27,6 +25,8 @@ import { PrintDoPodDeliverDataDoPodDeliverDetailVm } from '../../../models/print
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
+import { DoPodReturnService } from '../../master/do-pod-return.service';
+import { DoPodReturnDetailService } from '../../master/do-pod-return-detail.service';
 
 export class FirstMileDoPodReturnService {
 
@@ -116,7 +116,7 @@ export class FirstMileDoPodReturnService {
     let employeeNameDriver = null;
 
     // find data doPod Return
-    const doPodReturn = await this.byIdCache(payload.doPodId);
+    const doPodReturn = await DoPodReturnService.byIdCache(payload.doPodReturnId);
     if (!doPodReturn) {
       throw new BadRequestException('Surat Jalan tidak valid!');
     }
@@ -140,8 +140,8 @@ export class FirstMileDoPodReturnService {
 
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        // NOTE: first must scan in branch
-        if (this.isValidAwbStatusIdLast) {
+        const checkValidAwbStatusIdLast = this.checkValidAwbStatusIdLast(awb);
+        if (checkValidAwbStatusIdLast.isValid) {
           // Add Locking setnx redis
           const holdRedis = await RedisService.lockingWithExpire(
             `hold:scanoutant:${awb.awbItemId}`,
@@ -156,7 +156,7 @@ export class FirstMileDoPodReturnService {
                 await this.deleteExistDoPodReturnDetail(awb.awbItemId, authMeta.userId, transactionManager);
 
                 // save table do_pod_return_detail
-                await this.createDoPodReturnDetail(payload.doPodId, awb, awbNumber, transactionManager);
+                await DoPodReturnDetailService.createDoPodReturnDetail(payload.doPodReturnId, awb, awbNumber, transactionManager);
 
                 // NOTE: queue by Bull ANT
                 DoPodDetailPostMetaQueueService.createJobByAwbReturn(
@@ -188,7 +188,7 @@ export class FirstMileDoPodReturnService {
         } else {
           totalError += 1;
           response.status = 'error';
-          response.message = `Resi ${awbNumber} sudah di proses.`;
+          response.message = checkValidAwbStatusIdLast.message;
         }
       } else {
         totalError += 1;
@@ -204,7 +204,7 @@ export class FirstMileDoPodReturnService {
 
     // NOTE: counter total scan out
     if (doPodReturn && totalSuccess > 0) {
-      await this.updateTotalAwbById(
+      await DoPodReturnService.updateTotalAwbById(
         doPodReturn.totalAwb,
         totalSuccess,
         doPodReturn.doPodReturnId,
@@ -220,35 +220,31 @@ export class FirstMileDoPodReturnService {
     return result;
   }
 
-  static async creatDoPodReturn(
+  static async createDoPodReturn(
     payload: WebDoPodCreateReturnPayloadVm,
   ): Promise<WebDoPodCreateReturnResponseVm> {
     const result = new WebDoPodCreateReturnResponseVm();
 
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    // create do_pod_return ((jalan Antar Retur Sigesit)
-    const doPod = DoPodReturn.create();
-    // NOTE: Tipe surat (jalan Antar Retur Sigesit)
-    doPod.doPodReturnCode = await CustomCounterCode.doPodReturn(
-      moment().toDate(),
-    );
-    doPod.userIdDriver = payload.userIdDriver || null;
-    doPod.doPodReturnDateTime = moment().toDate();
-    doPod.description = payload.desc || null;
-    doPod.branchId = permissonPayload.branchId;
-    doPod.userId = authMeta.userId;
-    await DoPodReturn.save(doPod);
+    // create do_pod_return (jalan Antar Retur Sigesit)
+    const doPodReturn = await DoPodReturnService.createDoPodReturn(
+      payload.userIdDriver,
+      payload.desc,
+      permissonPayload.branchId,
+      authMeta.userId,
+      false,
+      );
 
-    await this.createAuditReturHistory(doPod.doPodReturnId, false);
+    await DoPodReturnService.createAuditReturnHistory(doPodReturn.doPodReturnId, false);
 
     // Populate return value
     result.status = 'ok';
     result.message = 'success';
-    result.doPodId = doPod.doPodReturnId;
+    result.doPodReturnId = doPodReturn.doPodReturnId;
 
     // For printDoPodReturnMetadata
-    result.printDoPodReturnMetadata.doPodReturnCode = doPod.doPodReturnCode;
+    result.printDoPodReturnMetadata.doPodReturnCode = doPodReturn.doPodReturnCode;
     result.printDoPodReturnMetadata.description = payload.desc;
 
     const dataUser = await EmployeeService.findByUserIdDriver(payload.userIdDriver);
@@ -260,90 +256,6 @@ export class FirstMileDoPodReturnService {
     }
 
     return result;
-  }
-
-  private static async createAuditReturHistory(
-    doPodReturnId: string,
-    isUpdate: boolean,
-  ) {
-    // find doPodReturn
-    const doPodReturn = await this.getDataById(
-      doPodReturnId,
-    );
-    if (doPodReturn) {
-      // construct note for information
-      const description = doPodReturn.description
-        ? doPodReturn.description
-        : '';
-      const stage = isUpdate ? 'Updated' : 'Created';
-      const note = `
-        Data ${stage} \n
-        Nama Driver  : ${doPodReturn.userDriver.employee.employeeName}
-        Gerai Assign : ${doPodReturn.branch.branchName}
-        Note         : ${description}
-      `;
-      // create new object AuditHistory
-      const auditHistory = AuditHistory.create();
-      auditHistory.changeId = doPodReturnId;
-      auditHistory.transactionStatusId = 1500; // NOTE: doPodReturn
-      auditHistory.note = note;
-      return await AuditHistory.save(auditHistory);
-    }
-  }
-
-  private static async getDataById(doPodReturnId: string) {
-    const doPodRepository = new OrionRepositoryService(DoPodReturn);
-    const q = doPodRepository.findOne();
-    // Manage relation (default inner join)
-    q.leftJoin(e => e.branch);
-    q.leftJoin(e => e.userDriver);
-    q.leftJoin(e => e.userDriver.employee);
-
-    q.select({
-      doPodReturnId: true,
-      doPodReturnCode: true,
-      totalAwb: true,
-      description: true,
-      branch: {
-        branchId: true,
-        branchCode: true,
-        branchName: true,
-      },
-      userDriver: {
-        userId: true,
-        userIdCreated: true,
-        employeeId: true,
-        firstName: true,
-        username: true,
-        employee: {
-          employeeId: true,
-          employeeName: true,
-        },
-      },
-      userCreated: {
-        userId: true,
-        userIdCreated: true,
-        employeeId: true,
-        firstName: true,
-        username: true,
-        employee: {
-          employeeId: true,
-          employeeName: true,
-        },
-      },
-    });
-    q.where(e => e.doPodReturnId, w => w.equals(doPodReturnId));
-    q.andWhere(e => e.isDeleted, w => w.equals(false));
-    q.take(1);
-    return await q.exec();
-  }
-
-  private static async byIdCache(doPodReturnId: string): Promise<DoPodReturn> {
-    const doPodReturn = await DoPodReturn.findOne(
-      { doPodReturnId },
-      { cache: true },
-    );
-    return doPodReturn;
   }
 
   private static handlePrintMetadata(awb: AwbItemAttr) {
@@ -393,32 +305,33 @@ export class FirstMileDoPodReturnService {
     }
   }
 
-  private static async createDoPodReturnDetail(
-    doPodId: string,
-    awb: AwbItemAttr,
-    awbNumber: string,
-    transactionManager: EntityManager,
-    ) {
-    const doPodReturnDetail = DoPodReturnDetail.create();
-    doPodReturnDetail.doPodReturnId = doPodId;
-    doPodReturnDetail.awbId = awb.awbId;
-    doPodReturnDetail.awbItemId = awb.awbItemId;
-    doPodReturnDetail.awbNumber = awbNumber;
-    doPodReturnDetail.awbStatusIdLast = AWB_STATUS.ANT;
-    await transactionManager.insert(DoPodReturnDetail, doPodReturnDetail);
-  }
-
-  private static isValidAwbStatusIdLast(awbItemAttr: AwbItemAttr) {
-    const statusOnProcessOrFinal = [AWB_STATUS.DLV, AWB_STATUS.CANCEL_DLV, AWB_STATUS.ANT];
-    if (awbItemAttr.awbStatusIdLast &&
-      statusOnProcessOrFinal.includes(awbItemAttr.awbStatusIdLast)
-      ) {
-        return false;
+  private static checkValidAwbStatusIdLast(awbItemAttr: AwbItemAttr) {
+    let message = null;
+    let isValid = false;
+    if (awbItemAttr.awbStatusIdLast) {
+      if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
+      }
+      if (AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
+      }
+      if (AWB_STATUS.DLV == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} sudah deliv`;
+      }
+      if (AWB_STATUS.CANCEL_DLV == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
+      }
     }
-    return true;
+
+    if (null == message) {
+      isValid = true;
+    }
+
+    const result = {
+      isValid,
+      message,
+    };
+    return result;
   }
 
-  private static async updateTotalAwbById(totalAwb: number, totalSuccess: number, doPodReturnId: string) {
-    await DoPodReturn.update({doPodReturnId}, {totalAwb: totalAwb += totalSuccess});
-  }
 }

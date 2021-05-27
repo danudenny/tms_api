@@ -17,12 +17,12 @@ import {
 
 import { WebDoPodCreateReturnResponseVm, WebScanAwbReturnResponseVm, WebScanOutReturnGroupListResponseVm } from '../../models/first-mile/do-pod-retur-response.vm';
 import { WebDoPodCreateReturnPayloadVm, WebScanAwbReturnPayloadVm } from '../../models/first-mile/do-pod-retur-payload.vm';
-import { FirstMileDoPodReturnService } from '../../services/web/first-mile/first-mile-do-pod-retur.sevice';
+import { FirstMileDoPodReturnService } from '../../services/web/first-mile/first-mile-do-pod-return.sevice';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
-@ApiUseTags('Web Do Pod Retur')
-@Controller('web/pod/retur/scanOut')
-export class WebDoPodReturController {
+@ApiUseTags('Web Do Pod Return')
+@Controller('web/pod/return/scanOut')
+export class WebDoPodReturnController {
   constructor() {}
 
   @Post('createReturn')
@@ -32,7 +32,7 @@ export class WebDoPodReturController {
   @ApiOkResponse({ type: WebDoPodCreateReturnResponseVm })
   @Transactional()
   public async createReturn(@Body() payload: WebDoPodCreateReturnPayloadVm) {
-    return FirstMileDoPodReturnService.creatDoPodReturn(payload);
+    return FirstMileDoPodReturnService.createDoPodReturn(payload);
   }
 
   @Post('awbReturn')

@@ -28,7 +28,7 @@ export class WebScanAwbReturnPayloadVm  {
     skipValidation: true,
   })
   @IsDefined({message: 'POD ID harus diisi'})
-  doPodId: string;
+  doPodReturnId: string;
 
   @ApiModelProperty({
     example: ['00020001', '00020002'],
@@ -39,4 +39,16 @@ export class WebScanAwbReturnPayloadVm  {
   @IsAwbNumber({ message: 'No Resi tidak sesuai' })
   @Type(() => String)
   awbNumber: string[];
+}
+
+export class MobileScanAwbReturnPayloadVm {
+  @ApiModelProperty()
+  @IsDefined({ message: 'Nomor awb harus diisi' })
+  // @IsAwbNumber({ message: 'No Resi tidak sesuai' })
+  @Type(() => String)
+  awbNumber: string;
+
+  @ApiModelProperty()
+  @IsDefined({ message: 'Nomor surat jalan harus diisi' })
+  doPodReturnId: string;
 }
