@@ -7,6 +7,7 @@ import { MonitoringHubProblemVm, MonitoringHubTotalProblemVm, MonitoringHubProbl
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { MonitoringProblemListService } from './monitoring-problem-list.service';
 import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub-monitoring.service';
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 
 @Injectable()
 export class MonitoringProblemLebihSortirListService {
@@ -51,7 +52,7 @@ export class MonitoringProblemLebihSortirListService {
     };
 
     const whereSubQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
-    const whereQueryBagItemAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia00.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereQueryLastStatus = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'ah3.branch_id', ['eq'], 'branchIdFrom');
     const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dohd.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
 
@@ -112,14 +113,21 @@ export class MonitoringProblemLebihSortirListService {
         LEFT JOIN LATERAL (
           SELECT
             ah3.awb_status_id,
-            as3.awb_status_name
-          FROM
-            awb_history ah3
+            as3.awb_status_name,
+            ai3.awb_item_id
+          FROM awb_history ah3
+          INNER JOIN awb_item ai3 ON ah3.awb_item_id = ai3.awb_item_id AND ai3.awb_id = dohd.awb_id
           INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
-          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = bia.awb_number AND bia3.is_deleted = FALSE
+          ${whereQueryLastStatus ? 'AND ' + whereQueryLastStatus : ''}
           ORDER BY
-            ah3.history_date DESC
-          LIMIT 1
+            CASE
+              WHEN ah3.awb_status_id = ${AWB_STATUS.BROKE} THEN 1
+              WHEN ah3.awb_status_id = ${AWB_STATUS.LOST} THEN 2
+              WHEN ah3.awb_status_id = ${AWB_STATUS.OUT_HUB} THEN 3
+              WHEN ah3.awb_status_id = ${AWB_STATUS.IN_HUB} THEN 4
+              WHEN ah3.awb_status_id = ${AWB_STATUS.DO_HUB} THEN 5
+            END, ah3.created_time DESC
+            LIMIT 1
         ) AS last_status ON TRUE
     `);
     if (whereQuery) {
@@ -194,7 +202,6 @@ export class MonitoringProblemLebihSortirListService {
       cityId : 'c.city_id',
     };
 
-    const whereQueryBagItemAwb = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia00.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
     const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dohd.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
 

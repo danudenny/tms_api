@@ -64,6 +64,7 @@ export class MonitoringProblemListService {
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQueryForBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagSortirFilter, true);
     const whereQueryForBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagNumberFilter, true);
+    const whereQueryLastStatus = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'ah3.branch_id', ['eq'], 'branchIdFrom');
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
@@ -91,6 +92,7 @@ export class MonitoringProblemListService {
       [`doh.created_time`, 'scanDate'],
       [`bag_sortir.created_time`, 'scanDateInHub'],
       [`dohd.awb_number`, 'awbNumber'],
+      [`bia.awb_item_id`, 'awbItemId'],
       [`CASE
           WHEN bag_sortir.bag_number IS NOT NULL
             THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
@@ -195,13 +197,21 @@ export class MonitoringProblemListService {
         INNER JOIN LATERAL (
           SELECT
             ah3.awb_status_id,
-            as3.awb_status_name
+            as3.awb_status_name,
+            ai3.awb_item_id
           FROM awb_history ah3
+          INNER JOIN awb_item ai3 ON ah3.awb_item_id = ai3.awb_item_id AND ai3.awb_id = dohd.awb_id
           INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
-          INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id
-          INNER JOIN awb_item ai3 ON ai3.awb_item_id = bia3.awb_item_id AND ai3.is_deleted = FALSE AND dohd.awb_id = ai3.awb_id
-          ORDER BY ah3.history_date DESC
-          LIMIT 1
+          ${whereQueryLastStatus ? 'AND ' + whereQueryLastStatus : ''}
+          ORDER BY
+            CASE
+              WHEN ah3.awb_status_id = ${AWB_STATUS.BROKE} THEN 1
+              WHEN ah3.awb_status_id = ${AWB_STATUS.LOST} THEN 2
+              WHEN ah3.awb_status_id = ${AWB_STATUS.OUT_HUB} THEN 3
+              WHEN ah3.awb_status_id = ${AWB_STATUS.IN_HUB} THEN 4
+              WHEN ah3.awb_status_id = ${AWB_STATUS.DO_HUB} THEN 5
+            END, ah3.created_time DESC
+            LIMIT 1
         ) AS last_status ON TRUE
     `);
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -221,6 +231,7 @@ export class MonitoringProblemListService {
       doh.bag_number,
       doh.created_time,
       bag_sortir.created_time,
+      bia.awb_item_id,
       -- br.branch_name,
       scan_out.awb_id,
       last_status.awb_status_name,
@@ -299,7 +310,9 @@ export class MonitoringProblemListService {
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQueryForBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagSortirFilter, true);
     const whereQueryForBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagNumberFilter, true);
+    const whereQueryLastStatus = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'ah3.branch_id', ['eq'], 'branchIdFrom');
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
+
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
@@ -420,12 +433,21 @@ export class MonitoringProblemListService {
       INNER JOIN LATERAL (
         SELECT
           ah3.awb_status_id,
-          as3.awb_status_name
+          as3.awb_status_name,
+          ai3.awb_item_id
         FROM awb_history ah3
+        INNER JOIN awb_item ai3 ON ah3.awb_item_id = ai3.awb_item_id AND ai3.awb_id = dohd.awb_id
         INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
-        INNER JOIN bag_item_awb bia3 ON bia3.awb_item_id = ah3.awb_item_id AND bia3.awb_number = dohd.awb_number AND bia3.is_deleted = FALSE
-        ORDER BY ah3.history_date DESC
-        LIMIT 1
+        ${whereQueryLastStatus ? 'AND ' + whereQueryLastStatus : ''}
+        ORDER BY
+          CASE
+            WHEN ah3.awb_status_id = ${AWB_STATUS.BROKE} THEN 1
+            WHEN ah3.awb_status_id = ${AWB_STATUS.LOST} THEN 2
+            WHEN ah3.awb_status_id = ${AWB_STATUS.OUT_HUB} THEN 3
+            WHEN ah3.awb_status_id = ${AWB_STATUS.IN_HUB} THEN 4
+            WHEN ah3.awb_status_id = ${AWB_STATUS.DO_HUB} THEN 5
+          END, ah3.created_time DESC
+          LIMIT 1
       ) AS last_status ON TRUE
     `);
     q.andWhere(e => e.isDeleted, w => w.isFalse());
