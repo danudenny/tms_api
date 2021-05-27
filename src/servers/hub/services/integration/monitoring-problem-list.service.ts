@@ -86,7 +86,7 @@ export class MonitoringProblemListService {
         END`, 'bagNumber'],
       ['\'Yes\'::text', 'do'],
       [`CASE WHEN bag_sortir.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
-      [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
+      [`CASE WHEN (scan_out.awb_id IS NOT NULL OR scan_out_sortiran_transit.awb_id IS NOT NULL) THEN 'Yes' ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
     );
 
@@ -148,7 +148,7 @@ export class MonitoringProblemListService {
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
           WHERE bia1.is_deleted = FALSE AND b1.is_sortir = TRUE ${filterIsManual ? '\nAND ' + filterIsManual : ''}
-          ${whereQueryBagSortir ? '\nAND ' + whereQueryBagSortir : ''}
+          ${whereQueryBagSortir ? 'AND ' + whereQueryBagSortir : ''}
         ) AS bag_sortir ON TRUE
         LEFT JOIN LATERAL (
           SELECT
@@ -167,8 +167,19 @@ export class MonitoringProblemListService {
             dp2.is_deleted = FALSE
             AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT})
             AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
-            ${whereQueryScanOut ? '\nAND ' + whereQueryScanOut : ''}
+            ${whereQueryScanOut ? 'AND ' + whereQueryScanOut : ''}
         ) AS scan_out ON TRUE
+        LEFT JOIN LATERAL (
+          SELECT
+            ai2.awb_id
+          FROM do_pod dp2
+          INNER JOIN do_pod_detail dpd2 ON dpd2.do_pod_id = dp2.do_pod_id AND ai.awb_item_id = dpd2.awb_item_id
+            AND ai.awb_item_id = dpd2.awb_item_id AND dpd2.is_deleted = FALSE
+          WHERE
+            dp2.is_deleted = FALSE
+            AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB_AWB}
+            ${whereQueryScanOut ? 'AND ' + whereQueryScanOut : ''}
+        ) AS scan_out_sortiran_transit ON TRUE
         INNER JOIN LATERAL (
           SELECT
             ah3.awb_status_id,
@@ -200,7 +211,8 @@ export class MonitoringProblemListService {
       scan_out.awb_id,
       last_status.awb_status_name,
       last_status.awb_status_id,
-      c.city_id
+      c.city_id,
+      scan_out_sortiran_transit.awb_id
       ${sortByRaw}
     `);
 
@@ -358,13 +370,12 @@ export class MonitoringProblemListService {
         INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
         INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
         INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
-        INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
         WHERE
           dp2.is_deleted = FALSE
           AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB}, ${POD_TYPE.OUT_HUB_TRANSIT})
           AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
           ${whereQueryScanOut ? '\nAND ' + whereQueryScanOut : ''}
-      ) AS scan_out ON true
+      ) AS scan_out ON TRUE
       INNER JOIN LATERAL (
         SELECT
           ah3.awb_status_id,
