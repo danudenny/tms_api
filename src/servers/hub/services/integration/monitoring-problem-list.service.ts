@@ -50,7 +50,8 @@ export class MonitoringProblemListService {
     };
 
     let whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia1.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
-    const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    const whereQueryScanOutSortiranTransit = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpd2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     if (!whereQueryBagSortir) {
@@ -178,7 +179,7 @@ export class MonitoringProblemListService {
           WHERE
             dp2.is_deleted = FALSE
             AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB_AWB}
-            ${whereQueryScanOut ? 'AND ' + whereQueryScanOut : ''}
+            ${whereQueryScanOutSortiranTransit ? 'AND ' + whereQueryScanOutSortiranTransit : ''}
         ) AS scan_out_sortiran_transit ON TRUE
         INNER JOIN LATERAL (
           SELECT
@@ -271,7 +272,8 @@ export class MonitoringProblemListService {
     };
 
     let whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia1.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
-    const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dp2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    const whereQueryScanOutSortiranTransit = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpd2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     if (!whereQueryBagSortir) {
@@ -317,7 +319,11 @@ export class MonitoringProblemListService {
           DISTINCT CASE WHEN bag_sortir.is_manual = FALSE THEN dohd.awb_number
         END)`, 'machineSortir'],
       [`COUNT(
-          DISTINCT scan_out.awb_id
+          DISTINCT CASE
+            WHEN (
+              scan_out.awb_id IS NOT NULL OR scan_out_sortiran_transit.awb_id IS NOT NULL
+            )
+            THEN dohd.awb_id END
         )`, 'scanOut'],
       [`COUNT(
           DISTINCT CASE
@@ -376,6 +382,17 @@ export class MonitoringProblemListService {
           AND dp2.user_id_driver IS NOT NULL AND dp2.branch_id_to IS NOT NULL
           ${whereQueryScanOut ? '\nAND ' + whereQueryScanOut : ''}
       ) AS scan_out ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT
+          ai.awb_id
+        FROM do_pod dp2
+        INNER JOIN do_pod_detail dpd2 ON dpd2.do_pod_id = dp2.do_pod_id AND ai.awb_item_id = dpd2.awb_item_id
+          AND ai.awb_item_id = dpd2.awb_item_id AND dpd2.is_deleted = FALSE
+        WHERE
+          dp2.is_deleted = FALSE
+          AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB_AWB}
+          ${whereQueryScanOutSortiranTransit ? 'AND ' + whereQueryScanOutSortiranTransit : ''}
+      ) AS scan_out_sortiran_transit ON TRUE
       INNER JOIN LATERAL (
         SELECT
           ah3.awb_status_id,
