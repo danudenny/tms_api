@@ -5,8 +5,8 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
 import { MonitoringHubProblemVm, MonitoringHubTotalProblemVm } from '../../models/monitoring-hub-problem.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { Bag } from '../../../../shared/orm-entity/bag';
-import {HubMonitoringService} from '../../../main/services/web/hub-transit/hub-monitoring.service';
+import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub-monitoring.service';
+import { DropoffHub } from '../../../../shared/orm-entity/dropoff_hub';
 
 @Injectable()
 export class MonitoringProblemListService {
@@ -83,7 +83,7 @@ export class MonitoringProblemListService {
     }
     payload.sortBy = '';
 
-    const repo = new OrionRepositoryService(Bag, 'bag');
+    const repo = new OrionRepositoryService(DropoffHub, 'doh');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -91,7 +91,6 @@ export class MonitoringProblemListService {
       [`doh.created_time`, 'scanDate'],
       [`bag_sortir.created_time`, 'scanDateInHub'],
       [`dohd.awb_number`, 'awbNumber'],
-      [`bia.awb_item_id`, 'awbItemId'],
       [`CASE
           WHEN bag_sortir.bag_number IS NOT NULL
             THEN CONCAT(bag_sortir.bag_number, LPAD(bag_sortir.bag_seq::text, 3, '0'))
@@ -130,21 +129,10 @@ export class MonitoringProblemListService {
     }
 
     q.innerJoinRaw(
-      'dropoff_hub',
-      'doh',
+      'dropoff_hub_detail',
+      'dohd',
       `
-        bag.bag_id = doh.bag_id AND doh.is_deleted = FALSE
-        INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-        INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
-        INNER JOIN LATERAL (
-          SELECT *
-          FROM bag_item_awb bia00
-          WHERE bia00.bag_item_id = bi.bag_item_id
-            AND bia00.is_deleted = FALSE
-          ORDER BY bia00.bag_item_awb_id DESC
-          LIMIT 1
-        ) AS bia ON TRUE
-        INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
+        dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
         INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
         INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
         INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
@@ -160,8 +148,9 @@ export class MonitoringProblemListService {
           INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
           INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
           INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
-          WHERE bia1.is_deleted = FALSE AND b1.is_sortir = TRUE ${filterIsManual ? '\nAND ' + filterIsManual : ''}
-          ${whereQueryBagSortir ? 'AND ' + whereQueryBagSortir : ''}
+          WHERE
+            bia1.is_deleted = FALSE AND b1.is_sortir = TRUE ${filterIsManual ? '\nAND ' + filterIsManual : ''}
+            ${whereQueryBagSortir ? 'AND ' + whereQueryBagSortir : ''}
         ) AS bag_sortir ON TRUE
         LEFT JOIN LATERAL (
           SELECT
@@ -175,7 +164,6 @@ export class MonitoringProblemListService {
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
           INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE
           INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE AND dohd.awb_id = ai2.awb_id
-          -- INNER JOIN users u2 ON u2.user_id = dpdb2.user_id_created AND u2.is_deleted = FALSE
           WHERE
             dp2.is_deleted = FALSE
             AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
@@ -219,8 +207,6 @@ export class MonitoringProblemListService {
       doh.bag_number,
       doh.created_time,
       bag_sortir.created_time,
-      bia.awb_item_id,
-      -- br.branch_name,
       scan_out.awb_id,
       last_status.awb_status_name,
       last_status.awb_status_id,
@@ -309,7 +295,7 @@ export class MonitoringProblemListService {
     }
     payload.sortBy = '';
 
-    const repo = new OrionRepositoryService(Bag, 'bag');
+    const repo = new OrionRepositoryService(DropoffHub, 'doh');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -342,22 +328,11 @@ export class MonitoringProblemListService {
         END)`, 'notScanOut'],
     );
     q.innerJoinRaw(
-      'dropoff_hub',
-      'doh',
+      'dropoff_hub_detail',
+      'dohd',
       `
-      bag.bag_id = doh.bag_id AND doh.is_deleted = FALSE
-      INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-      INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
-      INNER JOIN LATERAL (
-        SELECT *
-        FROM bag_item_awb bia00
-        WHERE bia00.bag_item_id = bi.bag_item_id
-          AND bia00.is_deleted = FALSE
-        ORDER BY bia00.bag_item_awb_id DESC
-        LIMIT 1
-      ) AS bia ON TRUE
-      INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.is_deleted = FALSE
-      INNER JOIN "public"."branch" "br" ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
+      dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+      INNER JOIN branch br ON br.branch_id = doh.branch_id AND br.is_deleted = FALSE
       INNER JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE
       INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE
       LEFT JOIN LATERAL
@@ -373,8 +348,8 @@ export class MonitoringProblemListService {
         INNER JOIN bag_item bi1 ON bi1.bag_item_id = bia1.bag_item_id AND bi1.is_deleted = FALSE
         INNER JOIN bag b1 ON b1.bag_id = bi1.bag_id AND b1.is_deleted = FALSE AND b1.branch_id_to IS NOT NULL
         WHERE bia1.is_deleted = FALSE AND b1.is_sortir = TRUE
-        ${whereQueryBagSortir ? 'AND ' + whereQueryBagSortir : ''}
-      ) AS bag_sortir ON true
+          ${whereQueryBagSortir ? 'AND ' + whereQueryBagSortir : ''}
+      ) AS bag_sortir ON TRUE
       LEFT JOIN LATERAL (
         SELECT
           ai2.awb_id,
