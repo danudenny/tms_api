@@ -171,7 +171,7 @@ export class MonitoringProblemListService {
         ) AS scan_out ON TRUE
         LEFT JOIN LATERAL (
           SELECT
-            ai2.awb_id
+            ai.awb_id
           FROM do_pod dp2
           INNER JOIN do_pod_detail dpd2 ON dpd2.do_pod_id = dp2.do_pod_id AND ai.awb_item_id = dpd2.awb_item_id
             AND ai.awb_item_id = dpd2.awb_item_id AND dpd2.is_deleted = FALSE
