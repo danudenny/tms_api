@@ -105,7 +105,7 @@ export class MonitoringProblemLebihSortirListService {
           INNER JOIN branch br2 ON br2.branch_id = dp2.branch_id_to AND br2.is_deleted = FALSE
           INNER JOIN bag_item_awb bia2 ON bia2.bag_item_id = dpdb2.bag_item_id AND bia2.is_deleted = FALSE AND bia2.awb_number = bia.awb_number
           INNER JOIN awb_item ai2 ON ai2.awb_item_id = bia2.awb_item_id AND ai2.is_deleted = FALSE
-          WHERE dp2.is_deleted = FALSE AND dp2.do_pod_type IN (${POD_TYPE.OUT_HUB},${POD_TYPE.OUT_HUB_TRANSIT})
+          WHERE dp2.is_deleted = FALSE AND dp2.do_pod_type = ${POD_TYPE.OUT_HUB}
           AND dp2.user_id_driver IS NOT NULL
           AND dp2.branch_id_to IS NOT NULL
           ${whereSubQueryScanOut ? 'AND ' + whereSubQueryScanOut : ''}
