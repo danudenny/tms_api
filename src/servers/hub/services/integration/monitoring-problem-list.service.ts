@@ -35,6 +35,7 @@ export class MonitoringProblemListService {
     const mappingBagSortirFilter = {
       bagSortir : 'b1.bag_number',
       bagSeqSortir : 'bi1.bag_seq',
+      bagNumber: 'b1.bag_number',
     };
 
     const mappingForBagSortirFilter = {
