@@ -18,7 +18,7 @@ import { MobileFirstMileDoPodReturnService } from '../../services/mobile/mobile-
 import { MobileCreateDoPodResponseVm, MobileScanAwbReturnResponseVm } from '../../models/first-mile/do-pod-retur-response.vm';
 import { MobileScanAwbReturnPayloadVm } from '../../models/first-mile/do-pod-retur-payload.vm';
 
-@ApiUseTags('Web Do Pod Return')
+@ApiUseTags('Mobile Do Pod Return')
 @Controller('mobile/pod/return/scanOut')
 export class MobileDoPodReturnController {
   constructor() {}
