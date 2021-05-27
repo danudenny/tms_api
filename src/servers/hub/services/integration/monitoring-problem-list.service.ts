@@ -37,6 +37,11 @@ export class MonitoringProblemListService {
       bagSeqSortir : 'bi1.bag_seq',
     };
 
+    const mappingForBagSortirFilter = {
+      bagSortir : 'bag_sortir.bag_number',
+      bagSeqSortir : 'bag_sortir.bag_seq',
+    };
+
     // replace fieldResolverMap in Orion as Query Raw
     const mappingFilter = {
       scanDate:  'doh.created_time',
@@ -53,6 +58,7 @@ export class MonitoringProblemListService {
     const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryScanOutSortiranTransit = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpd2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
+    const whereQueryForBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagSortirFilter, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
@@ -197,10 +203,9 @@ export class MonitoringProblemListService {
     if (whereQuery) {
       q.andWhereRaw(whereQuery);
     }
-    // q.andWhereRaw(`
-    //   bag.branch_id IS NOT NULL
-    //   -- AND (bag.is_sortir IS NULL OR bag.is_sortir = FALSE)
-    // `);
+    if (whereQueryForBagSortir) {
+      q.andWhereRaw(whereQueryForBagSortir);
+    }
     q.groupByRaw(`
       dohd.awb_number,
       bag_sortir.bag_number,
@@ -259,6 +264,11 @@ export class MonitoringProblemListService {
       bagSeqSortir : 'bi1.bag_seq',
     };
 
+    const mappingForBagSortirFilter = {
+      bagSortir : 'bag_sortir.bag_number',
+      bagSeqSortir : 'bag_sortir.bag_seq',
+    };
+
     // replace fieldResolverMap in Orion as Query Raw
     const mappingFilter = {
       scanDate:  'doh.created_time',
@@ -275,6 +285,7 @@ export class MonitoringProblemListService {
     const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryScanOutSortiranTransit = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpd2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
+    const whereQueryForBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagSortirFilter, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
@@ -409,10 +420,10 @@ export class MonitoringProblemListService {
     if (whereQuery) {
       q.andWhereRaw(whereQuery);
     }
-    // q.andWhereRaw(`
-    //   bag.branch_id IS NOT NULL
-    //   -- AND (bag.is_sortir IS NULL OR bag.is_sortir = FALSE)
-    // `);
+
+    if (whereQueryForBagSortir) {
+      q.andWhereRaw(whereQueryForBagSortir);
+    }
 
     q.groupByRaw(`
       br.branch_name,
