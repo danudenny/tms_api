@@ -334,7 +334,7 @@ export class MonitoringProblemListService {
           DISTINCT CASE WHEN bag_sortir.is_manual = FALSE THEN dohd.awb_number
         END)`, 'machineSortir'],
       [`COUNT(
-          DISTINCT dohd.awb_id
+          DISTINCT scan_out.awb_id
         )`, 'scanOut'],
       [`COUNT(
           DISTINCT CASE
