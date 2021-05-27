@@ -116,7 +116,7 @@ export class MonitoringProblemLebihSortirListService {
             as3.awb_status_name,
             ai3.awb_item_id
           FROM awb_history ah3
-          INNER JOIN awb_item ai3 ON ah3.awb_item_id = ai3.awb_item_id AND ai3.awb_id = dohd.awb_id
+          INNER JOIN awb_item ai3 ON ah3.awb_item_id = ai3.awb_item_id AND ai3.awb_id = ai.awb_id
           INNER JOIN awb_status as3 ON as3.awb_status_id = ah3.awb_status_id
           ${whereQueryLastStatus ? 'AND ' + whereQueryLastStatus : ''}
           ORDER BY
