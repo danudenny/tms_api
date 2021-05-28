@@ -25,4 +25,5 @@ export const AWB_STATUS = {
   IN_SORTIR: 13000,
   CANCEL: 1800,
   CANCEL_DLV: 21800,
+  LOST: 23500,
 };
