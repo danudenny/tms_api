@@ -54,7 +54,7 @@ export class HubMachineSortirService {
       } else {
         is_cod = false;
       }
-      if(!district_id) {
+      if (!district_id) {
         data.push({
           state: 1,
           tracking_number: payload.tracking_number,
@@ -117,10 +117,10 @@ export class HubMachineSortirService {
             WHERE
               bs.is_deleted = FALSE AND
               bs.is_cod = ${escape(is_cod)} AND
-              bs.branch_id = ${payload.sorting_branch_id} AND 
+              bs.branch_id = ${payload.sorting_branch_id} AND
               dmd.district_id='${escape(district_id)}'
           `;
-          
+
           const resultData = await RawQueryService.query(rawQuery);
           if (resultData.length > 0 ) {
             const combineChute = [];
@@ -219,7 +219,7 @@ export class HubMachineSortirService {
             WHERE
               bs.is_deleted = FALSE AND
               bs.is_cod = ${escape(is_cod)} AND
-              bs.branch_id = ${payload.sorting_branch_id} AND 
+              bs.branch_id = ${payload.sorting_branch_id} AND
               dmd.district_id='${escape(district_id)}'
           `;
           const resultData = await RawQueryService.query(rawQuery);
