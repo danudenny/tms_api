@@ -14,12 +14,19 @@ import {
   ApiUseTags,
   ApiBearerAuth,
 } from '../../../../shared/external/nestjs-swagger';
-
-import { WebDoPodCreateReturnResponseVm, WebScanAwbReturnResponseVm, WebScanOutReturnGroupListResponseVm } from '../../models/first-mile/do-pod-retur-response.vm';
-import { WebDoPodCreateReturnPayloadVm, WebScanAwbReturnPayloadVm } from '../../models/first-mile/do-pod-retur-payload.vm';
 import { FirstMileDoPodReturnService } from '../../services/web/first-mile/first-mile-do-pod-return.sevice';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-
+import {
+  WebDoPodCreateReturnResponseVm,
+  WebScanAwbReturnResponseVm,
+  WebScanOutReturnListResponseVm,
+  WebScanOutReturnGroupListResponseVm,
+  WebReturnListResponseVm,
+} from '../../models/first-mile/do-pod-return-response.vm';
+import {
+  WebDoPodCreateReturnPayloadVm,
+  WebScanAwbReturnPayloadVm,
+} from '../../models/first-mile/do-pod-return-payload.vm';
 @ApiUseTags('Web Do Pod Return')
 @Controller('web/pod/return/scanOut')
 export class WebDoPodReturnController {
@@ -52,6 +59,24 @@ export class WebDoPodReturnController {
   @ApiOkResponse({ type: WebScanOutReturnGroupListResponseVm })
   public async awbReturnGroupList(@Body() payload: BaseMetaPayloadVm) {
     return FirstMileDoPodReturnService.findAllScanOutAwbReturnGroupList(payload);
+  }
+
+  @Post('awbReturnList')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutReturnListResponseVm })
+  public async awbReturnList(@Body() payload: BaseMetaPayloadVm) {
+    return FirstMileDoPodReturnService.findAllScanOutAwbReturnList(payload);
+  }
+
+  @Post('awbReturnDetail')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebReturnListResponseVm })
+  public async awbReturnDetail(@Body() payload: BaseMetaPayloadVm) {
+    return FirstMileDoPodReturnService.detailReturn(payload);
   }
 
   // @Post('do-pod-deliver/store')

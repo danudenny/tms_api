@@ -1,105 +1,36 @@
 import moment = require('moment');
 import { EntityManager, getManager } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
+import { RedisService } from '../../../../../shared/services/redis.service';
+import { DoPodReturn } from '../../../../../shared/orm-entity/do-pod-return';
+import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
+import { User } from '../../../../../shared/orm-entity/user';
+import { DoPodReturnDetail } from '../../../../../shared/orm-entity/do-pod-return-detail';
 import { AwbService } from '../../v1/awb.service';
 import { EmployeeService } from '../../master/employee.service';
-import { DoPodReturn } from '../../../../../shared/orm-entity/do-pod-retur';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { MetaService } from '../../../../../shared/services/meta.service';
+import { DoPodReturnService } from '../../master/do-pod-return.service';
+import { DoPodReturnDetailService } from '../../master/do-pod-return-detail.service';
+import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
+import { PrintDoPodDeliverDataDoPodDeliverDetailVm } from '../../../models/print-do-pod-deliver.vm';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
   WebDoPodCreateReturnPayloadVm,
   WebScanAwbReturnPayloadVm,
-} from '../../../models/first-mile/do-pod-retur-payload.vm';
+} from '../../../models/first-mile/do-pod-return-payload.vm';
 import {
   ScanAwbReturnVm,
   WebDoPodCreateReturnResponseVm,
   WebScanAwbReturnResponseVm,
+  WebScanOutReturnListResponseVm,
   WebScanOutReturnGroupListResponseVm,
-} from '../../../models/first-mile/do-pod-retur-response.vm';
-import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
-import { User } from '../../../../../shared/orm-entity/user';
-import { RedisService } from '../../../../../shared/services/redis.service';
-import { DoPodReturnDetail } from '../../../../../shared/orm-entity/do-pod-return-detail';
-import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
-import { PrintDoPodDeliverDataDoPodDeliverDetailVm } from '../../../models/print-do-pod-deliver.vm';
-import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
-import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
-import { MetaService } from '../../../../../shared/services/meta.service';
-import { DoPodReturnService } from '../../master/do-pod-return.service';
-import { DoPodReturnDetailService } from '../../master/do-pod-return-detail.service';
+  WebReturnListResponseVm,
+} from '../../../models/first-mile/do-pod-return-response.vm';
 
 export class FirstMileDoPodReturnService {
-
-  static async findAllScanOutAwbReturnGroupList(
-    payload: BaseMetaPayloadVm,
-  ): Promise<WebScanOutReturnGroupListResponseVm> {
-    // mapping field
-    payload.fieldResolverMap['doPodRetrunDateTime'] =
-      't1.do_pod_return_date_time';
-    payload.fieldResolverMap['datePOD'] = 'datePOD';
-    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
-    payload.fieldResolverMap['branchName'] = 't5.branch_name';
-    payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
-    payload.fieldResolverMap['doPodReturnCode'] = 't1.do_pod_return_code';
-    payload.fieldResolverMap['totalSuratJalan'] = 'totalSuratJalan';
-    payload.fieldResolverMap['totalAssigned'] = 'totalAssigned';
-    payload.fieldResolverMap['totalOnProcess'] = 'totalOnProcess';
-    payload.fieldResolverMap['totalSuccess'] = 'totalSuccess';
-    payload.fieldResolverMap['totalProblem'] = 'totalProblem';
-
-    if (payload.sortBy === '') {
-      payload.sortBy = 'datePOD';
-    }
-
-    const repo = new OrionRepositoryService(DoPodReturn, 't1');
-    const q = repo.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(q, true);
-
-    q.selectRaw(
-      ['t1.user_id_driver', 'userIdDriver'],
-      ['t2.fullname', 'nickname'],
-      ['t1.do_pod_return_date_time::date', 'datePOD'],
-      ['t5.branch_name', 'branchName'],
-      ['t1.branch_id', 'branchId'],
-      ['COUNT(DISTINCT(t1.do_pod_return_id))', 'totalSuratJalan'],
-      ['COUNT(t3.awb_number)', 'totalAssigned'],
-      [
-        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 14000)',
-        'totalOnProcess',
-      ],
-      [
-        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 30000)',
-        'totalSuccess',
-      ],
-      [
-        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000 AND t3.awb_status_id_last <> 14000)',
-        'totalProblem',
-      ],
-    );
-
-    q.innerJoin(e => e.userDriver.employee, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.doPodReturnDetails, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.branch, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.groupByRaw(
-      '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
-    );
-
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
-
-    const result = new WebScanOutReturnGroupListResponseVm();
-    result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
-
-    return result;
-  }
 
   static async scanAwbReturn(
     payload: WebScanAwbReturnPayloadVm,
@@ -254,6 +185,226 @@ export class FirstMileDoPodReturnService {
       result.printDoPodReturnMetadata.userDriver.employee.nickname =
         dataUser[0].nickname;
     }
+
+    return result;
+  }
+
+  static async findAllScanOutAwbReturnGroupList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanOutReturnGroupListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodRetrunDateTime'] =
+      't1.do_pod_return_date_time';
+    payload.fieldResolverMap['datePOD'] = 'datePOD';
+    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
+    payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
+    payload.fieldResolverMap['doPodReturnCode'] = 't1.do_pod_return_code';
+    payload.fieldResolverMap['totalSuratJalan'] = 'totalSuratJalan';
+    payload.fieldResolverMap['totalAssigned'] = 'totalAssigned';
+    payload.fieldResolverMap['totalOnProcess'] = 'totalOnProcess';
+    payload.fieldResolverMap['totalSuccess'] = 'totalSuccess';
+    payload.fieldResolverMap['totalProblem'] = 'totalProblem';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'datePOD';
+    }
+
+    const repo = new OrionRepositoryService(DoPodReturn, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.user_id_driver', 'userIdDriver'],
+      ['t2.fullname', 'nickname'],
+      ['t1.do_pod_return_date_time::date', 'datePOD'],
+      ['t5.branch_name', 'branchName'],
+      ['t1.branch_id', 'branchId'],
+      ['COUNT(DISTINCT(t1.do_pod_return_id))', 'totalSuratJalan'],
+      ['COUNT(t3.awb_number)', 'totalAssigned'],
+      [
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 14000)',
+        'totalOnProcess',
+      ],
+      [
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 30000)',
+        'totalSuccess',
+      ],
+      [
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000 AND t3.awb_status_id_last <> 14000)',
+        'totalProblem',
+      ],
+    );
+
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodReturnDetails, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw(
+      '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
+    );
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanOutReturnGroupListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async findAllScanOutAwbReturnList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanOutReturnListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodReturnDateTime'] =
+      't1.do_pod_return_date_time';
+    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['doPodReturnCode'] = 't1.do_pod_return_code';
+    payload.fieldResolverMap['description'] = 't1.description';
+    payload.fieldResolverMap['nickname'] = 't2.nickname';
+    payload.fieldResolverMap['totalAssigned'] = 'totalAssigned';
+    payload.fieldResolverMap['totalOnProcess'] = 'totalOnProcess';
+    payload.fieldResolverMap['totalSuccess'] = 'totalSuccess';
+    payload.fieldResolverMap['totalProblem'] = 'totalProblem';
+    payload.fieldResolverMap['totalCodValue'] = 'totalCodValue';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodReturnDateTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodReturnDateTime',
+      },
+      {
+        field: 'doPodReturnCode',
+      },
+      {
+        field: 'description',
+      },
+      {
+        field: 'nickname',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPodReturn, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_return_id', 'doPodReturnId'],
+      ['t1.do_pod_return_code', 'doPodReturnCode'],
+      ['t1.do_pod_return_date_time', 'doPodReturnDateTime'],
+      ['t1.description', 'description'],
+      [
+        'COUNT(t3.awb_number)FILTER (WHERE t3.awb_status_id_last = 30000)',
+        'totalSuccess',
+      ],
+      [
+        'COUNT(t3.awb_number)FILTER (WHERE t3.awb_status_id_last NOT IN (30000, 14000))',
+        'totalProblem',
+      ],
+      [
+        'COUNT (t3.awbNumber) FILTER (WHERE t3.awb_status_id_last = 14000)',
+        'totalOnProcess',
+      ],
+      ['COUNT (t3.awbNumber)', 'totalAssigned'],
+      ['t2.fullname', 'nickname'],
+      [
+        `CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`,
+        'totalCodValue',
+      ],
+    );
+
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodReturnDetails, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodReturnDetails.awb, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw('t1.do_pod_return_id, t2.fullname');
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanOutReturnListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async detailReturn(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebReturnListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodReturnId'] = 't1.do_pod_return_id';
+    payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
+    payload.fieldResolverMap['consigneeName'] = 't1.consignee_name';
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'awbNumber',
+      },
+      {
+        field: 'doPodReturnId',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPodReturnDetail, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_return_detail_id', 'doPodReturnDetailId'],
+      ['t2.awb_number', 'awbNumber'],
+      ['t1.awb_status_id_last', 'awbStatusIdLast'],
+      ['t1.desc_last', 'note'],
+      ['t2.is_cod', 'isCod'],
+      [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      ['COALESCE(t1.consignee_name, t2.consignee_name)', 'consigneeName'],
+      ['t3.awb_status_title', 'awbStatusTitle'],
+      ['t4.do_return', 'isDoReturn'],
+      ['t4.do_return_number', 'doReturnNumber'],
+      [
+        'CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))',
+        'totalCodValue',
+      ],
+    );
+
+    q.innerJoin(e => e.awb, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbStatus, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.pickupRequestDetail, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new WebReturnListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
   }

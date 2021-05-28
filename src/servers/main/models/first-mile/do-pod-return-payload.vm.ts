@@ -52,3 +52,14 @@ export class MobileScanAwbReturnPayloadVm {
   @IsDefined({ message: 'Nomor surat jalan harus diisi' })
   doPodReturnId: string;
 }
+
+export class MobileInitDataPayloadVm {
+  @ApiModelPropertyOptional({ format: 'date-time' })
+  lastSyncDateTime: string;
+
+  // @ApiModelPropertyOptional()
+  // doPodReturnDetailId: string;
+
+  // @ApiModelPropertyOptional()
+  // doPodReturnId: string;
+}

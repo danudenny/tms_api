@@ -1,6 +1,6 @@
 import moment = require('moment');
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
-import { DoPodReturn } from '../../../../shared/orm-entity/do-pod-retur';
+import { DoPodReturn } from '../../../../shared/orm-entity/do-pod-return';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 

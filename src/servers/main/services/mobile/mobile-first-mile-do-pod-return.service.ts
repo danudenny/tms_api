@@ -7,12 +7,15 @@ import { DoPodReturnService } from '../master/do-pod-return.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { DoPodReturnDetailService } from '../master/do-pod-return-detail.service';
 import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
-import { MobileScanAwbReturnPayloadVm } from '../../models/first-mile/do-pod-retur-payload.vm';
+import { MobileScanAwbReturnPayloadVm } from '../../models/first-mile/do-pod-return-payload.vm';
 import {
   MobileCreateDoPodResponseVm,
+  MobileInitDataReturnResponseVm,
   MobileScanAwbReturnResponseVm,
   MobileScanAwbReturnVm,
-} from '../../models/first-mile/do-pod-retur-response.vm';
+} from '../../models/first-mile/do-pod-return-response.vm';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { DoPodReturnDetail } from '../../../../shared/orm-entity/do-pod-return-detail';
 
 export class MobileFirstMileDoPodReturnService {
 
@@ -164,6 +167,105 @@ export class MobileFirstMileDoPodReturnService {
     }
   }
 
+  static async getInitDataReturn(
+    fromDate?: string,
+  ): Promise<MobileInitDataReturnResponseVm> {
+    const result = new MobileInitDataReturnResponseVm();
+    result.delivery = await this.getDelivery(fromDate);
+    result.serverDateTime = moment().format();
+    return result;
+  }
+
+  private static async getDelivery(fromDate?: string) {
+    const qb = createQueryBuilder();
+    const authMeta = AuthService.getAuthMetadata();
+
+    const repo = new OrionRepositoryService(DoPodReturnDetail, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      ['t1.do_pod_return_detail_id', 'doPodReturnDetailId'],
+      ['t1.awb_item_id', 'awbItemId'],
+      ['t1.awb_status_date_time_last', 'awbStatusDateTimeLast'],
+      ['t1.consignee_name', 'consigneeNameNote'],
+      ['t2.do_pod_return_id', 'doPodReturnId'],
+      ['t2.do_pod_return_date_time', 'doPodRetrunDateTime'],
+      ['t3.awb_id', 'awbId'],
+      ['t3.awb_date', 'awbDate'],
+      ['t3.awb_number', 'awbNumber'],
+      ['t3.ref_customer_account_id', 'merchant'],
+      ['t3.consignee_name', 'consigneeName'],
+      ['t3.consignee_address', 'consigneeAddress'],
+      ['t3.notes', 'consigneeNote'],
+      ['t3.consignee_phone', 'consigneeNumber'],
+      ['t3.total_cod_value', 'totalCodValue'],
+      ['t3.is_cod', 'isCOD'],
+      [`COALESCE(t4.is_high_value, t8.is_high_value, false)`, 'isHighValue'],
+      ['t5.awb_status_id', 'awbStatusId'],
+      ['t5.awb_status_name', 'awbStatusName'],
+      ['t6.employee_id', 'employeeId'],
+      ['t6.fullname', 'employeeName'],
+      ['t7.package_type_name', 'packageTypeName'],
+      ['t8.recipient_longitude', 'recipientLongitude'],
+      ['t8.recipient_latitude', 'recipientLatitude'],
+      ['t8.do_return', 'isDoReturn'],
+      ['t8.do_return_number', 'doReturnNumber'],
+      ['t9.reason_code', 'reasonCode'],
+      ['t9.reason_name', 'reasonName'],
+    );
+
+    q.innerJoin(e => e.doPodReturn, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbItemAttr, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awbItemAttr.awbStatus, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodReturn.userDriver.employee, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.awb.packageType, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.pickupRequestDetail, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.reasonLast, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.doPodReturn.userIdDriver, w => w.equals(authMeta.userId));
+
+    const dateFrom = moment().subtract(1, 'd');
+    const dateTo = moment();
+    q.andWhere(
+      e => e.doPodReturn.doPodReturnDateTime,
+      w => w.greaterThanOrEqual(moment(dateFrom).toDate()),
+    );
+
+    q.andWhere(
+      e => e.doPodReturn.doPodReturnDateTime,
+      w => w.lessThanOrEqual(moment(dateTo).toDate()),
+    );
+
+    if (fromDate) {
+      q.andWhere(
+        e => e.updatedTime,
+        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+      );
+      q.orWhere(
+        e => e.createdTime,
+        w => w.lessThanOrEqual(moment(fromDate).toDate()),
+      );
+    }
+    return await q.exec();
+  }
+
   private static checkValidAwbStatusIdLast(awbItemAttr: any) {
     let message = null;
     let isValid = false;
@@ -192,5 +294,4 @@ export class MobileFirstMileDoPodReturnService {
     };
     return result;
   }
-
 }

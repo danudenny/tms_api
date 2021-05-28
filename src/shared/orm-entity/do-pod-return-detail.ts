@@ -3,7 +3,7 @@ import { Awb } from './awb';
 import { AwbItem } from './awb-item';
 import { AwbItemAttr } from './awb-item-attr';
 import { AwbStatus } from './awb-status';
-import { DoPodReturn } from './do-pod-retur';
+import { DoPodReturn } from './do-pod-return';
 import { PickupRequestDetail } from './pickup-request-detail';
 import { Reason } from './reason';
 import { TmsBaseEntity } from './tms-base';
