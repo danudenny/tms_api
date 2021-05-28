@@ -166,13 +166,18 @@ export class V1WebTrackingService {
       'attachments',
       'attachments.attachment_tms_id = dpda.attachment_tms_id ',
     );
-    qq.where('dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId', {
-      doPodDeliverDetailId: payload.doPodDeliverDetailId,
-    });
+    qq.where(
+      'dpdd.do_pod_deliver_detail_id = :doPodDeliverDetailId AND dpda.is_deleted = false',
+      {
+        doPodDeliverDetailId: payload.doPodDeliverDetailId,
+      },
+    );
 
     if (payload.attachmentType) {
       qq.andWhere('dpda.type = :attachmentType', { attachmentType: payload.attachmentType });
     }
+    qq.orderBy('dpda.created_time', 'DESC');
+    qq.limit(3); // only get 3 data file (photo, signature, photoCod)
 
     const result = new PhotoResponseVm();
     result.data = await qq.getRawMany();
@@ -544,12 +549,12 @@ export class V1WebTrackingService {
     qb.innerJoin(
       'users',
       't4',
-      't1.user_id_created = t4.user_id AND t3.is_deleted = false',
+      't1.user_id_created = t4.user_id',
     );
     qb.innerJoin(
       'employee',
       't5',
-      't4.employee_id = t5.employee_id AND t5.is_deleted = false',
+      't4.employee_id = t5.employee_id',
     );
     qb.where('t1.awb_item_id = :awbItemId AND t1.is_deleted = false', {
       awbItemId,

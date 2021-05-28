@@ -54,7 +54,7 @@ export class HubMachineSortirService {
       } else {
         is_cod = false;
       }
-      if(!district_id) {
+      if (!district_id) {
         data.push({
           state: 1,
           tracking_number: payload.tracking_number,
@@ -100,16 +100,27 @@ export class HubMachineSortirService {
       const resultDataSubDistrict = await RawQueryService.query(rawQuerySubDistrict);
       if (resultDataSubDistrict.length > 0 ) {
         if (is_cod == true) {
+          // const rawQuery = `
+          //   SELECT bs.*
+          //   FROM branch_sortir bs
+          //   WHERE
+          //     bs.is_deleted = FALSE AND
+          //     bs.branch_id_lastmile=${resultDataSubDistrict[0].branch_id} AND
+          //     bs.is_cod = ${escape(is_cod)} AND
+          //     bs.branch_id = ${payload.sorting_branch_id}
+          //   ;
+          // `;
           const rawQuery = `
             SELECT bs.*
             FROM branch_sortir bs
+            INNER JOIN district_mapping_detail dmd ON bs.branch_id_lastmile = dmd.branch_id and dmd.is_deleted = FALSE
             WHERE
               bs.is_deleted = FALSE AND
-              bs.branch_id_lastmile=${resultDataSubDistrict[0].branch_id} AND
               bs.is_cod = ${escape(is_cod)} AND
-              bs.branch_id = ${payload.sorting_branch_id}
-            ;
+              bs.branch_id = ${payload.sorting_branch_id} AND
+              dmd.district_id='${escape(district_id)}'
           `;
+
           const resultData = await RawQueryService.query(rawQuery);
           if (resultData.length > 0 ) {
             const combineChute = [];
@@ -190,17 +201,27 @@ export class HubMachineSortirService {
             return result;
           }
         } else {
+          // const rawQuery = `
+          //   SELECT bs.*
+          //   FROM branch_sortir bs
+          //   WHERE
+          //     bs.is_deleted = FALSE AND
+          //     bs.branch_id_lastmile=${resultDataSubDistrict[0].branch_id} AND
+          //     bs.is_cod = ${escape(is_cod)} AND
+          //     bs.branch_id = ${payload.sorting_branch_id}
+          //   ;
+          // `;
+          // console.log(rawQuery);
           const rawQuery = `
             SELECT bs.*
             FROM branch_sortir bs
+            INNER JOIN district_mapping_detail dmd ON bs.branch_id_lastmile = dmd.branch_id and dmd.is_deleted = FALSE
             WHERE
               bs.is_deleted = FALSE AND
-              bs.branch_id_lastmile=${resultDataSubDistrict[0].branch_id} AND
               bs.is_cod = ${escape(is_cod)} AND
-              bs.branch_id = ${payload.sorting_branch_id}
-            ;
+              bs.branch_id = ${payload.sorting_branch_id} AND
+              dmd.district_id='${escape(district_id)}'
           `;
-          console.log(rawQuery);
           const resultData = await RawQueryService.query(rawQuery);
           // console.log(rawQuery);
           if (resultData.length > 0 ) {
