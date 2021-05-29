@@ -88,7 +88,7 @@ export class BagDropoffHubQueueService {
                   updatedTime: data.timestamp,
                 },
               );
-              await HubSummaryAwb.save(hubSummaryAwb);
+              await HubSummaryAwb.insert(hubSummaryAwb);
 
               //
 
