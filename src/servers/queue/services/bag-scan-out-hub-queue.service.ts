@@ -6,6 +6,7 @@ import { DoPodDetail } from '../../../shared/orm-entity/do-pod-detail';
 import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue.service';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { SharedService } from '../../../shared/services/shared.service';
+import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -42,6 +43,7 @@ export class BagScanOutHubQueueService {
       console.log('### SCAN OUT HUB JOB ID =========', job.id);
       const data = job.data;
 
+      const dateNow = moment().toDate();
       const bagItemsAwb = await BagItemAwb.find({
         where: {
           bagItemId: data.bagItemId,
@@ -96,6 +98,18 @@ export class BagScanOutHubQueueService {
             doPodDetail.userIdUpdated = data.userId;
             doPodDetail.userIdCreated = data.userId;
             await DoPodDetail.insert(doPodDetail);
+
+            await HubSummaryAwb.update(
+              {
+                awbNumber: itemAwb.awbNumber,
+              },
+              {
+                scanDateOutHub: dateNow,
+                outHub: true,
+                userIdUpdated: data.userId,
+                updatedTime: data.timestamp,
+              },
+            );
 
             // TODO: if isTransit auto IN
             if (data.doPodType == 3020) {
