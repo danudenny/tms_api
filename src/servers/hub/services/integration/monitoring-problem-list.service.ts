@@ -26,7 +26,7 @@ export class MonitoringProblemListService {
       scanDate:  'doh.created_time',
       scanDateInHub: 'doh.created_time',
       createdTime : 'doh.created_time',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'doh.branch_id',
       branchNameFrom : 'br.branch_name',
       awbNumber : 'dohd.awb_number',
       bagNumber : 'doh.bag_number',
@@ -35,6 +35,11 @@ export class MonitoringProblemListService {
     const mappingBagSortirFilter = {
       bagSortir : 'b1.bag_number',
       bagSeqSortir : 'bi1.bag_seq',
+      branchIdFrom : 'b1.branch_id',
+    };
+
+    const mappingScanOutFilter = {
+      branchIdFrom : 'dp2.branch_id',
     };
 
     const mappingForBagSortirFilter = {
@@ -51,7 +56,7 @@ export class MonitoringProblemListService {
       scanDate:  'doh.created_time',
       scanDateInHub: 'doh.created_time',
       createdTime : 'doh.created_time',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'doh.branch_id',
       branchNameFrom : 'br.branch_name',
       awbNumber : 'dohd.awb_number',
       bagNumber : 'doh.bag_number',
@@ -59,7 +64,8 @@ export class MonitoringProblemListService {
     };
 
     let whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia1.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
-    const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    let whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    const whereQueryScanOut2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingScanOutFilter, true);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQueryForBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagSortirFilter, true);
     const whereQueryForBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagNumberFilter, true);
@@ -69,6 +75,11 @@ export class MonitoringProblemListService {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
       whereQueryBagSortir = whereQueryBagSortir2 ? whereQueryBagSortir + '\nAND ' + whereQueryBagSortir2 : whereQueryBagSortir;
+    }
+    if (!whereQueryScanOut) {
+      whereQueryScanOut = whereQueryScanOut2;
+    } else {
+      whereQueryScanOut = whereQueryScanOut2 ? whereQueryScanOut + '\nAND ' + whereQueryScanOut2 : whereQueryScanOut;
     }
     payload.filters = [];
 
@@ -237,7 +248,7 @@ export class MonitoringProblemListService {
       scanDate:  'doh.created_time::DATE',
       scanDateInHub: 'doh.created_time::DATE',
       createdTime : 'doh.created_time::DATE',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'doh.branch_id',
       branchNameFrom : 'br.branch_name',
       awbNumber : 'dohd.awb_number',
       bagNumber : 'doh.bag_number',
@@ -246,6 +257,11 @@ export class MonitoringProblemListService {
     const mappingBagSortirFilter = {
       bagSortir : 'b1.bag_number',
       bagSeqSortir : 'bi1.bag_seq',
+      branchIdFrom : 'b1.branch_id',
+    };
+
+    const mappingScanOutFilter = {
+      branchIdFrom : 'dp2.branch_id',
     };
 
     const mappingForBagSortirFilter = {
@@ -262,7 +278,7 @@ export class MonitoringProblemListService {
       scanDate:  'doh.created_time',
       scanDateInHub: 'doh.created_time',
       createdTime : 'doh.created_time',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'doh.branch_id',
       branchNameFrom : 'br.branch_name',
       awbNumber : 'dohd.awb_number',
       bagNumber : 'doh.bag_number',
@@ -270,17 +286,23 @@ export class MonitoringProblemListService {
     };
 
     let whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia1.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
-    const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    let whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    const whereQueryScanOut2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingScanOutFilter, true);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQueryForBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagSortirFilter, true);
     const whereQueryForBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagNumberFilter, true);
     const whereQueryLastStatus = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'ah3.branch_id', ['eq'], 'branchIdFrom');
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
-
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
       whereQueryBagSortir = whereQueryBagSortir2 ? whereQueryBagSortir + '\nAND ' + whereQueryBagSortir2 : whereQueryBagSortir;
+    }
+
+    if (!whereQueryScanOut) {
+      whereQueryScanOut = whereQueryScanOut2;
+    } else {
+      whereQueryScanOut = whereQueryScanOut2 ? whereQueryScanOut + '\nAND ' + whereQueryScanOut2 : whereQueryScanOut;
     }
     payload.filters = [];
 
@@ -303,7 +325,7 @@ export class MonitoringProblemListService {
       [`br.branch_name`, 'branchName'],
       [`doh.created_time::DATE`, 'scanDate'],
       [`br.branch_code`, 'branchCode'],
-      [`br.branch_id`, 'branchId'],
+      [`doh.branch_id`, 'branchId'],
       [`c.city_name`, 'cityName'],
       [`COUNT(
           DISTINCT CASE
@@ -405,7 +427,6 @@ export class MonitoringProblemListService {
     q.groupByRaw(`
       br.branch_name,
       br.branch_code,
-      br.branch_id,
       c.city_name,
       doh.created_time::DATE,
       doh.branch_id

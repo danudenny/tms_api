@@ -24,9 +24,9 @@ export class MonitoringProblemLebihSortirListService {
       scanDate:  '"bi"."created_time"::DATE',
       scanDateInHub: '"bi"."created_time"::DATE',
       createdTime : '"bi"."created_time"::DATE',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'bag.branch_id',
       branchNameFrom : 'br.branch_name',
-      branchId : 'br.branch_id',
+      branchId : 'bag.branch_id',
       branchName : 'br.branch_name',
       awbNumber : 'bia.awb_number',
       bagNumber : 'bag.bag_number',
@@ -51,11 +51,20 @@ export class MonitoringProblemLebihSortirListService {
       cityId : 'c.city_id',
     };
 
-    const whereSubQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const mappingScanOutFilter = {
+      branchIdFrom : 'dp2.branch_id',
+    };
+
+    let whereSubQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereSubQueryScanOut2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingScanOutFilter, true);
     const whereQueryLastStatus = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'ah3.branch_id', ['eq'], 'branchIdFrom');
     const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dohd.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
-
+    if (!whereSubQueryScanOut) {
+      whereSubQueryScanOut = whereSubQueryScanOut2;
+    } else {
+      whereSubQueryScanOut = whereSubQueryScanOut2 ? whereSubQueryScanOut + '\nAND ' + whereSubQueryScanOut2 : whereSubQueryScanOut;
+    }
     payload.filters = [];
 
     payload.globalSearchFields = [
@@ -191,9 +200,9 @@ export class MonitoringProblemLebihSortirListService {
       scanDate:  'bi.created_time',
       scanDateInHub: 'bi.created_time',
       createdTime : 'bi.created_time',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'bag.branch_id',
       branchNameFrom : 'br.branch_name',
-      branchId : 'br.branch_id',
+      branchId : 'bag.branch_id',
       branchName : 'br.branch_name',
       awbNumber : 'bia.awb_number',
       bagNumber : 'bag.bag_number',
@@ -230,7 +239,7 @@ export class MonitoringProblemLebihSortirListService {
       [`c.city_id`, 'cityId'],
       [`br.branch_name`, 'branchName'],
       [`br.branch_code`, 'branchCode'],
-      [`br.branch_id`, 'branchId'],
+      [`bag.branch_id`, 'branchId'],
       [`COUNT (
           DISTINCT ai.awb_id
         )`, 'lebihSortir',
@@ -264,7 +273,7 @@ export class MonitoringProblemLebihSortirListService {
     q.groupByRaw(`
       br.branch_name,
       br.branch_code,
-      br.branch_id,
+      bag.branch_id,
       c.city_name,
       c.city_id,
       bi.created_time::DATE
