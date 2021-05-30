@@ -82,6 +82,7 @@ export class BagDropoffHubQueueService {
                   doHub: true,
                   bagItemIdDo: data.bagItemId,
                   bagIdDo: data.bagId,
+                  awbItemId: itemAwb.awbItemId,
                   userIdCreated: data.userId,
                   userIdUpdated: data.userId,
                   createdTime: data.timestamp,

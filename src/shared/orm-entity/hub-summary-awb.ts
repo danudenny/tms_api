@@ -63,6 +63,18 @@ export class HubSummaryAwb extends TmsBaseEntity {
   outHub: boolean;
 
   @Column('bigint', {
+    nullable: true,
+    name: 'awb_status_id_last',
+  })
+  awbStatusIdLast: number | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'awb_item_id',
+  })
+  awbItemId: number | null;
+
+  @Column('bigint', {
     nullable: false,
     name: 'bag_item_id_do',
   })
