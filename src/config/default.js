@@ -45,8 +45,8 @@ module.exports = {
     },
     exportHandoverSigesitMeta: {
       repeat: '0 10 * * *',
-      emailTo: 'ajengauliya07@gmail.com',
-      emailCC: ['beben@sicepat.com', 'barizana.arifin@sicepat.com'],
+      emailTo: 'yonna@e.sicepat.com',
+      emailCC: ['ajengaulia937@gmail.com', 'beben@sicepat.com', 'barizana.arifin@sicepat.com'],
     },
   },
   logger: {
