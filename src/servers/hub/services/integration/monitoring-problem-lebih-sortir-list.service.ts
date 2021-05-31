@@ -8,6 +8,7 @@ import { Bag } from '../../../../shared/orm-entity/bag';
 import { MonitoringProblemListService } from './monitoring-problem-list.service';
 import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub-monitoring.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import moment= require('moment');
 
 @Injectable()
 export class MonitoringProblemLebihSortirListService {
@@ -58,7 +59,7 @@ export class MonitoringProblemLebihSortirListService {
     let whereSubQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
     const whereSubQueryScanOut2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingScanOutFilter, true);
     const whereQueryLastStatus = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'ah3.branch_id', ['eq'], 'branchIdFrom');
-    const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dohd.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dohd.created_time', ['gt', 'gte'], 'scanDateDoHub');
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     if (!whereSubQueryScanOut) {
       whereSubQueryScanOut = whereSubQueryScanOut2;
@@ -74,7 +75,7 @@ export class MonitoringProblemLebihSortirListService {
     ];
     let sortByRaw = '';
     if (payload.sortBy) {
-      sortByRaw = 'ORDER BY ' + mappingSortBy[payload.sortBy] + ' ' + payload.sortDir.toUpperCase();
+      sortByRaw = mappingSortBy[payload.sortBy];
     }
     payload.sortBy = '';
 
@@ -160,8 +161,8 @@ export class MonitoringProblemLebihSortirListService {
       last_status.awb_status_name,
       c.city_id,
       scan_out.awb_id
-    ${sortByRaw}
     `);
+    q.orderByRaw(sortByRaw, payload.sortDir.toUpperCase() == 'ASC' ? 'ASC' : 'DESC');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -211,7 +212,7 @@ export class MonitoringProblemLebihSortirListService {
       cityId : 'c.city_id',
     };
 
-    const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dohd.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
+    const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dohd.created_time', ['gt', 'gte'], 'scanDateDoHub');
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
 
     payload.filters = [];
@@ -223,7 +224,7 @@ export class MonitoringProblemLebihSortirListService {
     ];
     let sortByRaw = '';
     if (payload.sortBy) {
-      sortByRaw = 'ORDER BY ' + mappingSortBy[payload.sortBy] + ' ' + payload.sortDir.toUpperCase();
+      sortByRaw = mappingSortBy[payload.sortBy];
     }
     payload.sortBy = '';
 
@@ -277,8 +278,8 @@ export class MonitoringProblemLebihSortirListService {
       c.city_name,
       c.city_id,
       bi.created_time::DATE
-      ${sortByRaw}
     `);
+    q.orderByRaw(sortByRaw, payload.sortDir.toUpperCase() == 'ASC' ? 'ASC' : 'DESC');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -295,12 +296,19 @@ export class MonitoringProblemLebihSortirListService {
 
     // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < payload.filters.length; i++) {
-      if (payload.filters[i].field == 'bagSortir' || payload.filters[i].field == 'bagNumber') {
+      const field = payload.filters[i].field;
+      const opt = payload.filters[i].operator;
+      if (field == 'bagSortir' || field == 'bagNumber') {
         const bagSortir = payload.filters[i].value.substr( 0 , 7);
         const bagSeq = payload.filters[i].value.substr(7 , 10);
         payload.filters[i].value = bagSortir;
         payload.filters[i].field = 'bagSortir';
         payload.filters.push({field: 'bagSeqSortir', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
+      }
+      if ((field == 'scanDate' || field == 'createdTime' || field == 'scanDateInHub')
+        && (opt == 'gt' || opt == 'gte')) {
+        const value = moment(payload.filters[i].value).subtract(10, 'days').format('YYYY-MM-DD');
+        payload.filters.push({field: 'scanDateDoHub', operator: opt, value} as BaseMetaPayloadFilterVm);
       }
     }
     return payload;
