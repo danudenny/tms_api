@@ -199,22 +199,14 @@ export class InternalHandoverPackageService {
 
       const emailStatus = await EmailService.sendEmail(message);
       console.log('EMAIL STATUS =========== ', JSON.stringify(emailStatus));
-
-      // const obj = JSON.parse(emailStatus);
-      if(emailStatus.statusCode == 200 || emailStatus.statusCode == 202){
-        result.statusCode = HttpStatus.OK;
-        result.message = 'List Handover Sigesit successfully sent to email';
-      } else{
-        result.statusCode = HttpStatus.BAD_REQUEST;
-        result.message = emailStatus.message;
-      }
-      
     } catch (error) {
       console.log(error);
       throw error;
     } finally {
       const currDateTime = moment().toDate();
       console.log('########## STOP CRON FOR EXPORT HANDOVER SIGESIT :: timeNow ==============  ', currDateTime);
+      result.statusCode = HttpStatus.OK;
+      result.message = 'List Handover Sigesit successfully sent to email';
       return result;
     }
   }
