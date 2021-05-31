@@ -4,7 +4,7 @@ import {
 } from '../../../../shared/external/nestjs-swagger';
 import { AuthXAPIKeyGuard } from '../../../../shared/guards/auth-x-api-key.guard';
 import { CheckSpkVm, CheckSpkResponseVM, CheckSpkPayloadVm } from '../../models/partner/diva.vm';
-import { DeleteTaxResponseVM, DeteleTaxPayloadVm, UpdateTaxPayloadVm, UpdateTaxResponseVM, ExportHandoverSigesitResponseVM } from '../../models/partner/internal-tms.vm';
+import { DeleteTaxResponseVM, DeteleTaxPayloadVm, UpdateTaxPayloadVm, UpdateTaxResponseVM } from '../../models/partner/internal-tms.vm';
 import { InternalTmsService } from '../../services/integration/internal-tms.service';
 import { PartnerDivaService } from '../../services/integration/partner-diva.service';
 
@@ -29,14 +29,5 @@ export class InternalTmsController {
   @ApiOkResponse({ type: UpdateTaxResponseVM })
   public async updateAwb(@Body() payload: UpdateTaxPayloadVm) {
     return InternalTmsService.updateAwb(payload);
-  }
-
-  @Get('exportHandoverSigesit')
-  @HttpCode(HttpStatus.OK)
-  @ApiImplicitHeader({ name: 'x-api-key' })
-  @UseGuards(AuthXAPIKeyGuard)
-  @ApiOkResponse({ type: ExportHandoverSigesitResponseVM })
-  public async exportHandoverSigesit(@Body() payload: any) {
-    return InternalTmsService.exportHandoverSigesit(payload);
   }
 }

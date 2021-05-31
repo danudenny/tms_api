@@ -36,11 +36,6 @@ module.exports = {
       retryDelayMs: 2 * 60 * 1000, // 2 minutes
       keepRetryInHours: 24, // keep retrying in 1 day
     },
-    exportHandoverSigesitMeta: {
-      repeat: '0 10 * * *',
-      emailTo: 'ajengauliya07@gmail.com',
-      emailCC: ['barizana.arifin@sicepat.com'],
-    },
   },
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
