@@ -307,7 +307,7 @@ export class MonitoringProblemLebihSortirListService {
       }
       if ((field == 'scanDate' || field == 'createdTime' || field == 'scanDateInHub')
         && (opt == 'gt' || opt == 'gte')) {
-        const value = moment(payload.filters[i].value).subtract(10, 'days').format('YYYY-MM-DD');
+        const value = moment(payload.filters[i].value).subtract(30, 'days').format('YYYY-MM-DD');
         payload.filters.push({field: 'scanDateDoHub', operator: opt, value} as BaseMetaPayloadFilterVm);
       }
     }
