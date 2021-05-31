@@ -7,10 +7,7 @@ import { MonitoringHubProblemVm, MonitoringHubTotalProblemVm } from '../../model
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub-monitoring.service';
 import { DropoffHub } from '../../../../shared/orm-entity/dropoff_hub';
-import {HubSummaryAwb} from '../../../../shared/orm-entity/hub-summary-awb';
-import {OrionRepositoryQueryService} from '../../../../shared/services/orion-repository-query.service';
-import {Bag} from '../../../../shared/orm-entity/bag';
-import {RawQueryService} from '../../../../shared/services/raw-query.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 @Injectable()
 export class MonitoringProblemListService {
@@ -497,12 +494,12 @@ export class MonitoringProblemListService {
             THEN CONCAT(bi.bag_number, LPAD(bin.bag_seq::text, 3, '0'))
           ELSE CONCAT(b.bag_number, LPAD(bdo.bag_seq::text, 3, '0'))
         END AS "bagNumber",
-        hsa.do_hub AS "do",
-        hsa.in_hub AS "in",
-        hsa.out_hub AS "out",
+        CASE WHEN hsa.do_hub = TRUE THEN 'Yes' ELSE 'No' END AS "do",
+        CASE WHEN hsa.in_hub = TRUE THEN 'Yes' ELSE 'No' END AS "in",
+        CASE WHEN hsa.out_hub = TRUE THEN 'Yes' ELSE 'No' END AS "out",
         ast.awb_status_name AS "awbStatusName"
       FROM hub_summary_awb hsa
-      INNER JOIN awb_status ast ON hsa.awb_status_id_last = ast.awb_status_id AND ast.is_deleted = FALSE
+      LEFT JOIN awb_status ast ON hsa.awb_status_id_last = ast.awb_status_id AND ast.is_deleted = FALSE
       LEFT JOIN bag_item bdo ON hsa.bag_item_id_do = bdo.bag_Item_id AND bdo.is_deleted = FALSE
       LEFT JOIN bag b ON bdo.bag_id = b.bag_id AND b.is_deleted = FALSE
       LEFT JOIN bag_item bin ON hsa.bag_item_id_in = bin.bag_Item_id AND bin.is_deleted = FALSE
