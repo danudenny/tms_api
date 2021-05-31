@@ -252,7 +252,7 @@ export class MobileScanAwbReturnResponseVm {
 
 export class MobileReturnHistoryVm {
   @ApiModelProperty()
-  doPodReturnHistoryId: string;
+  doPodDeliverHistoryId: string;
 
   @ApiModelProperty({ format: 'date-time' })
   historyDateTime: string;
@@ -376,4 +376,31 @@ export class MobileInitDataReturnResponseVm {
 
   @ApiModelProperty({ format: 'date-time' })
   serverDateTime: string;
+}
+
+export class MobileSyncAwbReturnVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  process: boolean;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class MobileSyncDataReturnResponseVm {
+  @ApiModelProperty({ type: [MobileSyncAwbReturnVm] })
+  data: MobileSyncAwbReturnVm[];
+}
+
+export class MobileSyncReturnImageDataResponseVm {
+  @ApiModelProperty()
+  attachmentId: number;
+
+  @ApiModelProperty()
+  url: string;
+
+  @ApiModelProperty()
+  totalData: number;
 }

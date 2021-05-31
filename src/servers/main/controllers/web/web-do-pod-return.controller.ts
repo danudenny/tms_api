@@ -1,3 +1,4 @@
+import express = require('express');
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
@@ -8,6 +9,9 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Get,
+  Query,
+  Response,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -24,9 +28,13 @@ import {
   WebReturnListResponseVm,
 } from '../../models/first-mile/do-pod-return-response.vm';
 import {
+  PrintDoPodReturnPayloadQueryVm,
+  PrintDoPodReturnVm,
   WebDoPodCreateReturnPayloadVm,
   WebScanAwbReturnPayloadVm,
 } from '../../models/first-mile/do-pod-return-payload.vm';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
 @ApiUseTags('Web Do Pod Return')
 @Controller('web/pod/return/scanOut')
 export class WebDoPodReturnController {
@@ -79,11 +87,25 @@ export class WebDoPodReturnController {
     return FirstMileDoPodReturnService.detailReturn(payload);
   }
 
-  // @Post('do-pod-deliver/store')
-  // @ApiBearerAuth()
-  // public async storePrintDoPodDeliver(
-  //   @Body() payloadBody: PrintDoPodDeliverVm,
-  // ) {
-  //   return PrintByStoreService.storePrintDoPodDeliver(payloadBody);
-  // }
+  @Post('print/store')
+  @ApiBearerAuth()
+  public async storePrintDoPodReturn(
+    @Body() payloadBody: PrintDoPodReturnVm,
+  ) {
+    return FirstMileDoPodReturnService.storePrintDoPodReturn(payloadBody);
+  }
+
+  @Get('print/execute')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async executePrintDoPodReturn(
+    @Query() queryParams: PrintDoPodReturnPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
+    return FirstMileDoPodReturnService.executePrintDoPodReturn(
+      serverResponse,
+      queryParams,
+    );
+  }
 }

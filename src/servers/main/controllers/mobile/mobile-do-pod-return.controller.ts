@@ -8,6 +8,8 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -15,8 +17,10 @@ import {
   ApiBearerAuth,
 } from '../../../../shared/external/nestjs-swagger';
 import { MobileFirstMileDoPodReturnService } from '../../services/mobile/mobile-first-mile-do-pod-return.service';
-import { MobileCreateDoPodResponseVm, MobileInitDataReturnResponseVm, MobileScanAwbReturnResponseVm } from '../../models/first-mile/do-pod-return-response.vm';
-import { MobileInitDataPayloadVm, MobileScanAwbReturnPayloadVm } from '../../models/first-mile/do-pod-return-payload.vm';
+import { MobileCreateDoPodResponseVm, MobileInitDataReturnResponseVm, MobileScanAwbReturnResponseVm, MobileSyncDataReturnResponseVm, MobileSyncReturnImageDataResponseVm } from '../../models/first-mile/do-pod-return-response.vm';
+import { MobileInitDataPayloadVm, MobileScanAwbReturnPayloadVm, MobileSyncReturnImageDataPayloadVm, MobileSyncReturnPayloadVm } from '../../models/first-mile/do-pod-return-payload.vm';
+import { ResponseSerializerOptions } from '../../../..//shared/decorators/response-serializer-options.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiUseTags('Mobile Do Pod Return')
 @Controller('mobile/pod/return/scanOut')
@@ -54,4 +58,28 @@ export class MobileDoPodReturnController {
     );
   }
 
+  @Post('sync')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  @ApiOkResponse({ type: MobileSyncDataReturnResponseVm })
+  public async sync(@Body() payload: MobileSyncReturnPayloadVm) {
+    return MobileFirstMileDoPodReturnService.syncByRequest(payload);
+  }
+
+  @Post('sync/imageData')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobileSyncReturnImageDataResponseVm })
+  @Transactional()
+  public async syncImageForm(
+    @Body() payload: MobileSyncReturnImageDataPayloadVm,
+    @UploadedFile() file,
+  ) {
+    return MobileFirstMileDoPodReturnService.syncImageData(payload, file);
+  }
+  
 }

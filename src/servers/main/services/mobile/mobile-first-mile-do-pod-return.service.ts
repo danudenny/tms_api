@@ -1,21 +1,37 @@
 import moment = require('moment');
-import { BadRequestException } from '@nestjs/common';
-import { createQueryBuilder, getManager } from 'typeorm';
+import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
+import { createQueryBuilder, getManager, LessThan, MoreThan } from 'typeorm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { DoPodReturnService } from '../master/do-pod-return.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { DoPodReturnDetailService } from '../master/do-pod-return-detail.service';
 import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
-import { MobileScanAwbReturnPayloadVm } from '../../models/first-mile/do-pod-return-payload.vm';
+import { MobileScanAwbReturnPayloadVm, MobileSyncReturnImageDataPayloadVm, MobileSyncReturnPayloadVm } from '../../models/first-mile/do-pod-return-payload.vm';
 import {
   MobileCreateDoPodResponseVm,
   MobileInitDataReturnResponseVm,
+  MobileReturnVm,
   MobileScanAwbReturnResponseVm,
   MobileScanAwbReturnVm,
+  MobileSyncAwbReturnVm,
+  MobileSyncDataReturnResponseVm,
+  MobileSyncReturnImageDataResponseVm,
 } from '../../models/first-mile/do-pod-return-response.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoPodReturnDetail } from '../../../../shared/orm-entity/do-pod-return-detail';
+import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-deliver-history';
+import { last } from 'lodash';
+import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
+import { CodPayment } from '../../../../shared/orm-entity/cod-payment';
+import { AwbReturnService } from '../master/awb-return.service';
+import { DoPodReturn } from '../../../../shared/orm-entity/do-pod-return';
+import { AwbNotificationMailQueueService } from '../../../../servers/queue/services/notification/awb-notification-mail-queue.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
+import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
+import { DoPodReturnAttachment } from '../../../../shared/orm-entity/do-pod-return-attachment';
+import { UploadImagePodQueueService } from '../../../../servers/queue/services/upload-pod-image-queue.service';
 
 export class MobileFirstMileDoPodReturnService {
 
@@ -171,12 +187,116 @@ export class MobileFirstMileDoPodReturnService {
     fromDate?: string,
   ): Promise<MobileInitDataReturnResponseVm> {
     const result = new MobileInitDataReturnResponseVm();
-    result.delivery = await this.getDelivery(fromDate);
+    result.delivery = await this.getReturnDetail(fromDate);
     result.serverDateTime = moment().format();
     return result;
   }
 
-  private static async getDelivery(fromDate?: string) {
+  static async syncByRequest(
+    payload: MobileSyncReturnPayloadVm,
+  ): Promise<MobileSyncDataReturnResponseVm> {
+    const result = new MobileSyncDataReturnResponseVm();
+    const dataItem: MobileSyncAwbReturnVm[] = [];
+    for (const delivery of payload.deliveries) {
+      // Locking redis
+      const holdRedis = await RedisService.redlock(
+        `hold:mobileSync:${delivery.awbNumber}`,
+        10,
+      );
+      const response = {
+        process: false,
+        message: 'Data Not Valid',
+      };
+
+      if (holdRedis) {
+        const process = await this.syncReturn(delivery);
+        if (process) {
+          response.process = process;
+          response.message = 'Success';
+        }
+        // remove key holdRedis
+        RedisService.del(`hold:mobileSync:${delivery.awbNumber}`);
+      }
+
+      // push item
+      dataItem.push({
+        awbNumber: delivery.awbNumber,
+        ...response,
+      });
+
+    } // endof loop
+
+    result.data = dataItem;
+    return result;
+  }
+
+  static async syncImageData(
+    payload: MobileSyncReturnImageDataPayloadVm,
+    file,
+  ): Promise<MobileSyncReturnImageDataResponseVm> {
+    const result = new MobileSyncReturnImageDataResponseVm();
+
+    let url = null;
+    let attachmentId = null;
+
+    let attachment = await AttachmentTms.findOne({
+      where: {
+        fileName: file.originalname,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    if (attachment) {
+      // attachment exist
+      attachmentId = attachment.attachmentTmsId;
+      url = attachment.url;
+    } else {
+      // upload image
+      const pathId = `tms-delivery-${payload.imageType}`;
+      attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        pathId,
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      }
+    }
+
+    // NOTE: insert data array
+    let total = 0;
+    if (attachmentId && payload.data) {
+      const data = payload.data.split(';');
+      for (const item of data) {
+        if (item) {
+          const doPodReturnAttachment = await DoPodReturnAttachment.create();
+          doPodReturnAttachment.doPodReturnDetailId = item;
+          doPodReturnAttachment.attachmentTmsId = attachmentId;
+          doPodReturnAttachment.type = payload.imageType;
+          await DoPodReturnAttachment.save(doPodReturnAttachment);
+
+          // send to background reupload s3 with awb number
+          UploadImagePodQueueService.perform(
+            item,
+            url,
+            payload.imageType,
+          );
+          total += 1;
+        }
+      }
+    } else {
+      PinoLoggerService.log('#### Payload Data Not Valid : ', payload.data);
+    }
+
+    result.url = url;
+    result.attachmentId = attachmentId;
+    result.totalData = total;
+    return result;
+  }
+
+  private static async getReturnDetail(fromDate?: string) {
     const qb = createQueryBuilder();
     const authMeta = AuthService.getAuthMetadata();
 
@@ -189,7 +309,7 @@ export class MobileFirstMileDoPodReturnService {
       ['t1.awb_status_date_time_last', 'awbStatusDateTimeLast'],
       ['t1.consignee_name', 'consigneeNameNote'],
       ['t2.do_pod_return_id', 'doPodReturnId'],
-      ['t2.do_pod_return_date_time', 'doPodRetrunDateTime'],
+      ['t2.do_pod_return_date_time', 'doPodReturnDateTime'],
       ['t3.awb_id', 'awbId'],
       ['t3.awb_date', 'awbDate'],
       ['t3.awb_number', 'awbNumber'],
@@ -241,8 +361,8 @@ export class MobileFirstMileDoPodReturnService {
 
     q.andWhere(e => e.doPodReturn.userIdDriver, w => w.equals(authMeta.userId));
 
-    const dateFrom = moment().subtract(1, 'd');
-    const dateTo = moment();
+    const dateFrom = moment().subtract(1, 'd').format('YYYY-MM-DD 00:00:00');
+    const dateTo = moment().format('YYYY-MM-DD 23:59:59');
     q.andWhere(
       e => e.doPodReturn.doPodReturnDateTime,
       w => w.greaterThanOrEqual(moment(dateFrom).toDate()),
@@ -254,14 +374,16 @@ export class MobileFirstMileDoPodReturnService {
     );
 
     if (fromDate) {
-      q.andWhere(
-        e => e.updatedTime,
-        w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-      );
-      q.orWhere(
-        e => e.createdTime,
-        w => w.lessThanOrEqual(moment(fromDate).toDate()),
-      );
+      q.andWhereIsolated(qw => {
+        qw.andWhere(
+          e => e.updatedTime,
+          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+        );
+        qw.orWhere(
+          e => e.createdTime,
+          w => w.lessThanOrEqual(moment(fromDate).toDate()),
+        );
+      });
     }
     return await q.exec();
   }
@@ -294,4 +416,229 @@ export class MobileFirstMileDoPodReturnService {
     };
     return result;
   }
+
+  private static async syncReturn(delivery: MobileReturnVm) {
+    const doPodDeliverHistories: DoPodDeliverHistory[] = [];
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    let process = false;
+    for (const deliveryHistory of delivery.deliveryHistory) {
+      if (!deliveryHistory.doPodDeliverHistoryId) {
+        const doPodDeliverHistory = DoPodDeliverHistory.create({
+          doPodDeliverDetailId: delivery.doPodReturnDetailId,
+          awbStatusId: deliveryHistory.awbStatusId,
+          reasonId: deliveryHistory.reasonId,
+          syncDateTime: moment().toDate(),
+          latitudeDelivery: deliveryHistory.latitudeDelivery,
+          longitudeDelivery: deliveryHistory.longitudeDelivery,
+          desc: deliveryHistory.reasonNotes,
+          awbStatusDateTime: moment(deliveryHistory.historyDateTime).toDate(),
+          historyDateTime: moment(deliveryHistory.historyDateTime).toDate(),
+          employeeIdDriver: deliveryHistory.employeeId,
+        });
+        doPodDeliverHistories.push(doPodDeliverHistory);
+      }
+    }
+
+    if (doPodDeliverHistories.length) {
+      const lastDoPodDeliverHistory = last(doPodDeliverHistories);
+      // NOTE: check data timestamp and time server
+      // handle time status offline
+      const historyDateTime =
+        lastDoPodDeliverHistory.awbStatusDateTime <
+          lastDoPodDeliverHistory.syncDateTime
+          ? lastDoPodDeliverHistory.awbStatusDateTime
+          : lastDoPodDeliverHistory.syncDateTime;
+
+      try {
+        const awbdReturn = await DoPodReturnDetailService.getDoPodReturnDetail(delivery.doPodReturnDetailId);
+        const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
+        if (awbdReturn && !finalStatus.includes(awbdReturn.awbStatusIdLast)) {
+          const awbStatus = await AwbStatus.findOne(
+              { awbStatusId: lastDoPodDeliverHistory.awbStatusId },
+              { cache: true },
+            );
+
+            // #region transaction data
+          await getManager().transaction(async transactionEntityManager => {
+              await transactionEntityManager.insert(
+                DoPodDeliverHistory,
+                doPodDeliverHistories,
+              );
+
+              // Update data DoPodDeliverDetail
+              await transactionEntityManager.update(
+                DoPodReturnDetail,
+                delivery.doPodReturnDetailId,
+                {
+                  awbStatusIdLast: lastDoPodDeliverHistory.awbStatusId,
+                  latitudeDeliveryLast: lastDoPodDeliverHistory.latitudeDelivery,
+                  longitudeDeliveryLast: lastDoPodDeliverHistory.longitudeDelivery,
+                  awbStatusDateTimeLast: lastDoPodDeliverHistory.awbStatusDateTime,
+                  reasonIdLast: lastDoPodDeliverHistory.reasonId,
+                  syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
+                  descLast: lastDoPodDeliverHistory.desc,
+                  consigneeName: delivery.consigneeNameNote,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
+                },
+              );
+
+              // only awb COD and DLV
+              if (delivery.isCOD && lastDoPodDeliverHistory.awbStatusId == AWB_STATUS.DLV) {
+                // find and update
+                const codPayment = await transactionEntityManager.findOne(
+                  CodPayment,
+                  {
+                    where: {
+                      awbItemId: delivery.awbItemId,
+                      isDeleted: false,
+                    },
+                  },
+                );
+                if (codPayment) {
+                  // update data
+                  await transactionEntityManager.update(
+                    CodPayment,
+                    {
+                      codPaymentId: codPayment.codPaymentId,
+                    },
+                    {
+                      codValue: delivery.totalCodValue,
+                      codPaymentMethod: delivery.codPaymentMethod,
+                      codPaymentService: delivery.codPaymentService,
+                      note: delivery.note,
+                      noReference: delivery.noReference,
+                      userIdUpdated: authMeta.userId,
+                      userIdDriver: authMeta.userId,
+                      branchId: awbdReturn.branchId,
+                      updatedTime: moment().toDate(),
+                    },
+                  );
+                } else {
+                  await transactionEntityManager.insert(
+                    CodPayment,
+                    {
+                    awbNumber: delivery.awbNumber,
+                    codValue: delivery.totalCodValue,
+                    codPaymentMethod: delivery.codPaymentMethod,
+                    codPaymentService: delivery.codPaymentService,
+                    note: delivery.note,
+                    noReference: delivery.noReference,
+                    doPodDeliverDetailId: delivery.doPodReturnDetailId,
+                    awbItemId: delivery.awbItemId,
+                    branchId: awbdReturn.branchId,
+                    userIdDriver: authMeta.userId,
+                    userIdCreated: authMeta.userId,
+                    userIdUpdated: authMeta.userId,
+                    createdTime: moment().toDate(),
+                    updatedTime: moment().toDate(),
+                  });
+                }
+                // TODO: update transaction_status_id = TRANSACTION_STATUS.SIGESIT
+
+              }
+
+              // MOL NOTE
+              // NOTE: handle only awb status return
+              if (awbStatus.isReturn) {
+                await AwbReturnService.createAwbReturn(
+                  delivery.awbNumber,
+                  delivery.awbId,
+                  permissonPayload.branchId,
+                  authMeta.userId,
+                  true,
+                );
+              }
+
+              const doPodReturn = await DoPodReturn.findOne({
+                where: {
+                  doPodReturnId: delivery.doPodReturnId,
+                  isDeleted: false,
+                },
+              });
+              if (doPodReturn) {
+
+                if (awbStatus.isProblem) {
+                  await transactionEntityManager.increment(
+                    DoPodReturn,
+                    {
+                      doPodReturnId: delivery.doPodReturnId,
+                      totalReturn: LessThan(doPodReturn.totalAwb),
+                    },
+                    'totalReturn',
+                    1,
+                  );
+                }
+                // else if (awbStatus.isFinalStatus) {
+                //   await transactionEntityManager.increment(
+                //     DoPodReturn,
+                //     {
+                //       doPodReturnId: delivery.doPodReturnId,
+                //       totalDelivery: LessThan(doPodReturn.totalAwb),
+                //     },
+                //     'totalDelivery',
+                //     1,
+                //   );
+                //   // balance total problem
+                //   await transactionEntityManager.decrement(
+                //     DoPodReturn,
+                //     {
+                //       doPodReturnId: delivery.doPodReturnId,
+                //       totalProblem: MoreThan(0),
+                //     },
+                //     'totalProblem',
+                //     1,
+                //   );
+                // }
+              }
+            });
+            // #endregion of transaction
+
+            // NOTE: queue by Bull
+          DoPodDetailPostMetaQueueService.createJobV1MobileSync(
+              awbdReturn.awbItemId,
+              lastDoPodDeliverHistory.awbStatusId,
+              authMeta.userId,
+              awbdReturn.branchId,
+              authMeta.userId,
+              delivery.employeeId,
+              lastDoPodDeliverHistory.reasonId,
+              lastDoPodDeliverHistory.desc,
+              delivery.consigneeNameNote,
+              awbStatus.awbStatusName,
+              awbStatus.awbStatusTitle,
+              historyDateTime,
+              lastDoPodDeliverHistory.latitudeDelivery,
+              lastDoPodDeliverHistory.longitudeDelivery,
+            );
+
+            // NOTE: push data only DLV to Sunfish
+          if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
+              // TODO: add flag
+              // AwbSunfishV2QueueService.perform(
+              //   delivery.awbNumber,
+              //   delivery.employeeId,
+              //   historyDateTime,
+              // );
+            } else {
+              // NOTE: mail notification status problem
+              AwbNotificationMailQueueService.perform(
+                awbdReturn.awbItemId,
+                awbStatus.awbStatusId,
+              );
+            }
+          process = true;
+          } else {
+            PinoLoggerService.log('##### Data Not Valid', delivery);
+          }
+      } catch (error) {
+        console.error(error);
+        throw new ServiceUnavailableException(error);
+      }
+    } // end of doPodDeliverHistories.length
+    return process;
+  }
+
 }

@@ -1,4 +1,5 @@
 import moment = require('moment');
+import express = require('express');
 import { EntityManager, getManager } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
@@ -18,6 +19,8 @@ import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant'
 import { PrintDoPodDeliverDataDoPodDeliverDetailVm } from '../../../models/print-do-pod-deliver.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
+  PrintDoPodReturnPayloadQueryVm,
+  PrintDoPodReturnVm,
   WebDoPodCreateReturnPayloadVm,
   WebScanAwbReturnPayloadVm,
 } from '../../../models/first-mile/do-pod-return-payload.vm';
@@ -28,7 +31,12 @@ import {
   WebScanOutReturnListResponseVm,
   WebScanOutReturnGroupListResponseVm,
   WebReturnListResponseVm,
+  PrintDoPodReturnDataVm,
 } from '../../../models/first-mile/do-pod-return-response.vm';
+import { RequestErrorService } from '../../../../../shared/services/request-error.service';
+import { PrintByStoreService } from '../../print-by-store.service';
+import { RepositoryService } from '../../../../../shared/services/repository.service';
+import { PrinterService } from '../../../../../shared/services/printer.service';
 
 export class FirstMileDoPodReturnService {
 
@@ -409,6 +417,41 @@ export class FirstMileDoPodReturnService {
     return result;
   }
 
+  static async storePrintDoPodReturn(payloadBody: PrintDoPodReturnVm) {
+    return PrintByStoreService.storeGenericPrintData(
+      'do-pod-return',
+      payloadBody.data.doPodDeliverId,
+      payloadBody,
+    );
+  }
+
+  static async executePrintDoPodReturn(
+    res: express.Response,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const printPayload = await PrintByStoreService.retrieveGenericPrintData<
+      PrintDoPodReturnVm
+    >('do-pod-deliver', queryParams.id);
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    return this.printDoPodReturnAndQueryMeta(
+      res,
+      printPayload.data,
+      {
+        userId: queryParams.userId,
+        branchId: queryParams.branchId,
+      },
+      {
+        printCopy: queryParams.printCopy,
+      },
+    );
+  }
+
   private static handlePrintMetadata(awb: AwbItemAttr) {
     const meta = new PrintDoPodDeliverDataDoPodDeliverDetailVm();
     // Assign print metadata - Scan Out & Return
@@ -485,4 +528,120 @@ export class FirstMileDoPodReturnService {
     return result;
   }
 
+  private static async printDoPodReturnAndQueryMeta(
+    res: express.Response,
+    data: Partial<PrintDoPodReturnDataVm>,
+    metaQuery: {
+      userId: number;
+      branchId: number;
+    },
+    templateConfig: {
+      printCopy?: number;
+    } = {
+      printCopy: 1,
+    },
+  ) {
+    // #region get user login and branch login
+    const currentUser = await RepositoryService.user
+      .loadById(metaQuery.userId)
+      .select({
+        userId: true, // needs to be selected due to users relations are being included
+        employee: {
+          nickname: true,
+        },
+      })
+      .exec();
+
+    if (!currentUser) {
+      RequestErrorService.throwObj({
+        message: 'User tidak ditemukan',
+      });
+    }
+
+    const currentBranch = await RepositoryService.branch
+      .loadById(metaQuery.branchId)
+      .select({
+        branchName: true,
+      });
+
+    if (!currentBranch) {
+      RequestErrorService.throwObj({
+        message: 'Gerai asal tidak ditemukan',
+      });
+    }
+    // #endregion
+
+    const currentDate = moment();
+    let totalAllCod = 0;
+
+    // sum totalCodValue from object
+    // loop data and sum data totalCodValue
+    if (data && data.doPodReturnDetails) {
+      data.doPodReturnDetails.map(function(doPod) {
+        if (
+          doPod &&
+          doPod.awbItem &&
+          doPod.awbItem.awb &&
+          doPod.awbItem.awb.totalCodValue
+        ) {
+          totalAllCod += Number(doPod.awbItem.awb.totalCodValue);
+        }
+      });
+    }
+
+    return this.printDoPodReturn(
+      res,
+      data,
+      {
+        currentUserName: currentUser.employee.nickname,
+        currentBranchName: currentBranch.branchName,
+        date: currentDate.format('DD/MM/YY'),
+        time: currentDate.format('HH:mm'),
+        totalItems: data.doPodReturnDetails.length,
+        totalCod: totalAllCod,
+      },
+      templateConfig,
+    );
+  }
+
+  private static async printDoPodReturn(
+    res: express.Response,
+    data: Partial<PrintDoPodReturnDataVm>,
+    meta: {
+      currentUserName: string;
+      currentBranchName: string;
+      date: string;
+      time: string;
+      totalItems: number;
+      totalCod: number;
+    },
+    templateConfig: {
+      printCopy?: number;
+    } = {
+      printCopy: 1,
+    },
+  ) {
+    const jsreportParams = {
+      data,
+      meta,
+    };
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'surat-jalan-antar-return',
+          templateData: jsreportParams,
+          printCopy: templateConfig.printCopy,
+        },
+        {
+          templateName: 'surat-jalan-antar-return-admin',
+          templateData: jsreportParams,
+          printCopy: templateConfig.printCopy,
+        },
+      ],
+      listPrinterName,
+    });
+  }
 }

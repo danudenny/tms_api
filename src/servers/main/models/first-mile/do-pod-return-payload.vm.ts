@@ -3,6 +3,7 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/e
 import { IsDefined } from 'class-validator';
 import { IsAwbNumber } from '../../../../shared/decorators/custom-validation.decorator';
 import { Type } from 'class-transformer';
+import { MobileReturnVm, PrintDoPodReturnDataVm } from './do-pod-return-response.vm';
 
 export class WebDoPodCreateReturnPayloadVm {
   @ApiModelPropertyOptional({
@@ -40,6 +41,24 @@ export class WebScanAwbReturnPayloadVm  {
   @Type(() => String)
   awbNumber: string[];
 }
+export class PrintDoPodReturnVm {
+  @ApiModelProperty({ type: () => PrintDoPodReturnDataVm })
+  data: PrintDoPodReturnDataVm = new PrintDoPodReturnDataVm();
+}
+
+export class PrintDoPodReturnPayloadQueryVm {
+  @ApiModelProperty()
+  id: number;
+
+  @ApiModelProperty()
+  userId: number;
+
+  @ApiModelProperty()
+  branchId: number;
+
+  @ApiModelProperty()
+  printCopy: number;
+}
 
 export class MobileScanAwbReturnPayloadVm {
   @ApiModelProperty()
@@ -62,4 +81,20 @@ export class MobileInitDataPayloadVm {
 
   // @ApiModelPropertyOptional()
   // doPodReturnId: string;
+}
+
+export class MobileSyncReturnPayloadVm {
+  @ApiModelProperty({ type: () => [MobileReturnVm] })
+  deliveries: MobileReturnVm[];
+
+  @ApiModelProperty({ format: 'date-time' })
+  lastSyncDateTime: string;
+}
+
+export class MobileSyncReturnImageDataPayloadVm {
+  @ApiModelProperty()
+  data: string;
+
+  @ApiModelProperty()
+  imageType: string;
 }
