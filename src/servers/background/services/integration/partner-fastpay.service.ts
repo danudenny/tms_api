@@ -10,6 +10,7 @@ import { WorkOrderHistory } from '../../../../shared/orm-entity/work-order-histo
 import { In } from 'typeorm';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 
 export class PartnerFastpayService {
 
@@ -34,16 +35,34 @@ export class PartnerFastpayService {
         );
       } else {
         let pickupProcessed = false;
-        const resultPickupProcessed = await AwbHistory.findOne({
-          select: ['refAwbNumber', 'awbStatusId'],
+        const awbAttr = await AwbItemAttr.findOne({
+          select: ['awbItemId', 'awbNumber'],
           where: {
-            refAwbNumber: payload.awb_number,
-            awbStatusId: In([1800, 1810, 7100, 1200]),
-            isDeleted: false,
+            awbNumber: payload.awb_number,
           },
         });
+
+        if (!awbAttr) {
+          throw new BadRequestException(
+            'Status Resi Tidak Valid - Tidak dapat melakukan Drop!',
+          );
+        }
+
+        const resultPickupProcessed = await AwbHistory.find({
+          select: ['refAwbNumber', 'awbStatusId'],
+          where: {
+            awbItemId: awbAttr.awbItemId,
+          },
+        });
+
+        const awbStatusPickup = [1800, 1810, 7100, 1200];
         if (resultPickupProcessed) {
-          pickupProcessed = true;
+          for (const item of resultPickupProcessed) {
+            if (awbStatusPickup.includes(item.awbStatusId)) {
+              pickupProcessed = true;
+              break;
+            }
+          }
         }
 
         pickupRequest.pickupProcessed = pickupProcessed;
