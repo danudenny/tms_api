@@ -38,11 +38,13 @@ export class PartnerFastpayService {
           select: ['refAwbNumber', 'awbStatusId'],
           where: {
             refAwbNumber: payload.awb_number,
-            awbStatusId: In([1800, 1810, 7100, 1200]),
-            isDeleted: false,
           },
         });
-        if (resultPickupProcessed) {
+        const awbStatusDrop = [1800, 1810, 7100, 1200];
+        if (
+          resultPickupProcessed &&
+          awbStatusDrop.includes(resultPickupProcessed.awbStatusId)
+        ) {
           pickupProcessed = true;
         }
 
