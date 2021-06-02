@@ -18,7 +18,7 @@ import {
 } from '../../../../shared/external/nestjs-swagger';
 import { MobileFirstMileDoPodReturnService } from '../../services/mobile/mobile-first-mile-do-pod-return.service';
 import { MobileCreateDoPodResponseVm, MobileInitDataReturnResponseVm, MobileInitReturnDataResponseVm, MobileScanAwbReturnResponseVm, MobileSyncDataReturnResponseVm, MobileSyncReturnImageDataResponseVm } from '../../models/first-mile/do-pod-return-response.vm';
-import { MobileInitDataPayloadVm, MobileScanAwbReturnPayloadVm, MobileSyncReturnImageDataPayloadVm, MobileSyncReturnPayloadVm } from '../../models/first-mile/do-pod-return-payload.vm';
+import { MobileHistoryDataReturnDetailPayloadVm, MobileHistoryDataReturnPayloadVm, MobileInitDataPayloadVm, MobileScanAwbReturnPayloadVm, MobileSyncReturnImageDataPayloadVm, MobileSyncReturnPayloadVm } from '../../models/first-mile/do-pod-return-payload.vm';
 import { ResponseSerializerOptions } from '../../../..//shared/decorators/response-serializer-options.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 
@@ -82,14 +82,26 @@ export class MobileDoPodReturnController {
     return MobileFirstMileDoPodReturnService.syncImageData(payload, file);
   }
 
-  @Post('getHistory')
+  @Post('historyReturn')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: MobileInitDataReturnResponseVm })
+  public async historyReturn(@Body() payload: MobileHistoryDataReturnPayloadVm) {
+    return MobileFirstMileDoPodReturnService.historyReturn(
+      payload.dateFrom,
+      payload.dateTo,
+    );
+  }
+
+  @Post('getHistoryReturnDetail')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ResponseSerializerOptions({ disable: true })
   @ApiOkResponse({ type: MobileInitReturnDataResponseVm })
-  public async getHistory(@Body() payload: MobileInitDataPayloadVm) {
-    return MobileFirstMileDoPodReturnService.getHistoryByRequest(
+  public async getHistoryReturnDetail(@Body() payload: MobileHistoryDataReturnDetailPayloadVm) {
+    return MobileFirstMileDoPodReturnService.getHistoryReturnDetail(
       payload.doPodReturnDetailId,
     );
   }

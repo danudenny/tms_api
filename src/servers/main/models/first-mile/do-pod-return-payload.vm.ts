@@ -75,12 +75,6 @@ export class MobileScanAwbReturnPayloadVm {
 export class MobileInitDataPayloadVm {
   @ApiModelPropertyOptional({ format: 'date-time' })
   lastSyncDateTime: string;
-
-  @ApiModelPropertyOptional()
-  doPodReturnDetailId: string;
-
-  @ApiModelPropertyOptional()
-  doPodReturnId: string;
 }
 
 export class MobileSyncReturnPayloadVm {
@@ -97,4 +91,28 @@ export class MobileSyncReturnImageDataPayloadVm {
 
   @ApiModelProperty()
   imageType: string;
+}
+
+export class MobileHistoryDataReturnPayloadVm {
+  @ApiModelProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2021-05-06T17:00:00.000Z',
+  })
+  dateFrom: string;
+
+  @ApiModelPropertyOptional({
+    type: 'string',
+    format: 'date-time',
+    example: '2021-05-06T17:00:00.000Z',
+  })
+  dateTo: string;
+}
+export class MobileHistoryDataReturnDetailPayloadVm {
+
+  @ApiModelPropertyOptional()
+  doPodReturnDetailId: string;
+
+  @ApiModelPropertyOptional()
+  doPodReturnId: string;
 }

@@ -184,10 +184,20 @@ export class MobileFirstMileDoPodReturnService {
   }
 
   static async getInitDataReturn(
-    fromDate?: string,
+    dateFrom?: string,
   ): Promise<MobileInitDataReturnResponseVm> {
     const result = new MobileInitDataReturnResponseVm();
-    result.returnsData = await this.getReturnDetail(fromDate);
+    result.returnsData = await this.getReturnDetail(dateFrom, null, true);
+    result.serverDateTime = moment().format();
+    return result;
+  }
+
+  static async historyReturn(
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<MobileInitDataReturnResponseVm> {
+    const result = new MobileInitDataReturnResponseVm();
+    result.returnsData = await this.getReturnDetail(dateFrom, dateTo, false);
     result.serverDateTime = moment().format();
     return result;
   }
@@ -296,7 +306,7 @@ export class MobileFirstMileDoPodReturnService {
     return result;
   }
 
-  static async getHistoryByRequest(doPodDeliverDetailId: string) {
+  static async getHistoryReturnDetail(doPodReturnrDetailId: string) {
     const repo = new OrionRepositoryService(DoPodReturnHistory, 't1');
     const q = repo.findAllRaw();
 
@@ -315,25 +325,28 @@ export class MobileFirstMileDoPodReturnService {
       ['t3.awb_status_title', 'awbStatusName'],
     );
 
-    q.innerJoin(e => e.reason, 't2', j =>
+    q.leftJoin(e => e.reason, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatus, 't3', j =>
+    q.leftJoin(e => e.awbStatus, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.employee, 't4', j =>
+    q.leftJoin(e => e.employee, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.andWhere(e => e.doPodReturnDetailId, w => w.equals(doPodDeliverDetailId));
+    q.andWhere(e => e.doPodReturnDetailId, w => w.equals(doPodReturnrDetailId));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     return await q.exec();
   }
 
-  private static async getReturnDetail(fromDate?: string) {
+  private static async getReturnDetail(
+    payloadDateFrom?: string,
+    payloadDateTo?: string,
+    isHistoryReturn?: boolean) {
     const authMeta = AuthService.getAuthMetadata();
 
     const repo = new OrionRepositoryService(DoPodReturnDetail, 't1');
@@ -397,30 +410,47 @@ export class MobileFirstMileDoPodReturnService {
 
     q.andWhere(e => e.doPodReturn.userIdDriver, w => w.equals(authMeta.userId));
 
-    const dateFrom = moment().subtract(1, 'd').format('YYYY-MM-DD 00:00:00');
-    const dateTo = moment().format('YYYY-MM-DD 23:59:59');
-    q.andWhere(
-      e => e.doPodReturn.doPodReturnDateTime,
-      w => w.greaterThanOrEqual(moment(dateFrom).toDate()),
-    );
-
-    q.andWhere(
-      e => e.doPodReturn.doPodReturnDateTime,
-      w => w.lessThanOrEqual(moment(dateTo).toDate()),
-    );
-
-    if (fromDate) {
-      q.andWhereIsolated(qw => {
-        qw.andWhere(
+    if (!isHistoryReturn) {
+      q.andWhere(e => e.awbItemAttr.awbStatus.awbStatusId, w => w.notEquals('14000'));
+      q.andWhere(
+        e => e.updatedTime,
+        w => w.greaterThan(moment(payloadDateFrom).toDate()),
+      );
+      if (payloadDateTo) {
+        q.andWhere(
           e => e.updatedTime,
-          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+          w => w.lessThanOrEqual(moment(payloadDateTo).toDate()),
         );
-        qw.orWhere(
-          e => e.createdTime,
-          w => w.lessThanOrEqual(moment(fromDate).toDate()),
-        );
-      });
+      }
+    } else {
+      q.andWhere(e => e.awbItemAttr.awbStatus.awbStatusId, w => w.equals('14000'));
+
+      const dateFrom = moment().subtract(1, 'd').format('YYYY-MM-DD 00:00:00');
+      const dateTo = moment().format('YYYY-MM-DD 23:59:59');
+      q.andWhere(
+        e => e.doPodReturn.doPodReturnDateTime,
+        w => w.greaterThanOrEqual(moment(dateFrom).toDate()),
+      );
+
+      q.andWhere(
+        e => e.doPodReturn.doPodReturnDateTime,
+        w => w.lessThanOrEqual(moment(dateTo).toDate()),
+      );
+
+      if (payloadDateFrom) {
+        q.andWhereIsolated(qw => {
+          qw.andWhere(
+            e => e.updatedTime,
+            w => w.greaterThanOrEqual(moment(payloadDateFrom).toDate()),
+          );
+          qw.orWhere(
+            e => e.createdTime,
+            w => w.lessThanOrEqual(moment(payloadDateFrom).toDate()),
+          );
+        });
+      }
     }
+
     return await q.exec();
   }
 
@@ -487,10 +517,10 @@ export class MobileFirstMileDoPodReturnService {
           ? lastDoPodReturnHistory.awbStatusDateTime
           : lastDoPodReturnHistory.syncDateTime;
 
-      try {
-        const awbdReturn = await DoPodReturnDetailService.getDoPodReturnDetail(returnsData.doPodReturnDetailId);
-        const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
-        if (awbdReturn && !finalStatus.includes(awbdReturn.awbStatusIdLast)) {
+      // try {
+      const awbdReturn = await DoPodReturnDetailService.getDoPodReturnDetail(returnsData.doPodReturnDetailId);
+      const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
+      if (awbdReturn && !finalStatus.includes(awbdReturn.awbStatusIdLast)) {
           const awbStatus = await AwbStatus.findOne(
               { awbStatusId: lastDoPodReturnHistory.awbStatusId },
               { cache: true },
@@ -632,7 +662,7 @@ export class MobileFirstMileDoPodReturnService {
             });
             // #endregion of transaction
 
-            // NOTE: queue by Bull
+          // NOTE: queue by Bull
           DoPodDetailPostMetaQueueService.createJobV1MobileSync(
               awbdReturn.awbItemId,
               lastDoPodReturnHistory.awbStatusId,
@@ -669,11 +699,11 @@ export class MobileFirstMileDoPodReturnService {
           } else {
             PinoLoggerService.log('##### Data Not Valid', returnsData);
           }
-      } catch (error) {
-        console.error(error);
-        throw new ServiceUnavailableException(error);
-      }
-    } // end of doPodDeliverHistories.length
+      // } catch (error) {
+      //   console.error(error);
+      //   throw new ServiceUnavailableException(error);
+      // }
+    } // end of doPodDeliverHistorlength
     return process;
   }
 
