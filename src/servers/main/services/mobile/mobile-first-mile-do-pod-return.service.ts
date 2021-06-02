@@ -517,10 +517,10 @@ export class MobileFirstMileDoPodReturnService {
           ? lastDoPodReturnHistory.awbStatusDateTime
           : lastDoPodReturnHistory.syncDateTime;
 
-      // try {
-      const awbdReturn = await DoPodReturnDetailService.getDoPodReturnDetail(returnsData.doPodReturnDetailId);
-      const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
-      if (awbdReturn && !finalStatus.includes(awbdReturn.awbStatusIdLast)) {
+      try {
+        const awbdReturn = await DoPodReturnDetailService.getDoPodReturnDetail(returnsData.doPodReturnDetailId);
+        const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
+        if (awbdReturn && !finalStatus.includes(awbdReturn.awbStatusIdLast)) {
           const awbStatus = await AwbStatus.findOne(
               { awbStatusId: lastDoPodReturnHistory.awbStatusId },
               { cache: true },
@@ -699,10 +699,10 @@ export class MobileFirstMileDoPodReturnService {
           } else {
             PinoLoggerService.log('##### Data Not Valid', returnsData);
           }
-      // } catch (error) {
-      //   console.error(error);
-      //   throw new ServiceUnavailableException(error);
-      // }
+      } catch (error) {
+        console.error(error);
+        throw new ServiceUnavailableException(error);
+      }
     } // end of doPodDeliverHistorlength
     return process;
   }
