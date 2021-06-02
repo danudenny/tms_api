@@ -481,6 +481,15 @@ export class MonitoringProblemListService {
       isManual : 'bi.is_manual',
       outHub : 'hsa.out_hub',
     };
+    const mappingSortBy = {
+      scanDate:  'hsa.scan_date_do_hub',
+      scanDateInHub: 'hsa.scan_date_do_hub',
+      createdTime : 'hsa.scan_date_do_hub',
+      branchIdFrom : 'hsa.branch_id',
+      branchNameFrom : 'br.branch_name',
+      awbNumber : 'br.branch_id',
+      cityId : 'c.city_id',
+    };
     payload = this.formatPayloadFiltersAwbProblem(payload);
 
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
@@ -508,7 +517,17 @@ export class MonitoringProblemListService {
         hsa.is_deleted = FALSE ${whereQuery ? 'AND ' + whereQuery : ''} ${problemFilter ? 'AND ' + problemFilter : ''}
     `;
 
-    const data = await RawQueryService.query(query);
+    const queryFix = query +
+      `${
+        payload.sortBy && mappingSortBy[payload.sortBy] ?
+        `ORDER BY ${mappingSortBy[payload.sortBy]} ${payload.sortDir}` :
+        `ORDER BY hsa.scan_date_do_hub DESC`
+      }
+      LIMIT ${payload.limit}
+      ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''}
+    `;
+
+    const data = await RawQueryService.query(queryFix);
     const total = await RawQueryService.query('SELECT COUNT(*) AS total FROM(' + query + ') n');
 
     const result = new MonitoringHubProblemVm();
@@ -541,6 +560,15 @@ export class MonitoringProblemListService {
 
     const mappingFilter = {
       branchIdFrom : 'br.branch_id',
+      cityId : 'c.city_id',
+    };
+
+    const mappingSortBy = {
+      scanDate:  'hsa.scan_date_do_hub',
+      scanDateInHub: 'hsa.scan_date_do_hub',
+      createdTime : 'hsa.scan_date_do_hub',
+      branchIdFrom : 'hsa.branch_id',
+      branchNameFrom : 'br.branch_name',
       cityId : 'c.city_id',
     };
 
@@ -596,7 +624,17 @@ export class MonitoringProblemListService {
       ${whereQuery ? 'WHERE ' + whereQuery : ''}
     `;
 
-    const data = await RawQueryService.query(query);
+    const queryFix = query +
+      `${
+        payload.sortBy && mappingSortBy[payload.sortBy] ?
+        `ORDER BY ${mappingSortBy[payload.sortBy]} ${payload.sortDir}` :
+        `ORDER BY da.scan_date_do_hub DESC`
+      }
+      LIMIT ${payload.limit}
+      ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''}
+    `;
+
+    const data = await RawQueryService.query(queryFix);
     const total = await RawQueryService.query('SELECT COUNT(*) AS total FROM(' + query + ') n');
 
     const result = new MonitoringHubTotalProblemVm();
