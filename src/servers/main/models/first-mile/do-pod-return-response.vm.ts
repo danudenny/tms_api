@@ -3,11 +3,14 @@ import {
   ApiModelPropertyOptional,
 } from '../../../../shared/external/nestjs-swagger';
 import { BaseMetaResponseVm } from '../../../../shared/models/base-meta-response.vm';
+import { AwbStatusVm } from '../awb-status.vm';
+import { MobileCheckInResponseVm } from '../mobile-check-in-response.vm';
 import { PrintDoPodDeliverDataDoPodDeliverDetailVm, PrintDoPodDeliverDataUserDriverVm } from '../print-do-pod-deliver.vm';
+import { ReasonVm } from '../reason.vm';
 
 export class PrintDoPodReturnDataVm {
   @ApiModelProperty()
-  doPodDeliverId: number;
+  doPodReturnId: number;
 
   @ApiModelProperty()
   doPodReturnCode: string;
@@ -252,7 +255,7 @@ export class MobileScanAwbReturnResponseVm {
 
 export class MobileReturnHistoryVm {
   @ApiModelProperty()
-  doPodDeliverHistoryId: string;
+  doPodReturnHistoryId: string;
 
   @ApiModelProperty({ format: 'date-time' })
   historyDateTime: string;
@@ -276,11 +279,12 @@ export class MobileReturnHistoryVm {
   awbStatusId: number;
 
   @ApiModelProperty()
-  latitudeDelivery: string;
+  latitudeReturn: string;
 
   @ApiModelProperty()
-  longitudeDelivery: string;
+  longitudeReturn: string;
 }
+
 export class MobileReturnVm {
   @ApiModelProperty()
   doPodReturnDetailId: string;
@@ -367,12 +371,12 @@ export class MobileReturnVm {
   isHighValue: boolean;
 
   @ApiModelProperty({ type: [MobileReturnHistoryVm] })
-  deliveryHistory: MobileReturnHistoryVm[];
+  returnHistory: MobileReturnHistoryVm[];
 }
 
 export class MobileInitDataReturnResponseVm {
   @ApiModelProperty({ type: [MobileReturnVm] })
-  delivery: MobileReturnVm[];
+  returnsData: MobileReturnVm[];
 
   @ApiModelProperty({ format: 'date-time' })
   serverDateTime: string;
@@ -403,4 +407,21 @@ export class MobileSyncReturnImageDataResponseVm {
 
   @ApiModelProperty()
   totalData: number;
+}
+
+export class MobileInitReturnDataResponseVm {
+  @ApiModelProperty({ type: () => [ReasonVm] })
+  reason: ReasonVm[];
+
+  @ApiModelProperty({ type: () => [AwbStatusVm]})
+  awbStatus: AwbStatusVm[];
+
+  @ApiModelProperty({ type: [MobileReturnVm] })
+  returnsData: MobileReturnVm[];
+
+  @ApiModelProperty({ format: 'date-time' })
+  serverDateTime: string;
+
+  @ApiModelProperty()
+  checkIn: MobileCheckInResponseVm;
 }

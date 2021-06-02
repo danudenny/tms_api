@@ -76,16 +76,16 @@ export class MobileInitDataPayloadVm {
   @ApiModelPropertyOptional({ format: 'date-time' })
   lastSyncDateTime: string;
 
-  // @ApiModelPropertyOptional()
-  // doPodReturnDetailId: string;
+  @ApiModelPropertyOptional()
+  doPodReturnDetailId: string;
 
-  // @ApiModelPropertyOptional()
-  // doPodReturnId: string;
+  @ApiModelPropertyOptional()
+  doPodReturnId: string;
 }
 
 export class MobileSyncReturnPayloadVm {
   @ApiModelProperty({ type: () => [MobileReturnVm] })
-  deliveries: MobileReturnVm[];
+  returnsData: MobileReturnVm[];
 
   @ApiModelProperty({ format: 'date-time' })
   lastSyncDateTime: string;

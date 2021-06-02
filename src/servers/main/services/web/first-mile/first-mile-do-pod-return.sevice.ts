@@ -420,7 +420,7 @@ export class FirstMileDoPodReturnService {
   static async storePrintDoPodReturn(payloadBody: PrintDoPodReturnVm) {
     return PrintByStoreService.storeGenericPrintData(
       'do-pod-return',
-      payloadBody.data.doPodDeliverId,
+      payloadBody.data.doPodReturnId,
       payloadBody,
     );
   }
