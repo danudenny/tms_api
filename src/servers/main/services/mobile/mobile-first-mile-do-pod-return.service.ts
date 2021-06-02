@@ -703,7 +703,7 @@ export class MobileFirstMileDoPodReturnService {
         console.error(error);
         throw new ServiceUnavailableException(error);
       }
-    } // end of doPodDeliverHistorlength
+    } // end of doPodDeliverHistor.length
     return process;
   }
 
