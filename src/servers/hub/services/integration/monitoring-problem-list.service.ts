@@ -564,10 +564,10 @@ export class MonitoringProblemListService {
     };
 
     const mappingSortBy = {
-      scanDate:  'hsa.scan_date_do_hub',
-      scanDateInHub: 'hsa.scan_date_do_hub',
-      createdTime : 'hsa.scan_date_do_hub',
-      branchIdFrom : 'hsa.branch_id',
+      scanDate:  'da.scan_date_do_hub',
+      scanDateInHub: 'da.scan_date_do_hub',
+      createdTime : 'da.scan_date_do_hub',
+      branchIdFrom : 'br.branch_id',
       branchNameFrom : 'br.branch_name',
       cityId : 'c.city_id',
     };
