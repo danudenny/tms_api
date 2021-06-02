@@ -20,7 +20,6 @@ import {
 } from '../../models/first-mile/do-pod-return-response.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoPodReturnDetail } from '../../../../shared/orm-entity/do-pod-return-detail';
-import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-deliver-history';
 import { last } from 'lodash';
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { CodPayment } from '../../../../shared/orm-entity/cod-payment';
@@ -32,6 +31,7 @@ import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { DoPodReturnAttachment } from '../../../../shared/orm-entity/do-pod-return-attachment';
 import { UploadImagePodQueueService } from '../../../../servers/queue/services/upload-pod-image-queue.service';
+import { DoPodReturnHistory } from '../../../../shared/orm-entity/do-pod-return-history';
 
 export class MobileFirstMileDoPodReturnService {
 
@@ -187,7 +187,7 @@ export class MobileFirstMileDoPodReturnService {
     fromDate?: string,
   ): Promise<MobileInitDataReturnResponseVm> {
     const result = new MobileInitDataReturnResponseVm();
-    result.delivery = await this.getReturnDetail(fromDate);
+    result.returnsData = await this.getReturnDetail(fromDate);
     result.serverDateTime = moment().format();
     return result;
   }
@@ -197,10 +197,10 @@ export class MobileFirstMileDoPodReturnService {
   ): Promise<MobileSyncDataReturnResponseVm> {
     const result = new MobileSyncDataReturnResponseVm();
     const dataItem: MobileSyncAwbReturnVm[] = [];
-    for (const delivery of payload.deliveries) {
+    for (const returnData of payload.returnsData) {
       // Locking redis
       const holdRedis = await RedisService.redlock(
-        `hold:mobileSync:${delivery.awbNumber}`,
+        `hold:mobileSync:${returnData.awbNumber}`,
         10,
       );
       const response = {
@@ -209,18 +209,18 @@ export class MobileFirstMileDoPodReturnService {
       };
 
       if (holdRedis) {
-        const process = await this.syncReturn(delivery);
+        const process = await this.syncReturn(returnData);
         if (process) {
           response.process = process;
           response.message = 'Success';
         }
         // remove key holdRedis
-        RedisService.del(`hold:mobileSync:${delivery.awbNumber}`);
+        RedisService.del(`hold:mobileSync:${returnData.awbNumber}`);
       }
 
       // push item
       dataItem.push({
-        awbNumber: delivery.awbNumber,
+        awbNumber: returnData.awbNumber,
         ...response,
       });
 
@@ -296,8 +296,44 @@ export class MobileFirstMileDoPodReturnService {
     return result;
   }
 
+  static async getHistoryByRequest(doPodDeliverDetailId: string) {
+    const repo = new OrionRepositoryService(DoPodReturnHistory, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      ['t1.do_pod_return_history_id', 'doPodReturnHistoryId'],
+      ['t1.history_date_time', 'historyDateTime'],
+      ['t1.desc', 'desc'],
+      ['t1.awb_status_id', 'awbStatusId'],
+      ['t1.latitude_return', 'latitudeReturn'],
+      ['t1.longitude_return', 'longitudeReturn'],
+      ['t2.reason_id', 'reasonId'],
+      ['t2.reason_code', 'reasonCode'],
+      ['t4.employee_id', 'employeeId'],
+      ['t4.fullname', 'employeeName'],
+      ['t3.awb_status_name', 'awbStatusCode'],
+      ['t3.awb_status_title', 'awbStatusName'],
+    );
+
+    q.innerJoin(e => e.reason, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbStatus, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.employee, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.doPodReturnDetailId, w => w.equals(doPodDeliverDetailId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    return await q.exec();
+  }
+
   private static async getReturnDetail(fromDate?: string) {
-    const qb = createQueryBuilder();
     const authMeta = AuthService.getAuthMetadata();
 
     const repo = new OrionRepositoryService(DoPodReturnDetail, 't1');
@@ -417,82 +453,82 @@ export class MobileFirstMileDoPodReturnService {
     return result;
   }
 
-  private static async syncReturn(delivery: MobileReturnVm) {
-    const doPodDeliverHistories: DoPodDeliverHistory[] = [];
+  private static async syncReturn(returnsData: MobileReturnVm) {
+    const doPodReturnHistories: DoPodReturnHistory[] = [];
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     let process = false;
-    for (const deliveryHistory of delivery.deliveryHistory) {
-      if (!deliveryHistory.doPodDeliverHistoryId) {
-        const doPodDeliverHistory = DoPodDeliverHistory.create({
-          doPodDeliverDetailId: delivery.doPodReturnDetailId,
-          awbStatusId: deliveryHistory.awbStatusId,
-          reasonId: deliveryHistory.reasonId,
+    for (const returnHistory of returnsData.returnHistory) {
+      if (!returnHistory.doPodReturnHistoryId) {
+        const doPodReturnHistory = DoPodReturnHistory.create({
+          doPodReturnDetailId: returnsData.doPodReturnDetailId,
+          awbStatusId: returnHistory.awbStatusId,
+          reasonId: returnHistory.reasonId,
           syncDateTime: moment().toDate(),
-          latitudeDelivery: deliveryHistory.latitudeDelivery,
-          longitudeDelivery: deliveryHistory.longitudeDelivery,
-          desc: deliveryHistory.reasonNotes,
-          awbStatusDateTime: moment(deliveryHistory.historyDateTime).toDate(),
-          historyDateTime: moment(deliveryHistory.historyDateTime).toDate(),
-          employeeIdDriver: deliveryHistory.employeeId,
+          latitudeReturn: returnHistory.latitudeReturn,
+          longitudeReturn: returnHistory.longitudeReturn,
+          desc: returnHistory.reasonNotes,
+          awbStatusDateTime: moment(returnHistory.historyDateTime).toDate(),
+          historyDateTime: moment(returnHistory.historyDateTime).toDate(),
+          employeeIdDriver: returnHistory.employeeId,
         });
-        doPodDeliverHistories.push(doPodDeliverHistory);
+        doPodReturnHistories.push(doPodReturnHistory);
       }
     }
 
-    if (doPodDeliverHistories.length) {
-      const lastDoPodDeliverHistory = last(doPodDeliverHistories);
+    if (doPodReturnHistories.length) {
+      const lastDoPodReturnHistory = last(doPodReturnHistories);
       // NOTE: check data timestamp and time server
       // handle time status offline
-      const historyDateTime =
-        lastDoPodDeliverHistory.awbStatusDateTime <
-          lastDoPodDeliverHistory.syncDateTime
-          ? lastDoPodDeliverHistory.awbStatusDateTime
-          : lastDoPodDeliverHistory.syncDateTime;
+      const returnDateTime =
+        lastDoPodReturnHistory.awbStatusDateTime <
+          lastDoPodReturnHistory.syncDateTime
+          ? lastDoPodReturnHistory.awbStatusDateTime
+          : lastDoPodReturnHistory.syncDateTime;
 
       try {
-        const awbdReturn = await DoPodReturnDetailService.getDoPodReturnDetail(delivery.doPodReturnDetailId);
+        const awbdReturn = await DoPodReturnDetailService.getDoPodReturnDetail(returnsData.doPodReturnDetailId);
         const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
         if (awbdReturn && !finalStatus.includes(awbdReturn.awbStatusIdLast)) {
           const awbStatus = await AwbStatus.findOne(
-              { awbStatusId: lastDoPodDeliverHistory.awbStatusId },
+              { awbStatusId: lastDoPodReturnHistory.awbStatusId },
               { cache: true },
             );
 
             // #region transaction data
           await getManager().transaction(async transactionEntityManager => {
               await transactionEntityManager.insert(
-                DoPodDeliverHistory,
-                doPodDeliverHistories,
+                DoPodReturnHistory,
+                doPodReturnHistories,
               );
 
-              // Update data DoPodDeliverDetail
+              // Update data DoPodReturnDetail
               await transactionEntityManager.update(
                 DoPodReturnDetail,
-                delivery.doPodReturnDetailId,
+                returnsData.doPodReturnDetailId,
                 {
-                  awbStatusIdLast: lastDoPodDeliverHistory.awbStatusId,
-                  latitudeDeliveryLast: lastDoPodDeliverHistory.latitudeDelivery,
-                  longitudeDeliveryLast: lastDoPodDeliverHistory.longitudeDelivery,
-                  awbStatusDateTimeLast: lastDoPodDeliverHistory.awbStatusDateTime,
-                  reasonIdLast: lastDoPodDeliverHistory.reasonId,
-                  syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
-                  descLast: lastDoPodDeliverHistory.desc,
-                  consigneeName: delivery.consigneeNameNote,
+                  awbStatusIdLast: lastDoPodReturnHistory.awbStatusId,
+                  latitudeDeliveryLast: lastDoPodReturnHistory.latitudeReturn,
+                  longitudeDeliveryLast: lastDoPodReturnHistory.longitudeReturn,
+                  awbStatusDateTimeLast: lastDoPodReturnHistory.awbStatusDateTime,
+                  reasonIdLast: lastDoPodReturnHistory.reasonId,
+                  syncDateTimeLast: lastDoPodReturnHistory.syncDateTime,
+                  descLast: lastDoPodReturnHistory.desc,
+                  consigneeName: returnsData.consigneeNameNote,
                   userIdUpdated: authMeta.userId,
                   updatedTime: moment().toDate(),
                 },
               );
 
               // only awb COD and DLV
-              if (delivery.isCOD && lastDoPodDeliverHistory.awbStatusId == AWB_STATUS.DLV) {
+              if (returnsData.isCOD && lastDoPodReturnHistory.awbStatusId == AWB_STATUS.DLV) {
                 // find and update
                 const codPayment = await transactionEntityManager.findOne(
                   CodPayment,
                   {
                     where: {
-                      awbItemId: delivery.awbItemId,
+                      awbItemId: returnsData.awbItemId,
                       isDeleted: false,
                     },
                   },
@@ -505,11 +541,11 @@ export class MobileFirstMileDoPodReturnService {
                       codPaymentId: codPayment.codPaymentId,
                     },
                     {
-                      codValue: delivery.totalCodValue,
-                      codPaymentMethod: delivery.codPaymentMethod,
-                      codPaymentService: delivery.codPaymentService,
-                      note: delivery.note,
-                      noReference: delivery.noReference,
+                      codValue: returnsData.totalCodValue,
+                      codPaymentMethod: returnsData.codPaymentMethod,
+                      codPaymentService: returnsData.codPaymentService,
+                      note: returnsData.note,
+                      noReference: returnsData.noReference,
                       userIdUpdated: authMeta.userId,
                       userIdDriver: authMeta.userId,
                       branchId: awbdReturn.branchId,
@@ -520,14 +556,14 @@ export class MobileFirstMileDoPodReturnService {
                   await transactionEntityManager.insert(
                     CodPayment,
                     {
-                    awbNumber: delivery.awbNumber,
-                    codValue: delivery.totalCodValue,
-                    codPaymentMethod: delivery.codPaymentMethod,
-                    codPaymentService: delivery.codPaymentService,
-                    note: delivery.note,
-                    noReference: delivery.noReference,
-                    doPodDeliverDetailId: delivery.doPodReturnDetailId,
-                    awbItemId: delivery.awbItemId,
+                    awbNumber: returnsData.awbNumber,
+                    codValue: returnsData.totalCodValue,
+                    codPaymentMethod: returnsData.codPaymentMethod,
+                    codPaymentService: returnsData.codPaymentService,
+                    note: returnsData.note,
+                    noReference: returnsData.noReference,
+                    doPodDeliverDetailId: returnsData.doPodReturnDetailId,
+                    awbItemId: returnsData.awbItemId,
                     branchId: awbdReturn.branchId,
                     userIdDriver: authMeta.userId,
                     userIdCreated: authMeta.userId,
@@ -544,8 +580,8 @@ export class MobileFirstMileDoPodReturnService {
               // NOTE: handle only awb status return
               if (awbStatus.isReturn) {
                 await AwbReturnService.createAwbReturn(
-                  delivery.awbNumber,
-                  delivery.awbId,
+                  returnsData.awbNumber,
+                  returnsData.awbId,
                   permissonPayload.branchId,
                   authMeta.userId,
                   true,
@@ -554,7 +590,7 @@ export class MobileFirstMileDoPodReturnService {
 
               const doPodReturn = await DoPodReturn.findOne({
                 where: {
-                  doPodReturnId: delivery.doPodReturnId,
+                  doPodReturnId: returnsData.doPodReturnId,
                   isDeleted: false,
                 },
               });
@@ -564,7 +600,7 @@ export class MobileFirstMileDoPodReturnService {
                   await transactionEntityManager.increment(
                     DoPodReturn,
                     {
-                      doPodReturnId: delivery.doPodReturnId,
+                      doPodReturnId: returnsData.doPodReturnId,
                       totalReturn: LessThan(doPodReturn.totalAwb),
                     },
                     'totalReturn',
@@ -599,19 +635,19 @@ export class MobileFirstMileDoPodReturnService {
             // NOTE: queue by Bull
           DoPodDetailPostMetaQueueService.createJobV1MobileSync(
               awbdReturn.awbItemId,
-              lastDoPodDeliverHistory.awbStatusId,
+              lastDoPodReturnHistory.awbStatusId,
               authMeta.userId,
               awbdReturn.branchId,
               authMeta.userId,
-              delivery.employeeId,
-              lastDoPodDeliverHistory.reasonId,
-              lastDoPodDeliverHistory.desc,
-              delivery.consigneeNameNote,
+              returnsData.employeeId,
+              lastDoPodReturnHistory.reasonId,
+              lastDoPodReturnHistory.desc,
+              returnsData.consigneeNameNote,
               awbStatus.awbStatusName,
               awbStatus.awbStatusTitle,
-              historyDateTime,
-              lastDoPodDeliverHistory.latitudeDelivery,
-              lastDoPodDeliverHistory.longitudeDelivery,
+              returnDateTime,
+              lastDoPodReturnHistory.latitudeReturn,
+              lastDoPodReturnHistory.longitudeReturn,
             );
 
             // NOTE: push data only DLV to Sunfish
@@ -631,7 +667,7 @@ export class MobileFirstMileDoPodReturnService {
             }
           process = true;
           } else {
-            PinoLoggerService.log('##### Data Not Valid', delivery);
+            PinoLoggerService.log('##### Data Not Valid', returnsData);
           }
       } catch (error) {
         console.error(error);
