@@ -584,13 +584,12 @@ export class MonitoringProblemListService {
         hsa.scan_date_do_hub,
         hsa.branch_id,
         COUNT(hsa.awb_number) as do_hub,
-		    COUNT(hsa.awb_number) FILTER (WHERE b.is_sortir = TRUE AND b.is_manual = TRUE) as manual_sortir,
+        COUNT(hsa.awb_number) FILTER (WHERE b.is_sortir = TRUE AND b.is_manual = TRUE) as manual_sortir,
         COUNT(hsa.awb_number) FILTER (WHERE b.is_sortir = TRUE AND b.is_manual = FALSE) as machine_sortir,
-		    COUNT(hsa.awb_number) FILTER (WHERE hsa.out_hub = TRUE) as scanout,
+        COUNT(hsa.awb_number) FILTER (WHERE hsa.out_hub = TRUE) as scanout,
         COUNT(hsa.awb_number) FILTER (WHERE hsa.out_hub = FALSE) as not_scanout,
-		    COUNT(hsa.awb_number) FILTER (WHERE hsa.awb_status_id_last >= 23500 AND hsa.awb_status_id_last <= 24000) as problem
+        COUNT(hsa.awb_number) FILTER (WHERE hsa.awb_status_id_last >= 23500 AND hsa.awb_status_id_last <= 24000) as problem
       FROM hub_summary_awb hsa
-      INNER JOIN awb a ON hsa.awb_number = a.awb_number AND a.is_deleted = FALSE
       LEFT JOIN bag b ON hsa.bag_id_in = b.bag_id AND b.is_deleted = FALSE
       ${whereQueryBagNumber || whereQueryBagSortir ?
       `LEFT JOIN bag_item bi ON ${whereQueryBagSortir ? 'hsa.bag_item_id_in' : 'hsa.bag_item_id_do'} = bi.bag_item_id AND bi.is_deleted = FALSE` : ''
