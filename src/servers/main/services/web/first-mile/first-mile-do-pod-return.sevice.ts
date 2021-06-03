@@ -452,6 +452,66 @@ export class FirstMileDoPodReturnService {
     );
   }
 
+  static async printDoPodReturnByRequest(
+    res: express.Response,
+    queryParams: PrintDoPodReturnPayloadQueryVm,
+  ) {
+    const repo = new OrionRepositoryService(DoPodReturn, 't1');
+    const q = repo.findOne();
+    q.leftJoin(e => e.doPodReturnDetails);
+    q.leftJoin(e => e.userDriver.employee);
+
+    const doPodReturn = await q
+      .select({
+        doPodReturnId: true, // needs to be selected due to do_pod_return relations are being included
+        doPodReturnCode: true,
+        description: true,
+        userDriver: {
+          userId: true,
+          employee: {
+            nickname: true,
+            nik: true,
+          },
+        },
+        doPodReturnDetails: {
+          doPodReturnDetailId: true, // needs to be selected due to do_pod_return_detail relations are being included
+          awbItem: {
+            awbItemId: true, // needs to be selected due to awb_item relations are being included
+            awb: {
+              awbId: true,
+              awbNumber: true,
+              consigneeName: true,
+              consigneeNumber: true,
+              consigneeAddress: true,
+              consigneeZip: true,
+              totalCodValue: true,
+              isCod: true,
+            },
+          },
+        },
+      })
+      .where(e => e.doPodReturnId, w => w.equals(queryParams.id))
+      .andWhere(e => e.doPodReturnDetails.isDeleted, w => w.isFalse());
+
+    if (!doPodReturn) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    }
+
+    this.printDoPodReturnAndQueryMeta(
+      res,
+      doPodReturn as any,
+      {
+        userId: queryParams.userId,
+        branchId: queryParams.branchId,
+      },
+      {
+        printCopy: queryParams.printCopy,
+      },
+    );
+  }
+
   private static handlePrintMetadata(awb: AwbItemAttr) {
     const meta = new PrintDoPodDeliverDataDoPodDeliverDetailVm();
     // Assign print metadata - Scan Out & Return

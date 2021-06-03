@@ -23,7 +23,7 @@ import { ResponseSerializerOptions } from '../../../..//shared/decorators/respon
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiUseTags('Mobile Do Pod Return')
-@Controller('mobile/pod/return/scanOut')
+@Controller('mobile/firstMile/pod/return')
 export class MobileDoPodReturnController {
   constructor() {}
 
@@ -94,7 +94,7 @@ export class MobileDoPodReturnController {
     );
   }
 
-  @Post('getHistoryReturnDetail')
+  @Post('historyReturnDetail')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)

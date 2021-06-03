@@ -36,7 +36,7 @@ import {
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
 @ApiUseTags('Web Do Pod Return')
-@Controller('web/pod/return/scanOut')
+@Controller('web/firstMile/pod/return')
 export class WebDoPodReturnController {
   constructor() {}
 
@@ -107,5 +107,16 @@ export class WebDoPodReturnController {
       serverResponse,
       queryParams,
     );
+  }
+
+  @Get('print/do-pod-return')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoPodReturn(
+    @Query() queryParams: PrintDoPodReturnPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
+    return FirstMileDoPodReturnService.printDoPodReturnByRequest(serverResponse, queryParams);
   }
 }
