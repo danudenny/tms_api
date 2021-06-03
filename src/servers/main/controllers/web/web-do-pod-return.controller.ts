@@ -36,7 +36,7 @@ import {
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
 @ApiUseTags('Web Do Pod Return')
-@Controller('web/firstMile/pod/return')
+@Controller('web/firstMile/return')
 export class WebDoPodReturnController {
   constructor() {}
 
