@@ -496,8 +496,8 @@ export class MonitoringProblemListService {
 
     const query = `
       SELECT
-        hsa.scan_date_do_hub AS scanDate,
-        hsa.awb_number AS awbNumber,
+        hsa.scan_date_do_hub AS "scanDate",
+        hsa.awb_number AS "awbNumber",
         CASE
           WHEN bi.bag_number IS NOT NULL
             THEN CONCAT(bi.bag_number, LPAD(bin.bag_seq::text, 3, '0'))
