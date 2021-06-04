@@ -1764,7 +1764,6 @@ export class V1WebAwbCodService {
       select: ['userId', 'employeeId', 'firstName', 'username'],
       where: {
         userId: userIdDriver,
-        isDeleted: false,
       },
     });
 
