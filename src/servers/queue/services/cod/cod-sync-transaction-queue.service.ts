@@ -51,7 +51,6 @@ export class CodSyncTransactionQueueService {
             select: ['userId', 'firstName', 'username'],
             where: {
               userId: Number(data.userId),
-              isDeleted: false,
             },
             cache: true,
           });

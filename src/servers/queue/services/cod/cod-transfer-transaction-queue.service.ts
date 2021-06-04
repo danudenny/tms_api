@@ -270,7 +270,6 @@ export class CodTransferTransactionQueueService {
       select: ['userId', 'firstName', 'username'],
       where: {
         userId: transaction.userIdUpdated,
-        isDeleted: false,
       },
       cache: true,
     });
@@ -282,7 +281,6 @@ export class CodTransferTransactionQueueService {
       select: ['userId', 'firstName', 'username'],
       where: {
         userId: transaction.userIdDriver,
-        isDeleted: false,
       },
       cache: true,
     });
