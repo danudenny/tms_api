@@ -19,12 +19,12 @@ import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { AwbNotificationMailQueueService } from '../../../queue/services/notification/awb-notification-mail-queue.service';
 import { DoPodReturnDetailService } from '../master/do-pod-return-detail.service';
-import { JwtPermissionTokenPayload } from 'src/shared/interfaces/jwt-payload.interface';
-import { AuthLoginMetadata } from 'src/shared/models/auth-login-metadata.model';
-import { AwbItemAttr } from 'src/shared/orm-entity/awb-item-attr';
-import { DoPodReturnDetail } from 'src/shared/orm-entity/do-pod-return-detail';
-import { DoPodReturnHistory } from 'src/shared/orm-entity/do-pod-return-history';
-import { DoPodReturn } from 'src/shared/orm-entity/do-pod-return';
+import { JwtPermissionTokenPayload } from '../../../../shared/interfaces/jwt-payload.interface';
+import { AuthLoginMetadata } from '../../../../shared/models/auth-login-metadata.model';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { DoPodReturnDetail } from '../../../../shared/orm-entity/do-pod-return-detail';
+import { DoPodReturnHistory } from '../../../../shared/orm-entity/do-pod-return-history';
+import { DoPodReturn } from '../../../../shared/orm-entity/do-pod-return';
 // //#endregion
 export class WebAwbDeliverService {
   constructor() {}
