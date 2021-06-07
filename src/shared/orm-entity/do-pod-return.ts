@@ -68,6 +68,13 @@ export class DoPodReturn extends TmsBaseEntity {
   })
   isMobile: boolean;
 
+  @Column('integer', {
+    nullable: false,
+    default: () => '0',
+    name: 'total_problem',
+  })
+  totalProblem: number;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;

@@ -43,4 +43,33 @@ export class DoPodReturnDetailService {
     const result = await q.exec();
     return result[0];
   }
+
+    static async getDoPodReturnDetailByAwbNumber(awbNumber: string): Promise<DoPodReturnDetail> {
+    const awbRepository = new OrionRepositoryService(
+      DoPodReturnDetail,
+    );
+    const q = awbRepository.findOne();
+    // Manage relation (default inner join)
+    q.select({
+      doPodReturnDetailId: true,
+      doPodReturnId: true,
+      awbItemId: true,
+      awbNumber: true,
+      awbStatusIdLast: true,
+      awbStatusDateTimeLast: true,
+      doPodReturn: {
+        branchId: true,
+        userIdDriver: true,
+      },
+      updatedTime: true,
+    });
+    q.where(
+      e => e.awbNumber,
+      w => w.equals(awbNumber),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.orderBy({ updatedTime: 'DESC' });
+    q.take(1);
+    return await q.exec();
+  }
 }

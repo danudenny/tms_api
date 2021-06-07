@@ -18,6 +18,13 @@ import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { AwbNotificationMailQueueService } from '../../../queue/services/notification/awb-notification-mail-queue.service';
+import { DoPodReturnDetailService } from '../master/do-pod-return-detail.service';
+import { JwtPermissionTokenPayload } from 'src/shared/interfaces/jwt-payload.interface';
+import { AuthLoginMetadata } from 'src/shared/models/auth-login-metadata.model';
+import { AwbItemAttr } from 'src/shared/orm-entity/awb-item-attr';
+import { DoPodReturnDetail } from 'src/shared/orm-entity/do-pod-return-detail';
+import { DoPodReturnHistory } from 'src/shared/orm-entity/do-pod-return-history';
+import { DoPodReturn } from 'src/shared/orm-entity/do-pod-return';
 // //#endregion
 export class WebAwbDeliverService {
   constructor() {}
@@ -33,13 +40,13 @@ export class WebAwbDeliverService {
     const result = new WebAwbDeliverSyncResponseVm();
 
     const dataItem = [];
-    let onlyDriver = false;
+    const onlyDriver = false;
 
     try {
       for (const delivery of payload.deliveries) {
         // TODO: check awb number
         // payload.role ['palkur', 'ct', 'sigesit']
-        let syncManualDelivery = false;
+        const syncManualDelivery = false;
         const awb = await AwbService.validAwbNumber(delivery.awbNumber);
         if (awb) {
           // add handel status Cod problem
@@ -54,70 +61,46 @@ export class WebAwbDeliverService {
             response.status = 'error';
             response.message = `Resi ${delivery.awbNumber} bukan resi COD !`;
           } else {
-            const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
-            if (awbDeliver) {
-              // hardcode check role sigesit
-              const roleIdSigesit = 23;
-              if (permissonPayload.roleId == roleIdSigesit) {
-                // check only own awb number
-                if (
-                  awbDeliver.awbStatusIdLast == AWB_STATUS.ANT &&
-                  awbDeliver.doPodDeliver.userIdDriver ==
-                    authMeta.userId
-                ) {
-                  syncManualDelivery = true;
-                } else {
-                  onlyDriver = true;
-                }
-              } else {
-                syncManualDelivery = true;
-              }
 
-              if (syncManualDelivery) {
-                // add handel final status
-                const statusFinal = [AWB_STATUS.DLV];
-                if (statusFinal.includes(awb.awbStatusIdLast)) {
-                  response.status = 'error';
-                  response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
-                } else {
-                  // check awb is cod
-                  if (awb.awbItem.awb.isCod == true && delivery.awbStatusId == AWB_STATUS.DLV) {
-                    response.status = 'error';
-                    response.message = `Resi ${
-                      delivery.awbNumber
-                    }, adalah resi COD, tidak dapat melakukan POD Manual!`;
-                  } else {
-                    // set data deliver
-                    delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
-                    delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
-                    delivery.awbItemId = awbDeliver.awbItemId;
-                    // delivery.employeeId = authMeta.employeeId;
-                    await this.syncDeliver(delivery);
-                    // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
-                    if (payload.isReturn) {
-                      await this.createAwbReturn(
-                        delivery.awbNumber,
-                        awb.awbId,
-                        permissonPayload.branchId,
-                        authMeta.userId,
-                      );
-                    }
-                    response.status = 'ok';
-                    response.message = 'success';
-                  }
-                }
+            const awbDeliverDetail = await this.getDeliverDetail(delivery.awbNumber);
+            const awbReturnDetail = await DoPodReturnDetailService.getDoPodReturnDetailByAwbNumber(delivery.awbNumber);
+            let isReturnAwb = false;
+            let isDeliverAwb = false;
+            if (awbReturnDetail && awbDeliverDetail) {
+              if (awbReturnDetail.updatedTime > awbDeliverDetail.updatedTime) {
+                isReturnAwb = true;
               } else {
-                response.status = 'error';
-                if (onlyDriver) {
-                  response.message = `Resi ${
-                    delivery.awbNumber
-                  }, bukan milik user sigesit login`;
-                } else {
-                  response.message = `Resi ${
-                    delivery.awbNumber
-                  }, bermasalah harap scan antar terlebih dahulu`;
-                }
+                isDeliverAwb = true;
               }
+            } else if (awbReturnDetail) {
+              isReturnAwb = true;
+            } else {
+              isDeliverAwb = true;
+            }
+
+            if (isDeliverAwb) {
+              // hardcode check role sigesit
+              await this.deliverProcess(
+                permissonPayload,
+                awbDeliverDetail,
+                authMeta,
+                syncManualDelivery,
+                onlyDriver,
+                awb,
+                response,
+                delivery,
+                payload);
+            } else if (isReturnAwb) {
+              await this.returnProcess(
+                permissonPayload,
+                awbReturnDetail,
+                authMeta,
+                syncManualDelivery,
+                onlyDriver,
+                awb,
+                response,
+                delivery,
+                payload);
             } else {
               // NOTE: Manual Status not POD only status problem (not have spk)
               delivery.awbItemId = awb.awbItemId;
@@ -160,6 +143,138 @@ export class WebAwbDeliverService {
       response.status = 'error';
       response.message = `message error ${error.message}`;
       throw new BadRequestException(response);
+    }
+  }
+
+  private static async deliverProcess(
+    permissonPayload: JwtPermissionTokenPayload,
+    awbDeliverDetail: DoPodDeliverDetail,
+    authMeta: AuthLoginMetadata,
+    syncManualDelivery: boolean,
+    onlyDriver: boolean,
+    awb: AwbItemAttr,
+    response: AwbDeliverManualSync,
+    delivery: WebDeliveryVm,
+    payload: WebAwbDeliverSyncPayloadVm,
+    ) {
+    const roleIdSigesit = 23;
+    if (permissonPayload.roleId == roleIdSigesit) {
+      // check only own awb number
+      if (awbDeliverDetail.awbStatusIdLast == AWB_STATUS.ANT &&
+        awbDeliverDetail.doPodDeliver.userIdDriver ==
+        authMeta.userId) {
+        syncManualDelivery = true;
+      } else {
+        onlyDriver = true;
+      }
+    } else {
+      syncManualDelivery = true;
+    }
+
+    if (syncManualDelivery) {
+      // add handel final status
+      const statusFinal = [AWB_STATUS.DLV];
+      if (statusFinal.includes(awb.awbStatusIdLast)) {
+        response.status = 'error';
+        response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
+      } else {
+        // check awb is cod
+        if (awb.awbItem.awb.isCod == true && delivery.awbStatusId == AWB_STATUS.DLV) {
+          response.status = 'error';
+          response.message = `Resi ${delivery.awbNumber}, adalah resi COD, tidak dapat melakukan POD Manual!`;
+        } else {
+          // set data deliver
+          delivery.doPodDeliverId = awbDeliverDetail.doPodDeliverId;
+          delivery.doPodDeliverDetailId = awbDeliverDetail.doPodDeliverDetailId;
+          delivery.awbItemId = awbDeliverDetail.awbItemId;
+          // delivery.employeeId = authMeta.employeeId;
+          await this.syncDeliver(delivery);
+          // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
+          if (payload.isReturn) {
+            await this.createAwbReturn(
+              delivery.awbNumber,
+              awb.awbId,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
+          }
+          response.status = 'ok';
+          response.message = 'success';
+        }
+      }
+    } else {
+      response.status = 'error';
+      if (onlyDriver) {
+        response.message = `Resi ${delivery.awbNumber}, bukan milik user sigesit login`;
+      } else {
+        response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
+      }
+    }
+  }
+
+  private static async returnProcess(
+    permissonPayload: JwtPermissionTokenPayload,
+    awbReturnDetail: DoPodReturnDetail,
+    authMeta: AuthLoginMetadata,
+    syncManualDelivery: boolean,
+    onlyDriver: boolean,
+    awb: AwbItemAttr,
+    response: AwbDeliverManualSync,
+    delivery: WebDeliveryVm,
+    payload: WebAwbDeliverSyncPayloadVm,
+    ) {
+    const roleIdSigesit = 23;
+    if (permissonPayload.roleId == roleIdSigesit) {
+      // check only own awb number
+      if (awbReturnDetail.awbStatusIdLast == AWB_STATUS.ANT &&
+        awbReturnDetail.doPodReturn.userIdDriver ==
+        authMeta.userId) {
+        syncManualDelivery = true;
+      } else {
+        onlyDriver = true;
+      }
+    } else {
+      syncManualDelivery = true;
+    }
+
+    if (syncManualDelivery) {
+      // add handel final status
+      const statusFinal = [AWB_STATUS.DLV];
+      if (statusFinal.includes(awb.awbStatusIdLast)) {
+        response.status = 'error';
+        response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
+      } else {
+        // check awb is cod
+        if (awb.awbItem.awb.isCod == true && delivery.awbStatusId == AWB_STATUS.DLV) {
+          response.status = 'error';
+          response.message = `Resi ${delivery.awbNumber}, adalah resi COD, tidak dapat melakukan POD Manual!`;
+        } else {
+          // set data deliver
+          delivery.doPodDeliverId = awbReturnDetail.doPodReturnId;
+          delivery.doPodDeliverDetailId = awbReturnDetail.doPodReturnDetailId;
+          delivery.awbItemId = awbReturnDetail.awbItemId;
+          // delivery.employeeId = authMeta.employeeId;
+          await this.syncReturn(delivery);
+          // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
+          if (payload.isReturn) {
+            await this.createAwbReturn(
+              delivery.awbNumber,
+              awb.awbId,
+              permissonPayload.branchId,
+              authMeta.userId,
+            );
+          }
+          response.status = 'ok';
+          response.message = 'success';
+        }
+      }
+    } else {
+      response.status = 'error';
+      if (onlyDriver) {
+        response.message = `Resi ${delivery.awbNumber}, bukan milik user sigesit login`;
+      } else {
+        response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
+      }
     }
   }
 
@@ -281,6 +396,124 @@ export class WebAwbDeliverService {
     }
   }
 
+  private static async syncReturn(delivery: WebDeliveryVm) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    // Generate History by Status input pod manual
+    const doPodReturnHistory = DoPodReturnHistory.create({
+      doPodReturnDetailId: delivery.doPodDeliverDetailId,
+      awbStatusId: delivery.awbStatusId,
+      reasonId: delivery.reasonId,
+      syncDateTime: moment().toDate(),
+      desc: delivery.reasonNotes,
+      awbStatusDateTime: moment().toDate(),
+      historyDateTime: moment().toDate(),
+      employeeIdDriver: null,
+    });
+
+    // TODO: validation check final status last
+    const awbReturn = await DoPodReturnDetail.findOne({
+      where: {
+        doPodReturnDetailId: delivery.doPodDeliverDetailId,
+        isDeleted: false,
+      },
+    });
+    const finalStatus = [AWB_STATUS.DLV];
+    if (awbReturn && !finalStatus.includes(awbReturn.awbStatusIdLast)) {
+      const awbStatus = await AwbStatus.findOne({
+        where: {
+          awbStatusId: doPodReturnHistory.awbStatusId,
+          isDeleted: false,
+        },
+        cache: true,
+      });
+      // #region transaction data
+      await getManager().transaction(async transactionEntityManager => {
+        // insert data deliver history
+        await transactionEntityManager.insert(
+          DoPodReturnHistory,
+          doPodReturnHistory,
+        );
+
+        // Update data DoPodDeliverDetail
+        await transactionEntityManager.update(
+          DoPodReturnDetail,
+          delivery.doPodDeliverDetailId,
+          {
+            awbStatusIdLast: doPodReturnHistory.awbStatusId,
+            awbStatusDateTimeLast: doPodReturnHistory.awbStatusDateTime,
+            reasonIdLast: doPodReturnHistory.reasonId,
+            syncDateTimeLast: doPodReturnHistory.syncDateTime,
+            descLast: doPodReturnHistory.desc,
+            consigneeName: delivery.consigneeNameNote,
+            updatedTime: moment().toDate(),
+          },
+        );
+        // TODO: validation DoPodDeliver
+        const doPodReturn = await DoPodReturn.findOne({
+          where: {
+            doPodReturnId: delivery.doPodDeliverId,
+            isDeleted: false,
+          },
+        });
+        if (doPodReturn) {
+          if (awbStatus.isProblem) {
+            await transactionEntityManager.increment(
+              DoPodReturn,
+              {
+                doPodReturnId: delivery.doPodDeliverId,
+                totalProblem: LessThan(doPodReturn.totalAwb),
+              },
+              'totalProblem',
+              1,
+            );
+          } else if (awbStatus.isFinalStatus) {
+            await transactionEntityManager.increment(
+              DoPodReturn,
+              {
+                doPodReturnId: delivery.doPodDeliverId,
+                totalReturn: LessThan(doPodReturn.totalAwb),
+              },
+              'totalReturn',
+              1,
+            );
+            // balance total problem
+            await transactionEntityManager.decrement(
+              DoPodReturn,
+              {
+                doPodReturnId: delivery.doPodDeliverId,
+                totalProblem: MoreThan(0),
+              },
+              'totalProblem',
+              1,
+            );
+          }
+        }
+      });
+      // #endregion of transaction
+
+      // NOTE: queue by Bull need refactoring
+      const reasonId = delivery.reasonId == 0 ? null : delivery.reasonId;
+      DoPodDetailPostMetaQueueService.createJobV2ByManual(
+        delivery.awbItemId,
+        delivery.awbStatusId,
+        authMeta.userId,
+        permissonPayload.branchId,
+        delivery.reasonNotes,
+        reasonId,
+        delivery.consigneeNameNote,
+      );
+      // NOTE: mail notification
+      AwbNotificationMailQueueService.perform(
+        delivery.awbItemId,
+        delivery.awbStatusId,
+      );
+
+    } else {
+      console.log('##### Data Not Valid', delivery);
+    }
+  }
+
   private static async syncStatusManual(
     userId: number,
     branchId: number,
@@ -339,6 +572,7 @@ export class WebAwbDeliverService {
         branchId: true,
         userIdDriver: true,
       },
+      updatedTime: true,
     });
     q.where(
       e => e.awbNumber,
