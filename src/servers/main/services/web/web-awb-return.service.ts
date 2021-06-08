@@ -389,6 +389,7 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['branchIdTo'] = 't1.branch_id';
     payload.fieldResolverMap['branchTo'] = 't3.branch_name';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
     payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
     payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
@@ -400,7 +401,7 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
     payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
     if (payload.sortBy === '') {
-      payload.sortBy = 'createdTime';
+      payload.sortBy = 'updatedTime';
     }
 
     // mapping search field and operator default ilike
