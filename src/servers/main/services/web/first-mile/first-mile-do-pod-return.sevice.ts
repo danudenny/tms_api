@@ -431,7 +431,7 @@ export class FirstMileDoPodReturnService {
   ) {
     const printPayload = await PrintByStoreService.retrieveGenericPrintData<
       PrintDoPodReturnVm
-    >('do-pod-deliver', queryParams.id);
+    >('do-pod-return', queryParams.id);
 
     if (!printPayload || (printPayload && !printPayload.data)) {
       RequestErrorService.throwObj({
