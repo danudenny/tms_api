@@ -428,6 +428,7 @@ export class WebAwbReturnService {
       ['t1.return_awb_number', 'returnAwbNumber'],
       ['t1.branch_id', 'branchIdTo'],
       ['t1.created_time', 'createdTime'],
+      ['t1.updated_time', 'updatedTime'],
       ['t3.branch_name', 'branchTo'],
       ['t2.awb_status_name', 'awbStatus'],
       ['t2.awb_status_id', 'awbStatusId'],
