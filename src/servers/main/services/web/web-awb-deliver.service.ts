@@ -74,7 +74,7 @@ export class WebAwbDeliverService {
               }
             } else if (awbReturnDetail) {
               isReturnAwb = true;
-            } else {
+            } else if (awbDeliverDetail) {
               isDeliverAwb = true;
             }
 
