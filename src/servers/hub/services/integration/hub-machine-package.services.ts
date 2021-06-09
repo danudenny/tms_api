@@ -122,6 +122,15 @@ export class HubMachineService {
               }
             }
             if(scanResultMachine) {
+              // Status DONE 200 untuk PODSCANINHUB
+              await PodScanInHub.update(
+                { podScanInHubId:  paramPodScanInHubId},
+                {
+                  transactionStatusId: 200,
+                  updatedTime: moment().toDate(),
+                  userIdUpdated: 1,
+                },
+              );
               const data = [];
               data.push({
                 state: 0,
