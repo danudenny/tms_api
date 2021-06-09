@@ -638,9 +638,7 @@ export class V1WebCodSupplierInvoiceService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.userAdmin, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.userAdmin, 't5');
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.groupByRaw(
