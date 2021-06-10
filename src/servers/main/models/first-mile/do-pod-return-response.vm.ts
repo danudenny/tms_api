@@ -158,6 +158,22 @@ export class WebScanOutReturnListResponseVm extends BaseMetaResponseVm {
   data: WebScanInReturnResponseVm[];
 }
 
+export class AwbReturnManualSync {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
+
+export class WebAwbReturnSyncResponseVm {
+  @ApiModelProperty({ type: [AwbReturnManualSync] })
+  data: AwbReturnManualSync[];
+}
+
 export class ItemReturnResponseVm {
 
   @ApiModelProperty()

@@ -18,7 +18,7 @@ import {
   ApiUseTags,
   ApiBearerAuth,
 } from '../../../../shared/external/nestjs-swagger';
-import { FirstMileDoPodReturnService } from '../../services/web/first-mile/first-mile-do-pod-return.sevice';
+import { FirstMileDoPodReturnService } from '../../services/web/first-mile/first-mile-do-pod-return.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import {
   WebDoPodCreateReturnResponseVm,
@@ -26,10 +26,12 @@ import {
   WebScanOutReturnListResponseVm,
   WebScanOutReturnGroupListResponseVm,
   WebReturnListResponseVm,
+  WebAwbReturnSyncResponseVm,
 } from '../../models/first-mile/do-pod-return-response.vm';
 import {
   PrintDoPodReturnPayloadQueryVm,
   PrintDoPodReturnVm,
+  WebAwbReturnSyncPayloadVm,
   WebDoPodCreateReturnPayloadVm,
   WebScanAwbReturnPayloadVm,
 } from '../../models/first-mile/do-pod-return-payload.vm';
@@ -85,6 +87,15 @@ export class WebDoPodReturnController {
   @ApiOkResponse({ type: WebReturnListResponseVm })
   public async awbReturnDetail(@Body() payload: BaseMetaPayloadVm) {
     return FirstMileDoPodReturnService.detailReturn(payload);
+  }
+
+  @Post('syncReturn')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbReturnSyncResponseVm })
+  public async syncAwb(@Body() payload: WebAwbReturnSyncPayloadVm) {
+    return FirstMileDoPodReturnService.syncAwbReturn(payload);
   }
 
   @Post('print/store')

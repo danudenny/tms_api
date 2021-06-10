@@ -41,6 +41,45 @@ export class WebScanAwbReturnPayloadVm  {
   @Type(() => String)
   awbNumber: string[];
 }
+
+export class WebReturnVm {
+  @ApiModelPropertyOptional()
+  doPodReturnDetailId: string;
+
+  @ApiModelPropertyOptional()
+  doPodReturnId: string;
+
+  @ApiModelPropertyOptional({ format: 'date-time' })
+  doPodReturnDate: string;
+
+  @ApiModelProperty()
+  employeeId: number;
+
+  @ApiModelPropertyOptional()
+  awbItemId: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  awbStatusId: number;
+
+  @ApiModelProperty()
+  consigneeNameNote: string;
+
+  @ApiModelProperty()
+  reasonId: number;
+
+  @ApiModelProperty()
+  reasonNotes: string;
+
+}
+
+export class WebAwbReturnSyncPayloadVm {
+  @ApiModelProperty({ type: () => [WebReturnVm] })
+  returnList: WebReturnVm[];
+}
+
 export class PrintDoPodReturnVm {
   @ApiModelProperty({ type: () => PrintDoPodReturnDataVm })
   data: PrintDoPodReturnDataVm = new PrintDoPodReturnDataVm();
