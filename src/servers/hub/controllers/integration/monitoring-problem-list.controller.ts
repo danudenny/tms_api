@@ -80,7 +80,7 @@ export class MonitoringProblemListController {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubProblemVm })
   public async getNotScanOutList(@Body() payload: BaseMetaPayloadVm) {
-    return MonitoringProblemListService.getAwbNotScanOut(payload);
+    return MonitoringProblemListService.getAwbNotScanOutV2(payload);
   }
   @Post('not-scan-out-old/list')
   @HttpCode(HttpStatus.OK)
