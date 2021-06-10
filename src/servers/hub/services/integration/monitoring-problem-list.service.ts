@@ -589,9 +589,10 @@ export class MonitoringProblemListService {
         COUNT(hsa.awb_number) FILTER (WHERE hsa.out_hub = FALSE) as not_scanout,
         COUNT(hsa.awb_number) FILTER (WHERE hsa.awb_status_id_last >= 23500 AND hsa.awb_status_id_last <= 24000) as problem
       FROM hub_summary_awb hsa
+      LEFT JOIN bag b ON ${whereQueryBagSortir ? 'hsa.bag_id_in' : 'hsa.bag_id_in'} = b.bag_id AND b.is_deleted = FALSE
+
       ${whereQueryBagNumber || whereQueryBagSortir ?
-      `LEFT JOIN bag b ON ${whereQueryBagSortir ? 'hsa.bag_id_in' : 'hsa.bag_id_in'} = b.bag_id AND b.is_deleted = FALSE
-      LEFT JOIN bag_item bi ON ${whereQueryBagSortir ? 'hsa.bag_item_id_in' : 'hsa.bag_item_id_do'} = bi.bag_item_id AND bi.is_deleted = FALSE` : ''
+      `LEFT JOIN bag_item bi ON ${whereQueryBagSortir ? 'hsa.bag_item_id_in' : 'hsa.bag_item_id_do'} = bi.bag_item_id AND bi.is_deleted = FALSE` : ''
       }
       WHERE
         hsa.is_deleted = FALSE ${whereSubQuery ? 'AND ' + whereSubQuery : ''}
