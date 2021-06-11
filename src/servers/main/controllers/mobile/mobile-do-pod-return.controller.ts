@@ -55,6 +55,7 @@ export class MobileDoPodReturnController {
   public async initDataReturn(@Body() payload: MobileInitDataPayloadVm) {
     return MobileFirstMileDoPodReturnService.getInitDataReturn(
       payload.lastSyncDateTime,
+      payload.awbNumber,
     );
   }
 

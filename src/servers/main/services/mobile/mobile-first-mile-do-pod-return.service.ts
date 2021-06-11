@@ -185,9 +185,10 @@ export class MobileFirstMileDoPodReturnService {
 
   static async getInitDataReturn(
     dateFrom?: string,
+    awbNumber?: string,
   ): Promise<MobileInitDataReturnResponseVm> {
     const result = new MobileInitDataReturnResponseVm();
-    result.returnsData = await this.getReturnDetail(dateFrom, null, true);
+    result.returnsData = await this.getReturnDetail(dateFrom, null, awbNumber, true);
     result.serverDateTime = moment().format();
     return result;
   }
@@ -197,7 +198,7 @@ export class MobileFirstMileDoPodReturnService {
     dateTo?: string,
   ): Promise<MobileInitDataReturnResponseVm> {
     const result = new MobileInitDataReturnResponseVm();
-    result.returnsData = await this.getReturnDetail(dateFrom, dateTo, false);
+    result.returnsData = await this.getReturnDetail(dateFrom, dateTo, null, false);
     result.serverDateTime = moment().format();
     return result;
   }
@@ -346,6 +347,7 @@ export class MobileFirstMileDoPodReturnService {
   private static async getReturnDetail(
     payloadDateFrom?: string,
     payloadDateTo?: string,
+    awbNumber?: string,
     isHistoryReturn?: boolean) {
     const authMeta = AuthService.getAuthMetadata();
 
@@ -449,6 +451,11 @@ export class MobileFirstMileDoPodReturnService {
           );
         });
       }
+
+      if (awbNumber) {
+        q.andWhere(e => e.awb.awbNumber, w => w.equals(awbNumber));
+      }
+
     }
 
     return await q.exec();

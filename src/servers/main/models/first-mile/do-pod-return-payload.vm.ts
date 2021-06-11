@@ -114,6 +114,10 @@ export class MobileScanAwbReturnPayloadVm {
 export class MobileInitDataPayloadVm {
   @ApiModelPropertyOptional({ format: 'date-time' })
   lastSyncDateTime: string;
+
+  @ApiModelPropertyOptional()
+  @Type(() => String)
+  awbNumber: string;
 }
 
 export class MobileSyncReturnPayloadVm {
