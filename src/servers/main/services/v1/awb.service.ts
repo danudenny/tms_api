@@ -55,6 +55,51 @@ export class AwbService {
     return await q.exec();
   }
 
+  public static async validAwbNumbers(awbNumbers: string[]): Promise<AwbItemAttr[]> {
+    const awbRepository = new OrionRepositoryService(AwbItemAttr);
+    const q = awbRepository.findAll();
+    // Manage relation (default inner join)
+    q.leftJoin(e => e.branchLast);
+    q.leftJoin(e => e.bagItemLast);
+
+    q.select({
+      awbItemAttrId: true,
+      awbStatusIdLast: true,
+      awbHistoryIdLast: true,
+      awbItemId: true,
+      awbItem: {
+        awbItemId: true,
+        awbId: true,
+        weightReal: true,
+        weightRealRounded: true,
+        awb: {
+          consigneeName: true,
+          consigneeNumber: true,
+          consigneeAddress: true,
+          consigneeZip: true,
+          totalCodValue: true,
+          isCod: true,
+        },
+      },
+      awbId: true,
+      awbNumber: true,
+      isPackageCombined: true,
+      bagItemIdLast: true,
+      branchIdLast: true,
+      branchIdNext: true,
+      branchLast: {
+        branchId: true,
+        branchCode: true,
+        branchName: true,
+      },
+    });
+    // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
+    q.where(e => e.awbNumber, w => w.in(awbNumbers));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.take(1000); // max 1000 to avoid taking too much data
+    return await q.exec();
+  }
+
   public static async validAwbBagNumber(awbNumber: string): Promise<AwbItemAttr> {
     const awbRepository = new OrionRepositoryService(AwbItemAttr);
     const q = awbRepository.findOne();
