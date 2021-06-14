@@ -60,7 +60,7 @@ export class HubMachineService {
         result.statusCode = HttpStatus.BAD_REQUEST;
         result.message = `Sorting Branch ID Null`;
         result.data = data;
-        throw new BadRequestException('Sorting Branch ID Null');
+        PinoLoggerService.log(result);
       } else {
         const branch = await transactionManager.getRepository(Branch).findOne({
           where: {
@@ -94,6 +94,7 @@ export class HubMachineService {
                 result.statusCode = HttpStatus.BAD_REQUEST;
                 result.message = `No resi tidak ditemukan / tidak valid`;
                 result.data = data;
+                PinoLoggerService.log(result);
                 return result;
               } else if (awbItemAttr.isPackageCombined) {
                 const data = [];
@@ -104,6 +105,7 @@ export class HubMachineService {
                 result.statusCode = HttpStatus.BAD_REQUEST;
                 result.message = `Nomor resi sudah digabung sortir`;
                 result.data = data;
+                PinoLoggerService.log(result);
                 return result;
               }
             }
@@ -141,6 +143,7 @@ export class HubMachineService {
                 result.statusCode = HttpStatus.OK;
                 result.message = `Success Upload`;
                 result.data = data;
+                PinoLoggerService.log(result);
               }
             } else {
               const data = [];
@@ -151,6 +154,7 @@ export class HubMachineService {
                 result.statusCode = HttpStatus.BAD_REQUEST;
                 result.message = `Nomor resi sedang di PROSESS !`;
                 result.data = data;
+                PinoLoggerService.log(result);
                 return result;
             }
 
@@ -163,6 +167,7 @@ export class HubMachineService {
             result.statusCode = HttpStatus.BAD_REQUEST;
             result.message = `Branch Sortir not found`;
             result.data = data;
+            PinoLoggerService.log(result);
           }
         } else {
           const data = [];
@@ -173,6 +178,7 @@ export class HubMachineService {
           result.statusCode = HttpStatus.BAD_REQUEST;
           result.message = `Branch not found`;
           result.data = data;
+          PinoLoggerService.log(result);
         }
       }
       return result;
