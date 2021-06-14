@@ -99,18 +99,6 @@ export class BagScanOutHubQueueService {
             doPodDetail.userIdCreated = data.userId;
             await DoPodDetail.insert(doPodDetail);
 
-            await HubSummaryAwb.update(
-              {
-                awbNumber: itemAwb.awbNumber,
-              },
-              {
-                scanDateOutHub: dateNow,
-                outHub: true,
-                userIdUpdated: data.userId,
-                updatedTime: data.timestamp,
-              },
-            );
-
             // TODO: if isTransit auto IN
             if (data.doPodType == 3020) {
               // queue bull IN HUB
@@ -142,6 +130,19 @@ export class BagScanOutHubQueueService {
                 1,
               );
             }
+
+            await HubSummaryAwb.update(
+              {
+                awbNumber: itemAwb.awbNumber,
+              },
+              {
+                scanDateOutHub: dateNow,
+                outHub: true,
+                userIdUpdated: data.userId,
+                updatedTime: data.timestamp,
+                awbStatusIdLast: AWB_STATUS.OUT_HUB,
+              },
+            );
           }
         }
       } else {
