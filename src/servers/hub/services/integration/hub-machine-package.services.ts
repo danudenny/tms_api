@@ -1,6 +1,6 @@
 // //#region
 import _, { assign, join, sampleSize } from 'lodash';
-import { createQueryBuilder, getManager } from 'typeorm';
+import { createQueryBuilder, getConnection, getManager } from 'typeorm';
 
 import { BadRequestException, HttpStatus } from '@nestjs/common';
 import { Awb } from '../../../../shared/orm-entity/awb';
@@ -41,117 +41,129 @@ export class HubMachineService {
   static async awbPackage(
     payload: PackageMachinePayloadVm,
   ): Promise<MachinePackageResponseVm> {
-    const regexNumber = /^[0-9]+$/;
-    // const value = payload.value;
-    // const valueLength = value.length;
-    const result = new MachinePackageResponseVm();
+    return await getConnection().transaction(async transactionManager => {
+      const result = new MachinePackageResponseVm();
 
-    // result.branchId = 0;
-    // result.branchName = null;
-    let paramBagItemId = null;
-    let paramBagNumber = null;
-    let paramPodScanInHubId = null;
-    let scanResultMachine;
+      let paramBagItemId = null;
+      let paramBagNumber = null;
+      let paramPodScanInHubId = null;
+      let scanResultMachine;
 
-    if (!payload.sorting_branch_id) {
-      const data = [];
-      data.push({
-        state: 1,
-        no_gabung_sortir: null,
-      });
-      result.statusCode = HttpStatus.BAD_REQUEST;
-      result.message = `Sorting Branch ID Null`;
-      result.data = data;
-      // throw new BadRequestException('Sorting Branch ID Null');
-    } else {
-      const branch = await Branch.findOne({
-        where: {
-          branchId: payload.sorting_branch_id,
-          isDeleted: false,
-        },
-      });
+      console.log('payload data', payload);
 
-      const branchSortir = await BranchSortir.findOne({
-        where: {
-          branchId: payload.sorting_branch_id,
-          noChute: payload.chute_number,
-          isDeleted: false,
-        },
-      });
-      if(branch){
-        if (branchSortir) {
-          for(let i = 0; i < payload.reference_numbers.length; i++) {
-            const awbItemAttr = await AwbService.validAwbNumber(payload.reference_numbers[i]);
-            // NOTE: check destination awb with awb.toId
-            const awb = await Awb.findOne({
-              where: { awbNumber: payload.reference_numbers[i], isDeleted: false },
-            });
-            if (!awbItemAttr || !awb) {
-              const data = [];
-              data.push({
-                state: 1,
-                no_gabung_sortir: null,
-              });
-              result.statusCode = HttpStatus.BAD_REQUEST;
-              result.message = `No resi tidak ditemukan / tidak valid`;
-              result.data = data;
-              return result;
-            } else if (awbItemAttr.isPackageCombined) {
-              const data = [];
-              data.push({
-                state: 1,
-                no_gabung_sortir: null,
-              });
-              result.statusCode = HttpStatus.BAD_REQUEST;
-              result.message = `Nomor resi sudah digabung sortir`;
-              result.data = data;
-              return result;
-            }
-          }
-          // Process Create GS
-          const redlock = await RedisService.redlock(
-            `redlock:createMachineGS:${payload.sorting_branch_id}-${payload.chute_number}`, 10
-          );
-          if (redlock) { 
+      if (!payload.sorting_branch_id) {
+        const data = [];
+        data.push({
+          state: 1,
+          no_gabung_sortir: null,
+        });
+        result.statusCode = HttpStatus.BAD_REQUEST;
+        result.message = `Sorting Branch ID Null`;
+        result.data = data;
+        throw new BadRequestException('Sorting Branch ID Null');
+      } else {
+        const branch = await transactionManager.getRepository(Branch).findOne({
+          where: {
+            branchId: payload.sorting_branch_id,
+            isDeleted: false,
+          },
+        });
+
+        const branchSortir = await transactionManager.getRepository(BranchSortir).findOne({
+          where: {
+            branchId: payload.sorting_branch_id,
+            noChute: payload.chute_number,
+            isDeleted: false,
+          },
+        });
+        // console.log('branchSortir', branchSortir);
+        if(branch){
+          if (branchSortir) {
             for(let i = 0; i < payload.reference_numbers.length; i++) {
-              scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
-              if(scanResultMachine) {
-                paramBagItemId = scanResultMachine.bagItemId;
-                paramBagNumber = scanResultMachine.bagNumber;
-                paramPodScanInHubId = scanResultMachine.podScanInHubId;
+              const awbItemAttr = await AwbService.validAwbNumber(payload.reference_numbers[i]);
+              // NOTE: check destination awb with awb.toId
+              const awb = await Awb.findOne({
+                where: { awbNumber: payload.reference_numbers[i], isDeleted: false },
+              });
+              if (!awbItemAttr || !awb) {
+                const data = [];
+                data.push({
+                  state: 1,
+                  no_gabung_sortir: null,
+                });
+                result.statusCode = HttpStatus.BAD_REQUEST;
+                result.message = `No resi tidak ditemukan / tidak valid`;
+                result.data = data;
+                return result;
+              } else if (awbItemAttr.isPackageCombined) {
+                const data = [];
+                data.push({
+                  state: 1,
+                  no_gabung_sortir: null,
+                });
+                result.statusCode = HttpStatus.BAD_REQUEST;
+                result.message = `Nomor resi sudah digabung sortir`;
+                result.data = data;
+                return result;
               }
             }
-            if(scanResultMachine) {
-              // Status DONE 200 untuk PODSCANINHUB
-              await PodScanInHub.update(
-                { podScanInHubId:  paramPodScanInHubId},
-                {
-                  transactionStatusId: 200,
-                  updatedTime: moment().toDate(),
-                  userIdUpdated: 1,
-                },
-              );
+            // Process Create GS
+            const redlock = await RedisService.redlock(
+              `redlock:createMachineGS:${payload.sorting_branch_id}-${payload.chute_number}`, 10
+            );
+            if (redlock) {
+              for(let i = 0; i < payload.reference_numbers.length; i++) {
+                scanResultMachine = await this.machineAwbScan(transactionManager, payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
+                if(scanResultMachine) {
+                  paramBagItemId = scanResultMachine.bagItemId;
+                  paramBagNumber = scanResultMachine.bagNumber;
+                  paramPodScanInHubId = scanResultMachine.podScanInHubId;
+                }
+                // if (i == 2) {
+                //   throw new BadRequestException('Coba Gagal 1');
+                // }
+              }
+              if(scanResultMachine) {
+                // Status DONE 200 untuk PODSCANINHUB
+                await PodScanInHub.update(
+                  { podScanInHubId:  paramPodScanInHubId},
+                  {
+                    transactionStatusId: 200,
+                    updatedTime: moment().toDate(),
+                    userIdUpdated: 1,
+                  },
+                );
+                const data = [];
+                data.push({
+                  state: 0,
+                  no_gabung_sortir: scanResultMachine.bagNumber,
+                });
+                result.statusCode = HttpStatus.OK;
+                result.message = `Success Upload`;
+                result.data = data;
+              }
+            } else {
               const data = [];
-              data.push({
-                state: 0,
-                no_gabung_sortir: scanResultMachine.bagNumber,
-              });
-              result.statusCode = HttpStatus.OK;
-              result.message = `Success Upload`;
-              result.data = data;
+                data.push({
+                  state: 1,
+                  no_gabung_sortir: null,
+                });
+                result.statusCode = HttpStatus.BAD_REQUEST;
+                result.message = `Nomor resi sedang di PROSESS !`;
+                result.data = data;
+                return result;
             }
+
           } else {
             const data = [];
-              data.push({
-                state: 1,
-                no_gabung_sortir: null,
-              });
-              result.statusCode = HttpStatus.BAD_REQUEST;
-              result.message = `Nomor resi sedang di PROSESS !`;
-              result.data = data;
-              return result;
+            data.push({
+              state: 1,
+              no_gabung_sortir: null,
+            });
+            result.statusCode = HttpStatus.BAD_REQUEST;
+            result.message = `Branch Sortir not found`;
+            result.data = data;
           }
-
         } else {
           const data = [];
           data.push({
@@ -159,24 +171,15 @@ export class HubMachineService {
             no_gabung_sortir: null,
           });
           result.statusCode = HttpStatus.BAD_REQUEST;
-          result.message = `Branch Sortir not found`;
+          result.message = `Branch not found`;
           result.data = data;
         }
-      } else {
-        const data = [];
-        data.push({
-          state: 1,
-          no_gabung_sortir: null,
-        });
-        result.statusCode = HttpStatus.BAD_REQUEST;
-        result.message = `Branch not found`;
-        result.data = data;
       }
-    }
-    return result;
+      return result;
+    });
   }
 
-  private static async machineAwbScan(paramawbNumber: string, paramBranchId: number, paramBagItemId: number, paramBagNumber: string, paramPodScanInHubId: string, paramBranchIdLastmile: number, paramSealNumber: string): Promise<any> {
+  private static async machineAwbScan(transactionManager, paramawbNumber: string, paramBranchId: number, paramBagItemId: number, paramBagNumber: string, paramPodScanInHubId: string, paramBranchIdLastmile: number, paramSealNumber: string): Promise<any> {
     const awbNumber = paramawbNumber;
     const branchId: number = paramBranchId;
     const result = new Object();
@@ -210,7 +213,7 @@ export class HubMachineService {
 
     if (awb.toId) {
       // use cache data
-      branch = await Branch.findOne({ cache: true, where: { branchId } });
+      branch = await transactionManager.getRepository(Branch).findOne({ cache: true, where: { branchId } });
       // NOTE: Validate branch
       if (!branch) {
         isAllow = false;
@@ -228,7 +231,7 @@ export class HubMachineService {
     if (isAllow) {
       // use data district from branch
       if (branch && districtId) {
-        districtDetail = await District.findOne({
+        districtDetail = await transactionManager.getRepository(District).findOne({
           cache: true,
           where: { districtId, isDeleted: false },
         });
@@ -253,30 +256,19 @@ export class HubMachineService {
       // NOTE: critical path
       // get data bag / create new data bag
       if (paramBagNumber) {
-        const bagItem = await this.MachineInsertDetailAwb(paramBagNumber, awb, podScanInHubId, awbItemAttr.awbItemId, paramBranchId);
+        const bagItem = await this.MachineInsertDetailAwb(transactionManager, paramBagNumber, awb, podScanInHubId, awbItemAttr.awbItemId, paramBranchId);
         if (bagItem) {
           bagWeight = bagItem.weight;
           bagSeq = bagItem.bagSeq;
         }
       } else {
         // Generate Bag Number
-        const genBagNumber = await this.MachineCreateBagNumber(paramBranchId, awbItemAttr.awbItemId, districtDetail, branch, awb, paramBranchIdLastmile, paramSealNumber);
+        const genBagNumber = await this.MachineCreateBagNumber(transactionManager, paramBranchId, awbItemAttr.awbItemId, districtDetail, branch, awb, paramBranchIdLastmile, paramSealNumber);
         bagNumber = genBagNumber.bagNumber;
         podScanInHubId = genBagNumber.podScanInHubId;
         bagItemId = genBagNumber.bagItemId;
         bagWeight = genBagNumber.weight;
         bagSeq = genBagNumber.bagSeq;
-      }
-
-      // insert data trouble
-      // TODO: feature disable
-      if (isTrouble) {
-        // const dataTrouble = {
-        //   awbNumber: awb.awbNumber,
-        //   troubleDesc: join(troubleDesc, ' dan '),
-        // };
-        // console.error('TROUBLE SCAN GAB SORTIR :: ', dataTrouble);
-        // await this.insertAwbTrouble(dataTrouble);
       }
 
       // construct response data
@@ -311,9 +303,7 @@ export class HubMachineService {
     return result;
   }
 
-  private static async MachineInsertDetailAwb(paramBagNumber: string, paramAwbDetail, paramPodScanInHubId: string, paramAwbItemId: number, paramBranchId: number): Promise<BagItem> {
-    // const authMeta = AuthService.getAuthData();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
+  private static async MachineInsertDetailAwb(transactionManager, paramBagNumber: string, paramAwbDetail, paramPodScanInHubId: string, paramAwbItemId: number, paramBranchId: number): Promise<BagItem> {
     const bagDetail = await BagService.validBagNumber(paramBagNumber);
 
     if (!bagDetail) {
@@ -332,7 +322,7 @@ export class HubMachineService {
       const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
       PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat );
 
-      await BagItem.update({
+      await transactionManager.getRepository(BagItem).update({
         bagItemId: bagDetail.bagItemId,
       }, {
         weight: bagWeightFinalFloat,
@@ -362,10 +352,8 @@ export class HubMachineService {
     return bagItem;
   }
 
-  private static async MachineCreateBagNumber(paramBranchId: number, paramAwbItemId, districtDetail, branchDetail, paramAwbDetail, paramBranchIdLastmile, paramSealNumber ): Promise<CreateBagNumberResponseVM> {
+  private static async MachineCreateBagNumber(transactionManager, paramBranchId: number, paramAwbItemId, districtDetail, branchDetail, paramAwbDetail, paramBranchIdLastmile, paramSealNumber ): Promise<CreateBagNumberResponseVM> {
     const result = new CreateBagNumberResponseVM();
-    // const authMeta = AuthService.getAuthData();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
     const branchId = paramBranchId;
 
     let bagId: number;
@@ -376,66 +364,43 @@ export class HubMachineService {
       throw new BadRequestException('Tidak ada nomor resi');
     }
 
-    // const qb = createQueryBuilder();
-    // qb.addSelect('a.bag_id', 'bagId');
-    // qb.addSelect('a.bag_number', 'bagNumber');
-    // qb.addSelect('a.district_id_to', 'districtIdTo');
-    // qb.addSelect('MAX(b.bag_seq)', 'lastSequence');
-    // qb.from('bag', 'a');
-    // qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
-    // qb.where('a.created_time >= :today AND a.created_time < :tomorrow', {
-    //   today: moment().format('YYYY-MM-DD'),
-    //   tomorrow: moment().add(1, 'd').format('YYYY-MM-DD'),
-    // });
-    // qb.andWhere('a.branch_id_to = :branchId', { branchId });
-    // qb.andWhere('a.is_deleted = false');
-    // qb.groupBy('a.bag_id');
-
-    // const bagData = await qb.getRawOne();
-
-    // if (!bagData) {
       // generate bag number
-      randomBagNumber =
-        'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
-      const representativeCode = districtDetail
-        ? districtDetail.districtCode.substring(0, 3)
-        : null;
-      const representative = await Representative.findOne({
-        where: { isDeleted: false, representativeCode },
-      });
-      const refBranchCode = branchDetail ? branchDetail.branchCode : '';
-      const bagDetail = Bag.create({
-        bagNumber: randomBagNumber,
-        branchIdTo: paramBranchIdLastmile,
-        refRepresentativeCode: representative
-          ? representative.representativeCode
-          : null,
-        representativeIdTo: representative
-          ? representative.representativeId
-          : null,
-        refBranchCode,
-        bagType: 'branch',
-        branchId: branchId,
-        bagDate: moment().format('YYYY-MM-DD'),
-        bagDateReal: moment().toDate(),
-        createdTime: moment().toDate(),
-        updatedTime: moment().toDate(),
-        userIdCreated: 1,
-        userIdUpdated: 1,
-        isSortir: true,
-        isManual : false,
-        sealNumber: paramSealNumber,
-      });
+    randomBagNumber =
+      'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
+    const representativeCode = districtDetail
+      ? districtDetail.districtCode.substring(0, 3)
+      : null;
+    const representative = await Representative.findOne({
+      where: { isDeleted: false, representativeCode },
+    });
+    const refBranchCode = branchDetail ? branchDetail.branchCode : '';
+    const bagDetail = Bag.create({
+      bagNumber: randomBagNumber,
+      branchIdTo: paramBranchIdLastmile,
+      refRepresentativeCode: representative
+        ? representative.representativeCode
+        : null,
+      representativeIdTo: representative
+        ? representative.representativeId
+        : null,
+      refBranchCode,
+      bagType: 'branch',
+      branchId: branchId,
+      bagDate: moment().format('YYYY-MM-DD'),
+      bagDateReal: moment().toDate(),
+      createdTime: moment().toDate(),
+      updatedTime: moment().toDate(),
+      userIdCreated: 1,
+      userIdUpdated: 1,
+      isSortir: true,
+      isManual : false,
+      sealNumber: paramSealNumber,
+    });
 
-      const bag = await Bag.save(bagDetail);
-      bagId = bag.bagId;
-      sequence = 1;
-      assign(result, { bagNumber: randomBagNumber });
-    // } else {
-    //   bagId = bagData.bagId;
-    //   sequence = bagData.lastSequence + 1;
-    //   randomBagNumber = bagData.bagNumber;
-    // }
+    const bag = await transactionManager.getRepository(Bag).save(bagDetail);
+    bagId = bag.bagId;
+    sequence = 1;
+    assign(result, { bagNumber: randomBagNumber });
     const bagSeq: string = sequence.toString().padStart(3, '0');
     const awbDetail = paramAwbDetail;
 
@@ -452,7 +417,7 @@ export class HubMachineService {
       userIdUpdated: 1,
       isSortir: true,
     });
-    const bagItem = await BagItem.save(bagItemDetail);
+    const bagItem = await transactionManager.getRepository(BagItem).save(bagItemDetail);
 
     // NOTE: background job for insert bag item history
     BagItemHistoryQueueService.addData(
@@ -471,7 +436,7 @@ export class HubMachineService {
 
     // insert into pod scan in hub
     // 100 = inprogress, 200 = done
-    const podScanInHubData = PodScanInHub.create({
+    const podScanInHubData = transactionManager.getRepository(PodScanInHub).create({
       branchId: branchId,
       scanInType: 'BAG',
       transactionStatusId: 100,
@@ -480,7 +445,7 @@ export class HubMachineService {
       updatedTime: moment().toDate(),
       userIdUpdated: 1,
     });
-    const podScanInHub = await PodScanInHub.save(podScanInHubData);
+    const podScanInHub = await transactionManager.getRepository(PodScanInHub).save(podScanInHubData);
 
     // #region send to background process
     CreateBagFirstScanHubQueueService.perform(
