@@ -34,12 +34,12 @@ export class HubMachineService {
     let data: Branch = await RedisService.get(cacheKey, true);
     if (data) return data;
 
-    data = await Branch.findOne({
+    data = (await Branch.findOne({
       where: {
         branchId: branchId,
         isDeleted: false,
       },
-    });
+    })) as any;
 
     if (data) {
       // cache 30 minutes
@@ -55,13 +55,13 @@ export class HubMachineService {
     let data: BranchSortir = await RedisService.get(cacheKey, true);
     if (data) return data;
 
-    data = await BranchSortir.findOne({
+    data = (await BranchSortir.findOne({
       where: {
         branchId: branchId,
         noChute: chuteNumber,
         isDeleted: false,
       },
-    });
+    })) as any;
 
     if (data) {
       // cache 30 minutes
@@ -77,12 +77,12 @@ export class HubMachineService {
     let data: District = await RedisService.get(cacheKey, true);
     if (data) return data;
 
-    data = await District.findOne({
+    data = (await District.findOne({
       where: {
         districtId: districtId,
         isDeleted: false,
       },
-    });
+    })) as any;
 
     if (data) {
       // cache 6 hours
@@ -98,12 +98,12 @@ export class HubMachineService {
     let data: Representative = await RedisService.get(cacheKey, true);
     if (data) return data;
 
-    data = await Representative.findOne({
+    data = (await Representative.findOne({
       where: {
         representativeCode: representativeCode,
         isDeleted: false,
       },
-    });
+    })) as any;
 
     if (data) {
       // cache 30 minutes
@@ -185,7 +185,8 @@ export class HubMachineService {
       .reduce((result, value) => {
         result.push(value[0]);
         return result;
-      }, []);
+      }, [])
+      .value();
 
     const awbs = await this.getAwbs(awbNumbers);
     const awbItemAttrs = await this.getAwbItemAttrs(awbNumbers);
@@ -475,7 +476,7 @@ export class HubMachineService {
 
     // INSERT INTO TABLE BAG ITEM
     const bagItemQueryData = BagItem.create({
-      bagId,
+      bagId: bagId,
       bagSeq: sequence,
       branchIdLast: branch.branchId,
       bagItemStatusIdLast: 3000,
