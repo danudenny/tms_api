@@ -114,27 +114,34 @@ export class BagScanOutHubQueueService {
             // TODO: if isTransit auto IN
             if (data.doPodType == 3020) {
               // queue bull IN HUB
-              await DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+              DoPodDetailPostMetaQueueService.createJobByScanOutBagInHubAndOutHub(
                 itemAwb.awbItemId,
                 data.branchId,
                 data.userId,
+                employeeIdDriver,
+                employeeNameDriver,
+                branchName,
+                cityName,
+                data.branchIdNext,
+                branchNameNext,
+                1,
+              );
+            } else {
+              // NOTE: queue bull OUT HUB
+              DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+                itemAwb.awbItemId,
+                data.branchId,
+                data.userId,
+                employeeIdDriver,
+                employeeNameDriver,
+                AWB_STATUS.OUT_HUB,
+                branchName,
+                cityName,
+                data.branchIdNext,
+                branchNameNext,
+                1,
               );
             }
-
-            // NOTE: queue bull OUT HUB
-            DoPodDetailPostMetaQueueService.createJobByScanOutBag(
-              itemAwb.awbItemId,
-              data.branchId,
-              data.userId,
-              employeeIdDriver,
-              employeeNameDriver,
-              AWB_STATUS.OUT_HUB,
-              branchName,
-              cityName,
-              data.branchIdNext,
-              branchNameNext,
-              1,
-            );
           }
         }
       } else {
