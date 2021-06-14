@@ -13,7 +13,7 @@ import { getConnection, Transaction } from 'typeorm';
 @ApiUseTags('Hub Mesin Sortir Resi Bag')
 @Controller('hub/sortir/combine')
 export class HubMachinePackageController {
-  constructor() {}
+  constructor() { }
 
   @Post('packages')
   @HttpCode(HttpStatus.OK)
@@ -21,9 +21,6 @@ export class HubMachinePackageController {
   @UseGuards(AuthXAPIKeyGuard)
   @ApiOkResponse({ type: MachinePackageResponseVm })
   public async checkSpk(@Body() payload: PackageMachinePayloadVm) {
-    return await getConnection().transaction(transactionManager => {
-      return HubMachineService.awbPackage(transactionManager, payload);
-    });
-
+    return await HubMachineService.processMachineBagging(payload);
   }
 }

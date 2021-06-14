@@ -5,6 +5,7 @@ import { BagItemAwb } from '../../../shared/orm-entity/bag-item-awb';
 import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue.service';
 import { DropoffHubDetail } from '../../../shared/orm-entity/dropoff_hub_detail';
 import { AwbItem } from '../../../shared/orm-entity/awb-item';
+import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -39,6 +40,7 @@ export class BagDropoffHubQueueService {
       console.log('### SCAN DROP OFF HUB JOB ID =========', job.id);
       const data = job.data;
 
+      const dateNow = moment().toDate();
       const bagItemsAwb = await BagItemAwb.find({
         where: {
           bagItemId: data.bagItemId,
@@ -70,6 +72,26 @@ export class BagDropoffHubQueueService {
               dropoffDetail.createdTime = data.timestamp;
               dropoffDetail.updatedTime = data.timestamp;
               await DropoffHubDetail.save(dropoffDetail);
+
+              // CREATE STATUS DO HUB IN AWB SUMMARY
+              const hubSummaryAwb = HubSummaryAwb.create(
+                {
+                  scanDateDoHub: dateNow,
+                  branchId: data.branchId,
+                  awbNumber: itemAwb.awbNumber,
+                  doHub: true,
+                  bagItemIdDo: data.bagItemId,
+                  bagIdDo: data.bagId,
+                  awbItemId: itemAwb.awbItemId,
+                  userIdCreated: data.userId,
+                  userIdUpdated: data.userId,
+                  createdTime: data.timestamp,
+                  updatedTime: data.timestamp,
+                },
+              );
+              await HubSummaryAwb.insert(hubSummaryAwb);
+
+              //
 
               // NOTE: queue by Bull
               // add awb history with background process
@@ -105,6 +127,7 @@ export class BagDropoffHubQueueService {
     userId: number,
     branchId: number,
     isSmd = 0,
+    bagId = 0,
   ) {
     const obj = {
       dropoffHubId,
@@ -113,6 +136,7 @@ export class BagDropoffHubQueueService {
       branchId,
       timestamp: moment().toDate(),
       isSmd,
+      bagId,
     };
 
     return BagDropoffHubQueueService.queue.add(obj);

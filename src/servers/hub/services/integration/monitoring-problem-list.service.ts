@@ -7,6 +7,7 @@ import { MonitoringHubProblemVm, MonitoringHubTotalProblemVm } from '../../model
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub-monitoring.service';
 import { DropoffHub } from '../../../../shared/orm-entity/dropoff_hub';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 @Injectable()
 export class MonitoringProblemListService {
@@ -26,7 +27,7 @@ export class MonitoringProblemListService {
       scanDate:  'doh.created_time',
       scanDateInHub: 'doh.created_time',
       createdTime : 'doh.created_time',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'doh.branch_id',
       branchNameFrom : 'br.branch_name',
       awbNumber : 'dohd.awb_number',
       bagNumber : 'doh.bag_number',
@@ -35,6 +36,11 @@ export class MonitoringProblemListService {
     const mappingBagSortirFilter = {
       bagSortir : 'b1.bag_number',
       bagSeqSortir : 'bi1.bag_seq',
+      branchIdFrom : 'b1.branch_id',
+    };
+
+    const mappingScanOutFilter = {
+      branchIdFrom : 'dp2.branch_id',
     };
 
     const mappingForBagSortirFilter = {
@@ -51,7 +57,7 @@ export class MonitoringProblemListService {
       scanDate:  'doh.created_time',
       scanDateInHub: 'doh.created_time',
       createdTime : 'doh.created_time',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'doh.branch_id',
       branchNameFrom : 'br.branch_name',
       awbNumber : 'dohd.awb_number',
       bagNumber : 'doh.bag_number',
@@ -59,7 +65,8 @@ export class MonitoringProblemListService {
     };
 
     let whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia1.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
-    const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    let whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    const whereQueryScanOut2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingScanOutFilter, true);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQueryForBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagSortirFilter, true);
     const whereQueryForBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagNumberFilter, true);
@@ -69,6 +76,11 @@ export class MonitoringProblemListService {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
       whereQueryBagSortir = whereQueryBagSortir2 ? whereQueryBagSortir + '\nAND ' + whereQueryBagSortir2 : whereQueryBagSortir;
+    }
+    if (!whereQueryScanOut) {
+      whereQueryScanOut = whereQueryScanOut2;
+    } else {
+      whereQueryScanOut = whereQueryScanOut2 ? whereQueryScanOut + '\nAND ' + whereQueryScanOut2 : whereQueryScanOut;
     }
     payload.filters = [];
 
@@ -237,7 +249,7 @@ export class MonitoringProblemListService {
       scanDate:  'doh.created_time::DATE',
       scanDateInHub: 'doh.created_time::DATE',
       createdTime : 'doh.created_time::DATE',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'doh.branch_id',
       branchNameFrom : 'br.branch_name',
       awbNumber : 'dohd.awb_number',
       bagNumber : 'doh.bag_number',
@@ -246,6 +258,11 @@ export class MonitoringProblemListService {
     const mappingBagSortirFilter = {
       bagSortir : 'b1.bag_number',
       bagSeqSortir : 'bi1.bag_seq',
+      branchIdFrom : 'b1.branch_id',
+    };
+
+    const mappingScanOutFilter = {
+      branchIdFrom : 'dp2.branch_id',
     };
 
     const mappingForBagSortirFilter = {
@@ -262,7 +279,7 @@ export class MonitoringProblemListService {
       scanDate:  'doh.created_time',
       scanDateInHub: 'doh.created_time',
       createdTime : 'doh.created_time',
-      branchIdFrom : 'br.branch_id',
+      branchIdFrom : 'doh.branch_id',
       branchNameFrom : 'br.branch_name',
       awbNumber : 'dohd.awb_number',
       bagNumber : 'doh.bag_number',
@@ -270,17 +287,23 @@ export class MonitoringProblemListService {
     };
 
     let whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'bia1.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
-    const whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    let whereQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime']);
+    const whereQueryScanOut2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingScanOutFilter, true);
     const whereQueryBagSortir2 = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortirFilter, true);
     const whereQueryForBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagSortirFilter, true);
     const whereQueryForBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingForBagNumberFilter, true);
     const whereQueryLastStatus = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'ah3.branch_id', ['eq'], 'branchIdFrom');
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
-
     if (!whereQueryBagSortir) {
       whereQueryBagSortir = whereQueryBagSortir2;
     } else {
       whereQueryBagSortir = whereQueryBagSortir2 ? whereQueryBagSortir + '\nAND ' + whereQueryBagSortir2 : whereQueryBagSortir;
+    }
+
+    if (!whereQueryScanOut) {
+      whereQueryScanOut = whereQueryScanOut2;
+    } else {
+      whereQueryScanOut = whereQueryScanOut2 ? whereQueryScanOut + '\nAND ' + whereQueryScanOut2 : whereQueryScanOut;
     }
     payload.filters = [];
 
@@ -303,7 +326,7 @@ export class MonitoringProblemListService {
       [`br.branch_name`, 'branchName'],
       [`doh.created_time::DATE`, 'scanDate'],
       [`br.branch_code`, 'branchCode'],
-      [`br.branch_id`, 'branchId'],
+      [`doh.branch_id`, 'branchId'],
       [`c.city_name`, 'cityName'],
       [`COUNT(
           DISTINCT CASE
@@ -405,7 +428,6 @@ export class MonitoringProblemListService {
     q.groupByRaw(`
       br.branch_name,
       br.branch_code,
-      br.branch_id,
       c.city_name,
       doh.created_time::DATE,
       doh.branch_id
@@ -423,15 +445,215 @@ export class MonitoringProblemListService {
     return result;
   }
 
+  static async getDoHubV2(
+    payload: BaseMetaPayloadVm,
+    isManual = null,
+    isProblem = null,
+    isScanOut = null,
+  ): Promise<MonitoringHubProblemVm> {
+    let problemFilter = '';
+    if (isManual != null) {
+      payload.filters.push({
+        field: 'isManual',
+        operator: 'eq',
+        value: isManual ? 'true' : 'false',
+      } as BaseMetaPayloadFilterVm);
+    }
+    if (isProblem === true) {
+      problemFilter = 'hsa.awb_status_id_last >= 23500 AND hsa.awb_status_id_last <= 24000';
+    }
+    if (isScanOut != null) {
+      payload.filters.push({
+        field: 'outHub',
+        operator: 'eq',
+        value: isScanOut ? 'true' : 'false',
+      } as BaseMetaPayloadFilterVm);
+    }
+    const mappingFilter = {
+      bagNumber:  'b.bag_number',
+      bagSortir: 'bi.bag_number',
+      bagSeq : 'bdo.bag_seq',
+      bagSeqSortir : 'bin.bag_seq',
+      awbNumber : 'hsa.awb_number',
+      scanDate : 'hsa.scan_date_do_hub',
+      createdTime: 'hsa.scan_date_do_hub',
+      branchIdFrom : 'hsa.branch_id',
+      isManual : 'bi.is_manual',
+      outHub : 'hsa.out_hub',
+    };
+    const mappingSortBy = {
+      scanDate:  'hsa.scan_date_do_hub',
+      scanDateInHub: 'hsa.scan_date_do_hub',
+      createdTime : 'hsa.scan_date_do_hub',
+      branchIdFrom : 'hsa.branch_id',
+      branchNameFrom : 'br.branch_name',
+      awbNumber : 'br.branch_id',
+      cityId : 'c.city_id',
+    };
+    payload = this.formatPayloadFiltersAwbProblem(payload);
+
+    const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
+
+    const query = `
+      SELECT
+        hsa.scan_date_do_hub AS "scanDate",
+        hsa.awb_number AS "awbNumber",
+        CASE
+          WHEN bi.bag_number IS NOT NULL
+            THEN CONCAT(bi.bag_number, LPAD(bin.bag_seq::text, 3, '0'))
+          ELSE CONCAT(b.bag_number, LPAD(bdo.bag_seq::text, 3, '0'))
+        END AS "bagNumber",
+        CASE WHEN hsa.do_hub = TRUE THEN 'Yes' ELSE 'No' END AS "do",
+        CASE WHEN hsa.in_hub = TRUE THEN 'Yes' ELSE 'No' END AS "in",
+        CASE WHEN hsa.out_hub = TRUE THEN 'Yes' ELSE 'No' END AS "out",
+        ast.awb_status_name AS "awbStatusName"
+      FROM hub_summary_awb hsa
+      LEFT JOIN awb_status ast ON hsa.awb_status_id_last = ast.awb_status_id AND ast.is_deleted = FALSE
+      LEFT JOIN bag_item bdo ON hsa.bag_item_id_do = bdo.bag_Item_id AND bdo.is_deleted = FALSE
+      LEFT JOIN bag b ON bdo.bag_id = b.bag_id AND b.is_deleted = FALSE
+      LEFT JOIN bag_item bin ON hsa.bag_item_id_in = bin.bag_Item_id AND bin.is_deleted = FALSE
+      LEFT JOIN bag bi ON bin.bag_id = bi.bag_id AND bi.is_deleted = FALSE
+      WHERE
+        hsa.is_deleted = FALSE ${whereQuery ? 'AND ' + whereQuery : ''} ${problemFilter ? 'AND ' + problemFilter : ''}
+    `;
+
+    const queryFix = query +
+      `${
+        payload.sortBy && mappingSortBy[payload.sortBy] ?
+        `ORDER BY ${mappingSortBy[payload.sortBy]} ${payload.sortDir}` :
+        `ORDER BY hsa.scan_date_do_hub DESC`
+      }
+      LIMIT ${payload.limit}
+      ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''}
+    `;
+
+    const data = await RawQueryService.query(queryFix);
+    const total = await RawQueryService.query('SELECT COUNT(*) AS total FROM(' + query + ') n');
+
+    const result = new MonitoringHubProblemVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total[0].total);
+
+    return result;
+  }
+
+  static async getAwbtotalSortirV2(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubTotalProblemVm> {
+    const mappingBagNumber = {
+      bagNumber : 'b.branch_id',
+    };
+    const mappingBagSortir = {
+      bagSortir : 'b.bag_number',
+    };
+
+    const mappingSubFilter = {
+      bagNumber:  'b.bag_number',
+      bagSortir: 'b.bag_number',
+      bagSeq : 'bi.bag_seq',
+      bagSeqSortir : 'bi.bag_seq',
+      awbNumber : 'hsa.awb_number',
+      scanDate: 'hsa.scan_date_do_hub',
+      createdTime: 'hsa.scan_date_do_hub',
+    };
+
+    const mappingFilter = {
+      branchIdFrom : 'br.branch_id',
+      cityId : 'c.city_id',
+    };
+
+    const mappingSortBy = {
+      scanDate:  'da.scan_date_do_hub',
+      scanDateInHub: 'da.scan_date_do_hub',
+      createdTime : 'da.scan_date_do_hub',
+      branchIdFrom : 'br.branch_id',
+      branchNameFrom : 'br.branch_name',
+      cityId : 'c.city_id',
+    };
+
+    payload = this.formatPayloadFiltersAwbProblem(payload);
+
+    const whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortir, true);
+    const whereQueryBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagNumber, true);
+    const whereSubQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingSubFilter, true);
+    const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
+    const subQuery = `
+      SELECT
+        hsa.scan_date_do_hub,
+        hsa.branch_id,
+        COUNT(hsa.awb_number) as do_hub,
+        COUNT(hsa.awb_number) FILTER (WHERE b.is_sortir = TRUE AND b.is_manual = TRUE) as manual_sortir,
+        COUNT(hsa.awb_number) FILTER (WHERE b.is_sortir = TRUE AND b.is_manual = FALSE) as machine_sortir,
+        COUNT(hsa.awb_number) FILTER (WHERE hsa.out_hub = TRUE) as scanout,
+        COUNT(hsa.awb_number) FILTER (WHERE hsa.out_hub = FALSE) as not_scanout,
+        COUNT(hsa.awb_number) FILTER (WHERE hsa.awb_status_id_last >= 23500 AND hsa.awb_status_id_last <= 24000) as problem
+      FROM hub_summary_awb hsa
+      LEFT JOIN bag b ON ${whereQueryBagNumber ? 'hsa.bag_id_do' : 'hsa.bag_id_in'} = b.bag_id AND b.is_deleted = FALSE
+
+      ${whereQueryBagNumber || whereQueryBagSortir ?
+      `LEFT JOIN bag_item bi ON ${whereQueryBagSortir ? 'hsa.bag_item_id_in' : 'hsa.bag_item_id_do'} = bi.bag_item_id AND bi.is_deleted = FALSE` : ''
+      }
+      WHERE
+        hsa.is_deleted = FALSE ${whereSubQuery ? 'AND ' + whereSubQuery : ''}
+      GROUP BY
+        hsa.scan_date_do_hub,
+        hsa.branch_id
+    `;
+
+    const query = `
+      SELECT
+        br.branch_name AS "branchName",
+        da.scan_date_do_hub AS "scanDate",
+        br.branch_code AS "branchCode",
+        da.branch_id AS "branchId",
+        c.city_name AS "cityName",
+        da.problem AS "problem",
+        da.do_hub AS "doHub",
+        da.manual_sortir AS "manualSortir",
+        da.machine_sortir AS "machineSortir",
+        da.scanout AS "scanOut",
+        da.not_scanout AS "notScanOut"
+      FROM(
+        ${subQuery}
+      ) AS da
+      INNER JOIN branch br ON da.branch_id = br.branch_id AND br.is_deleted = FALSE
+      INNER JOIN district d ON br.district_id = d.district_id AND d.is_deleted = FALSE
+      INNER JOIN city c ON d.city_id = c.city_id AND c.is_deleted = FALSE
+      ${whereQuery ? 'WHERE ' + whereQuery : ''}
+    `;
+
+    const queryFix = query +
+      `${
+        payload.sortBy && mappingSortBy[payload.sortBy] ?
+        `ORDER BY ${mappingSortBy[payload.sortBy]} ${payload.sortDir}` :
+        `ORDER BY da.scan_date_do_hub DESC`
+      }
+      LIMIT ${payload.limit}
+      ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''}
+    `;
+
+    const data = await RawQueryService.query(queryFix);
+    const total = await RawQueryService.query('SELECT COUNT(*) AS total FROM(' + query + ') n');
+
+    const result = new MonitoringHubTotalProblemVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total[0].total);
+
+    return result;
+  }
+
   static formatPayloadFiltersAwbProblem(payload: BaseMetaPayloadVm) {
 
     // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < payload.filters.length; i++) {
-      if (payload.filters[i].field == 'bagSortir') {
+      const field = payload.filters[i].field;
+      if (field == 'bagSortir' || field == 'bagNumber') {
         const bagSortir = payload.filters[i].value.substr( 0 , 7);
         const bagSeq = payload.filters[i].value.substr(7 , 10);
         payload.filters[i].value = bagSortir;
-        payload.filters.push({field: 'bagSeqSortir', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
+        payload.filters.push({field: field == 'bagSortir' ? 'bagSeqSortir' : 'bagSeq', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
       }
     }
     return payload;
@@ -444,10 +666,23 @@ export class MonitoringProblemListService {
     return data;
   }
 
+  static async getAwbManualSortirV2(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubProblemVm> {
+    const data = this.getDoHubV2(payload, true);
+    return data;
+  }
+
   static async getAwbScanOut(
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringHubProblemVm> {
     const data = this.getDoHub(payload, null, null, true);
+    return data;
+  }
+  static async getAwbScanOutV2(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubProblemVm> {
+    const data = this.getDoHubV2(payload, null, null, true);
     return data;
   }
 
@@ -457,6 +692,12 @@ export class MonitoringProblemListService {
     const data = this.getDoHub(payload, null, null, false);
     return data;
   }
+  static async getAwbNotScanOutV2(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubProblemVm> {
+    const data = this.getDoHubV2(payload, null, null, false);
+    return data;
+  }
 
   static async getAwbMachineSortir(
     payload: BaseMetaPayloadVm,
@@ -464,11 +705,23 @@ export class MonitoringProblemListService {
     const data = this.getDoHub(payload, false);
     return data;
   }
+  static async getAwbMachineSortirV2(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubProblemVm> {
+    const data = this.getDoHubV2(payload, false);
+    return data;
+  }
 
   static async getAwbProblem(
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringHubProblemVm> {
     const data = this.getDoHub(payload, null, true);
+    return data;
+  }
+  static async getAwbProblemV2(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubProblemVm> {
+    const data = this.getDoHubV2(payload, null, true);
     return data;
   }
 
