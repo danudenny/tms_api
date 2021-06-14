@@ -78,5 +78,4 @@ export class BagItemHistoryQueueService {
 
     return BagItemHistoryQueueService.queue.add(obj);
   }
-
 }

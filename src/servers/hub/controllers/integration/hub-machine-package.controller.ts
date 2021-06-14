@@ -21,6 +21,6 @@ export class HubMachinePackageController {
   @UseGuards(AuthXAPIKeyGuard)
   @ApiOkResponse({ type: MachinePackageResponseVm })
   public async checkSpk(@Body() payload: PackageMachinePayloadVm) {
-    return await HubMachineService.awbPackage(payload);
+    return await HubMachineService.processMachineBagging(payload);
   }
 }

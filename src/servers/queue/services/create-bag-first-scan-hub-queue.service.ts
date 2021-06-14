@@ -1,4 +1,4 @@
-import { getManager } from 'typeorm';
+import { EntityManager, getManager, In } from 'typeorm';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 import { BagItemAwb } from '../../../shared/orm-entity/bag-item-awb';
 import { PodScanInHubBag } from '../../../shared/orm-entity/pod-scan-in-hub-bag';
@@ -8,6 +8,7 @@ import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue
 import { QueueBullBoard } from './queue-bull-board';
 import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import moment = require('moment');
+import * as _ from 'lodash';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -22,7 +23,7 @@ export class CreateBagFirstScanHubQueueService {
             60 *
             60 *
             1000) /
-            +ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
+          +ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
         ),
         backoff: {
           type: 'fixed',
@@ -142,7 +143,7 @@ export class CreateBagFirstScanHubQueueService {
       this.queue.clean(5000);
     });
 
-    this.queue.on('cleaned', function(job, type) {
+    this.queue.on('cleaned', function (job, type) {
       console.log('Cleaned %s %s jobs', job.length, type);
     });
   }
@@ -174,4 +175,130 @@ export class CreateBagFirstScanHubQueueService {
 
     return CreateBagFirstScanHubQueueService.queue.add(obj);
   }
+
+  public static async performDirect(
+    transactionManager: EntityManager,
+    batchData: CreateBagFirstScanHubQueueServiceBatch,
+  ) {
+    const dateNow = moment().toDate();
+
+    const awbNumbers = batchData.awbs.filter(x => x.awbNumber).map(x => x.awbNumber);
+    const awbItemIds = batchData.awbs.filter(x => x.awbItemId).map(x => x.awbItemId);
+    const awbItemAttrIds = batchData.awbs.filter(x => x.awbItemAttr).map(x => x.awbItemAttr.awbItemAttrId);
+
+    const bagItemAwbSaveDatas = batchData.awbs.filter(x => x.awbItemAttr).map(x => {
+      return BagItemAwb.create({
+        bagItemId: batchData.bagItemId,
+        awbNumber: x.awbNumber,
+        weight: x.totalWeight,
+        awbItemId: x.awbItemId,
+        userIdCreated: batchData.userId,
+        createdTime: batchData.timestamp,
+        updatedTime: batchData.timestamp,
+        userIdUpdated: batchData.userId,
+        isSortir: true,
+      });
+    });
+
+    const podScanInHubDetailSaveDatas = batchData.awbs.filter(x => x.awbItemAttr).map(x => {
+      return PodScanInHubDetail.create({
+        podScanInHubId: batchData.podScanInHubId,
+        bagId: batchData.bagId,
+        bagItemId: batchData.bagItemId,
+        bagNumber: batchData.bagNumber,
+        awbItemId: x.awbItemId,
+        awbId: x.awbItemAttr.awbId,
+        awbNumber: x.awbNumber,
+        userIdCreated: batchData.userId,
+        userIdUpdated: batchData.userId,
+        createdTime: batchData.timestamp,
+        updatedTime: batchData.timestamp,
+      });
+    });
+
+    // BEGIN INSERT
+
+    // insert into pod scan in hub bag
+    const podScanInHubBagSaveData = PodScanInHubBag.create({
+      podScanInHubId: batchData.podScanInHubId,
+      branchId: batchData.branchId,
+      bagId: batchData.bagId,
+      bagNumber: batchData.bagNumber,
+      bagItemId: batchData.bagItemId,
+      totalAwbItem: bagItemAwbSaveDatas.length,
+      totalAwbScan: bagItemAwbSaveDatas.length,
+      userIdCreated: batchData.userId,
+      userIdUpdated: batchData.userId,
+      createdTime: batchData.timestamp,
+      updatedTime: batchData.timestamp,
+    });
+
+    await transactionManager.insert(PodScanInHubBag, podScanInHubBagSaveData);
+
+    // INSERT INTO TABLE BAG ITEM AWB
+    await transactionManager.insert(BagItemAwb, bagItemAwbSaveDatas);
+
+    // insert into pod scan in hub detail
+    await transactionManager.insert(PodScanInHubDetail, podScanInHubDetailSaveDatas);        
+
+    // update awb item attr
+    const chunkAwbItemAttrs = _.chunk(awbItemAttrIds, 30);
+    for (const c of chunkAwbItemAttrs) {
+      await transactionManager.update(AwbItemAttr,
+        { awbItemAttrId: In(c) },
+        {
+          bagItemIdLast: batchData.bagItemId,
+          updatedTime: batchData.timestamp,
+          isPackageCombined: true,
+          awbStatusIdLast: 4500,
+          userIdLast: batchData.userId,
+        },
+      );    
+    }
+
+    // UPDATE STATUS IN HUB IN AWB SUMMARY    
+    const chunkAwbNumbers = _.chunk(awbNumbers, 30);
+    for (const c of chunkAwbNumbers) {
+      await transactionManager.update(
+        HubSummaryAwb,
+        { awbNumber: In(c) },
+        {
+          scanDateInHub: dateNow,
+          inHub: true,
+          bagItemIdIn: batchData.bagItemId,
+          bagIdIn: batchData.bagId,
+          userIdUpdated: batchData.userId,
+          updatedTime: batchData.timestamp,
+        },
+      );
+    }    
+
+    for (const awbItemId of awbItemIds) {
+      // update status awb
+      DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+        awbItemId,
+        batchData.branchId,
+        batchData.userId,
+      );
+    }    
+  }
+}
+
+
+export interface CreateBagFirstScanHubQueueServiceBatch {
+  bagId: number;
+  bagItemId: number;
+  bagNumber: string;
+  podScanInHubId: string;  
+  userId: number;
+  branchId: number;
+  timestamp: Date | string;
+  awbs: CreateBagFirstScanHubQueueServiceBatchAwb[];  
+}
+
+export interface CreateBagFirstScanHubQueueServiceBatchAwb {
+  awbItemId: number;
+  awbNumber: string;
+  awbItemAttr?: AwbItemAttr;
+  totalWeight: number;
 }
