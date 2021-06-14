@@ -1,4 +1,5 @@
-import { chunk, flatMap, sampleSize, chain } from 'lodash';
+// import { chunk, flatMap, sampleSize, chain } from 'lodash';
+const _ = require("lodash");
 import { getConnection, In } from 'typeorm';
 
 import { HttpStatus } from '@nestjs/common';
@@ -116,7 +117,7 @@ export class HubMachineService {
 
   public static async getAwbs(awbNumbers: string[]): Promise<Awb[]> {
     // chunk to 20 records to avoid long query
-    const chunks = chunk(awbNumbers, 20);
+    const chunks = _.chunk(awbNumbers, 20);
     const pResults = await Promise.all(chunks.map(x => {
       return Awb.find({
         where: { awbNumber: In(x), isDeleted: false },
@@ -124,19 +125,18 @@ export class HubMachineService {
       });
     }));
 
-    // const results = flatMap(pResults, (x) => x ?? []);
-    // return results;
-    return [];
+    const results = _.flatMap(pResults, (x) => x ?? []);
+    return results;
   }
 
   public static async getAwbItemAttrs(awbNumbers: string[]): Promise<AwbItemAttr[]> {
     // chunk to 20 records to avoid long query
-    const chunks = chunk(awbNumbers, 20);
+    const chunks = _.chunk(awbNumbers, 20);
     const pResults = await Promise.all(chunks.map(x => {
       return AwbService.validAwbNumbers(x);
     }));
 
-    const results = flatMap(pResults, x => x ?? []);
+    const results = _.flatMap(pResults, x => x ?? []);
     return results;
   }
 
@@ -181,13 +181,12 @@ export class HubMachineService {
       ? await this.getDistrict(branch.districtId)
       : null;
 
-    const awbNumbers: string[] = chain(payload.reference_numbers)
+    const awbNumbers: string[] = _(payload.reference_numbers)
       .groupBy(g => g)
       .reduce((result, value) => {
         result.push(value[0]);
         return result;
-      }, [])
-      .value();
+      }, []);
 
     const awbs = await this.getAwbs(awbNumbers);
     const awbItemAttrs = await this.getAwbItemAttrs(awbNumbers);
@@ -445,7 +444,7 @@ export class HubMachineService {
     const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
 
     // generate bag number
-    const randomBagNumber = 'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
+    const randomBagNumber = 'MS' + _.sampleSize('012345678900123456789001234567890', 5).join('');
     const refBranchCode = branch.branchCode ?? '';
     const representativeCode = district?.districtCode.substring(0, 3) ?? null;
     const representative = await this.getRepresentative(representativeCode);
