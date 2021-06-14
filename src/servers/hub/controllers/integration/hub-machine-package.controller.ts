@@ -14,7 +14,7 @@ import { HubMachineService } from '../../services/integration/hub-machine-packag
 import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { getConnection, Transaction } from 'typeorm';
-import * as hash from 'object-hash';
+// import * as hash from 'object-hash';
 import { RedisService } from 'src/shared/services/redis.service';
 
 @ApiUseTags('Hub Mesin Sortir Resi Bag')
@@ -35,7 +35,8 @@ export class HubMachinePackageController {
       chute_number: payload.chute_number,
     };
 
-    const h = hash(hashObj);
+    // const h = hash(hashObj);
+    const h = '2313132123';
     const cacheKey = `cache:sorting-machine:push-payload:${h}`;
     const data = await RedisService.get(cacheKey, true);
     if (data) { return data; }
