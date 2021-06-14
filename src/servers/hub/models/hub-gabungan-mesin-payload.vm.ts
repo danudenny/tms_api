@@ -49,7 +49,6 @@ export class PackageMachinePayloadVm {
   })
   @IsDefined({ message: 'Seal tidak boleh kosong' })
   chute_number: string;
-
 }
 
 export class PackageBackupPayloadVm {

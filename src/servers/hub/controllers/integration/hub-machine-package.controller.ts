@@ -9,6 +9,8 @@ import { HubMachineService } from '../../services/integration/hub-machine-packag
 import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { getConnection, Transaction } from 'typeorm';
+import * as hash from 'object-hash';
+import { RedisService } from 'src/shared/services/redis.service';
 
 @ApiUseTags('Hub Mesin Sortir Resi Bag')
 @Controller('hub/sortir/combine')
@@ -21,6 +23,18 @@ export class HubMachinePackageController {
   @UseGuards(AuthXAPIKeyGuard)
   @ApiOkResponse({ type: MachinePackageResponseVm })
   public async checkSpk(@Body() payload: PackageMachinePayloadVm) {
-    return await HubMachineService.processMachineBagging(payload);
+    const hashObj = {
+      sorting_branch_id: payload.sorting_branch_id,
+      reference_numbers: payload.reference_numbers,
+      tag_seal_number: payload.tag_seal_number,
+      chute_number: payload.chute_number,
+    };
+
+    const h = hash(hashObj);
+    const cacheKey = `cache:sorting-machine:push-payload:${h}`;
+    let data = await RedisService.get(cacheKey, true);
+    if (data) return data;
+
+    return await HubMachineService.processMachineBagging(payload, cacheKey);
   }
 }
