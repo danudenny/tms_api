@@ -114,7 +114,7 @@ export class BagScanOutHubQueueService {
             // TODO: if isTransit auto IN
             if (data.doPodType == 3020) {
               // queue bull IN HUB
-              DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+              await DoPodDetailPostMetaQueueService.createJobByAwbFilter(
                 itemAwb.awbItemId,
                 data.branchId,
                 data.userId,
