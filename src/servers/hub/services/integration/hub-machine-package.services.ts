@@ -380,56 +380,38 @@ export class HubMachineService {
       throw new BadRequestException('Tidak ada nomor resi');
     }
 
-    // const qb = createQueryBuilder();
-    // qb.addSelect('a.bag_id', 'bagId');
-    // qb.addSelect('a.bag_number', 'bagNumber');
-    // qb.addSelect('a.district_id_to', 'districtIdTo');
-    // qb.addSelect('MAX(b.bag_seq)', 'lastSequence');
-    // qb.from('bag', 'a');
-    // qb.innerJoin('bag_item', 'b', 'a.bag_id = b.bag_id');
-    // qb.where('a.created_time >= :today AND a.created_time < :tomorrow', {
-    //   today: moment().format('YYYY-MM-DD'),
-    //   tomorrow: moment().add(1, 'd').format('YYYY-MM-DD'),
-    // });
-    // qb.andWhere('a.branch_id_to = :branchId', { branchId });
-    // qb.andWhere('a.is_deleted = false');
-    // qb.groupBy('a.bag_id');
-
-    // const bagData = await qb.getRawOne();
-
-    // if (!bagData) {
       // generate bag number
-      randomBagNumber =
-        'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
-      const representativeCode = districtDetail
-        ? districtDetail.districtCode.substring(0, 3)
-        : null;
-      const representative = await Representative.findOne({
-        where: { isDeleted: false, representativeCode },
-      });
-      const refBranchCode = branchDetail ? branchDetail.branchCode : '';
-      const bagDetail = Bag.create({
-        bagNumber: randomBagNumber,
-        branchIdTo: paramBranchIdLastmile,
-        refRepresentativeCode: representative
-          ? representative.representativeCode
-          : null,
-        representativeIdTo: representative
-          ? representative.representativeId
-          : null,
-        refBranchCode,
-        bagType: 'branch',
-        branchId: branchId,
-        bagDate: moment().format('YYYY-MM-DD'),
-        bagDateReal: moment().toDate(),
-        createdTime: moment().toDate(),
-        updatedTime: moment().toDate(),
-        userIdCreated: 1,
-        userIdUpdated: 1,
-        isSortir: true,
-        isManual : false,
-        sealNumber: paramSealNumber,
-      });
+    randomBagNumber =
+      'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
+    const representativeCode = districtDetail
+      ? districtDetail.districtCode.substring(0, 3)
+      : null;
+    const representative = await Representative.findOne({
+      where: { isDeleted: false, representativeCode },
+    });
+    const refBranchCode = branchDetail ? branchDetail.branchCode : '';
+    const bagDetail = Bag.create({
+      bagNumber: randomBagNumber,
+      branchIdTo: paramBranchIdLastmile,
+      refRepresentativeCode: representative
+        ? representative.representativeCode
+        : null,
+      representativeIdTo: representative
+        ? representative.representativeId
+        : null,
+      refBranchCode,
+      bagType: 'branch',
+      branchId: branchId,
+      bagDate: moment().format('YYYY-MM-DD'),
+      bagDateReal: moment().toDate(),
+      createdTime: moment().toDate(),
+      updatedTime: moment().toDate(),
+      userIdCreated: 1,
+      userIdUpdated: 1,
+      isSortir: true,
+      isManual : false,
+      sealNumber: paramSealNumber,
+    });
 
       const bag = await transactionManager.getRepository(Bag).save(bagDetail);
       bagId = bag.bagId;
