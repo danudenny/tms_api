@@ -250,29 +250,30 @@ export class DoPodDetailPostMetaQueueService {
       noteInternal,
       notePublic,
     };
-    DoPodDetailPostMetaQueueService.queue.add(objInHub);
+    const res = await DoPodDetailPostMetaQueueService.queue.add(objInHub);
+    res.queue.on('completed', (job, result) => {
+      // UPDATE OUT_HUB
+      noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver} ke ${branchNameNext}`;
+      notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
 
-    // UPDATE OUT_HUB
-    noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver} ke ${branchNameNext}`;
-    notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
+      // provide data
+      const obj = {
+        awbItemId,
+        userId,
+        branchId,
+        awbStatusId: AWB_STATUS.OUT_HUB,
+        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+        userIdCreated: userId,
+        userIdUpdated: userId,
+        employeeIdDriver,
+        timestamp: addTime ? moment().add(addTime, 'minutes').toDate() : moment().toDate(),
+        noteInternal,
+        notePublic,
+        branchIdNext,
+      };
 
-    // provide data
-    const obj = {
-      awbItemId,
-      userId,
-      branchId,
-      awbStatusId: AWB_STATUS.OUT_HUB,
-      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-      userIdCreated: userId,
-      userIdUpdated: userId,
-      employeeIdDriver,
-      timestamp: addTime ? moment().add(addTime, 'minutes').toDate() : moment().toDate(),
-      noteInternal,
-      notePublic,
-      branchIdNext,
-    };
-
-    return DoPodDetailPostMetaQueueService.queue.add(obj);
+      DoPodDetailPostMetaQueueService.queue.add(obj);
+    });
   }
 
   public static async createJobByScanInAwb(doPodDetailId: string) {
