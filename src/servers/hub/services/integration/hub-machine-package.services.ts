@@ -124,8 +124,9 @@ export class HubMachineService {
       });
     }));
 
-    const results = flatMap(pResults, (x) => x ?? []);
-    return results;
+    // const results = flatMap(pResults, (x) => x ?? []);
+    // return results;
+    return [];
   }
 
   public static async getAwbItemAttrs(awbNumbers: string[]): Promise<AwbItemAttr[]> {
