@@ -39,6 +39,7 @@ export class HubMachineService {
   constructor() {}
 
   static async awbPackage(
+    transactionManager,
     payload: PackageMachinePayloadVm,
   ): Promise<MachinePackageResponseVm> {
     const regexNumber = /^[0-9]+$/;
@@ -53,6 +54,8 @@ export class HubMachineService {
     let paramPodScanInHubId = null;
     let scanResultMachine;
 
+    console.log('payload data', payload);
+
     if (!payload.sorting_branch_id) {
       const data = [];
       data.push({
@@ -64,20 +67,21 @@ export class HubMachineService {
       result.data = data;
       // throw new BadRequestException('Sorting Branch ID Null');
     } else {
-      const branch = await Branch.findOne({
+      const branch = await transactionManager.getRepository(Branch).findOne({
         where: {
           branchId: payload.sorting_branch_id,
           isDeleted: false,
         },
       });
 
-      const branchSortir = await BranchSortir.findOne({
+      const branchSortir = await transactionManager.getRepository(BranchSortir).findOne({
         where: {
           branchId: payload.sorting_branch_id,
           noChute: payload.chute_number,
           isDeleted: false,
         },
       });
+      // console.log('branchSortir', branchSortir);
       if(branch){
         if (branchSortir) {
           for(let i = 0; i < payload.reference_numbers.length; i++) {
@@ -112,9 +116,9 @@ export class HubMachineService {
           const redlock = await RedisService.redlock(
             `redlock:createMachineGS:${payload.sorting_branch_id}-${payload.chute_number}`, 10
           );
-          if (redlock) { 
+          if (redlock) {
             for(let i = 0; i < payload.reference_numbers.length; i++) {
-              scanResultMachine = await this.machineAwbScan(payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
+              scanResultMachine = await this.machineAwbScan(transactionManager, payload.reference_numbers[i],branch.branchId, paramBagItemId, paramBagNumber, paramPodScanInHubId, branchSortir.branchIdLastmile, payload.tag_seal_number);
               if(scanResultMachine) {
                 paramBagItemId = scanResultMachine.bagItemId;
                 paramBagNumber = scanResultMachine.bagNumber;
@@ -176,7 +180,7 @@ export class HubMachineService {
     return result;
   }
 
-  private static async machineAwbScan(paramawbNumber: string, paramBranchId: number, paramBagItemId: number, paramBagNumber: string, paramPodScanInHubId: string, paramBranchIdLastmile: number, paramSealNumber: string): Promise<any> {
+  private static async machineAwbScan(transactionManager, paramawbNumber: string, paramBranchId: number, paramBagItemId: number, paramBagNumber: string, paramPodScanInHubId: string, paramBranchIdLastmile: number, paramSealNumber: string): Promise<any> {
     const awbNumber = paramawbNumber;
     const branchId: number = paramBranchId;
     const result = new Object();
@@ -210,7 +214,7 @@ export class HubMachineService {
 
     if (awb.toId) {
       // use cache data
-      branch = await Branch.findOne({ cache: true, where: { branchId } });
+      branch = await transactionManager.getRepository(Branch).findOne({ cache: true, where: { branchId } });
       // NOTE: Validate branch
       if (!branch) {
         isAllow = false;
@@ -228,7 +232,7 @@ export class HubMachineService {
     if (isAllow) {
       // use data district from branch
       if (branch && districtId) {
-        districtDetail = await District.findOne({
+        districtDetail = await transactionManager.getRepository(District).findOne({
           cache: true,
           where: { districtId, isDeleted: false },
         });
@@ -253,14 +257,14 @@ export class HubMachineService {
       // NOTE: critical path
       // get data bag / create new data bag
       if (paramBagNumber) {
-        const bagItem = await this.MachineInsertDetailAwb(paramBagNumber, awb, podScanInHubId, awbItemAttr.awbItemId, paramBranchId);
+        const bagItem = await this.MachineInsertDetailAwb(transactionManager, paramBagNumber, awb, podScanInHubId, awbItemAttr.awbItemId, paramBranchId);
         if (bagItem) {
           bagWeight = bagItem.weight;
           bagSeq = bagItem.bagSeq;
         }
       } else {
         // Generate Bag Number
-        const genBagNumber = await this.MachineCreateBagNumber(paramBranchId, awbItemAttr.awbItemId, districtDetail, branch, awb, paramBranchIdLastmile, paramSealNumber);
+        const genBagNumber = await this.MachineCreateBagNumber(transactionManager, paramBranchId, awbItemAttr.awbItemId, districtDetail, branch, awb, paramBranchIdLastmile, paramSealNumber);
         bagNumber = genBagNumber.bagNumber;
         podScanInHubId = genBagNumber.podScanInHubId;
         bagItemId = genBagNumber.bagItemId;
@@ -311,7 +315,7 @@ export class HubMachineService {
     return result;
   }
 
-  private static async MachineInsertDetailAwb(paramBagNumber: string, paramAwbDetail, paramPodScanInHubId: string, paramAwbItemId: number, paramBranchId: number): Promise<BagItem> {
+  private static async MachineInsertDetailAwb(transactionManager, paramBagNumber: string, paramAwbDetail, paramPodScanInHubId: string, paramAwbItemId: number, paramBranchId: number): Promise<BagItem> {
     // const authMeta = AuthService.getAuthData();
     // const permissonPayload = AuthService.getPermissionTokenPayload();
     const bagDetail = await BagService.validBagNumber(paramBagNumber);
@@ -332,7 +336,7 @@ export class HubMachineService {
       const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
       PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat );
 
-      await BagItem.update({
+      await transactionManager.getRepository(BagItem).update({
         bagItemId: bagDetail.bagItemId,
       }, {
         weight: bagWeightFinalFloat,
@@ -362,7 +366,7 @@ export class HubMachineService {
     return bagItem;
   }
 
-  private static async MachineCreateBagNumber(paramBranchId: number, paramAwbItemId, districtDetail, branchDetail, paramAwbDetail, paramBranchIdLastmile, paramSealNumber ): Promise<CreateBagNumberResponseVM> {
+  private static async MachineCreateBagNumber(transactionManager, paramBranchId: number, paramAwbItemId, districtDetail, branchDetail, paramAwbDetail, paramBranchIdLastmile, paramSealNumber ): Promise<CreateBagNumberResponseVM> {
     const result = new CreateBagNumberResponseVM();
     // const authMeta = AuthService.getAuthData();
     // const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -427,7 +431,7 @@ export class HubMachineService {
         sealNumber: paramSealNumber,
       });
 
-      const bag = await Bag.save(bagDetail);
+      const bag = await transactionManager.getRepository(Bag).save(bagDetail);
       bagId = bag.bagId;
       sequence = 1;
       assign(result, { bagNumber: randomBagNumber });
@@ -452,7 +456,7 @@ export class HubMachineService {
       userIdUpdated: 1,
       isSortir: true,
     });
-    const bagItem = await BagItem.save(bagItemDetail);
+    const bagItem = await transactionManager.getRepository(BagItem).save(bagItemDetail);
 
     // NOTE: background job for insert bag item history
     BagItemHistoryQueueService.addData(
@@ -471,7 +475,7 @@ export class HubMachineService {
 
     // insert into pod scan in hub
     // 100 = inprogress, 200 = done
-    const podScanInHubData = PodScanInHub.create({
+    const podScanInHubData = transactionManager.getRepository(PodScanInHub).create({
       branchId: branchId,
       scanInType: 'BAG',
       transactionStatusId: 100,
@@ -480,7 +484,7 @@ export class HubMachineService {
       updatedTime: moment().toDate(),
       userIdUpdated: 1,
     });
-    const podScanInHub = await PodScanInHub.save(podScanInHubData);
+    const podScanInHub = await transactionManager.getRepository(PodScanInHub).save(podScanInHubData);
 
     // #region send to background process
     CreateBagFirstScanHubQueueService.perform(

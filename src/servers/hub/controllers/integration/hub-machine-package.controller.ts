@@ -8,7 +8,7 @@ import { AuthXAPIKeyGuard } from '../../../../shared/guards/auth-x-api-key.guard
 import { HubMachineService } from '../../services/integration/hub-machine-package.services';
 import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
-import { Transaction } from 'typeorm';
+import { getConnection, Transaction } from 'typeorm';
 
 @ApiUseTags('Hub Mesin Sortir Resi Bag')
 @Controller('hub/sortir/combine')
@@ -20,8 +20,10 @@ export class HubMachinePackageController {
   @ApiImplicitHeader({ name: 'x-api-key' })
   @UseGuards(AuthXAPIKeyGuard)
   @ApiOkResponse({ type: MachinePackageResponseVm })
-  @Transaction()
   public async checkSpk(@Body() payload: PackageMachinePayloadVm) {
-    return HubMachineService.awbPackage(payload);
+    return await getConnection().transaction(transactionManager => {
+      return HubMachineService.awbPackage(transactionManager, payload);
+    });
+
   }
 }
