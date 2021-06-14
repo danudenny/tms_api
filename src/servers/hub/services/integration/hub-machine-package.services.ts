@@ -1,40 +1,28 @@
-// //#region
-import _, { assign, join, sampleSize } from 'lodash';
-import { createQueryBuilder, getConnection, getManager, In } from 'typeorm';
+import _, { sampleSize } from 'lodash';
+import { getConnection, In } from 'typeorm';
 
-import { BadRequestException, HttpStatus } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
-import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { District } from '../../../../shared/orm-entity/district';
 import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
-import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
-import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { Representative } from '../../../../shared/orm-entity/representative';
-import { AuthService } from '../../../../shared/services/auth.service';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import {
   BagItemHistoryQueueService,
 } from '../../../queue/services/bag-item-history-queue.service';
 import {
-  CreateBagAwbScanHubQueueService,
-} from '../../../queue/services/create-bag-awb-scan-hub-queue.service';
-import {
   CreateBagFirstScanHubQueueService, CreateBagFirstScanHubQueueServiceBatch,
 } from '../../../queue/services/create-bag-first-scan-hub-queue.service';
-import { MachinePackageResponseVm, PackageAwbResponseVm } from '../../models/hub-gabungan.response.vm';
+import { MachinePackageResponseVm } from '../../models/hub-gabungan.response.vm';
 import moment = require('moment');
 import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload.vm';
 import { BranchSortir } from '../../../../shared/orm-entity/branch-sortir';
 import { AwbService } from '../../../main/services/v1/awb.service';
-import { BagService } from '../../../main/services/v1/bag.service';
-import { CreateBagNumberResponseVM } from '../../../main/models/package-payload.vm';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { QueryBuilderService } from 'src/shared/services/query-builder.service';
-// //#endregion
 
 export class HubMachineService {
   constructor() { }
@@ -155,6 +143,7 @@ export class HubMachineService {
 
   static async processMachineBagging(
     payload: PackageMachinePayloadVm,
+    cacheKey: string,
   ): Promise<MachinePackageResponseVm> {
     console.log('payload data', payload);
 
@@ -294,7 +283,11 @@ export class HubMachineService {
         state: 0,
         no_gabung_sortir: trxResults.fullBagNumber,
       }];
+
       PinoLoggerService.log(result);
+
+      // cache for 5 minutes
+      RedisService.setex(cacheKey, result, 60 * 5, true).then();
 
       // create background process
       try {
@@ -302,47 +295,12 @@ export class HubMachineService {
         // NOTE: background job for insert bag item history
 
         BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 500, branch.branchId, 1);
-        BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 3000, branch.branchId, 1);    
-
-        // let counter = 0;
-        // for (const awbNumber of awbNumbers) {
-        //   const awb = awbs.find(x => x.awbNumber === awbNumber);
-        //   const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === awbNumber);
-
-        //   if (counter === 0) {
-        //     CreateBagFirstScanHubQueueService.perform(
-        //       trxResults.bag.bagId,
-        //       trxResults.bagItem.bagItemId,
-        //       trxResults.randomBagNumber,
-        //       awbItemAttr.awbItemId,
-        //       awb.awbNumber,
-        //       trxResults.podScanInHub.podScanInHubId,
-        //       awb.totalWeightRealRounded,
-        //       1,
-        //       branch.branchId,
-        //       currentTimeStr,
-        //     );    
-        //   }
-
-        //   counter++;
-
-        //   CreateBagAwbScanHubQueueService.perform(
-        //     trxResults.bag.bagId,
-        //     trxResults.bagItem.bagItemId,
-        //     trxResults.bag.bagNumber,
-        //     awbItemAttr.awbItemId,
-        //     awb.awbNumber,
-        //     trxResults.podScanInHub.podScanInHubId,
-        //     awb.totalWeightRealRounded,
-        //     1,
-        //     branch.branchId,
-        //     currentTimeStr,
-        //   );
-        // }
+        BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 3000, branch.branchId, 1);  
       } catch (error) {
         console.log(error);
         PinoLoggerService.log(error);
       }
+
 
       return result;
     } catch (error) {
