@@ -244,13 +244,17 @@ export class FirstMileDoPodReturnService {
         'totalOnProcess',
       ],
       [
-        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 30000)',
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 25650)',
         'totalSuccess',
       ],
       [
-        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000 AND t3.awb_status_id_last <> 14000)',
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last IN (24550, 25000))',
         'totalProblem',
       ],
+      // [
+      //   'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000 AND t3.awb_status_id_last <> 14000)',
+      //   'totalProblem',
+      // ],
     );
 
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
@@ -323,11 +327,11 @@ export class FirstMileDoPodReturnService {
       ['t1.do_pod_return_date_time', 'doPodReturnDateTime'],
       ['t1.description', 'description'],
       [
-        'COUNT(t3.awb_number)FILTER (WHERE t3.awb_status_id_last = 30000)',
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 25650)',
         'totalSuccess',
       ],
       [
-        'COUNT(t3.awb_number)FILTER (WHERE t3.awb_status_id_last NOT IN (30000, 14000))',
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last IN (24550, 25000))',
         'totalProblem',
       ],
       [
@@ -999,7 +1003,7 @@ private static async syncReturn(returnData: WebReturnVm) {
           },
         });
         if (doPodReturn) {
-          if (awbStatus.isProblem) {
+          if ([AWB_STATUS.RTC, AWB_STATUS.RTS].includes(awbStatus.awbStatusId)) {
             await transactionEntityManager.increment(
               DoPodReturn,
               {
@@ -1009,7 +1013,7 @@ private static async syncReturn(returnData: WebReturnVm) {
               'totalProblem',
               1,
             );
-          } else if (awbStatus.isFinalStatus) {
+          } else if (AWB_STATUS.UNRTS == awbStatus.awbStatusId) {
             await transactionEntityManager.increment(
               DoPodReturn,
               {

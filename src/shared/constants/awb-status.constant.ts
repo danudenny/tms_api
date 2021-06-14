@@ -21,6 +21,7 @@ export const AWB_STATUS = {
   RTN: 24500,
   RTC: 24550,
   RTS: 25000,
+  UNRTS: 25650,
   THP: 28500,
   IN_SORTIR: 13000,
   CANCEL: 1800,
