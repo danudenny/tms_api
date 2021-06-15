@@ -71,7 +71,7 @@ export class RedisService {
     });
   }
 
-  public static setex(key: string, value: string, seconds: number = 10, serialize: boolean = false) {
+  public static setex(key: string, value: any, seconds: number = 10, serialize: boolean = false) {
     return new Promise((resolve, reject) => {
       let targetValue = value;
 

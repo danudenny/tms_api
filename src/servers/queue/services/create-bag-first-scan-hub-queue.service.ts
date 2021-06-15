@@ -6,7 +6,7 @@ import { PodScanInHubDetail } from '../../../shared/orm-entity/pod-scan-in-hub-d
 import { ConfigService } from '../../../shared/services/config.service';
 import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue.service';
 import { QueueBullBoard } from './queue-bull-board';
-import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
+// import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import moment = require('moment');
 import * as _ from 'lodash';
 
