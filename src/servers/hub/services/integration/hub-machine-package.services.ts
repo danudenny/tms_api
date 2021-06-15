@@ -1,3 +1,4 @@
+const _ = require("lodash");
 import { getConnection, In } from 'typeorm';
 
 import { HttpStatus } from '@nestjs/common';
@@ -22,7 +23,6 @@ import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload
 import { BranchSortir } from '../../../../shared/orm-entity/branch-sortir';
 import { AwbService } from '../../../main/services/v1/awb.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { flatMap, chunk, sampleSize, chain } from 'lodash';
 
 export class HubMachineService {
   constructor() { }
@@ -32,11 +32,11 @@ export class HubMachineService {
   public static async getBranch(branchId: number): Promise<Branch> {
     const cacheKey = `cache:sorting-machine:branch:${branchId}`;
     let data: Branch = await RedisService.get(cacheKey, true);
-    if (data) { return data; }
+    if (data) return data;
 
     data = (await Branch.findOne({
       where: {
-        branchId,
+        branchId: branchId,
         isDeleted: false,
       },
     })) as any;
@@ -53,11 +53,11 @@ export class HubMachineService {
   public static async getBranchSortir(branchId: number, chuteNumber: number): Promise<BranchSortir> {
     const cacheKey = `cache:sorting-machine:branch_sortir_chute:${branchId}/${chuteNumber}`;
     let data: BranchSortir = await RedisService.get(cacheKey, true);
-    if (data) { return data; }
+    if (data) return data;
 
     data = (await BranchSortir.findOne({
       where: {
-        branchId,
+        branchId: branchId,
         noChute: chuteNumber,
         isDeleted: false,
       },
@@ -75,11 +75,11 @@ export class HubMachineService {
   public static async getDistrict(districtId: number): Promise<District> {
     const cacheKey = `cache:sorting-machine:district:${districtId}`;
     let data: District = await RedisService.get(cacheKey, true);
-    if (data) { return data; }
+    if (data) return data;
 
     data = (await District.findOne({
       where: {
-        districtId,
+        districtId: districtId,
         isDeleted: false,
       },
     })) as any;
@@ -96,11 +96,11 @@ export class HubMachineService {
   public static async getRepresentative(representativeCode: string): Promise<Representative> {
     const cacheKey = `cache:sorting-machine:representative:${representativeCode}`;
     let data: Representative = await RedisService.get(cacheKey, true);
-    if (data) { return data; }
+    if (data) return data;
 
     data = (await Representative.findOne({
       where: {
-        representativeCode,
+        representativeCode: representativeCode,
         isDeleted: false,
       },
     })) as any;
@@ -116,7 +116,7 @@ export class HubMachineService {
 
   public static async getAwbs(awbNumbers: string[]): Promise<Awb[]> {
     // chunk to 20 records to avoid long query
-    const chunks = chunk(awbNumbers, 20);
+    const chunks = _.chunk(awbNumbers, 20);
     const pResults = await Promise.all(chunks.map(x => {
       return Awb.find({
         where: { awbNumber: In(x), isDeleted: false },
@@ -124,18 +124,18 @@ export class HubMachineService {
       });
     }));
 
-    const results = flatMap(pResults, (x) => x );
+    const results = _.flatMap(pResults, (x) => x ?? []);
     return results;
   }
 
   public static async getAwbItemAttrs(awbNumbers: string[]): Promise<AwbItemAttr[]> {
     // chunk to 20 records to avoid long query
-    const chunks = chunk(awbNumbers, 20);
+    const chunks = _.chunk(awbNumbers, 20);
     const pResults: AwbItemAttr[][] = await Promise.all(chunks.map(x => {
       return AwbService.validAwbNumbers(x);
     }));
 
-    const results = flatMap(pResults, (x: AwbItemAttr[]) => x  );
+    const results = _.flatMap(pResults, (x: AwbItemAttr[]) => x ?? []);
     return results;
   }
 
@@ -180,12 +180,12 @@ export class HubMachineService {
       ? await this.getDistrict(branch.districtId)
       : null;
 
-    const awbNumbers: string[] = chain(payload.reference_numbers)
+    const awbNumbers: string[] = _(payload.reference_numbers)
       .groupBy(g => g)
       .reduce((result, value) => {
         result.push(value[0]);
         return result;
-      }, []).value();
+      }, []);
 
     const awbs = await this.getAwbs(awbNumbers);
     const awbItemAttrs = await this.getAwbItemAttrs(awbNumbers);
@@ -233,13 +233,13 @@ export class HubMachineService {
         //   bagId: number;
         //   bagItemId: number;
         //   bagNumber: string;
-        //   podScanInHubId: string;
+        //   podScanInHubId: string;  
         //   userId: number;
         //   branchId: number;
         //   timestamp: Date;
-        //   awbs: CreateBagFirstScanHubQueueServiceBatchAwb[];
+        //   awbs: CreateBagFirstScanHubQueueServiceBatchAwb[];  
         // }
-
+        
         // export interface CreateBagFirstScanHubQueueServiceBatchAwb {
         //   awbItemId: number;
         //   awbNumber: string;
@@ -265,7 +265,7 @@ export class HubMachineService {
           bagAwbBatch.awbs.push({
             awbItemId: awbItemAttr.awbItemId,
           awbNumber: awb.awbNumber,
-          awbItemAttr,
+          awbItemAttr: awbItemAttr,
           totalWeight: awb.totalWeightRealRounded,
           });
         }
@@ -295,15 +295,16 @@ export class HubMachineService {
         // NOTE: background job for insert bag item history
 
         BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 500, branch.branchId, 1);
-        BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 3000, branch.branchId, 1);
+        BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 3000, branch.branchId, 1);  
       } catch (error) {
         console.log(error);
         PinoLoggerService.log(error);
       }
 
+
       return result;
     } catch (error) {
-      PinoLoggerService.log(`ERROR MESIN SORTIR CATCH: ${error.message }`);
+      PinoLoggerService.log(`ERROR MESIN SORTIR CATCH: ${error?.message}`);
       PinoLoggerService.log(error);
       throw error;
     } finally {
@@ -436,23 +437,23 @@ export class HubMachineService {
 
   private static async createBag(transactionManager, branch: Branch, branchSortir: BranchSortir, district: District, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment): Promise<CreateBagResult> {
     // const result = new CreateBagNumberResponseVM();
-    // const branchId = branchId;
+    // const branchId = branchId;    
 
     const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
     const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
 
     // generate bag number
-    const randomBagNumber = 'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
-    const refBranchCode = branch ? branch.branchCode : '';
-    const representativeCode = district ? district.districtCode.substring(0, 3) : null;
+    const randomBagNumber = 'MS' + _.sampleSize('012345678900123456789001234567890', 5).join('');
+    const refBranchCode = branch.branchCode ?? '';
+    const representativeCode = district?.districtCode.substring(0, 3) ?? null;
     const representative = await this.getRepresentative(representativeCode);
 
     const bagQueryData = Bag.create({
       bagNumber: randomBagNumber,
       branchIdTo: branchSortir.branchIdLastmile,
-      refRepresentativeCode: representative ? representative.representativeCode : null,
-      representativeIdTo: representative ? representative.representativeId : null,
-      refBranchCode,
+      refRepresentativeCode: representative?.representativeCode ?? null,
+      representativeIdTo: representative?.representativeId ?? null,
+      refBranchCode: refBranchCode,
       bagType: 'branch',
       branchId: branch.branchId,
       bagDate: currentDateStr,
@@ -463,7 +464,7 @@ export class HubMachineService {
       userIdUpdated: 1,
       isSortir: true,
       isManual: false,
-      sealNumber,
+      sealNumber: sealNumber,
     });
 
     const bag = await transactionManager.getRepository(Bag).save(bagQueryData);
@@ -541,12 +542,12 @@ export class HubMachineService {
     // result.bagSeq = sequence;
 
     return {
-      randomBagNumber,
+      randomBagNumber: randomBagNumber,
       fullBagNumber: `${randomBagNumber}${bagSeq}`,
       bagSeq: sequence,
-      bag,
-      bagItem,
-      podScanInHub,
+      bag: bag,
+      bagItem: bagItem,
+      podScanInHub: podScanInHub,
     };
   }
 
