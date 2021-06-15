@@ -232,6 +232,24 @@ export class HubMachineService {
       const trxResults = await getConnection().transaction(async transactionManager => {
         const createBagResult = await this.createBag(transactionManager, branch, branchSortir, district, payload.tag_seal_number, totalWeight, mCurrentTime);
 
+        // export interface CreateBagFirstScanHubQueueServiceBatch {
+        //   bagId: number;
+        //   bagItemId: number;
+        //   bagNumber: string;
+        //   podScanInHubId: string;
+        //   userId: number;
+        //   branchId: number;
+        //   timestamp: Date;
+        //   awbs: CreateBagFirstScanHubQueueServiceBatchAwb[];
+        // }
+
+        // export interface CreateBagFirstScanHubQueueServiceBatchAwb {
+        //   awbItemId: number;
+        //   awbNumber: string;
+        //   awbItemAttr?: AwbItemAttr;
+        //   totalWeight: number;
+        // }
+
         const bagAwbBatch: CreateBagFirstScanHubQueueServiceBatch = {
             bagId: createBagResult.bag.bagId,
           bagItemId: createBagResult.bagItem.bagItemId,
@@ -260,15 +278,6 @@ export class HubMachineService {
         return createBagResult;
       });
 
-      for (const awbNumber of awbNumbers) {
-        const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === awbNumber);
-        // update status awb
-        DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-          awbItemAttr.awbItemId,
-          branch.branchId,
-          1,
-        );
-      }
       const result = new MachinePackageResponseVm();
 
       result.statusCode = HttpStatus.OK;
@@ -277,7 +286,6 @@ export class HubMachineService {
         state: 0,
         no_gabung_sortir: trxResults.fullBagNumber,
       }];
-
 
       PinoLoggerService.log(result);
 
@@ -314,7 +322,7 @@ export class HubMachineService {
     const dateNow = moment().toDate();
 
     const awbNumbers = batchData.awbs.filter(x => x.awbNumber).map(x => x.awbNumber);
-    // const awbItemIds = batchData.awbs.filter(x => x.awbItemId).map(x => x.awbItemId);
+    const awbItemIds = batchData.awbs.filter(x => x.awbItemId).map(x => x.awbItemId);
     const awbItemAttrIds = batchData.awbs.filter(x => x.awbItemAttr).map(x => x.awbItemAttr.awbItemAttrId);
     
 
@@ -405,14 +413,14 @@ export class HubMachineService {
       );
     }    
 
-    // for (const awbItemId of awbItemIds) {
-    //   // update status awb
-    //   DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-    //     awbItemId,
-    //     batchData.branchId,
-    //     batchData.userId,
-    //   );
-    // }    
+    for (const awbItemId of awbItemIds) {
+      // update status awb
+      DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+        awbItemId,
+        batchData.branchId,
+        batchData.userId,
+      );
+    }    
   }
 
   // private static async machineAwbScan(
