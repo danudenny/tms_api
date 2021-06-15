@@ -1,4 +1,4 @@
-import { getManager } from 'typeorm';
+import { EntityManager, getManager, In } from 'typeorm';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 import { BagItemAwb } from '../../../shared/orm-entity/bag-item-awb';
 import { PodScanInHubBag } from '../../../shared/orm-entity/pod-scan-in-hub-bag';
@@ -6,6 +6,9 @@ import { PodScanInHubDetail } from '../../../shared/orm-entity/pod-scan-in-hub-d
 import { ConfigService } from '../../../shared/services/config.service';
 import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue.service';
 import { QueueBullBoard } from './queue-bull-board';
+import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
+import moment = require('moment');
+import * as _ from 'lodash';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -20,7 +23,7 @@ export class CreateBagFirstScanHubQueueService {
             60 *
             60 *
             1000) /
-            +ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
+          +ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
         ),
         backoff: {
           type: 'fixed',
@@ -38,9 +41,12 @@ export class CreateBagFirstScanHubQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(async job => {
       const data = job.data;
+      const dateNow = moment().toDate();
+
       const awbItemAttr = await AwbItemAttr.findOne({
         where: { awbItemId: data.awbItemId, isDeleted: false },
       });
+
       await getManager().transaction(async transactional => {
         // Handle first awb scan
         // const awbItemAttr = await AwbItemAttr.findOne({
@@ -107,6 +113,22 @@ export class CreateBagFirstScanHubQueueService {
           });
           await transactional.insert(PodScanInHubBag, podScanInHubBagData);
 
+          // UPDATE STATUS IN HUB IN AWB SUMMARY
+          await transactional.update(
+            HubSummaryAwb,
+            {
+              awbNumber: data.awbNumber,
+            },
+            {
+              scanDateInHub: dateNow,
+              inHub: true,
+              bagItemIdIn: data.bagItemId,
+              bagIdIn: data.bagId,
+              userIdUpdated: data.userId,
+              updatedTime: data.timestamp,
+            },
+          );
+
           // update status awb
           DoPodDetailPostMetaQueueService.createJobByAwbFilter(
             data.awbItemId,
@@ -126,7 +148,7 @@ export class CreateBagFirstScanHubQueueService {
       this.queue.clean(5000);
     });
 
-    this.queue.on('cleaned', function(job, type) {
+    this.queue.on('cleaned', function (job, type) {
       console.log('Cleaned %s %s jobs', job.length, type);
     });
   }
@@ -158,4 +180,5 @@ export class CreateBagFirstScanHubQueueService {
 
     return CreateBagFirstScanHubQueueService.queue.add(obj);
   }
+
 }

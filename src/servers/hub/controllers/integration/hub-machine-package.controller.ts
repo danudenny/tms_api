@@ -23,10 +23,10 @@ export class HubMachinePackageController {
   @ApiOkResponse({ type: MachinePackageResponseVm })
   public async checkSpk(@Body() payload: PackageMachinePayloadVm) {
     const hashObj = {
-      sorting_branch_id: payload.sorting_branch_id,
-      reference_numbers: payload.reference_numbers,
+      // sorting_branch_id: payload.sorting_branch_id,
+      // reference_numbers: payload.reference_numbers,
       tag_seal_number: payload.tag_seal_number,
-      chute_number: payload.chute_number,
+      // chute_number: payload.chute_number,
     };
 
     const h = hash(hashObj);    
