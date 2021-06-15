@@ -21,12 +21,11 @@ import { AwbService } from '../../../main/services/v1/awb.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { flatMap, chunk, sampleSize, chain } from 'lodash';
 import _ from 'lodash';
-// import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
+import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { HubSummaryAwb } from '../../../../shared/orm-entity/hub-summary-awb';
 import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
-import { DoPodDetailPostMetaInQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-in-queue.service';
 
 export class HubMachineService {
   constructor() { }
@@ -264,7 +263,7 @@ export class HubMachineService {
       for (const awbNumber of awbNumbers) {
         const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === awbNumber);
         // update status awb
-        DoPodDetailPostMetaInQueueService.createJobByAwbFilter(
+        DoPodDetailPostMetaQueueService.createJobByAwbFilter(
           awbItemAttr.awbItemId,
           branch.branchId,
           1,
