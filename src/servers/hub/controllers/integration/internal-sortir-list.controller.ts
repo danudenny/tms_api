@@ -7,7 +7,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { InternalSortirListService } from '../../services/integration/internal-sortir-list.service';
 
 @ApiUseTags('Internal Sortir Log')
-@Controller('internal/sortir-log/old')
+@Controller('internal/sortir-log')
 export class InternalSortirListController {
   constructor() {}
 
