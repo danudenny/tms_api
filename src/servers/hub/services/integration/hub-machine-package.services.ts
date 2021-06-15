@@ -131,11 +131,11 @@ export class HubMachineService {
   public static async getAwbItemAttrs(awbNumbers: string[]): Promise<AwbItemAttr[]> {
     // chunk to 20 records to avoid long query
     const chunks = _.chunk(awbNumbers, 20);
-    const pResults: AwbItemAttr[][] = await Promise.all(chunks.map(x => {
+    const pResults = await Promise.all(chunks.map(x => {
       return AwbService.validAwbNumbers(x);
     }));
 
-    const results = _.flatMap(pResults, (x: AwbItemAttr[]) => x ?? []);
+    const results = _.flatMap(pResults, x => x ?? []);
     return results;
   }
 
