@@ -1,4 +1,4 @@
-import { EntityManager, getConnection, In } from 'typeorm';
+import { getConnection, In } from 'typeorm';
 
 import { HttpStatus } from '@nestjs/common';
 import { Awb } from '../../../../shared/orm-entity/awb';
@@ -13,6 +13,9 @@ import { PinoLoggerService } from '../../../../shared/services/pino-logger.servi
 import {
   BagItemHistoryQueueService,
 } from '../../../queue/services/bag-item-history-queue.service';
+import {
+  CreateBagFirstScanHubQueueService, CreateBagFirstScanHubQueueServiceBatch,
+} from '../../../queue/services/create-bag-first-scan-hub-queue.service';
 import { MachinePackageResponseVm } from '../../models/hub-gabungan.response.vm';
 import moment = require('moment');
 import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload.vm';
@@ -20,12 +23,6 @@ import { BranchSortir } from '../../../../shared/orm-entity/branch-sortir';
 import { AwbService } from '../../../main/services/v1/awb.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { flatMap, chunk, sampleSize, chain } from 'lodash';
-import _ from 'lodash';
-import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
-import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
-import { HubSummaryAwb } from '../../../../shared/orm-entity/hub-summary-awb';
-import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
-import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 
 export class HubMachineService {
   constructor() { }
@@ -273,7 +270,7 @@ export class HubMachineService {
           });
         }
 
-        await this.performDirect(transactionManager, bagAwbBatch);
+        await CreateBagFirstScanHubQueueService.performDirect(transactionManager, bagAwbBatch);
 
         return createBagResult;
       });
@@ -289,8 +286,8 @@ export class HubMachineService {
 
       PinoLoggerService.log(result);
 
-      // cache for 3 Hours
-      RedisService.setex(cacheKey, result, 60 * 60 * 3, true).then();
+      // cache for 5 minutes
+      RedisService.setex(cacheKey, result, 60 * 5, true).then();
 
       // create background process
       try {
@@ -313,114 +310,6 @@ export class HubMachineService {
       // release lock
       RedisService.del(redlockKey).then();
     }
-  }
-
-  private static async performDirect(
-    transactionManager: EntityManager,
-    batchData: CreateBagFirstScanHubQueueServiceBatch,
-  ) {
-    const dateNow = moment().toDate();
-
-    const awbNumbers = batchData.awbs.filter(x => x.awbNumber).map(x => x.awbNumber);
-    const awbItemIds = batchData.awbs.filter(x => x.awbItemId).map(x => x.awbItemId);
-    const awbItemAttrIds = batchData.awbs.filter(x => x.awbItemAttr).map(x => x.awbItemAttr.awbItemAttrId);
-    
-
-    const bagItemAwbSaveDatas = batchData.awbs.filter(x => x.awbItemAttr).map(x => {
-      return BagItemAwb.create({
-        bagItemId: batchData.bagItemId,
-        awbNumber: x.awbNumber,
-        weight: x.totalWeight,
-        awbItemId: x.awbItemId,
-        userIdCreated: batchData.userId,
-        createdTime: batchData.timestamp,
-        updatedTime: batchData.timestamp,
-        userIdUpdated: batchData.userId,
-        isSortir: true,
-      });
-    });
-
-    const podScanInHubDetailSaveDatas = batchData.awbs.filter(x => x.awbItemAttr).map(x => {
-      return PodScanInHubDetail.create({
-        podScanInHubId: batchData.podScanInHubId,
-        bagId: batchData.bagId,
-        bagItemId: batchData.bagItemId,
-        bagNumber: batchData.bagNumber,
-        awbItemId: x.awbItemId,
-        awbId: x.awbItemAttr.awbId,
-        awbNumber: x.awbNumber,
-        userIdCreated: batchData.userId,
-        userIdUpdated: batchData.userId,
-        createdTime: batchData.timestamp,
-        updatedTime: batchData.timestamp,
-      });
-    });
-
-    // BEGIN INSERT
-
-    // insert into pod scan in hub bag
-    const podScanInHubBagSaveData = PodScanInHubBag.create({
-      podScanInHubId: batchData.podScanInHubId,
-      branchId: batchData.branchId,
-      bagId: batchData.bagId,
-      bagNumber: batchData.bagNumber,
-      bagItemId: batchData.bagItemId,
-      totalAwbItem: bagItemAwbSaveDatas.length,
-      totalAwbScan: bagItemAwbSaveDatas.length,
-      userIdCreated: batchData.userId,
-      userIdUpdated: batchData.userId,
-      createdTime: batchData.timestamp,
-      updatedTime: batchData.timestamp,
-    });
-
-    await transactionManager.insert(PodScanInHubBag, podScanInHubBagSaveData);
-
-    // INSERT INTO TABLE BAG ITEM AWB
-    await transactionManager.insert(BagItemAwb, bagItemAwbSaveDatas);
-
-    // insert into pod scan in hub detail
-    await transactionManager.insert(PodScanInHubDetail, podScanInHubDetailSaveDatas);        
-
-    // update awb item attr
-    const chunkAwbItemAttrs = chunk(awbItemAttrIds, 30);
-    for (const c of chunkAwbItemAttrs) {
-      await transactionManager.update(AwbItemAttr,
-        { awbItemAttrId: In(c) },
-        {
-          bagItemIdLast: batchData.bagItemId,
-          updatedTime: batchData.timestamp,
-          isPackageCombined: true,
-          awbStatusIdLast: 4500,
-          userIdLast: batchData.userId,
-        },
-      );    
-    }
-    
-    // UPDATE STATUS IN HUB IN AWB SUMMARY    
-    const chunkAwbNumbers = chunk(awbNumbers, 30);
-    for (const c of chunkAwbNumbers) {
-      await transactionManager.update(
-        HubSummaryAwb,
-        { awbNumber: In(c) },
-        {
-          scanDateInHub: dateNow,
-          inHub: true,
-          bagItemIdIn: batchData.bagItemId,
-          bagIdIn: batchData.bagId,
-          userIdUpdated: batchData.userId,
-          updatedTime: batchData.timestamp,
-        },
-      );
-    }    
-
-    for (const awbItemId of awbItemIds) {
-      // update status awb
-      DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-        awbItemId,
-        batchData.branchId,
-        batchData.userId,
-      );
-    }    
   }
 
   // private static async machineAwbScan(
@@ -582,7 +471,7 @@ export class HubMachineService {
     const sequence = 1;
 
     const bagSeq: string = sequence.toString().padStart(3, '0');
-    
+
     // INSERT INTO TABLE BAG ITEM
     const bagItemQueryData = BagItem.create({
       bagId: bagId,
@@ -650,7 +539,7 @@ export class HubMachineService {
     // result.bagNumber = `${randomBagNumber}${bagSeq}`;
     // result.weight = bagItem.weight;
     // result.bagSeq = sequence;
-    // throw new Error('Coba Gagal 1');
+
     return {
       randomBagNumber,
       fullBagNumber: `${randomBagNumber}${bagSeq}`,
@@ -718,22 +607,4 @@ interface CreateBagResult {
   bag: Bag;
   bagItem: BagItem;
   podScanInHub: PodScanInHub;
-}
-
-interface CreateBagFirstScanHubQueueServiceBatch {
-  bagId: number;
-  bagItemId: number;
-  bagNumber: string;
-  podScanInHubId: string;  
-  userId: number;
-  branchId: number;
-  timestamp: Date | string;
-  awbs: CreateBagFirstScanHubQueueServiceBatchAwb[];  
-}
-
-interface CreateBagFirstScanHubQueueServiceBatchAwb {
-  awbItemId: number;
-  awbNumber: string;
-  awbItemAttr?: AwbItemAttr;
-  totalWeight: number;
 }
