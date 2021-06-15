@@ -189,6 +189,11 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       BranchSortirLogQueueService.boot();
     }
 
+    if (serverConfig.bullHub) {
+      BagItemHistoryQueueService.boot();
+      DoPodDetailPostMetaQueueService.boot();
+    }
+
 
   }
 }
