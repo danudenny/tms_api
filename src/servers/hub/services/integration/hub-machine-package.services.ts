@@ -19,7 +19,7 @@ import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload
 import { BranchSortir } from '../../../../shared/orm-entity/branch-sortir';
 import { AwbService } from '../../../main/services/v1/awb.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { flatMap, chunk, sampleSize, chain } from 'lodash';
+import { flatMap, chunk, sampleSize, chain, result } from 'lodash';
 import _ from 'lodash';
 // import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
@@ -301,7 +301,15 @@ export class HubMachineService {
     } catch (error) {
       PinoLoggerService.log(`ERROR MESIN SORTIR CATCH: ${error.message }`);
       PinoLoggerService.log(error);
-      throw error;
+      const result = new MachinePackageResponseVm();
+      result.statusCode = HttpStatus.BAD_REQUEST;
+      result.message = `ERROR MESIN SORTIR GS : ${error.message }`;
+      result.data = [{
+        state: 1,
+        no_gabung_sortir: null,
+      }]; 
+      return result;
+      // throw error;
     } finally {
       // release lock
       RedisService.del(redlockKey).then();
