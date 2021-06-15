@@ -6,7 +6,6 @@ import { DoPodDetail } from '../../../shared/orm-entity/do-pod-detail';
 import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue.service';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { SharedService } from '../../../shared/services/shared.service';
-import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -43,7 +42,6 @@ export class BagScanOutHubQueueService {
       console.log('### SCAN OUT HUB JOB ID =========', job.id);
       const data = job.data;
 
-      const dateNow = moment().toDate();
       const bagItemsAwb = await BagItemAwb.find({
         where: {
           bagItemId: data.bagItemId,
@@ -99,49 +97,30 @@ export class BagScanOutHubQueueService {
             doPodDetail.userIdCreated = data.userId;
             await DoPodDetail.insert(doPodDetail);
 
-            await HubSummaryAwb.update(
-              {
-                awbNumber: itemAwb.awbNumber,
-              },
-              {
-                scanDateOutHub: dateNow,
-                outHub: true,
-                userIdUpdated: data.userId,
-                updatedTime: data.timestamp,
-              },
-            );
-
             // TODO: if isTransit auto IN
             if (data.doPodType == 3020) {
               // queue bull IN HUB
-              DoPodDetailPostMetaQueueService.createJobByScanOutBagInHubAndOutHub(
+              DoPodDetailPostMetaQueueService.createJobByAwbFilter(
                 itemAwb.awbItemId,
                 data.branchId,
                 data.userId,
-                employeeIdDriver,
-                employeeNameDriver,
-                branchName,
-                cityName,
-                data.branchIdNext,
-                branchNameNext,
-                1,
-              );
-            } else {
-              // NOTE: queue bull OUT HUB
-              DoPodDetailPostMetaQueueService.createJobByScanOutBag(
-                itemAwb.awbItemId,
-                data.branchId,
-                data.userId,
-                employeeIdDriver,
-                employeeNameDriver,
-                AWB_STATUS.OUT_HUB,
-                branchName,
-                cityName,
-                data.branchIdNext,
-                branchNameNext,
-                1,
               );
             }
+
+            // NOTE: queue bull OUT HUB
+            DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+              itemAwb.awbItemId,
+              data.branchId,
+              data.userId,
+              employeeIdDriver,
+              employeeNameDriver,
+              AWB_STATUS.OUT_HUB,
+              branchName,
+              cityName,
+              data.branchIdNext,
+              branchNameNext,
+              1,
+            );
           }
         }
       } else {

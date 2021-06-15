@@ -216,63 +216,6 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
-  public static async createJobByScanOutBagInHubAndOutHub(
-    awbItemId: number,
-    branchId: number,
-    userId: number,
-    employeeIdDriver: number,
-    employeeNameDriver: string,
-    branchName: string,
-    cityName: string,
-    branchIdNext: number,
-    branchNameNext: string,
-    addTime?: number,
-  ) {
-    // TODO: ONLY OUT_HUB
-    // UPDATE IN_HUB
-    let noteInternal = `Paket telah di terima di ${cityName} [${branchName}]`;
-    let notePublic = `Paket telah di terima di ${cityName} [${branchName}]`;
-
-    // provide data
-    const objInHub = {
-      awbItemId,
-      userId,
-      branchId,
-      awbStatusId: AWB_STATUS.IN_HUB,
-      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-      userIdCreated: userId,
-      userIdUpdated: userId,
-      employeeIdDriver: null,
-      timestamp: moment().toDate(),
-      noteInternal,
-      notePublic,
-    };
-    const res = await DoPodDetailPostMetaQueueService.queue.add(objInHub);
-    res.queue.on('completed', (job, result) => {
-      // UPDATE OUT_HUB
-      noteInternal = `Paket keluar dari ${cityName} [${branchName}] - Supir: ${employeeNameDriver} ke ${branchNameNext}`;
-      notePublic = `Paket keluar dari ${cityName} [${branchName}]`;
-
-      // provide data
-      const obj = {
-        awbItemId,
-        userId,
-        branchId,
-        awbStatusId: AWB_STATUS.OUT_HUB,
-        awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
-        userIdCreated: userId,
-        userIdUpdated: userId,
-        employeeIdDriver,
-        timestamp: addTime ? moment().add(addTime, 'minutes').toDate() : moment().toDate(),
-        noteInternal,
-        notePublic,
-        branchIdNext,
-      };
-
-      DoPodDetailPostMetaQueueService.queue.add(obj);
-    });
-  }
-
   public static async createJobByScanInAwb(doPodDetailId: string) {
     // TODO: ???
     const doPodDetailRepository = new OrionRepositoryService(
