@@ -111,7 +111,7 @@ export class HubMachineService {
 
     if (data) {
       // cache 30 minutes
-      RedisService.sextex(cacheKey, data, 60 * 30, true).then();
+      RedisService.setex(cacheKey, data, 60 * 30, true).then();
       return data;
     }
 
