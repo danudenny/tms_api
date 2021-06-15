@@ -23,7 +23,7 @@ import { flatMap, chunk, sampleSize, chain, result } from 'lodash';
 import _ from 'lodash';
 // import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
-import { HubSummaryAwb } from '../../../../shared/orm-entity/hub-summary-awb';
+// import { HubSummaryAwb } from '../../../../shared/orm-entity/hub-summary-awb';
 import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { DoPodDetailPostMetaInQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-in-queue.service';
@@ -111,7 +111,7 @@ export class HubMachineService {
 
     if (data) {
       // cache 30 minutes
-      RedisService.setex(cacheKey, data, 60 * 30, true).then();
+      RedisService.sextex(cacheKey, data, 60 * 30, true).then();
       return data;
     }
 
@@ -398,21 +398,21 @@ export class HubMachineService {
     }
     
     // UPDATE STATUS IN HUB IN AWB SUMMARY    
-    const chunkAwbNumbers = chunk(awbNumbers, 30);
-    for (const c of chunkAwbNumbers) {
-      await transactionManager.update(
-        HubSummaryAwb,
-        { awbNumber: In(c) },
-        {
-          scanDateInHub: dateNow,
-          inHub: true,
-          bagItemIdIn: batchData.bagItemId,
-          bagIdIn: batchData.bagId,
-          userIdUpdated: batchData.userId,
-          updatedTime: batchData.timestamp,
-        },
-      );
-    }
+    // const chunkAwbNumbers = chunk(awbNumbers, 30);
+    // for (const c of chunkAwbNumbers) {
+    //   await transactionManager.update(
+    //     HubSummaryAwb,
+    //     { awbNumber: In(c) },
+    //     {
+    //       scanDateInHub: dateNow,
+    //       inHub: true,
+    //       bagItemIdIn: batchData.bagItemId,
+    //       bagIdIn: batchData.bagId,
+    //       userIdUpdated: batchData.userId,
+    //       updatedTime: batchData.timestamp,
+    //     },
+    //   );
+    // }
   }
 
 

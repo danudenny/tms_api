@@ -118,6 +118,7 @@ export class RedisService {
   }
 
   public static ttl(key: string) {
+
     return new Promise((resolve, reject) => {
       this.client.ttl(key, (err, val) => {
         if (err) {

@@ -6,7 +6,7 @@ import { PodScanInHubDetail } from '../../../shared/orm-entity/pod-scan-in-hub-d
 import { ConfigService } from '../../../shared/services/config.service';
 import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue.service';
 import { QueueBullBoard } from './queue-bull-board';
-import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
+// import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import moment = require('moment');
 import * as _ from 'lodash';
 
@@ -112,22 +112,6 @@ export class CreateBagFirstScanHubQueueService {
             updatedTime: data.timestamp,
           });
           await transactional.insert(PodScanInHubBag, podScanInHubBagData);
-
-          // UPDATE STATUS IN HUB IN AWB SUMMARY
-          await transactional.update(
-            HubSummaryAwb,
-            {
-              awbNumber: data.awbNumber,
-            },
-            {
-              scanDateInHub: dateNow,
-              inHub: true,
-              bagItemIdIn: data.bagItemId,
-              bagIdIn: data.bagId,
-              userIdUpdated: data.userId,
-              updatedTime: data.timestamp,
-            },
-          );
 
           // update status awb
           DoPodDetailPostMetaQueueService.createJobByAwbFilter(
