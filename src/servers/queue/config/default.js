@@ -11,4 +11,5 @@ module.exports = {
   bullPodMobile: true,
   bullCod: true,
   bullSmd: true,
+  bullHub: true
 };

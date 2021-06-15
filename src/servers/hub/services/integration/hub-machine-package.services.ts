@@ -21,11 +21,12 @@ import { AwbService } from '../../../main/services/v1/awb.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { flatMap, chunk, sampleSize, chain } from 'lodash';
 import _ from 'lodash';
-import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
+// import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { HubSummaryAwb } from '../../../../shared/orm-entity/hub-summary-awb';
 import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
+import { DoPodDetailPostMetaInQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-in-queue.service';
 
 export class HubMachineService {
   constructor() { }
@@ -232,24 +233,6 @@ export class HubMachineService {
       const trxResults = await getConnection().transaction(async transactionManager => {
         const createBagResult = await this.createBag(transactionManager, branch, branchSortir, district, payload.tag_seal_number, totalWeight, mCurrentTime);
 
-        // export interface CreateBagFirstScanHubQueueServiceBatch {
-        //   bagId: number;
-        //   bagItemId: number;
-        //   bagNumber: string;
-        //   podScanInHubId: string;
-        //   userId: number;
-        //   branchId: number;
-        //   timestamp: Date;
-        //   awbs: CreateBagFirstScanHubQueueServiceBatchAwb[];
-        // }
-
-        // export interface CreateBagFirstScanHubQueueServiceBatchAwb {
-        //   awbItemId: number;
-        //   awbNumber: string;
-        //   awbItemAttr?: AwbItemAttr;
-        //   totalWeight: number;
-        // }
-
         const bagAwbBatch: CreateBagFirstScanHubQueueServiceBatch = {
             bagId: createBagResult.bag.bagId,
           bagItemId: createBagResult.bagItem.bagItemId,
@@ -278,6 +261,15 @@ export class HubMachineService {
         return createBagResult;
       });
 
+      for (const awbNumber of awbNumbers) {
+        const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === awbNumber);
+        // update status awb
+        DoPodDetailPostMetaInQueueService.createJobByAwbFilter(
+          awbItemAttr.awbItemId,
+          branch.branchId,
+          1,
+        );
+      }
       const result = new MachinePackageResponseVm();
 
       result.statusCode = HttpStatus.OK;
@@ -286,6 +278,7 @@ export class HubMachineService {
         state: 0,
         no_gabung_sortir: trxResults.fullBagNumber,
       }];
+
 
       PinoLoggerService.log(result);
 
@@ -322,7 +315,7 @@ export class HubMachineService {
     const dateNow = moment().toDate();
 
     const awbNumbers = batchData.awbs.filter(x => x.awbNumber).map(x => x.awbNumber);
-    const awbItemIds = batchData.awbs.filter(x => x.awbItemId).map(x => x.awbItemId);
+    // const awbItemIds = batchData.awbs.filter(x => x.awbItemId).map(x => x.awbItemId);
     const awbItemAttrIds = batchData.awbs.filter(x => x.awbItemAttr).map(x => x.awbItemAttr.awbItemAttrId);
     
 
@@ -411,139 +404,9 @@ export class HubMachineService {
           updatedTime: batchData.timestamp,
         },
       );
-    }    
-
-    for (const awbItemId of awbItemIds) {
-      // update status awb
-      DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-        awbItemId,
-        batchData.branchId,
-        batchData.userId,
-      );
-    }    
+    }
   }
 
-  // private static async machineAwbScan(
-  //   transactionManager,
-  //   paramAwbNumber: string,
-  //   paramAwb: Awb,
-  //   paramAwbItemAttr: AwbItemAttr,
-  //   paramBranch: Branch,
-  //   paramBagItemId: number,
-  //   paramBagNumber: string,
-  //   paramPodScanInHubId: string,
-  //   paramBranchIdLastmile: number,
-  //   paramSealNumber: string
-  // ): Promise<any> {
-  //   const result = new Object();
-  //   const troubleDesc: String[] = [];
-
-  //   let branchId = paramBranch?.branchId;
-  //   let bagWeight: number = null;
-  //   let bagSeq: number = null;
-  //   let districtDetail: District = null;
-  //   let branchName = null;
-  //   let branchCode = null;
-
-  //   let bagItemId: number = paramBagItemId;
-  //   let bagNumber: string = paramBagNumber;
-  //   let podScanInHubId: string = paramPodScanInHubId;
-
-  //   let isTrouble: boolean = false;
-  //   let isAllow: boolean = true;
-  //   let districtId = null;
-
-  //   if (paramAwbItemAttr.awbStatusIdLast !== 2600) {
-  //     isTrouble = true;
-  //     troubleDesc.push('Awb status tidak sesuai');
-  //   }
-
-  //   if (paramAwb.toId) {
-  //     // NOTE: Validate branch
-  //     if (!paramBranch) {
-  //       isAllow = false;
-  //       troubleDesc.push('Gerai tidak ditemukan');
-  //     } else {
-  //       branchCode = paramBranch.branchCode;
-  //       branchName = paramBranch.branchName;
-  //       districtId = paramBranch.districtId;
-  //     }
-  //   } else {
-  //     isTrouble = true;
-  //     troubleDesc.push('Tidak ada tujuan');
-  //   }
-
-  //   if (isAllow) {
-  //     // use data district from branch
-  //     if (paramBranch && districtId) {
-  //       districtDetail = await this.getDistrict(districtId);
-  //     }
-
-  //     // construct data detail
-  //     // NOTE: change totalWeightFinalRounded : awb.totalWeightRealRounded
-  //     const detail = {
-  //       awbNumber: paramAwb.awbNumber,
-  //       totalWeightRealRounded: paramAwb.totalWeightRealRounded,
-  //       totalWeightFinalRounded: paramAwb.totalWeightRealRounded,
-  //       consigneeName: paramAwb.consigneeName,
-  //       consigneeNumber: paramAwb.consigneeNumber,
-  //       awbItemId: paramAwbItemAttr.awbItemId,
-  //       customerId: paramAwb.customerAccountId,
-  //       pickupMerchant: paramAwb.pickupMerchant,
-  //       shipperName: paramAwb.refReseller,
-  //       consigneeAddress: paramAwb.consigneeAddress,
-  //       isTrouble,
-  //     };
-
-  //     // NOTE: critical path
-  //     // get data bag / create new data bag
-  //     if (!paramBagNumber) {
-  //       // Generate Bag Number
-  //       const genBagNumber = await this.createMachineBagNumber(transactionManager, branchId, paramAwbItemAttr.awbItemId, districtDetail, paramBranch, paramAwb, paramBranchIdLastmile, paramSealNumber);
-  //       bagNumber = genBagNumber.fullBagNumber;
-  //       podScanInHubId = genBagNumber.podScanInHubId;
-  //       bagItemId = genBagNumber.bagItemId;
-  //       bagWeight = genBagNumber.weight;
-  //       bagSeq = genBagNumber.bagSeq;
-  //     } else {
-  //       const bagItem = await this.insertMachineAwb(transactionManager, paramBagNumber, paramAwb, podScanInHubId, paramAwbItemAttr.awbItemId, branchId);
-  //       if (bagItem) {
-  //         bagWeight = bagItem.weight;
-  //         bagSeq = bagItem.bagSeq;
-  //       }
-  //     }
-
-  //     // construct response data
-  //     assign(result, {
-  //       bagNumber,
-  //       isAllow,
-  //       podScanInHubId,
-  //       bagItemId,
-  //       branchId,
-  //       data: detail,
-  //       branchName,
-  //       branchCode,
-  //       bagWeight,
-  //       bagSeq,
-  //     });
-
-  //   } else {
-  //     assign(result, {
-  //       isAllow,
-  //       bagNumber,
-  //       podScanInHubId,
-  //       bagItemId,
-  //       data: [],
-  //       branchId,
-  //       branchName,
-  //       branchCode,
-  //       bagWeight,
-  //       bagSeq,
-  //     });
-  //   }
-
-  //   return result;
-  // }
 
   private static async createBag(transactionManager, branch: Branch, branchSortir: BranchSortir, district: District, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment): Promise<CreateBagResult> {
     // const result = new CreateBagNumberResponseVM();
@@ -553,7 +416,7 @@ export class HubMachineService {
     const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
 
     // generate bag number
-    const randomBagNumber = 'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
+    const randomBagNumber = 'Z' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 6).join('');
     const refBranchCode = branch ? branch.branchCode : '';
     const representativeCode = district ? district.districtCode.substring(0, 3) : null;
     const representative = await this.getRepresentative(representativeCode);
@@ -613,44 +476,6 @@ export class HubMachineService {
 
     const podScanInHub = await transactionManager.getRepository(PodScanInHub).save(podScanInHubQueryData);
 
-    // #region send to background process
-
-    // NOTE: background job for insert bag item history
-    // BagItemHistoryQueueService.addData(
-    //   bagItem.bagItemId,
-    //   500,
-    //   branchId,
-    //   1,
-    // );
-
-    // BagItemHistoryQueueService.addData(
-    //   bagItem.bagItemId,
-    //   3000,
-    //   branchId,
-    //   1,
-    // );
-
-    // CreateBagFirstScanHubQueueService.perform(
-    //   bagId,
-    //   bagItem.bagItemId,
-    //   randomBagNumber,
-    //   paramAwbItemId,
-    //   awbDetail.awbNumber,
-    //   podScanInHub.podScanInHubId,
-    //   parseFloat(awbDetail.totalWeightRealRounded),
-    //   1,
-    //   branchId,
-    //   moment().toDate(),
-    // );
-    // #endregion send to background process
-
-    // contruct data response
-    // result.bagItemId = bagItem.bagItemId;
-    // result.podScanInHubId = podScanInHub.podScanInHubId;
-    // result.bagNumber = `${randomBagNumber}${bagSeq}`;
-    // result.weight = bagItem.weight;
-    // result.bagSeq = sequence;
-    // throw new Error('Coba Gagal 1');
     return {
       randomBagNumber,
       fullBagNumber: `${randomBagNumber}${bagSeq}`,
@@ -661,54 +486,6 @@ export class HubMachineService {
     };
   }
 
-  // private static async insertMachineAwb(transactionManager, branch: Branch, bag: Bag, bagItem: BagItem, podScanInHub: podScanInHub, awbNumbers: string[], awbs: Awb[], awbItemAttrs: AwbItemAttr[]): Promise<BagItem> {
-  //   const bagDetail = await BagService.validBagNumber(paramBagNumber);
-
-  //   if (!bagDetail) {
-  //     throw new BadRequestException('No gabungan sortir tidak ditemukan');
-  //   }
-
-  //   // update weight in bag item
-  //   // delay get data from replication
-  //   // TODO: change method update data weight bag ??
-  //   const bagItem = await BagItem.findOne({
-  //     where: { bagItemId: bagDetail.bagItemId },
-  //   });
-  //   if (bagItem) {
-  //     const bagWeight = Number(bagItem.weight);
-  //     const totalWeightRealRounded = Number(paramAwbDetail.totalWeightRealRounded);
-  //     const bagWeightFinalFloat = parseFloat((bagWeight + totalWeightRealRounded).toFixed(5));
-  //     PinoLoggerService.log('#### bagWeightFinalFloat :: ', bagWeightFinalFloat);
-
-  //     await transactionManager.getRepository(BagItem).update({
-  //       bagItemId: bagDetail.bagItemId,
-  //     }, {
-  //       weight: bagWeightFinalFloat,
-  //     });
-  //     bagItem.weight = bagWeightFinalFloat;
-  //     // await bagItem.save();
-
-  //     // //#region sending background process
-  //     CreateBagAwbScanHubQueueService.perform(
-  //       bagDetail.bagId,
-  //       bagDetail.bagItemId,
-  //       bagDetail.bag.bagNumber,
-  //       paramAwbItemId,
-  //       paramAwbDetail.awbNumber,
-  //       paramPodScanInHubId,
-  //       paramAwbDetail.totalWeightRealRounded,
-  //       1,
-  //       paramBranchId,
-  //       moment().toDate(),
-  //     );
-  //     // //#endregion
-  //   } else {
-  //     // DEBUG: TypeError: Cannot read property 'weight' of undefined
-  //     console.error('######## BAGITEM NOT FOUND :: BAG DETAIL :: ', bagDetail);
-  //     // console.error('######## BAGITEM NOT FOUND :: PAYLOAD :: ', payload);
-  //   }
-  //   return bagItem;
-  // }
 }
 
 interface CreateBagResult {
