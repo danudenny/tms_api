@@ -17,15 +17,15 @@ export class DoPodDetailPostMetaInQueueService {
     defaultJobOptions: {
       timeout: 0,
       attempts: Math.round(
-        (+ConfigService.get('queue.doPodDetailPostMeta.keepRetryInHours') *
+        (+ConfigService.get('queue.doPodDetailPostMetaIn.keepRetryInHours') *
           60 *
           60 *
           1000) /
-          +ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
+          +ConfigService.get('queue.doPodDetailPostMetaIn.retryDelayMs'),
       ),
       backoff: {
         type: 'fixed',
-        delay: ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
+        delay: ConfigService.get('queue.doPodDetailPostMetaIn.retryDelayMs'),
       },
     },
   });
