@@ -553,7 +553,7 @@ export class HubMachineService {
     const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
 
     // generate bag number
-    const randomBagNumber = 'MS' + sampleSize('012345678900123456789001234567890', 5).join('');
+    const randomBagNumber = 'Z' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 6).join('');
     const refBranchCode = branch ? branch.branchCode : '';
     const representativeCode = district ? district.districtCode.substring(0, 3) : null;
     const representative = await this.getRepresentative(representativeCode);
