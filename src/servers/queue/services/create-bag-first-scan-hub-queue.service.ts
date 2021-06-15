@@ -113,22 +113,6 @@ export class CreateBagFirstScanHubQueueService {
           });
           await transactional.insert(PodScanInHubBag, podScanInHubBagData);
 
-          // UPDATE STATUS IN HUB IN AWB SUMMARY
-          await transactional.update(
-            HubSummaryAwb,
-            {
-              awbNumber: data.awbNumber,
-            },
-            {
-              scanDateInHub: dateNow,
-              inHub: true,
-              bagItemIdIn: data.bagItemId,
-              bagIdIn: data.bagId,
-              userIdUpdated: data.userId,
-              updatedTime: data.timestamp,
-            },
-          );
-
           // update status awb
           DoPodDetailPostMetaQueueService.createJobByAwbFilter(
             data.awbItemId,
