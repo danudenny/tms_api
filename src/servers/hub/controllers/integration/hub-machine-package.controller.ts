@@ -9,7 +9,7 @@ import { AuthXAPIKeyGuard } from '../../../../shared/guards/auth-x-api-key.guard
 import { HubMachineService } from '../../services/integration/hub-machine-package.services';
 import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload.vm';
 import * as hash from 'object-hash';
-import { RedisService } from 'src/shared/services/redis.service';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 @ApiUseTags('Hub Mesin Sortir Resi Bag')
 @Controller('hub/sortir/combine')
@@ -29,7 +29,7 @@ export class HubMachinePackageController {
       // chute_number: payload.chute_number,
     };
 
-    const h = hash(hashObj);    
+    const h = hash(hashObj);
     const cacheKey = `cache:sorting-machine:push-payload:${h}`;
     const data = await RedisService.get(cacheKey, true);
     if (data) { return data; }
