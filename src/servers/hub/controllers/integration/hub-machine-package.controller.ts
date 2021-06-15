@@ -37,8 +37,8 @@ export class HubMachinePackageController {
 
     const h = hash(hashObj);
     const cacheKey = `cache:sorting-machine:push-payload:${h}`;
-    const data = await RedisService.get(cacheKey, true);
-    if (data) { return data; }
+    let data = await RedisService.get(cacheKey, true);
+    if (data) return data;
 
     return await HubMachineService.processMachineBagging(payload, cacheKey);
   }
