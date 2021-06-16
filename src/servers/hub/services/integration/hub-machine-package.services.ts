@@ -400,6 +400,7 @@ export class HubMachineService {
         updatedTime: batchData.timestamp,
         userIdUpdated: batchData.userId,
         isSortir: true,
+        isMachine: true,
       });
     });
 
