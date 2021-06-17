@@ -377,10 +377,11 @@ export class MobileFirstMileDoPodReturnService {
       ['t6.employee_id', 'employeeId'],
       ['t6.fullname', 'employeeName'],
       ['t7.package_type_name', 'packageTypeName'],
-      ['t8.recipient_longitude', 'recipientLongitude'],
-      ['t8.recipient_latitude', 'recipientLatitude'],
+      ['t8.recipient_longitude', 'longitudeReturn'],
+      ['t8.recipient_latitude', 'latitudeReturn'],
       ['t8.do_return', 'isDoReturn'],
       ['t8.do_return_number', 'doReturnNumber'],
+      ['t9.reason_id', 'reasonId'],
       ['t9.reason_code', 'reasonCode'],
       ['t9.reason_name', 'reasonName'],
     );
@@ -427,7 +428,7 @@ export class MobileFirstMileDoPodReturnService {
     } else {
       q.andWhere(e => e.awbItemAttr.awbStatus.awbStatusId, w => w.equals('14000'));
 
-      const dateFrom = moment().subtract(1, 'd').format('YYYY-MM-DD 00:00:00');
+      const dateFrom = moment().subtract(7, 'd').format('YYYY-MM-DD 00:00:00');
       const dateTo = moment().format('YYYY-MM-DD 23:59:59');
       q.andWhere(
         e => e.doPodReturn.doPodReturnDateTime,

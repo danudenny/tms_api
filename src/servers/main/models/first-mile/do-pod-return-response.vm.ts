@@ -386,6 +386,21 @@ export class MobileReturnVm {
   @ApiModelProperty()
   isHighValue: boolean;
 
+  @ApiModelProperty()
+  latitudeReturn: string;
+
+  @ApiModelProperty()
+  longitudeReturn: string;
+
+  @ApiModelProperty()
+  reasonId: number;
+
+  @ApiModelProperty()
+  reasonCode: string;
+
+  @ApiModelProperty()
+  reasonName: string;
+
   @ApiModelProperty({ type: [MobileReturnHistoryVm] })
   returnHistory: MobileReturnHistoryVm[];
 }
