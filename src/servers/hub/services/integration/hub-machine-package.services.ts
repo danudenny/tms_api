@@ -267,8 +267,8 @@ export class HubMachineService {
 
       PinoLoggerService.log(result);
 
-      // cache for 3 Hours
-      RedisService.setex(cacheKey, result, 60 * 60 * 3, true).then();
+      // Cache For 3 Days
+      RedisService.setex(cacheKey, result, 60 * 60 * 24 * 3, true).then();
 
       // create background process
       try {
