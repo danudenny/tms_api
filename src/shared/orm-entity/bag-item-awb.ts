@@ -93,6 +93,12 @@ export class BagItemAwb extends BaseEntity {
   })
   isSortir: boolean;
 
+  @Column('boolean', {
+    nullable: true,
+    name: 'is_machine',
+  })
+  isMachine: boolean;
+
   // relation model
   @ManyToOne(() => BagItem, bagItem => bagItem.bagItemAwbs, {
     onDelete: 'CASCADE',

@@ -111,7 +111,7 @@ export class HubMachineService {
 
     if (data) {
       // cache 30 minutes
-      RedisService.setex(cacheKey, data, 60 * 30, true).then();
+      RedisService.setex(cacheKey, data, 60 * 60 * 6, true).then();
       return data;
     }
 
@@ -128,7 +128,7 @@ export class HubMachineService {
       });
     }));
 
-    const results = flatMap(pResults, (x) => x );
+    const results = flatMap(pResults, (x) => x);
     return results;
   }
 
@@ -139,7 +139,7 @@ export class HubMachineService {
       return AwbService.validAwbNumbers(x);
     }));
 
-    const results = flatMap(pResults, (x: AwbItemAttr[]) => x  );
+    const results = flatMap(pResults, (x: AwbItemAttr[]) => x);
     return results;
   }
 
@@ -196,12 +196,6 @@ export class HubMachineService {
 
     let totalWeight = 0;
     for (const refNumber of awbNumbers) {
-      // const awbItemAttr = await AwbService.validAwbNumber(refNumber);
-      // // NOTE: check destination awb with awb.toId
-      // const awb = await Awb.findOne({
-      //   where: { awbNumber: refNumber, isDeleted: false },
-      // });
-
       const awb = awbs.find(x => x.awbNumber === refNumber);
       const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === refNumber);
 
@@ -234,7 +228,7 @@ export class HubMachineService {
         const createBagResult = await this.createBag(transactionManager, branch, branchSortir, district, payload.tag_seal_number, totalWeight, mCurrentTime);
 
         const bagAwbBatch: CreateBagFirstScanHubQueueServiceBatch = {
-            bagId: createBagResult.bag.bagId,
+          bagId: createBagResult.bag.bagId,
           bagItemId: createBagResult.bagItem.bagItemId,
           bagNumber: createBagResult.bag.bagNumber,
           podScanInHubId: createBagResult.podScanInHub.podScanInHubId,
@@ -250,26 +244,17 @@ export class HubMachineService {
 
           bagAwbBatch.awbs.push({
             awbItemId: awbItemAttr.awbItemId,
-          awbNumber: awb.awbNumber,
-          awbItemAttr,
-          totalWeight: awb.totalWeightRealRounded,
+            awbNumber: awb.awbNumber,
+            awbItemAttr,
+            totalWeight: awb.totalWeightRealRounded,
           });
         }
 
-        await this.performDirect(transactionManager, bagAwbBatch);
+        await this.createOrUpdateDetailDatas(transactionManager, bagAwbBatch);
 
         return createBagResult;
       });
 
-      for (const awbNumber of awbNumbers) {
-        const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === awbNumber);
-        // update status awb
-        DoPodDetailPostMetaInQueueService.createJobByAwbFilter(
-          awbItemAttr.awbItemId,
-          branch.branchId,
-          1,
-        );
-      }
       const result = new MachinePackageResponseVm();
 
       result.statusCode = HttpStatus.OK;
@@ -282,16 +267,25 @@ export class HubMachineService {
 
       PinoLoggerService.log(result);
 
-      // cache for 3 Hours
-      RedisService.setex(cacheKey, result, 60 * 60 * 3, true).then();
+      // Cache For 3 Days
+      RedisService.setex(cacheKey, result, 60 * 60 * 24 * 3, true).then();
 
       // create background process
       try {
-        // sending background process
-        // NOTE: background job for insert bag item history
-
+        // background job to insert bag item history
         BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 500, branch.branchId, 1);
         BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 3000, branch.branchId, 1);
+
+        for (const awbNumber of awbNumbers) {
+          const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === awbNumber);
+          
+          // background job to insert awb history
+          DoPodDetailPostMetaInQueueService.createJobByAwbFilter(
+            awbItemAttr.awbItemId,
+            branch.branchId,
+            1,
+          );
+        }
       } catch (error) {
         console.log(error);
         PinoLoggerService.log(error);
@@ -299,33 +293,101 @@ export class HubMachineService {
 
       return result;
     } catch (error) {
-      PinoLoggerService.log(`ERROR MESIN SORTIR CATCH: ${error.message }`);
+      const errMessage = `ERROR MESIN SORTIR CATCH: ${error.message}`;
+      PinoLoggerService.log(errMessage);
       PinoLoggerService.log(error);
-      const result = new MachinePackageResponseVm();
-      result.statusCode = HttpStatus.BAD_REQUEST;
-      result.message = `ERROR MESIN SORTIR GS : ${error.message }`;
-      result.data = [{
-        state: 1,
-        no_gabung_sortir: null,
-      }]; 
-      return result;
+      return generateErrorResult(errMessage);
       // throw error;
     } finally {
       // release lock
       RedisService.del(redlockKey).then();
     }
+  }  
+
+  private static async createBag(transactionManager, branch: Branch, branchSortir: BranchSortir, district: District, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment): Promise<CreateBagResult> {
+    const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
+    const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
+
+    // generate bag number
+    const randomBagNumber = 'Z' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 6).join('');
+    const refBranchCode = branch ? branch.branchCode : '';
+    const representativeCode = district ? district.districtCode.substring(0, 3) : null;
+    const representative = await this.getRepresentative(representativeCode);
+
+    const bagQueryData = Bag.create({
+      bagNumber: randomBagNumber,
+      branchIdTo: branchSortir.branchIdLastmile,
+      refRepresentativeCode: representative ? representative.representativeCode : null,
+      representativeIdTo: representative ? representative.representativeId : null,
+      refBranchCode,
+      bagType: 'branch',
+      branchId: branch.branchId,
+      bagDate: currentDateStr,
+      bagDateReal: currentTimeStr,
+      createdTime: currentTimeStr,
+      updatedTime: currentTimeStr,
+      userIdCreated: 1,
+      userIdUpdated: 1,
+      isSortir: true,
+      isManual: false,
+      sealNumber,
+    });
+
+    const bag = await transactionManager.getRepository(Bag).save(bagQueryData);
+    const bagId = bag.bagId;
+    const sequence = 1;
+
+    const bagSeq: string = sequence.toString().padStart(3, '0');
+
+    // INSERT INTO TABLE BAG ITEM
+    const bagItemQueryData = BagItem.create({
+      bagId: bagId,
+      bagSeq: sequence,
+      branchIdLast: branch.branchId,
+      bagItemStatusIdLast: 3000,
+      userIdCreated: 1,
+      weight: totalWeight,
+      createdTime: currentTimeStr,
+      updatedTime: currentTimeStr,
+      userIdUpdated: 1,
+      isSortir: true,
+    });
+
+    const bagItem = await transactionManager.getRepository(BagItem).save(bagItemQueryData);
+
+    // insert into pod scan in hub
+    // 100 = inprogress, 200 = done
+    const podScanInHubQueryData = transactionManager.getRepository(PodScanInHub).create({
+      branchId: branch.branchId,
+      scanInType: 'BAG',
+      transactionStatusId: 200,
+      userIdCreated: 1,
+      createdTime: currentTimeStr,
+      updatedTime: currentTimeStr,
+      userIdUpdated: 1,
+    });
+
+    const podScanInHub = await transactionManager.getRepository(PodScanInHub).save(podScanInHubQueryData);
+
+    return {
+      randomBagNumber,
+      fullBagNumber: `${randomBagNumber}${bagSeq}`,
+      bagSeq: sequence,
+      bag,
+      bagItem,
+      podScanInHub,
+    };
   }
 
-  private static async performDirect(
+  private static async createOrUpdateDetailDatas(
     transactionManager: EntityManager,
     batchData: CreateBagFirstScanHubQueueServiceBatch,
   ) {
-    const dateNow = moment().toDate();
+    // const dateNow = moment().toDate();
 
-    const awbNumbers = batchData.awbs.filter(x => x.awbNumber).map(x => x.awbNumber);
+    // const awbNumbers = batchData.awbs.filter(x => x.awbNumber).map(x => x.awbNumber);
     // const awbItemIds = batchData.awbs.filter(x => x.awbItemId).map(x => x.awbItemId);
-    const awbItemAttrIds = batchData.awbs.filter(x => x.awbItemAttr).map(x => x.awbItemAttr.awbItemAttrId);
-    
+    // const awbItemAttrIds = batchData.awbs.filter(x => x.awbItemAttr).map(x => x.awbItemAttr.awbItemAttrId);
 
     const bagItemAwbSaveDatas = batchData.awbs.filter(x => x.awbItemAttr).map(x => {
       return BagItemAwb.create({
@@ -338,6 +400,7 @@ export class HubMachineService {
         updatedTime: batchData.timestamp,
         userIdUpdated: batchData.userId,
         isSortir: true,
+        isMachine: true,
       });
     });
 
@@ -380,23 +443,24 @@ export class HubMachineService {
     await transactionManager.insert(BagItemAwb, bagItemAwbSaveDatas);
 
     // insert into pod scan in hub detail
-    await transactionManager.insert(PodScanInHubDetail, podScanInHubDetailSaveDatas);        
+    await transactionManager.insert(PodScanInHubDetail, podScanInHubDetailSaveDatas);
 
     // update awb item attr
-    const chunkAwbItemAttrs = chunk(awbItemAttrIds, 30);
-    for (const c of chunkAwbItemAttrs) {
-      await transactionManager.update(AwbItemAttr,
-        { awbItemAttrId: In(c) },
-        {
-          bagItemIdLast: batchData.bagItemId,
-          updatedTime: batchData.timestamp,
-          isPackageCombined: true,
-          awbStatusIdLast: 4500,
-          userIdLast: batchData.userId,
-        },
-      );    
-    }
-    
+    // CANCELLED. Already Updated in DB Trigger
+    // const chunkAwbItemAttrs = chunk(awbItemAttrIds, 30);
+    // for (const c of chunkAwbItemAttrs) {
+    //   await transactionManager.update(AwbItemAttr,
+    //     { awbItemAttrId: In(c) },
+    //     {
+    //       bagItemIdLast: batchData.bagItemId,
+    //       updatedTime: batchData.timestamp,
+    //       isPackageCombined: true,
+    //       awbStatusIdLast: 4500,
+    //       userIdLast: batchData.userId,
+    //     },
+    //   );
+    // }
+
     // UPDATE STATUS IN HUB IN AWB SUMMARY    
     // const chunkAwbNumbers = chunk(awbNumbers, 30);
     // for (const c of chunkAwbNumbers) {
@@ -414,86 +478,6 @@ export class HubMachineService {
     //   );
     // }
   }
-
-
-  private static async createBag(transactionManager, branch: Branch, branchSortir: BranchSortir, district: District, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment): Promise<CreateBagResult> {
-    // const result = new CreateBagNumberResponseVM();
-    // const branchId = branchId;
-
-    const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
-    const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
-
-    // generate bag number
-    const randomBagNumber = 'Z' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 6).join('');
-    const refBranchCode = branch ? branch.branchCode : '';
-    const representativeCode = district ? district.districtCode.substring(0, 3) : null;
-    const representative = await this.getRepresentative(representativeCode);
-
-    const bagQueryData = Bag.create({
-      bagNumber: randomBagNumber,
-      branchIdTo: branchSortir.branchIdLastmile,
-      refRepresentativeCode: representative ? representative.representativeCode : null,
-      representativeIdTo: representative ? representative.representativeId : null,
-      refBranchCode,
-      bagType: 'branch',
-      branchId: branch.branchId,
-      bagDate: currentDateStr,
-      bagDateReal: currentTimeStr,
-      createdTime: currentTimeStr,
-      updatedTime: currentTimeStr,
-      userIdCreated: 1,
-      userIdUpdated: 1,
-      isSortir: true,
-      isManual: false,
-      sealNumber,
-    });
-
-    const bag = await transactionManager.getRepository(Bag).save(bagQueryData);
-    const bagId = bag.bagId;
-    const sequence = 1;
-
-    const bagSeq: string = sequence.toString().padStart(3, '0');
-    
-    // INSERT INTO TABLE BAG ITEM
-    const bagItemQueryData = BagItem.create({
-      bagId: bagId,
-      bagSeq: sequence,
-      branchIdLast: branch.branchId,
-      bagItemStatusIdLast: 3000,
-      userIdCreated: 1,
-      weight: totalWeight,
-      createdTime: currentTimeStr,
-      updatedTime: currentTimeStr,
-      userIdUpdated: 1,
-      isSortir: true,
-    });
-
-    const bagItem = await transactionManager.getRepository(BagItem).save(bagItemQueryData);
-
-    // insert into pod scan in hub
-    // 100 = inprogress, 200 = done
-    const podScanInHubQueryData = transactionManager.getRepository(PodScanInHub).create({
-      branchId: branch.branchId,
-      scanInType: 'BAG',
-      transactionStatusId: 200,
-      userIdCreated: 1,
-      createdTime: currentTimeStr,
-      updatedTime: currentTimeStr,
-      userIdUpdated: 1,
-    });
-
-    const podScanInHub = await transactionManager.getRepository(PodScanInHub).save(podScanInHubQueryData);
-
-    return {
-      randomBagNumber,
-      fullBagNumber: `${randomBagNumber}${bagSeq}`,
-      bagSeq: sequence,
-      bag,
-      bagItem,
-      podScanInHub,
-    };
-  }
-
 }
 
 interface CreateBagResult {
@@ -509,11 +493,11 @@ interface CreateBagFirstScanHubQueueServiceBatch {
   bagId: number;
   bagItemId: number;
   bagNumber: string;
-  podScanInHubId: string;  
+  podScanInHubId: string;
   userId: number;
   branchId: number;
   timestamp: Date | string;
-  awbs: CreateBagFirstScanHubQueueServiceBatchAwb[];  
+  awbs: CreateBagFirstScanHubQueueServiceBatchAwb[];
 }
 
 interface CreateBagFirstScanHubQueueServiceBatchAwb {
