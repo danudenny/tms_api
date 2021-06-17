@@ -1,6 +1,8 @@
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   Controller,
   Post,
@@ -16,11 +18,25 @@ import {
   ApiUseTags,
   ApiBearerAuth,
 } from '../../../../shared/external/nestjs-swagger';
+import { 
+  MobileCreateDoPodResponseVm, 
+  MobileInitDataReturnResponseVm, 
+  MobileInitReturnDataResponseVm, 
+  MobileScanAwbReturnResponseVm, 
+  MobileSyncDataReturnResponseVm, 
+  MobileSyncReturnImageDataResponseVm
+ } from '../../models/first-mile/do-pod-return-response.vm';
+import { 
+  MobileHistoryDataReturnDetailPayloadVm, 
+  MobileHistoryDataReturnPayloadVm, 
+  MobileInitDataPayloadVm, 
+  MobileScanAwbReturnPayloadVm, 
+  MobileSyncReturnImageDataPayloadVm, 
+  MobileSyncReturnPayloadVm, 
+  PhotoReturnDetailVm 
+} from '../../models/first-mile/do-pod-return-payload.vm';
+import { PhotoResponseVm } from '../../models/bag-order-detail-response.vm';
 import { MobileFirstMileDoPodReturnService } from '../../services/mobile/mobile-first-mile-do-pod-return.service';
-import { MobileCreateDoPodResponseVm, MobileInitDataReturnResponseVm, MobileInitReturnDataResponseVm, MobileScanAwbReturnResponseVm, MobileSyncDataReturnResponseVm, MobileSyncReturnImageDataResponseVm } from '../../models/first-mile/do-pod-return-response.vm';
-import { MobileHistoryDataReturnDetailPayloadVm, MobileHistoryDataReturnPayloadVm, MobileInitDataPayloadVm, MobileScanAwbReturnPayloadVm, MobileSyncReturnImageDataPayloadVm, MobileSyncReturnPayloadVm } from '../../models/first-mile/do-pod-return-payload.vm';
-import { ResponseSerializerOptions } from '../../../..//shared/decorators/response-serializer-options.decorator';
-import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiUseTags('Mobile Do Pod Return')
 @Controller('mobile/firstMile/return')
@@ -105,6 +121,14 @@ export class MobileDoPodReturnController {
     return MobileFirstMileDoPodReturnService.getHistoryReturnDetail(
       payload.doPodReturnDetailId,
     );
+  }
+
+  @Post('photoDetail')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: PhotoResponseVm })
+  public async photoDetail(@Body() payload: PhotoReturnDetailVm) {
+    return MobileFirstMileDoPodReturnService.getPhotoReturnDetail(payload);
   }
 
 }

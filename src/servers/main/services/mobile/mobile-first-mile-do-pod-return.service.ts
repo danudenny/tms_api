@@ -1,13 +1,15 @@
 import moment = require('moment');
+import { last } from 'lodash';
 import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { createQueryBuilder, getManager, LessThan, MoreThan } from 'typeorm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { DoPodReturnService } from '../master/do-pod-return.service';
-import { RedisService } from '../../../../shared/services/redis.service';
-import { DoPodReturnDetailService } from '../master/do-pod-return-detail.service';
-import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
-import { MobileScanAwbReturnPayloadVm, MobileSyncReturnImageDataPayloadVm, MobileSyncReturnPayloadVm } from '../../models/first-mile/do-pod-return-payload.vm';
+import { 
+  MobileScanAwbReturnPayloadVm, 
+  MobileSyncReturnImageDataPayloadVm, 
+  MobileSyncReturnPayloadVm, 
+  PhotoReturnDetailVm 
+} from '../../models/first-mile/do-pod-return-payload.vm';
 import {
   MobileCreateDoPodResponseVm,
   MobileInitDataReturnResponseVm,
@@ -18,19 +20,23 @@ import {
   MobileSyncDataReturnResponseVm,
   MobileSyncReturnImageDataResponseVm,
 } from '../../models/first-mile/do-pod-return-response.vm';
+import { PhotoResponseVm } from '../../models/bag-order-detail-response.vm';
+import { DoPodReturnService } from '../master/do-pod-return.service';
+import { RedisService } from '../../../../shared/services/redis.service';
+import { DoPodReturnDetailService } from '../master/do-pod-return-detail.service';
+import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { DoPodReturnDetail } from '../../../../shared/orm-entity/do-pod-return-detail';
-import { last } from 'lodash';
-import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
-import { CodPayment } from '../../../../shared/orm-entity/cod-payment';
 import { AwbReturnService } from '../master/awb-return.service';
-import { DoPodReturn } from '../../../../shared/orm-entity/do-pod-return';
 import { AwbNotificationMailQueueService } from '../../../../servers/queue/services/notification/awb-notification-mail-queue.service';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
-import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
-import { DoPodReturnAttachment } from '../../../../shared/orm-entity/do-pod-return-attachment';
 import { UploadImagePodQueueService } from '../../../../servers/queue/services/upload-pod-image-queue.service';
+import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
+import { CodPayment } from '../../../../shared/orm-entity/cod-payment';
+import { DoPodReturn } from '../../../../shared/orm-entity/do-pod-return';
+import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
+import { DoPodReturnAttachment } from '../../../../shared/orm-entity/do-pod-return-attachment';
 import { DoPodReturnHistory } from '../../../../shared/orm-entity/do-pod-return-history';
 
 export class MobileFirstMileDoPodReturnService {
@@ -342,6 +348,14 @@ export class MobileFirstMileDoPodReturnService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     return await q.exec();
+  }
+
+  static async getPhotoReturnDetail(
+    payload: PhotoReturnDetailVm
+  ): Promise<PhotoResponseVm> {
+    const result = new PhotoResponseVm();
+    result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodReturnDetailId, payload.attachmentType);
+    return result;
   }
 
   private static async getReturnDetail(

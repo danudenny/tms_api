@@ -18,7 +18,7 @@ import {
   ApiUseTags,
   ApiBearerAuth,
 } from '../../../../shared/external/nestjs-swagger';
-import { FirstMileDoPodReturnService } from '../../services/web/first-mile/first-mile-do-pod-return.service';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import {
   WebDoPodCreateReturnResponseVm,
@@ -29,14 +29,17 @@ import {
   WebAwbReturnSyncResponseVm,
 } from '../../models/first-mile/do-pod-return-response.vm';
 import {
+  PhotoReturnDetailVm,
   PrintDoPodReturnPayloadQueryVm,
   PrintDoPodReturnVm,
   WebAwbReturnSyncPayloadVm,
   WebDoPodCreateReturnPayloadVm,
   WebScanAwbReturnPayloadVm,
 } from '../../models/first-mile/do-pod-return-payload.vm';
-import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
+import { PhotoResponseVm } from '../../models/bag-order-detail-response.vm';
 import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
+import { FirstMileDoPodReturnService } from '../../services/web/first-mile/first-mile-do-pod-return.service';
+
 @ApiUseTags('Web Do Pod Return')
 @Controller('web/firstMile/return')
 export class WebDoPodReturnController {
@@ -129,5 +132,13 @@ export class WebDoPodReturnController {
   ) {
     await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
     return FirstMileDoPodReturnService.printDoPodReturnByRequest(serverResponse, queryParams);
+  }
+
+  @Post('photoDetail')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: PhotoResponseVm })
+  public async photoDetail(@Body() payload: PhotoReturnDetailVm) {
+    return FirstMileDoPodReturnService.getPhotoReturnDetail(payload);
   }
 }

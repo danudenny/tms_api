@@ -3,6 +3,7 @@ import { EntityManager } from 'typeorm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { DoPodReturnDetail } from '../../../../shared/orm-entity/do-pod-return-detail';
+import { DoPodReturnAttachment } from '../../../../shared/orm-entity/do-pod-return-attachment';
 
 export class DoPodReturnDetailService {
   static async createDoPodReturnDetail(
@@ -44,7 +45,7 @@ export class DoPodReturnDetailService {
     return result[0];
   }
 
-    static async getDoPodReturnDetailByAwbNumber(awbNumber: string): Promise<DoPodReturnDetail> {
+  static async getDoPodReturnDetailByAwbNumber(awbNumber: string): Promise<DoPodReturnDetail> {
     const awbRepository = new OrionRepositoryService(
       DoPodReturnDetail,
     );
@@ -70,6 +71,39 @@ export class DoPodReturnDetailService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.orderBy({ updatedTime: 'DESC' });
     q.take(1);
+    return await q.exec();
+  }
+
+  static async getPhotoDetail(
+    doPodReturnDetailId : string,
+    attachmentType : string
+    ):Promise<any>{
+    const repo = new OrionRepositoryService(DoPodReturnAttachment, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      ['t1.type', 'type'],
+      ['t3.url', 'url'],
+      ['t2.awb_number', 'awbNumber'],
+    );
+
+    q.innerJoin(e => e.doPodReturnDetail, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.attachment, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.doPodReturnDetail.doPodReturnDetailId, w => w.equals(doPodReturnDetailId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    if (attachmentType) {
+      q.andWhere(e => e.type, w => w.equals(attachmentType));
+    }
+    q.orderBy({createdTime:'DESC'});
+    q.take(3); // only get 3 data file (photo, signature, photoCod)
+
     return await q.exec();
   }
 }

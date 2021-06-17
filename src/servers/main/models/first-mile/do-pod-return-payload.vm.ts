@@ -159,3 +159,11 @@ export class MobileHistoryDataReturnDetailPayloadVm {
   @ApiModelPropertyOptional()
   doPodReturnId: string;
 }
+
+export class PhotoReturnDetailVm {
+  @ApiModelProperty()
+  doPodReturnDetailId: string;
+
+  @ApiModelPropertyOptional({ example: 'photo, photoCod, signature' })
+  attachmentType: string;
+}

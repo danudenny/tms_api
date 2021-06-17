@@ -2,11 +2,14 @@ import moment = require('moment');
 import express = require('express');
 import { EntityManager, getManager, LessThan, MoreThan } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
-import { RedisService } from '../../../../../shared/services/redis.service';
+import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { DoPodReturn } from '../../../../../shared/orm-entity/do-pod-return';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { User } from '../../../../../shared/orm-entity/user';
 import { DoPodReturnDetail } from '../../../../../shared/orm-entity/do-pod-return-detail';
+import { DoPodReturnHistory } from '../../../../../shared/orm-entity/do-pod-return-history';
+import { AwbStatus } from '../../../../../shared/orm-entity/awb-status';
+import { RedisService } from '../../../../../shared/services/redis.service';
 import { AwbService } from '../../v1/awb.service';
 import { EmployeeService } from '../../master/employee.service';
 import { AuthService } from '../../../../../shared/services/auth.service';
@@ -15,10 +18,17 @@ import { MetaService } from '../../../../../shared/services/meta.service';
 import { DoPodReturnService } from '../../master/do-pod-return.service';
 import { DoPodReturnDetailService } from '../../master/do-pod-return-detail.service';
 import { DoPodDetailPostMetaQueueService } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
-import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
+import { RequestErrorService } from '../../../../../shared/services/request-error.service';
+import { PrintByStoreService } from '../../print-by-store.service';
+import { RepositoryService } from '../../../../../shared/services/repository.service';
+import { PrinterService } from '../../../../../shared/services/printer.service';
+import { AwbReturnService } from '../../master/awb-return.service';
+import { AwbNotificationMailQueueService } from '../../../../../servers/queue/services/notification/awb-notification-mail-queue.service';
+
 import { PrintDoPodDeliverDataDoPodDeliverDetailVm } from '../../../models/print-do-pod-deliver.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import {
+  PhotoReturnDetailVm,
   PrintDoPodReturnPayloadQueryVm,
   PrintDoPodReturnVm,
   WebAwbReturnSyncPayloadVm,
@@ -37,14 +47,8 @@ import {
   WebAwbReturnSyncResponseVm,
   AwbReturnManualSync,
 } from '../../../models/first-mile/do-pod-return-response.vm';
-import { RequestErrorService } from '../../../../../shared/services/request-error.service';
-import { PrintByStoreService } from '../../print-by-store.service';
-import { RepositoryService } from '../../../../../shared/services/repository.service';
-import { PrinterService } from '../../../../../shared/services/printer.service';
-import { AwbReturnService } from '../../master/awb-return.service';
-import { DoPodReturnHistory } from '../../../../../shared/orm-entity/do-pod-return-history';
-import { AwbStatus } from '../../../../../shared/orm-entity/awb-status';
-import { AwbNotificationMailQueueService } from '../../../../../servers/queue/services/notification/awb-notification-mail-queue.service';
+import { PhotoResponseVm } from '../../../../../servers/main/models/bag-order-detail-response.vm';
+
 
 export class FirstMileDoPodReturnService {
 
@@ -681,6 +685,14 @@ export class FirstMileDoPodReturnService {
         printCopy: queryParams.printCopy,
       },
     );
+  }
+
+  static async getPhotoReturnDetail(
+    payload: PhotoReturnDetailVm
+    ): Promise<PhotoResponseVm>{
+      const result = new PhotoResponseVm();
+      result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodReturnDetailId, payload.attachmentType);
+      return result;
   }
 
   private static handlePrintMetadata(awb: AwbItemAttr) {

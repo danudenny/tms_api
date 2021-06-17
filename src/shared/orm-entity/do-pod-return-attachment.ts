@@ -1,6 +1,7 @@
 import { TmsBaseEntity } from './tms-base';
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { AttachmentTms } from './attachment-tms';
+import { DoPodReturnDetail } from './do-pod-return-detail';
 
 @Entity('do_pod_return_attachment', { schema: 'public' })
 export class DoPodReturnAttachment extends TmsBaseEntity {
@@ -17,7 +18,6 @@ export class DoPodReturnAttachment extends TmsBaseEntity {
 
   @Column('character varying', {
     nullable: false,
-    length: 255,
     name: 'do_pod_return_detail_id',
   })
   doPodReturnDetailId: string;
@@ -32,4 +32,8 @@ export class DoPodReturnAttachment extends TmsBaseEntity {
   @OneToOne(() => AttachmentTms)
   @JoinColumn({ name: 'attachment_tms_id', referencedColumnName: 'attachmentTmsId' })
   attachment: AttachmentTms;
+
+  @OneToOne(() => DoPodReturnDetail)
+  @JoinColumn({ name: 'do_pod_return_detail_id', referencedColumnName: 'doPodReturnDetailId'})
+  doPodReturnDetail: DoPodReturnDetail;
 }
