@@ -1,10 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import {
     ApiOkResponse, ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MonitoringHubProblemLebihSortirVm, MonitoringHubProblemVm } from '../../models/monitoring-hub-problem.vm';
-import { MonitoringProblemLebihSortirListService } from '../../services/integration/monitoring-problem-lebih-sortir-list.service';
+import { MonitoringProblemLebihSortirListService } from '../../services/hub/monitoring-problem-lebih-sortir-list.service';
 
 @ApiUseTags('Monitoring Problem')
 @Controller('monitoring-hub')
