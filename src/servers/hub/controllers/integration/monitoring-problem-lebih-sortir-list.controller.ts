@@ -7,7 +7,7 @@ import { MonitoringHubProblemLebihSortirVm, MonitoringHubProblemVm } from '../..
 import { MonitoringProblemLebihSortirListService } from '../../services/integration/monitoring-problem-lebih-sortir-list.service';
 
 @ApiUseTags('Monitoring Problem')
-@Controller('monitoring-hub/old')
+@Controller('monitoring-hub')
 export class MonitoringProblemLebihSortirListController {
   constructor() {}
 
