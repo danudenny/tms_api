@@ -87,7 +87,7 @@ export class MonitoringProblemLebihSortirListService {
       [`bi.created_time`, 'scanDateInHub'],
       [`bia.awb_number`, 'awbNumber'],
       [`CONCAT(bag.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bagNumber'],
-      ['\'No\'::text', 'do'],
+      ['\'No\'', 'do'],
       [`CASE WHEN bag.bag_number IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'in'],
       [`CASE WHEN scan_out.awb_id IS NOT NULL THEN 'Yes' ELSE 'No' END`, 'out'],
       [`last_status.awb_status_name`, 'awbStatusName'],
