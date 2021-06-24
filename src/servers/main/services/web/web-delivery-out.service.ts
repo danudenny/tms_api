@@ -1355,10 +1355,10 @@ export class WebDeliveryOutService {
       qz.addSelect('bag_item_id.bag_item_id', 'bagItemId');
       qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
       qz.addSelect('awb.awb_id', 'awbId');
-      qz.addSelect(`CONCAT(awb.total_weight_final::numeric(10,2), 'kg')`, 'totalWeightFinal');
-      qz.addSelect(`CONCAT(awb.total_weight_final_rounded::numeric(10,2), 'kg')`, 'totalWeightFinalRounded');
-      qz.addSelect(`COALESCE(package_type.package_type_code, '-')`, 'packageTypeCode');
-      qz.addSelect(`COALESCE(package_type.package_type_name, '-')`, 'packageTypeName');
+      qz.addSelect(`awb.total_weight_final::numeric(10,2)`, 'totalWeightFinal');
+      qz.addSelect(`awb.total_weight_final_rounded::numeric(10,2)`, 'totalWeightFinalRounded');
+      qz.addSelect(`package_type.package_type_code`, 'packageTypeCode');
+      qz.addSelect(`package_type.package_type_name`, 'packageTypeName');
       qz.addSelect('awb.awb_id', 'awbId');
       qz.from('bag', 'bag');
       qz.innerJoin(
@@ -1407,7 +1407,7 @@ export class WebDeliveryOutService {
       
 
       const result = new BagOrderResponseVm();
-      result.awbNumbers = await qz.getRawMany();
+      result.data = await qz.getRawMany();
       // const awb = [];
       // for (const a in data) {
       //   awb.push(data[a].awbNumber);
@@ -1420,7 +1420,6 @@ export class WebDeliveryOutService {
   }
 
   async exportbagOrderDetailList(payload: BagAwbExportVm, response) {
-    console.log('PAAYLOADDDD::::', payload);
     try {
       const fileName = `POD_deliver_out_bag_order_detail${new Date().getTime()}.csv`;
       

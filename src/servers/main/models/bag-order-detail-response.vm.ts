@@ -14,7 +14,7 @@ export class BagOrderDetailResponseVm {
 
 export class BagOrderResponseVm {
   @ApiModelProperty({ type: () => [BagOrderDetailResponseVm] })
-  awbNumbers: BagOrderDetailResponseVm[];
+  data: BagOrderDetailResponseVm[];
 }
 
 export class AuditHistVm {
