@@ -7,9 +7,9 @@ module.exports = {
     description: 'SiCepat TMS queue server api',
     path: 'docs',
   },
-  bullPod: true,
-  bullPodMobile: true,
-  bullCod: true,
-  bullSmd: true,
-  bullHub: true
+  bullPod: false,
+  bullPodMobile: false,
+  bullCod: false,
+  bullSmd: false,
+  bullHub: false
 };
