@@ -1,4 +1,4 @@
-import { DropCashlessVm, DropCashLessResponseVM, DropPickupRequestResponseVM, DropCreateWorkOrderPayloadVM, CheckDataDropPartnerVm, DropSuccessResponseVm } from '../../models/partner/fastpay-drop.vm';
+import { DropCashlessVm, DropCashLessResponseVM, DropPickupRequestResponseVM, DropCreateWorkOrderPayloadVM, CheckDataDropPartnerVm, DropSuccessResponseVm, ListSuccessResponseVm } from '../../models/partner/fastpay-drop.vm';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
