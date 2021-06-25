@@ -22,7 +22,7 @@ export class SmdBagCityReportController {
     return SmdBagCityReportService.storeExcelPayload(payloadBody);
   }
 
-  @Get('scanIn/excel/export')
+  @Get('bag-city/excel/export')
   public async exportExcelBranch(
     @Query() queryParams: BagCityReportVm,
     @Response() serverResponse: express.Response,
