@@ -210,3 +210,42 @@ export class DropCreateWorkOrderPayloadVM {
   @ApiModelProperty()
   partnerIdAssigned: number;
 }
+
+export class ListSuccessResponseVm {
+  @ApiModelProperty({example: 'List Success'})
+  message: string;
+
+  @ApiModelProperty({example: 200})
+  status_code: number;
+
+  @ApiModelProperty({type: () => [ListDataVm]})
+  data: ListDataVm[];
+}
+
+export class ListDataVm {
+
+  @ApiModelProperty()
+  branch_sicepat_code: string;
+
+  @ApiModelProperty()
+  branch_sicepat_name: string;
+
+  @ApiModelProperty()
+  branch_partner_code: string;
+
+  @ApiModelProperty()
+  branch_partner_name: string;
+
+  @ApiModelProperty({type: () => [ChildVm]})
+  branch_child: ChildVm[];
+
+}
+export class ChildVm {
+
+  @ApiModelProperty()
+  branch_child_partner_code: string;
+
+  @ApiModelProperty()
+  branch_child_partner_name: string;
+
+}
