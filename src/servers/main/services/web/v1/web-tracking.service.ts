@@ -13,6 +13,7 @@ import {
   TrackingBagRepresentativeAwbPayloadVm,
   TrackingBagRepresentativeDetailPayloadVm,
   TrackingBagRepresentativeDetailResponseVm,
+  TrackingBagRepresentativeAwbDetailResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -416,13 +417,17 @@ export class V1WebTrackingService {
     return rawData ? rawData[0] : null;
   }
 
-  private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<any> {
+ private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<TrackingBagRepresentativeAwbDetailResponseVm[]> {
     const query = `
       SELECT
-        ref_awb_number as "awbNumber"
-      FROM bag_representative_item
+        bri.ref_awb_number AS "awbNumber",
+        awb.total_weight_final_rounded AS "totalWeightFinalRounded",
+        pt.package_type_code AS "packageTypeCode"
+      FROM bag_representative_item bri
+      INNER JOIN awb ON awb.awb_id = bri.awb_id
+      INNER JOIN package_type pt ON pt.package_type_id = awb.package_type_id
       WHERE
-        bag_representative_id = :bagRepresentativeId
+        bri.bag_representative_id = :bagRepresentativeId
     `;
     const rawData = await RawQueryService.queryWithParams(query, {
       bagRepresentativeId,
