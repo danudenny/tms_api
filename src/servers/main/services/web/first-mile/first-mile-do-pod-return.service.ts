@@ -48,6 +48,7 @@ import {
   AwbReturnManualSync,
 } from '../../../models/first-mile/do-pod-return-response.vm';
 import { PhotoResponseVm } from '../../../../../servers/main/models/bag-order-detail-response.vm';
+import { AwbStatusService } from '../../master/awb-status.service';
 
 
 export class FirstMileDoPodReturnService {
@@ -80,7 +81,7 @@ export class FirstMileDoPodReturnService {
       }, { cache: true });
       if (userDriver) {
         employeeIdDriver = userDriver.employeeId;
-        employeeNameDriver =  userDriver.firstName;
+        employeeNameDriver = userDriver.firstName;
       }
     }
 
@@ -91,7 +92,7 @@ export class FirstMileDoPodReturnService {
 
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        const checkValidAwbStatusIdLast = this.checkValidAwbStatusIdLast(awb);
+        const checkValidAwbStatusIdLast = AwbStatusService.checkValidAwbStatusIdLast(awb);
         if (checkValidAwbStatusIdLast.isValid) {
           // Add Locking setnx redis
           const holdRedis = await RedisService.lockingWithExpire(
@@ -159,7 +160,7 @@ export class FirstMileDoPodReturnService {
         doPodReturn.totalAwb,
         totalSuccess,
         doPodReturn.doPodReturnId,
-        );
+      );
     }
 
     // Populate return value
@@ -185,7 +186,7 @@ export class FirstMileDoPodReturnService {
       permissonPayload.branchId,
       authMeta.userId,
       false,
-      );
+    );
 
     await DoPodReturnService.createAuditReturnHistory(doPodReturn.doPodReturnId, false);
 
@@ -461,8 +462,7 @@ export class FirstMileDoPodReturnService {
             response.message = `Resi ${returnData.awbNumber} bukan resi COD !`;
           } else if (returnData.awbStatusId == AWB_STATUS.RTS && awb.awbStatusIdLast != AWB_STATUS.ANT) {
             response.status = 'error';
-            response.message = `Resi ${
-              returnData.awbNumber
+            response.message = `Resi ${returnData.awbNumber
               }, tidak memiliki surat jalan, harap buatkan surat jalan terlebih dahulu!`;
           } else {
 
@@ -560,13 +560,12 @@ export class FirstMileDoPodReturnService {
                 );
                 const messageError = `Resi ${returnData.awbNumber}, tidak dapat update status manual`;
                 response.status = manualStatus ? 'ok' : 'error';
-                response.message = manualStatus ? 'success' : messageError ;
+                response.message = manualStatus ? 'success' : messageError;
               } else {
                 // status DLV, but not have spk
                 response.status = 'error';
-                response.message = `Resi ${
-                  returnData.awbNumber
-                }, tidak memiliki surat jalan, harap buatkan surat jalan terlebih dahulu!`;
+                response.message = `Resi ${returnData.awbNumber
+                  }, tidak memiliki surat jalan, harap buatkan surat jalan terlebih dahulu!`;
               }
             }
           }
@@ -689,10 +688,10 @@ export class FirstMileDoPodReturnService {
 
   static async getPhotoReturnDetail(
     payload: PhotoReturnDetailVm
-    ): Promise<PhotoResponseVm>{
-      const result = new PhotoResponseVm();
-      result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodReturnDetailId, payload.attachmentType);
-      return result;
+  ): Promise<PhotoResponseVm> {
+    const result = new PhotoResponseVm();
+    result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodReturnDetailId, payload.attachmentType);
+    return result;
   }
 
   private static handlePrintMetadata(awb: AwbItemAttr) {
@@ -718,12 +717,12 @@ export class FirstMileDoPodReturnService {
     userId: number,
     transactionManager: EntityManager) {
     const dataSpk = await DoPodReturnDetail.find({
-        select: ['awbNumber'],
-        where: {
-          awbItemId,
-          awbStatusIdLast: AWB_STATUS.ANT,
-          isDeleted: false,
-        },
+      select: ['awbNumber'],
+      where: {
+        awbItemId,
+        awbStatusIdLast: AWB_STATUS.ANT,
+        isDeleted: false,
+      },
     });
     if (dataSpk.length) {
       transactionManager.update(
@@ -742,34 +741,6 @@ export class FirstMileDoPodReturnService {
     }
   }
 
-  private static checkValidAwbStatusIdLast(awbItemAttr: AwbItemAttr) {
-    let message = null;
-    let isValid = false;
-    if (awbItemAttr.awbStatusIdLast) {
-      if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
-        return {isValid, message};
-      }
-      if (AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
-        return {isValid, message};
-      }
-      if (AWB_STATUS.DLV == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} sudah deliv`;
-        return {isValid, message};
-      }
-      if (AWB_STATUS.CANCEL_DLV == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
-        return {isValid, message};
-      }
-    }
-
-    if (null == message) {
-      isValid = true;
-    }
-    return {isValid, message};
-  }
-
   private static async printDoPodReturnAndQueryMeta(
     res: express.Response,
     data: Partial<PrintDoPodReturnDataVm>,
@@ -780,8 +751,8 @@ export class FirstMileDoPodReturnService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     // #region get user login and branch login
     const currentUser = await RepositoryService.user
@@ -819,7 +790,7 @@ export class FirstMileDoPodReturnService {
     // sum totalCodValue from object
     // loop data and sum data totalCodValue
     if (data && data.doPodReturnDetails) {
-      data.doPodReturnDetails.map(function(doPod) {
+      data.doPodReturnDetails.map(function (doPod) {
         if (
           doPod &&
           doPod.awbItem &&
@@ -860,8 +831,8 @@ export class FirstMileDoPodReturnService {
     templateConfig: {
       printCopy?: number;
     } = {
-      printCopy: 1,
-    },
+        printCopy: 1,
+      },
   ) {
     const jsreportParams = {
       data,
@@ -887,74 +858,7 @@ export class FirstMileDoPodReturnService {
     });
   }
 
-// private static async returnProcess(
-//     permissonPayload: JwtPermissionTokenPayload,
-//     awbReturnDetail: DoPodReturnDetail,
-//     authMeta: AuthLoginMetadata,
-//     syncManualDelivery: boolean,
-//     onlyDriver: boolean,
-//     awb: AwbItemAttr,
-//     response: AwbDeliverManualSync,
-//     delivery: WebDeliveryVm,
-//     payload: WebAwbDeliverSyncPayloadVm,
-//     ) {
-//     const roleIdSigesit = 23;
-//     if (permissonPayload.roleId == roleIdSigesit) {
-//       // check only own awb number
-//       if (awbReturnDetail.awbStatusIdLast == AWB_STATUS.ANT &&
-//         awbReturnDetail.doPodReturn.userIdDriver ==
-//         authMeta.userId) {
-//         syncManualDelivery = true;
-//       } else {
-//         onlyDriver = true;
-//       }
-//     } else {
-//       syncManualDelivery = true;
-//     }
-
-//     if (syncManualDelivery) {
-//       // add handel final status
-//       const statusFinal = [AWB_STATUS.DLV];
-//       if (statusFinal.includes(awb.awbStatusIdLast)) {
-//         response.status = 'error';
-//         response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
-//       } else {
-//         // check awb is cod
-//         if (awb.awbItem.awb.isCod == true && delivery.awbStatusId == AWB_STATUS.DLV) {
-//           response.status = 'error';
-//           response.message = `Resi ${delivery.awbNumber}, adalah resi COD, tidak dapat melakukan POD Manual!`;
-//         } else {
-//           // set data deliver
-//           delivery.doPodDeliverId = awbReturnDetail.doPodReturnId;
-//           delivery.doPodDeliverDetailId = awbReturnDetail.doPodReturnDetailId;
-//           delivery.awbItemId = awbReturnDetail.awbItemId;
-//           // delivery.employeeId = authMeta.employeeId;
-//           await this.syncReturn(delivery);
-//           // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
-//           if (payload.isReturn) {
-//             await AwbReturnService.createAwbReturn(
-//               delivery.awbNumber,
-//               awb.awbId,
-//               permissonPayload.branchId,
-//               authMeta.userId,
-//               false,
-//             );
-//           }
-//           response.status = 'ok';
-//           response.message = 'success';
-//         }
-//       }
-//     } else {
-//       response.status = 'error';
-//       if (onlyDriver) {
-//         response.message = `Resi ${delivery.awbNumber}, bukan milik user sigesit login`;
-//       } else {
-//         response.message = `Resi ${delivery.awbNumber}, bermasalah harap scan antar terlebih dahulu`;
-//       }
-//     }
-//   }
-
-private static async syncReturn(returnData: WebReturnVm) {
+  private static async syncReturn(returnData: WebReturnVm) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     // Generate History by Status input pod manual
@@ -1072,7 +976,7 @@ private static async syncReturn(returnData: WebReturnVm) {
     }
   }
 
-private static async syncStatusManual(
+  private static async syncStatusManual(
     userId: number,
     branchId: number,
     returnData: WebReturnVm,

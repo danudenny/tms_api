@@ -4,11 +4,11 @@ import { BadRequestException, ServiceUnavailableException } from '@nestjs/common
 import { createQueryBuilder, getManager, LessThan, MoreThan } from 'typeorm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { 
-  MobileScanAwbReturnPayloadVm, 
-  MobileSyncReturnImageDataPayloadVm, 
-  MobileSyncReturnPayloadVm, 
-  PhotoReturnDetailVm 
+import {
+  MobileScanAwbReturnPayloadVm,
+  MobileSyncReturnImageDataPayloadVm,
+  MobileSyncReturnPayloadVm,
+  PhotoReturnDetailVm
 } from '../../models/first-mile/do-pod-return-payload.vm';
 import {
   MobileCreateDoPodResponseVm,
@@ -38,6 +38,7 @@ import { DoPodReturn } from '../../../../shared/orm-entity/do-pod-return';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { DoPodReturnAttachment } from '../../../../shared/orm-entity/do-pod-return-attachment';
 import { DoPodReturnHistory } from '../../../../shared/orm-entity/do-pod-return-history';
+import { AwbStatusService } from '../master/awb-status.service';
 
 export class MobileFirstMileDoPodReturnService {
 
@@ -54,7 +55,7 @@ export class MobileFirstMileDoPodReturnService {
       permissonPayload.branchId,
       authMeta.userId,
       true,
-      );
+    );
 
     await DoPodReturnService.createAuditReturnHistory(doPodReturn.doPodReturnId, false);
 
@@ -113,7 +114,7 @@ export class MobileFirstMileDoPodReturnService {
     response.trouble = true;
 
     if (awb) {
-      const checkValidAwbStatusIdLast = this.checkValidAwbStatusIdLast(awb);
+      const checkValidAwbStatusIdLast = AwbStatusService.checkValidAwbStatusIdLast(awb);
       if (checkValidAwbStatusIdLast.isValid) {
         // Add Locking setnx redis
         const holdRedis = await RedisService.lockingWithExpire(
@@ -126,23 +127,23 @@ export class MobileFirstMileDoPodReturnService {
           try {
             await getManager().transaction(async transactionManager => {
               // save table do_pod_return_detail
-                await DoPodReturnDetailService.createDoPodReturnDetail(
-                  payload.doPodReturnId,
-                  awb,
-                  awbNumber,
-                  transactionManager,
-                  );
+              await DoPodReturnDetailService.createDoPodReturnDetail(
+                payload.doPodReturnId,
+                awb,
+                awbNumber,
+                transactionManager,
+              );
 
               // counter total scan out
-                const totalSuccess = doPodReturn.totalAwb + 1;
-                await DoPodReturnService.updateTotalAwbById(
-                  doPodReturn.totalAwb,
-                  totalSuccess,
-                  doPodReturn.doPodReturnId,
-                );
+              const totalSuccess = doPodReturn.totalAwb + 1;
+              await DoPodReturnService.updateTotalAwbById(
+                doPodReturn.totalAwb,
+                totalSuccess,
+                doPodReturn.doPodReturnId,
+              );
 
               // NOTE: queue by Bull ANT
-                DoPodDetailPostMetaQueueService.createJobByAwbReturn(
+              DoPodDetailPostMetaQueueService.createJobByAwbReturn(
                 awb.awbItemId,
                 AWB_STATUS.ANT,
                 permissonPayload.branchId,
@@ -177,7 +178,7 @@ export class MobileFirstMileDoPodReturnService {
         }
       } else {
         response.status = 'error';
-        response.message = `Resi ${awbNumber} sudah di proses.`;
+        response.message = checkValidAwbStatusIdLast.message;
       }
 
       result.data = response;
@@ -476,35 +477,6 @@ export class MobileFirstMileDoPodReturnService {
     return await q.exec();
   }
 
-  private static checkValidAwbStatusIdLast(awbItemAttr: any) {
-    let message = null;
-    let isValid = false;
-    if (awbItemAttr.awbStatusIdLast) {
-      if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
-      }
-      if (AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
-      }
-      if (AWB_STATUS.DLV == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} sudah deliv`;
-      }
-      if (AWB_STATUS.CANCEL_DLV == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
-      }
-    }
-
-    if (null == message) {
-      isValid = true;
-    }
-
-    const result = {
-      isValid,
-      message,
-    };
-    return result;
-  }
-
   private static async syncReturn(returnsData: MobileReturnVm) {
     const doPodReturnHistories: DoPodReturnHistory[] = [];
     const authMeta = AuthService.getAuthData();
@@ -544,70 +516,70 @@ export class MobileFirstMileDoPodReturnService {
         const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
         if (awbdReturn && !finalStatus.includes(awbdReturn.awbStatusIdLast)) {
           const awbStatus = await AwbStatus.findOne(
-              { awbStatusId: lastDoPodReturnHistory.awbStatusId },
-              { cache: true },
+            { awbStatusId: lastDoPodReturnHistory.awbStatusId },
+            { cache: true },
+          );
+
+          // #region transaction data
+          await getManager().transaction(async transactionEntityManager => {
+            await transactionEntityManager.insert(
+              DoPodReturnHistory,
+              doPodReturnHistories,
             );
 
-            // #region transaction data
-          await getManager().transaction(async transactionEntityManager => {
-              await transactionEntityManager.insert(
-                DoPodReturnHistory,
-                doPodReturnHistories,
-              );
+            // Update data DoPodReturnDetail
+            await transactionEntityManager.update(
+              DoPodReturnDetail,
+              returnsData.doPodReturnDetailId,
+              {
+                awbStatusIdLast: lastDoPodReturnHistory.awbStatusId,
+                latitudeDeliveryLast: lastDoPodReturnHistory.latitudeReturn,
+                longitudeDeliveryLast: lastDoPodReturnHistory.longitudeReturn,
+                awbStatusDateTimeLast: lastDoPodReturnHistory.awbStatusDateTime,
+                reasonIdLast: lastDoPodReturnHistory.reasonId,
+                syncDateTimeLast: lastDoPodReturnHistory.syncDateTime,
+                descLast: lastDoPodReturnHistory.desc,
+                consigneeName: returnsData.consigneeNameNote,
+                userIdUpdated: authMeta.userId,
+                updatedTime: moment().toDate(),
+              },
+            );
 
-              // Update data DoPodReturnDetail
-              await transactionEntityManager.update(
-                DoPodReturnDetail,
-                returnsData.doPodReturnDetailId,
+            // only awb COD and DLV
+            if (returnsData.isCOD && lastDoPodReturnHistory.awbStatusId == AWB_STATUS.DLV) {
+              // find and update
+              const codPayment = await transactionEntityManager.findOne(
+                CodPayment,
                 {
-                  awbStatusIdLast: lastDoPodReturnHistory.awbStatusId,
-                  latitudeDeliveryLast: lastDoPodReturnHistory.latitudeReturn,
-                  longitudeDeliveryLast: lastDoPodReturnHistory.longitudeReturn,
-                  awbStatusDateTimeLast: lastDoPodReturnHistory.awbStatusDateTime,
-                  reasonIdLast: lastDoPodReturnHistory.reasonId,
-                  syncDateTimeLast: lastDoPodReturnHistory.syncDateTime,
-                  descLast: lastDoPodReturnHistory.desc,
-                  consigneeName: returnsData.consigneeNameNote,
-                  userIdUpdated: authMeta.userId,
-                  updatedTime: moment().toDate(),
+                  where: {
+                    awbItemId: returnsData.awbItemId,
+                    isDeleted: false,
+                  },
                 },
               );
-
-              // only awb COD and DLV
-              if (returnsData.isCOD && lastDoPodReturnHistory.awbStatusId == AWB_STATUS.DLV) {
-                // find and update
-                const codPayment = await transactionEntityManager.findOne(
+              if (codPayment) {
+                // update data
+                await transactionEntityManager.update(
                   CodPayment,
                   {
-                    where: {
-                      awbItemId: returnsData.awbItemId,
-                      isDeleted: false,
-                    },
+                    codPaymentId: codPayment.codPaymentId,
+                  },
+                  {
+                    codValue: returnsData.totalCodValue,
+                    codPaymentMethod: returnsData.codPaymentMethod,
+                    codPaymentService: returnsData.codPaymentService,
+                    note: returnsData.note,
+                    noReference: returnsData.noReference,
+                    userIdUpdated: authMeta.userId,
+                    userIdDriver: authMeta.userId,
+                    branchId: awbdReturn.branchId,
+                    updatedTime: moment().toDate(),
                   },
                 );
-                if (codPayment) {
-                  // update data
-                  await transactionEntityManager.update(
-                    CodPayment,
-                    {
-                      codPaymentId: codPayment.codPaymentId,
-                    },
-                    {
-                      codValue: returnsData.totalCodValue,
-                      codPaymentMethod: returnsData.codPaymentMethod,
-                      codPaymentService: returnsData.codPaymentService,
-                      note: returnsData.note,
-                      noReference: returnsData.noReference,
-                      userIdUpdated: authMeta.userId,
-                      userIdDriver: authMeta.userId,
-                      branchId: awbdReturn.branchId,
-                      updatedTime: moment().toDate(),
-                    },
-                  );
-                } else {
-                  await transactionEntityManager.insert(
-                    CodPayment,
-                    {
+              } else {
+                await transactionEntityManager.insert(
+                  CodPayment,
+                  {
                     awbNumber: returnsData.awbNumber,
                     codValue: returnsData.totalCodValue,
                     codPaymentMethod: returnsData.codPaymentMethod,
@@ -623,104 +595,104 @@ export class MobileFirstMileDoPodReturnService {
                     createdTime: moment().toDate(),
                     updatedTime: moment().toDate(),
                   });
-                }
-                // TODO: update transaction_status_id = TRANSACTION_STATUS.SIGESIT
-
               }
+              // TODO: update transaction_status_id = TRANSACTION_STATUS.SIGESIT
 
-              // MOL NOTE
-              // NOTE: handle only awb status return
-              if (awbStatus.isReturn) {
-                await AwbReturnService.createAwbReturn(
-                  returnsData.awbNumber,
-                  returnsData.awbId,
-                  permissonPayload.branchId,
-                  authMeta.userId,
-                  true,
+            }
+
+            // MOL NOTE
+            // NOTE: handle only awb status return
+            if (awbStatus.isReturn) {
+              await AwbReturnService.createAwbReturn(
+                returnsData.awbNumber,
+                returnsData.awbId,
+                permissonPayload.branchId,
+                authMeta.userId,
+                true,
+              );
+            }
+
+            const doPodReturn = await DoPodReturn.findOne({
+              where: {
+                doPodReturnId: returnsData.doPodReturnId,
+                isDeleted: false,
+              },
+            });
+            if (doPodReturn) {
+
+              if (awbStatus.isProblem) {
+                await transactionEntityManager.increment(
+                  DoPodReturn,
+                  {
+                    doPodReturnId: returnsData.doPodReturnId,
+                    totalReturn: LessThan(doPodReturn.totalAwb),
+                  },
+                  'totalReturn',
+                  1,
                 );
               }
-
-              const doPodReturn = await DoPodReturn.findOne({
-                where: {
-                  doPodReturnId: returnsData.doPodReturnId,
-                  isDeleted: false,
-                },
-              });
-              if (doPodReturn) {
-
-                if (awbStatus.isProblem) {
-                  await transactionEntityManager.increment(
-                    DoPodReturn,
-                    {
-                      doPodReturnId: returnsData.doPodReturnId,
-                      totalReturn: LessThan(doPodReturn.totalAwb),
-                    },
-                    'totalReturn',
-                    1,
-                  );
-                }
-                // else if (awbStatus.isFinalStatus) {
-                //   await transactionEntityManager.increment(
-                //     DoPodReturn,
-                //     {
-                //       doPodReturnId: delivery.doPodReturnId,
-                //       totalDelivery: LessThan(doPodReturn.totalAwb),
-                //     },
-                //     'totalDelivery',
-                //     1,
-                //   );
-                //   // balance total problem
-                //   await transactionEntityManager.decrement(
-                //     DoPodReturn,
-                //     {
-                //       doPodReturnId: delivery.doPodReturnId,
-                //       totalProblem: MoreThan(0),
-                //     },
-                //     'totalProblem',
-                //     1,
-                //   );
-                // }
-              }
-            });
-            // #endregion of transaction
+              // else if (awbStatus.isFinalStatus) {
+              //   await transactionEntityManager.increment(
+              //     DoPodReturn,
+              //     {
+              //       doPodReturnId: delivery.doPodReturnId,
+              //       totalDelivery: LessThan(doPodReturn.totalAwb),
+              //     },
+              //     'totalDelivery',
+              //     1,
+              //   );
+              //   // balance total problem
+              //   await transactionEntityManager.decrement(
+              //     DoPodReturn,
+              //     {
+              //       doPodReturnId: delivery.doPodReturnId,
+              //       totalProblem: MoreThan(0),
+              //     },
+              //     'totalProblem',
+              //     1,
+              //   );
+              // }
+            }
+          });
+          // #endregion of transaction
 
           // NOTE: queue by Bull
           DoPodDetailPostMetaQueueService.createJobV1MobileSync(
-              awbdReturn.awbItemId,
-              lastDoPodReturnHistory.awbStatusId,
-              authMeta.userId,
-              awbdReturn.branchId,
-              authMeta.userId,
-              returnsData.employeeId,
-              lastDoPodReturnHistory.reasonId,
-              lastDoPodReturnHistory.desc,
-              returnsData.consigneeNameNote,
-              awbStatus.awbStatusName,
-              awbStatus.awbStatusTitle,
-              returnDateTime,
-              lastDoPodReturnHistory.latitudeReturn,
-              lastDoPodReturnHistory.longitudeReturn,
-            );
+            awbdReturn.awbItemId,
+            lastDoPodReturnHistory.awbStatusId,
+            authMeta.userId,
+            awbdReturn.branchId,
+            authMeta.userId,
+            returnsData.employeeId,
+            lastDoPodReturnHistory.reasonId,
+            lastDoPodReturnHistory.desc,
+            returnsData.consigneeNameNote,
+            awbStatus.awbStatusName,
+            awbStatus.awbStatusTitle,
+            returnDateTime,
+            lastDoPodReturnHistory.latitudeReturn,
+            lastDoPodReturnHistory.longitudeReturn,
+          );
 
-            // NOTE: push data only DLV to Sunfish
+          // NOTE: push data only DLV to Sunfish
           if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
-              // TODO: add flag
-              // AwbSunfishV2QueueService.perform(
-              //   delivery.awbNumber,
-              //   delivery.employeeId,
-              //   historyDateTime,
-              // );
-            } else {
-              // NOTE: mail notification status problem
-              AwbNotificationMailQueueService.perform(
-                awbdReturn.awbItemId,
-                awbStatus.awbStatusId,
-              );
-            }
-          process = true;
+            // TODO: add flag
+            // AwbSunfishV2QueueService.perform(
+            //   delivery.awbNumber,
+            //   delivery.employeeId,
+            //   historyDateTime,
+            // );
           } else {
-            PinoLoggerService.log('##### Data Not Valid', returnsData);
+            // NOTE: mail notification status problem
+            AwbNotificationMailQueueService.perform(
+              awbdReturn.awbItemId,
+              awbStatus.awbStatusId,
+            );
           }
+          process = true;
+        } else {
+          PinoLoggerService.log('##### Data Not Valid', returnsData);
+        }
       } catch (error) {
         console.error(error);
         throw new ServiceUnavailableException(error);
@@ -728,5 +700,4 @@ export class MobileFirstMileDoPodReturnService {
     } // end of doPodDeliverHistor.length
     return process;
   }
-
 }
