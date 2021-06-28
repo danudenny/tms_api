@@ -67,6 +67,8 @@ export class TrackingDeliveryOutService {
     q.innerJoin(e => e.awb.packageType, 'pt', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.innerJoin(e => e.awb, 'awb');
+    q.innerJoin(e => e.awb.packageType, 'pt');
     q.andWhere(e => e.bagRepresentativeId, w => w.equals(payload.bagRepresentativeId));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
