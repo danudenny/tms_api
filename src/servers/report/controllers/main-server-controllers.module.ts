@@ -16,6 +16,7 @@ import { ScaninWebDeliveryReportController } from './pod/scanin-web-delivery-rep
 import { AwbPatchStatusController } from './awb-patch-status.controller';
 import { MonitoringProblemLebihSortirListController } from './hub/monitoring-problem-lebih-sortir-list.controller';
 import { SmdBagCityReportController } from './smd/smd-bag-city-report.controller';
+import { TrackingDeliveryOutController } from './pod/tracking-delivery-out.controller';
 
 // #endregion
 @Module({
@@ -34,6 +35,7 @@ import { SmdBagCityReportController } from './smd/smd-bag-city-report.controller
     AwbPatchStatusController,
     MonitoringProblemLebihSortirListController,
     SmdBagCityReportController,
+    TrackingDeliveryOutController,
   ],
 })
 export class MainServerControllersModule {}
