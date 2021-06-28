@@ -78,14 +78,12 @@ export class SmdBagCityReportService {
     payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
-      ['t1.bag_representative_code', 'bagRepresentativeCode'],
-      ['t1.bag_representative_id', 'bagRepresentativeId'],
-      ['TO_CHAR(t1.bag_representative_date, \'dd-mm-YYYY HH24:MI:SS\')', 'bagRepresentativeDate'],
-      ['COUNT(t4.bag_representative_item_id)', 'totalItem'],
-      ['CAST(t1.total_weight AS DECIMAL(18,2))', 'totalWeight'],
-      ['t2.representative_code', 'representativeCode'],
-      ['t2.representative_name', 'representativeName'],
-      ['t3.branch_name', 'branchBagging'],
+      ['t1.bag_representative_code', 'No Gabung Sortir Kota'],
+      ['t2.representative_code', 'Kode Gerai'],
+      ['t3.branch_name', 'Gerai'],
+      ['TO_CHAR(t1.bag_representative_date, \'dd-mm-YYYY HH24:MI:SS\')', 'Tgl Gab. Paket kota'],
+      ['COUNT(t4.bag_representative_item_id)', 'Jumlah Resi'],
+      ['CONCAT(CAST(t1.total_weight AS DECIMAL(18,2)), \' Kg\')', 'Total Berat'],
     );
     q.leftJoin(e => e.representative, 't2');
     q.innerJoin(e => e.branch, 't3', j =>

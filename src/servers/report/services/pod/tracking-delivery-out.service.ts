@@ -8,7 +8,7 @@ import { RequestErrorService } from '../../../../shared/services/request-error.s
 import { CsvHelper } from '../../../../shared/helpers/csv-helpers';
 import { WebScanOutReportVm } from '../../../main/models/web-scan-out-response.vm';
 import { BagRepresentativeTrackingDetailAwbVm } from '../../../smd/models/bag-representative-tracking-detail-awb.vm';
-import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
+import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
 
 @Injectable()
 export class TrackingDeliveryOutService {
@@ -52,7 +52,7 @@ export class TrackingDeliveryOutService {
   static async getDataCsvtrackingBagRepresentative(
     payload: BagRepresentativeTrackingDetailAwbVm,
   ): Promise<any> {
-    const repo = new OrionRepositoryService(BagRepresentative, 'bri');
+    const repo = new OrionRepositoryService(BagRepresentativeItem, 'bri');
     const q = repo.findAllRaw();
 
     q.selectRaw(

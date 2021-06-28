@@ -107,8 +107,4 @@ export class BagRepresentative extends BaseEntity {
 
   @OneToMany(() => DoSmdDetailItem, e => e.bagRepresentativeId, { cascade: ['insert'] })
   doSmdDetailItem: DoSmdDetailItem[];
-
-  @OneToOne(() => Awb)
-  @JoinColumn({ name: 'awb_id' })
-  awb: Awb;
 }
