@@ -83,7 +83,7 @@ export class SmdBagCityReportService {
       ['t3.branch_name', 'Gerai'],
       ['TO_CHAR(t1.bag_representative_date, \'dd Mon YYYY HH24:MI:SS\')', 'Tgl Gab. Paket kota'],
       ['COUNT(t4.bag_representative_item_id)', 'Jumlah Resi'],
-      ['CONCAT(CAST(t1.total_weight AS DECIMAL(18,2)), \' Kg\')', 'Total Berat'],
+      ['CONCAT(CAST(t1.total_weight AS DECIMAL(18,0)), \' Kg\')', 'Total Berat'],
     );
     q.leftJoin(e => e.representative, 't2');
     q.innerJoin(e => e.branch, 't3', j =>
@@ -92,6 +92,7 @@ export class SmdBagCityReportService {
     q.innerJoin(e => e.bagRepresentativeItems, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.orderByRaw('t1.bag_representative_date DESC');
     q.groupByRaw(`
       t1.bag_representative_id,
       t1.bag_representative_code,
