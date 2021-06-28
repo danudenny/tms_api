@@ -92,7 +92,8 @@ export class SmdBagCityReportService {
     q.innerJoin(e => e.bagRepresentativeItems, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.orderByRaw('t1.bag_representative_date DESC');
+    q.orderByRaw('t1.bag_representative_date', 'DESC');
+
     q.groupByRaw(`
       t1.bag_representative_id,
       t1.bag_representative_code,
