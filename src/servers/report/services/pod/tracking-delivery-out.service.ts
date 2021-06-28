@@ -61,7 +61,7 @@ export class TrackingDeliveryOutService {
       ['pt.package_type_code', 'Layanan'],
     );
     q.innerJoin(e => e.awb, 'awb');
-    q.innerJoin(e => e.awb.packageType);
+    q.innerJoin(e => e.awb.packageType, 'pt');
     q.andWhere(e => e.bagRepresentativeId, w => w.equals(payload.bagRepresentativeId));
     const data = await q.exec();
 
