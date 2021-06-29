@@ -9,10 +9,10 @@ export class BagOrderDetailResponseVm {
   packageTypeCode: string;
 
   @ApiModelProperty()
-  totalWeightFinal: string;
+  totalWeight: string;
 
   @ApiModelProperty()
-  totalWeightFinalRounded: string;
+  totalWeightRealRounded: string;
 }
 
 export class BagOrderResponseVm {
