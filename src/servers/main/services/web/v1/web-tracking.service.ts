@@ -424,10 +424,11 @@ export class V1WebTrackingService {
         awb.total_weight_final_rounded AS "totalWeightFinalRounded",
         pt.package_type_code AS "packageTypeCode"
       FROM bag_representative_item bri
-      INNER JOIN awb ON awb.awb_id = bri.awb_id
-      INNER JOIN package_type pt ON pt.package_type_id = awb.package_type_id
+      INNER JOIN awb ON awb.awb_id = bri.awb_id AND awb.is_deleted = FALSE
+      INNER JOIN package_type pt ON pt.package_type_id = awb.package_type_id AND pt.is_deleted = FALSE
       WHERE
         bri.bag_representative_id = :bagRepresentativeId
+        AND bri.is_deleted = FALSE
     `;
     const rawData = await RawQueryService.queryWithParams(query, {
       bagRepresentativeId,
