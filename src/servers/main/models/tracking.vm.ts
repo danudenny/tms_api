@@ -375,4 +375,7 @@ export class TrackingBagRepresentativeAwbDetailResponseVm {
 
   @ApiModelProperty()
   packageTypeCode: string;
+
+  @ApiModelProperty()
+  totalWeightFinal: string;
 }

@@ -422,6 +422,7 @@ export class V1WebTrackingService {
       SELECT
         bri.ref_awb_number AS "awbNumber",
         awb.total_weight_final_rounded AS "totalWeightFinalRounded",
+        awb.total_weight_final AS "totalWeightFinal",
         pt.package_type_code AS "packageTypeCode"
       FROM bag_representative_item bri
       INNER JOIN awb ON awb.awb_id = bri.awb_id AND awb.is_deleted = FALSE
