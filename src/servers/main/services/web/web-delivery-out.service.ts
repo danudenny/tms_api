@@ -74,9 +74,9 @@ export class WebDeliveryOutService {
   constructor(
     @InjectRepository(DoPodRepository)
     private readonly doPodRepository: DoPodRepository,
-  ) {}
+  ) { }
 
-   ExportHeaderBagOrderDetailList = [
+  ExportHeaderBagOrderDetailList = [
     'No.Resi',
     'Layanan',
     'Berat Asli',
@@ -744,7 +744,7 @@ export class WebDeliveryOutService {
               authMeta.userId,
               additionMinutes,
             );
-              // #endregion after scanout
+            // #endregion after scanout
 
             totalSuccess += 1;
           } else {
@@ -1109,10 +1109,10 @@ export class WebDeliveryOutService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanOutTransitListAwbResponseVm> {
     // mapping field
-    payload.fieldResolverMap['doPodId']     = 't1.do_pod_id';
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
-    payload.fieldResolverMap['awbNumber']   = 't2.awb_number';
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['awbSubstitute'] = 't1.awb_substitute';
 
     const repo = new OrionRepositoryService(DoPodDetail, 't1');
@@ -1139,11 +1139,11 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    const data   = await q.exec();
-    const total  = await q.countWithoutTakeAndSkip();
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
     const result = new WebScanOutTransitListAwbResponseVm();
 
-    result.data   = data;
+    result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
@@ -1355,8 +1355,9 @@ export class WebDeliveryOutService {
       qz.addSelect('bag_item_id.bag_item_id', 'bagItemId');
       qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
       qz.addSelect('awb.awb_id', 'awbId');
-      qz.addSelect(`awb.total_weight_final::numeric(10,2)`, 'totalWeightFinal');
+      // qz.addSelect(`awb.total_weight_final::numeric(10,2)`, 'totalWeightFinal');
       qz.addSelect(`awb.total_weight_final_rounded::numeric(10,2)`, 'totalWeightFinalRounded');
+      qz.addSelect(`awb.total_weight_real_rounded::numeric(10,2)`, 'totalWeightFinal');
       qz.addSelect(`package_type.package_type_code`, 'packageTypeCode');
       qz.addSelect(`package_type.package_type_name`, 'packageTypeName');
       qz.addSelect('awb.awb_id', 'awbId');
@@ -1393,7 +1394,7 @@ export class WebDeliveryOutService {
           'do_pod_detail_bag',
           'do_pod_detail_bag.bag_item_id = bag_item_id.bag_item_id',
         );
-        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd and bag.is_deleted= false' , {
+        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd and bag.is_deleted= false', {
           bag: bag.bag.bagNumber,
           seq: bag.bagSeq,
           dpdd,
@@ -1404,7 +1405,7 @@ export class WebDeliveryOutService {
           seq: bag.bagSeq,
         });
       }
-      
+
 
       const result = new BagOrderResponseVm();
       result.data = await qz.getRawMany();
@@ -1422,7 +1423,7 @@ export class WebDeliveryOutService {
   async exportbagOrderDetailList(payload: BagAwbExportVm, response) {
     try {
       const fileName = `POD_deliver_out_bag_order_detail${new Date().getTime()}.csv`;
-      
+
       response.setHeader(
         'Content-disposition',
         `attachment; filename=${fileName}`,
@@ -1430,14 +1431,14 @@ export class WebDeliveryOutService {
       response.writeHead(200, { 'Content-Type': 'text/csv' });
       response.flushHeaders();
       response.write(`${this.ExportHeaderBagOrderDetailList.join(',')}\n`);
-      
+
       let payloadBagNumber = '0'
-      for(const filter of payload.filters){
-        if('bagNumber' == filter.field){
+      for (const filter of payload.filters) {
+        if ('bagNumber' == filter.field) {
           payloadBagNumber = filter.value;
         }
       }
-      payload.filters =[];
+      payload.filters = [];
 
       let bagNumber = '0';
       let bagSeq = 0;
@@ -1446,7 +1447,7 @@ export class WebDeliveryOutService {
         bagNumber = bag.bag.bagNumber;
         bagSeq = bag.bagSeq;
       }
-      
+
       // payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
       // payload.fieldResolverMap['bagSeq'] = 't1.bag_seq';
 
@@ -1461,8 +1462,9 @@ export class WebDeliveryOutService {
         ['t2.bag_seq', 'bagSeq'],
         ['t3.awb_number', 'awbNumber'],
         ['t5.awb_id', 'awbId'],
-        [`CONCAT(t5.total_weight_final::numeric(10,2), 'kg')`, 'totalWeightFinal'],
-        [`CONCAT(t5.total_weight_final_rounded::numeric(10,2), 'kg')`, 'totalWeightFinalRounded'],
+        // [`CONCAT(t5.total_weight_final::numeric(10,2), 'kg')`, 'totalWeightFinal'],
+        [`CONCAT(t5.total_weight_final_rounded::numeric(10,2), ' kg')`, 'totalWeightFinalRounded'],
+        [`CONCAT(t5.total_weight_real_rounded::numeric(10,2), ' kg')`, 'totalWeightFinal'],
         [`COALESCE(t6.package_type_code, '-')`, 'packageTypeCode'],
         [`COALESCE(t6.package_type_name, '-')`, 'packageTypeName'],
       );
@@ -1698,9 +1700,9 @@ export class WebDeliveryOutService {
     const bag = await DeliveryService.validBagNumber(bagNumber);
     if (bag) {
       // if (bag.branchIdLast == permissonPayload.branchId) {
-        response.status = 'ok';
-        response.trouble = false;
-        response.message = 'success';
+      response.status = 'ok';
+      response.trouble = false;
+      response.message = 'success';
       // }
     }
     result = { bagNumber, ...response };
@@ -1913,7 +1915,7 @@ export class WebDeliveryOutService {
     temp = await q.getRawMany();
 
     let id = '';
-    temp.map(function(item) {
+    temp.map(function (item) {
       id += id ? ',\'' + item.doPodDeliverId + '\'' : '\'' + item.doPodDeliverId + '\'';
     });
     const qq = createQueryBuilder();
@@ -1943,16 +1945,16 @@ export class WebDeliveryOutService {
 
   async updateAwbPartner(payload: UpdateAwbPartnerPayloadVm):
     Promise<WebScanOutTransitUpdateAwbPartnerResponseVm> {
-    const result           = new WebScanOutTransitUpdateAwbPartnerResponseVm();
-    result.status          = 'ok';
-    result.message         = 'success';
-    const authMeta         = AuthService.getAuthData();
+    const result = new WebScanOutTransitUpdateAwbPartnerResponseVm();
+    result.status = 'ok';
+    result.message = 'success';
+    const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const doPodDetail = await DoPodDetail.findOne({ doPodDetailId: payload.doPodDetailId });
     if (doPodDetail) {
       doPodDetail.awbSubstitute = payload.awbSubstitute;
-      doPodDetail.updatedTime   = moment().toDate();
+      doPodDetail.updatedTime = moment().toDate();
       doPodDetail.userIdUpdated = authMeta.userId;
       await doPodDetail.save();
 
@@ -1976,13 +1978,13 @@ export class WebDeliveryOutService {
         );
       }
     } else {
-      result.status  = 'error';
+      result.status = 'error';
       result.message = 'Data tidak ditemukan';
     }
 
     return result;
   }
-  
+
   private streamTransformBagOrderDetailList(d) {
     const values = [
       `'${d.awbNumber}`,
