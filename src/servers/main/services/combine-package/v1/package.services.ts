@@ -441,6 +441,7 @@ export class V1PackageService {
       branchIdHub: permissonPayload.branchId,
     });
     qb.andWhere('a.branch_id_to = :branchId', { branchId });
+    qb.andWhere('a.is_manual = true');
     qb.andWhere('a.is_deleted = false');
 
     const bagData = await qb.getRawOne();

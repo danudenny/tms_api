@@ -3,12 +3,12 @@ import { BaseMetaPayloadVm, BaseMetaPayloadFilterVm } from '../../../../shared/m
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
-import { MonitoringHubProblemVm, MonitoringHubTotalProblemVm, MonitoringHubProblemLebihSortirVm } from '../../models/monitoring-hub-problem.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
-import { MonitoringProblemListService } from './monitoring-problem-list.service';
-import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub-monitoring.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import moment= require('moment');
+import { MonitoringHubProblemVm, MonitoringHubProblemLebihSortirVm } from '../../models/monitoring-hub-problem.vm';
+import { HubMonitoringService } from '../../../hub/services/integration/hub-monitoring.service';
+import { MonitoringProblemListService } from './monitoring-problem-list.service';
 
 @Injectable()
 export class MonitoringProblemLebihSortirListService {

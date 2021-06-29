@@ -210,7 +210,7 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.users, 'g', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.users.roles, 'h', j =>
+    q.innerJoin(e => e.users.userRoles, 'h', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhereRaw(`h.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
@@ -381,7 +381,7 @@ export class WebMonitoringCoordinatorService {
     q.innerJoin(e => e.userToBranch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.users.roles, 't7', j =>
+    q.innerJoin(e => e.users.userRoles, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhereRaw(`t7.role_id ${operatorQueryHrdKorwil} ${korwilConfig.korwilHrdRoleId}`);
