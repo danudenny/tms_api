@@ -57,8 +57,9 @@ export class TrackingDeliveryOutService {
 
     q.selectRaw(
       ['CONCAT(\'="\',bri.ref_awb_number, \'"\')', 'No Resi'],
-      ['CONCAT(awb.total_weight_final_rounded::numeric(10,2), \' Kg\')', 'Berat Asli'],
       ['pt.package_type_code', 'Layanan'],
+      ['CONCAT(awb.total_weight_final::numeric(10,2), \' Kg\')', 'Berat Partner'],
+      ['CONCAT(awb.total_weight_final_rounded::numeric(10,2), \' Kg\')', 'Berat Asli'],
     );
     q.innerJoin(e => e.awb, 'awb', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
