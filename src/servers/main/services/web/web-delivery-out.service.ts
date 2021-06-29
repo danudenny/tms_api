@@ -79,6 +79,7 @@ export class WebDeliveryOutService {
   ExportHeaderBagOrderDetailList = [
     'No.Resi',
     'Layanan',
+    'Berat',
     'Berat Asli',
   ];
 
@@ -1355,9 +1356,8 @@ export class WebDeliveryOutService {
       qz.addSelect('bag_item_id.bag_item_id', 'bagItemId');
       qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
       qz.addSelect('awb.awb_id', 'awbId');
-      // qz.addSelect(`awb.total_weight_final::numeric(10,2)`, 'totalWeightFinal');
+      qz.addSelect(`awb.total_weight_final::numeric(10,2)`, 'totalWeightFinal');
       qz.addSelect(`awb.total_weight_final_rounded::numeric(10,2)`, 'totalWeightFinalRounded');
-      qz.addSelect(`awb.total_weight_real_rounded::numeric(10,2)`, 'totalWeightFinal');
       qz.addSelect(`package_type.package_type_code`, 'packageTypeCode');
       qz.addSelect(`package_type.package_type_name`, 'packageTypeName');
       qz.addSelect('awb.awb_id', 'awbId');
@@ -1416,6 +1416,7 @@ export class WebDeliveryOutService {
       // if (data) {
       //   result.awbNumber = awb;
       // }
+      console.log('DATA:::::', result.data);
       return result;
     }
   }
@@ -1462,9 +1463,8 @@ export class WebDeliveryOutService {
         ['t2.bag_seq', 'bagSeq'],
         ['t3.awb_number', 'awbNumber'],
         ['t5.awb_id', 'awbId'],
-        // [`CONCAT(t5.total_weight_final::numeric(10,2), 'kg')`, 'totalWeightFinal'],
+        [`CONCAT(t5.total_weight_final::numeric(10,2), 'kg')`, 'totalWeightFinal'],
         [`CONCAT(t5.total_weight_final_rounded::numeric(10,2), ' kg')`, 'totalWeightFinalRounded'],
-        [`CONCAT(t5.total_weight_real_rounded::numeric(10,2), ' kg')`, 'totalWeightFinal'],
         [`COALESCE(t6.package_type_code, '-')`, 'packageTypeCode'],
         [`COALESCE(t6.package_type_name, '-')`, 'packageTypeName'],
       );
@@ -1990,6 +1990,7 @@ export class WebDeliveryOutService {
       `'${d.awbNumber}`,
       d.packageTypeCode,
       d.totalWeightFinal,
+      d.totalWeightFinalRounded,
     ];
     return `${values.join(',')} \n`;
   }
