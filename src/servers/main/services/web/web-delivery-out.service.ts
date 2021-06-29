@@ -79,7 +79,7 @@ export class WebDeliveryOutService {
   ExportHeaderBagOrderDetailList = [
     'No.Resi',
     'Layanan',
-    'Berat',
+    'Berat Partner',
     'Berat Asli',
   ];
 
