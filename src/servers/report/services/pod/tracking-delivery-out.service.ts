@@ -60,9 +60,15 @@ export class TrackingDeliveryOutService {
       ['CONCAT(awb.total_weight_final_rounded::numeric(10,2), \' Kg\')', 'Berat Asli'],
       ['pt.package_type_code', 'Layanan'],
     );
-    q.innerJoin(e => e.awb, 'awb');
-    q.innerJoin(e => e.awb.packageType, 'pt');
+    q.innerJoin(e => e.awb, 'awb', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb.packageType, 'pt', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.andWhere(e => e.bagRepresentativeId, w => w.equals(payload.bagRepresentativeId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
     const data = await q.exec();
 
     return data;
