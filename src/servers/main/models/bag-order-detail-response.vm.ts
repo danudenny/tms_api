@@ -1,10 +1,23 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { Type } from 'class-transformer';
 
-export class BagOrderResponseVm {
+export class BagOrderDetailResponseVm {
   @ApiModelProperty()
-  @Type(() => String)
-  awbNumber: string[];
+  awbNumber: string;
+
+  @ApiModelProperty()
+  packageTypeCode: string;
+
+  @ApiModelProperty()
+  totalWeight: string;
+
+  @ApiModelProperty()
+  totalWeightRealRounded: string;
+}
+
+export class BagOrderResponseVm {
+  @ApiModelProperty({ type: () => [BagOrderDetailResponseVm] })
+  data: BagOrderDetailResponseVm[];
 }
 
 export class AuditHistVm {

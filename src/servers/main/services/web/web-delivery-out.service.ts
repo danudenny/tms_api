@@ -56,7 +56,7 @@ import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm, PhotoResponseVm, BagDeliveryDetailResponseVm } from '../../models/bag-order-detail-response.vm';
-import { BagAwbVm, BagDetailVm, PhotoDetailVm, BagDeliveryDetailVm } from '../../models/bag-order-response.vm';
+import { BagAwbVm, BagDetailVm, PhotoDetailVm, BagDeliveryDetailVm, BagAwbExportVm } from '../../models/bag-order-response.vm';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { AwbService } from '../v1/awb.service';
 import { DoPodDeliverRepository } from '../../../../shared/orm-repository/do-pod-deliver.repository';
@@ -66,6 +66,7 @@ import { Employee } from '../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { BagScanOutHubQueueService } from '../../../queue/services/bag-scan-out-hub-queue.service';
 import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
+import { Bag } from '../../../../shared/orm-entity/bag';
 // #endregion
 
 @Injectable()
@@ -73,7 +74,14 @@ export class WebDeliveryOutService {
   constructor(
     @InjectRepository(DoPodRepository)
     private readonly doPodRepository: DoPodRepository,
-  ) {}
+  ) { }
+
+  ExportHeaderBagOrderDetailList = [
+    'No.Resi',
+    'Layanan',
+    'Berat Partner',
+    'Berat Asli',
+  ];
 
   /**
    * Create DO POD
@@ -737,7 +745,7 @@ export class WebDeliveryOutService {
               authMeta.userId,
               additionMinutes,
             );
-              // #endregion after scanout
+            // #endregion after scanout
 
             totalSuccess += 1;
           } else {
@@ -1102,10 +1110,10 @@ export class WebDeliveryOutService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanOutTransitListAwbResponseVm> {
     // mapping field
-    payload.fieldResolverMap['doPodId']     = 't1.do_pod_id';
+    payload.fieldResolverMap['doPodId'] = 't1.do_pod_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
-    payload.fieldResolverMap['awbNumber']   = 't2.awb_number';
+    payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['awbSubstitute'] = 't1.awb_substitute';
 
     const repo = new OrionRepositoryService(DoPodDetail, 't1');
@@ -1132,11 +1140,11 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    const data   = await q.exec();
-    const total  = await q.countWithoutTakeAndSkip();
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
     const result = new WebScanOutTransitListAwbResponseVm();
 
-    result.data   = data;
+    result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
@@ -1347,6 +1355,12 @@ export class WebDeliveryOutService {
       qz.addSelect('bag.bag_id', 'bagId');
       qz.addSelect('bag_item_id.bag_item_id', 'bagItemId');
       qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
+      qz.addSelect('awb.awb_id', 'awbId');
+      qz.addSelect(`awb.total_weight::numeric(10,2)`, 'totalWeight');
+      qz.addSelect(`awb.total_weight_real_rounded::numeric(10,2)`, 'totalWeightRealRounded');
+      qz.addSelect(`package_type.package_type_code`, 'packageTypeCode');
+      qz.addSelect(`package_type.package_type_name`, 'packageTypeName');
+      qz.addSelect('awb.awb_id', 'awbId');
       qz.from('bag', 'bag');
       qz.innerJoin(
         'bag_item',
@@ -1358,6 +1372,21 @@ export class WebDeliveryOutService {
         'bag_item_awb',
         'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
       );
+      qz.leftJoin(
+        'awb_item',
+        'awb_item',
+        'awb_item.awb_item_id = bag_item_awb.awb_item_id',
+      );
+      qz.leftJoin(
+        'awb',
+        'awb',
+        'awb.awb_id = awb_item.awb_id',
+      );
+      qz.leftJoin(
+        'package_type',
+        'package_type',
+        'package_type.package_type_id = awb.package_type_id',
+      );
 
       if (dpdd) {
         qz.innerJoin(
@@ -1365,7 +1394,7 @@ export class WebDeliveryOutService {
           'do_pod_detail_bag',
           'do_pod_detail_bag.bag_item_id = bag_item_id.bag_item_id',
         );
-        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd and bag.is_deleted= false' , {
+        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd and bag.is_deleted= false', {
           bag: bag.bag.bagNumber,
           seq: bag.bagSeq,
           dpdd,
@@ -1377,16 +1406,90 @@ export class WebDeliveryOutService {
         });
       }
 
-      const data = await qz.getRawMany();
+
       const result = new BagOrderResponseVm();
-      const awb = [];
-      for (const a in data) {
-        awb.push(data[a].awbNumber);
-      }
-      if (data) {
-        result.awbNumber = awb;
-      }
+      result.data = await qz.getRawMany();
+      // const awb = [];
+      // for (const a in data) {
+      //   awb.push(data[a].awbNumber);
+      // }
+      // if (data) {
+      //   result.awbNumber = awb;
+      // }
       return result;
+    }
+  }
+
+  async exportbagOrderDetailList(payload: BagAwbExportVm, response) {
+    try {
+      const fileName = `POD_deliver_out_bag_order_detail${new Date().getTime()}.csv`;
+
+      response.setHeader(
+        'Content-disposition',
+        `attachment; filename=${fileName}`,
+      );
+      response.writeHead(200, { 'Content-Type': 'text/csv' });
+      response.flushHeaders();
+      response.write(`${this.ExportHeaderBagOrderDetailList.join(',')}\n`);
+
+      let payloadBagNumber = '0'
+      for (const filter of payload.filters) {
+        if ('bagNumber' == filter.field) {
+          payloadBagNumber = filter.value;
+        }
+      }
+      payload.filters = [];
+
+      let bagNumber = '0';
+      let bagSeq = 0;
+      const bag = await BagService.validBagNumber(payloadBagNumber);
+      if (bag) {
+        bagNumber = bag.bag.bagNumber;
+        bagSeq = bag.bagSeq;
+      }
+
+      // payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
+      // payload.fieldResolverMap['bagSeq'] = 't1.bag_seq';
+
+      const repo = new OrionRepositoryService(Bag, 't1');
+      const q = repo.findAllRaw();
+      payload.applyToOrionRepositoryQuery(q);
+
+      q.selectRaw(
+        ['t1.bag_id', 'bagId'],
+        ['t1.bag_number', 'bagNumber'],
+        ['t2.bag_item_id', 'bagItemId'],
+        ['t2.bag_seq', 'bagSeq'],
+        ['t3.awb_number', 'awbNumber'],
+        ['t5.awb_id', 'awbId'],
+        [`CONCAT(t5.total_weight::numeric(10,2), 'kg')`, 'totalWeight'],//Berat
+        [`CONCAT(t5.total_weight_real_rounded::numeric(10,2), ' kg')`, 'totalWeightRealRounded'],//Berat Asli
+        [`COALESCE(t6.package_type_code, '-')`, 'packageTypeCode'],
+        [`COALESCE(t6.package_type_name, '-')`, 'packageTypeName'],
+      );
+      q.innerJoin(e => e.bagItems, 't2', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.innerJoin(e => e.bagItems.bagItemAwbs, 't3', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.leftJoin(e => e.bagItems.bagItemAwbs.awbItem, 't4', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.leftJoin(e => e.bagItems.bagItemAwbs.awbItem.awb, 't5', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.leftJoin(e => e.bagItems.bagItemAwbs.awbItem.awb.packageType, 't6', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
+      q.andWhere(e => e.bagItems.bagSeq, w => w.equals(bagSeq));
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      await q.stream(response, this.streamTransformBagOrderDetailList);
+    } catch (err) {
+      console.error(err);
+      throw err.message;
     }
   }
 
@@ -1596,9 +1699,9 @@ export class WebDeliveryOutService {
     const bag = await DeliveryService.validBagNumber(bagNumber);
     if (bag) {
       // if (bag.branchIdLast == permissonPayload.branchId) {
-        response.status = 'ok';
-        response.trouble = false;
-        response.message = 'success';
+      response.status = 'ok';
+      response.trouble = false;
+      response.message = 'success';
       // }
     }
     result = { bagNumber, ...response };
@@ -1811,7 +1914,7 @@ export class WebDeliveryOutService {
     temp = await q.getRawMany();
 
     let id = '';
-    temp.map(function(item) {
+    temp.map(function (item) {
       id += id ? ',\'' + item.doPodDeliverId + '\'' : '\'' + item.doPodDeliverId + '\'';
     });
     const qq = createQueryBuilder();
@@ -1841,16 +1944,16 @@ export class WebDeliveryOutService {
 
   async updateAwbPartner(payload: UpdateAwbPartnerPayloadVm):
     Promise<WebScanOutTransitUpdateAwbPartnerResponseVm> {
-    const result           = new WebScanOutTransitUpdateAwbPartnerResponseVm();
-    result.status          = 'ok';
-    result.message         = 'success';
-    const authMeta         = AuthService.getAuthData();
+    const result = new WebScanOutTransitUpdateAwbPartnerResponseVm();
+    result.status = 'ok';
+    result.message = 'success';
+    const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     const doPodDetail = await DoPodDetail.findOne({ doPodDetailId: payload.doPodDetailId });
     if (doPodDetail) {
       doPodDetail.awbSubstitute = payload.awbSubstitute;
-      doPodDetail.updatedTime   = moment().toDate();
+      doPodDetail.updatedTime = moment().toDate();
       doPodDetail.userIdUpdated = authMeta.userId;
       await doPodDetail.save();
 
@@ -1874,11 +1977,20 @@ export class WebDeliveryOutService {
         );
       }
     } else {
-      result.status  = 'error';
+      result.status = 'error';
       result.message = 'Data tidak ditemukan';
     }
 
     return result;
   }
 
+  private streamTransformBagOrderDetailList(d) {
+    const values = [
+      `'${d.awbNumber}`,
+      d.packageTypeCode,
+      d.totalWeight,
+      d.totalWeightRealRounded,
+    ];
+    return `${values.join(',')} \n`;
+  }
 }
