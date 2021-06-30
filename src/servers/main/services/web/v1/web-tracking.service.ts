@@ -421,8 +421,8 @@ export class V1WebTrackingService {
     const query = `
       SELECT
         bri.ref_awb_number AS "awbNumber",
-        awb.total_weight_real_rounded::numeric(10, 2) AS "totalWeightFinalRounded",
-        awb.total_weight::numeric(10, 2) AS "totalWeightFinal",
+        awb.total_weight_real_rounded::numeric(10, 2) AS "totalWeightRealRounded",
+        awb.total_weight::numeric(10, 2) AS "totalWeight",
         pt.package_type_code AS "packageTypeCode"
       FROM bag_representative_item bri
       INNER JOIN awb ON awb.awb_id = bri.awb_id AND awb.is_deleted = FALSE
