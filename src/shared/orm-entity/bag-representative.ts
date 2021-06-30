@@ -3,7 +3,6 @@ import {Representative} from './representative';
 import {Branch} from './branch';
 import {BagRepresentativeItem} from './bag-representative-item';
 import { DoSmdDetailItem } from './do_smd_detail_item';
-import {Awb} from './awb';
 
 @Entity('bag_representative', { schema: 'public' })
 export class BagRepresentative extends BaseEntity {

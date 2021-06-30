@@ -1,6 +1,6 @@
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
-import {BagRepresentative} from './bag-representative';
-import {Awb} from './awb';
+import { BagRepresentative } from './bag-representative';
+import { Awb } from './awb';
 
 @Entity('bag_representative_item', { schema: 'public' })
 export class BagRepresentativeItem extends BaseEntity {
