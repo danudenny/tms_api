@@ -11,6 +11,7 @@ import {
   Get,
   Query,
   Response,
+  Res,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -69,6 +70,7 @@ import {
   BagDetailVm,
   PhotoDetailVm,
   BagDeliveryDetailVm,
+  BagAwbExportVm,
 } from '../../models/bag-order-response.vm';
 import { LastMileDeliveryOutService } from '../../services/web/last-mile/last-mile-delivery-out.service';
 import { LastMileDeliveryService } from '../../services/web/last-mile/last-mile-delivery.service';
@@ -468,5 +470,18 @@ export class WebDeliveryOutController {
     @Response() serverResponse: express.Response,
   ) {
     return WebDeliveryOutReportService.generateScanOutDeliveryDeliverCSV(serverResponse, queryParams);
+  }
+
+  @Post('bagOrderDetail/list/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async exportListAwbReturn(
+    @Body() payload: BagAwbExportVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await this.webDeliveryOutService.exportbagOrderDetailList(
+      payload,
+      outgoingHTTP,
+    );
   }
 }
