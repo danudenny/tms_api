@@ -58,13 +58,13 @@ export class TrackingDeliveryOutService {
     q.selectRaw(
       ['CONCAT(\'="\',bri.ref_awb_number, \'"\')', 'No Resi'],
       ['pt.package_type_code', 'Layanan'],
-      ['CONCAT(awb.total_weight_final::numeric(10,2), \' Kg\')', 'Berat Partner'],
-      ['CONCAT(awb.total_weight_final_rounded::numeric(10,2), \' Kg\')', 'Berat Asli'],
+      ['CONCAT(awb.total_weight::numeric(10,2), \' Kg\')', 'Berat Partner'],
+      ['CONCAT(awb.total_weight_real_rounded::numeric(10,2), \' Kg\')', 'Berat Asli'],
     );
     q.innerJoin(e => e.awb, 'awb', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.awb.packageType, 'pt', j =>
+    q.leftJoin(e => e.awb.packageType, 'pt', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.bagRepresentativeId, w => w.equals(payload.bagRepresentativeId));

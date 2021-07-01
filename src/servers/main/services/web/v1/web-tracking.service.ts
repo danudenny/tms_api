@@ -271,8 +271,8 @@ export class V1WebTrackingService {
         a.user_id as "userId",
         e.fullname as "employeeName",
         a.total_sell_price as "totalSellPrice",
-        a.total_weight_final::numeric(10, 2) as "totalWeightFinal",
-        a.total_weight_final_rounded::numeric(10, 2) as "totalWeightFinalRounded",
+        a.total_weight::numeric(10, 2) as "totalWeightFinal",
+        a.total_weight_real_rounded::numeric(10, 2) as "totalWeightFinalRounded",
         COALESCE(b.branch_name, '') as "branchName",
         CONCAT(r.representative_code, ' - ', dt.district_name) as "branchToName",
         CONCAT(ca.customer_account_code, ' - ',ca.customer_account_name) as "customerName",
@@ -421,12 +421,12 @@ export class V1WebTrackingService {
     const query = `
       SELECT
         bri.ref_awb_number AS "awbNumber",
-        awb.total_weight_final_rounded AS "totalWeightFinalRounded",
-        awb.total_weight_final AS "totalWeightFinal",
+        awb.total_weight_real_rounded::numeric(10, 2) AS "totalWeightRealRounded",
+        awb.total_weight::numeric(10, 2) AS "totalWeight",
         pt.package_type_code AS "packageTypeCode"
       FROM bag_representative_item bri
       INNER JOIN awb ON awb.awb_id = bri.awb_id AND awb.is_deleted = FALSE
-      INNER JOIN package_type pt ON pt.package_type_id = awb.package_type_id AND pt.is_deleted = FALSE
+      LEFT JOIN package_type pt ON pt.package_type_id = awb.package_type_id AND pt.is_deleted = FALSE
       WHERE
         bri.bag_representative_id = :bagRepresentativeId
         AND bri.is_deleted = FALSE
