@@ -14,20 +14,24 @@ import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-req
 
 export class V1WebAwbHighValueService {
   static ExportHeaderUploadResi = [
-    'Ref Awb Number',
-    'Partner Name',
-    'Recipient Name',
-    'Recipient Phone Number',
-    'Parcel Content',
-    'Awb Status Name',
-    'District Code',
-    'Branch To Name',
-    'Branch From Name',
+    'Tanggal Upload',
+    'Tanggal Status',
+    'Nomor Resi',
+    'Nama Partner',
+    'Nama Penerima',
+    'Telp Penerima',
+    'Isi Parsel',
+    'Status Awb',
+    'Kode Kecamatan',
+    'Gerai Tujuan',
+    'Gerai Asal',
   ];
 
   static streamTransform(doc) {
     // param = doc.awbNumber
     const values = [
+      doc.uploadedDate ? moment(doc.uploadedDate).format('YYYY-MMM-DD') : '-',
+      doc.awbHistoryDateLast ? moment(doc.awbHistoryDateLast).format('YYYY-MMM-DD') : '-',
       `'${doc.awbNumber}`,
       V1WebAwbHighValueService.strReplaceFunc(doc.partnerName),
       V1WebAwbHighValueService.strReplaceFunc(doc.recipientName),
@@ -408,7 +412,7 @@ export class V1WebAwbHighValueService {
 
   static async export(payload: BaseMetaPayloadVm, response) {
     try {
-      const fileName = `POD_upload_resi${new Date().getTime()}.csv`;
+      const fileName = `POD_upload_resi_barang_berharga${new Date().getTime()}.csv`;
 
       response.setHeader(
         'Content-disposition',
