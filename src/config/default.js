@@ -46,7 +46,7 @@ module.exports = {
     exportHandoverSigesitMeta: {
       repeat: '0 10 * * *',
       emailTo: 'yonna@e.sicepat.com',
-      emailCC: ['ajengaulia937@gmail.com', 'yudha.perwira@sicepat.com', 'Rudian.Syahreza@e.sicepat.com', 'Ali.Shodikin@e.sicepat.com', 'Ahmad.Fikri@e.sicepat.com', 'Jualian_Sa@sicepat.com', 'beben@sicepat.com', 'barizana.arifin@sicepat.com'],
+      emailCC: ['ajengaulia937@gmail.com', 'yudha.perwira@sicepat.com', 'Rudian.Syahreza@e.sicepat.com', 'Ali.Shodikin@e.sicepat.com', 'Ahmad.Fikri@e.sicepat.com', 'Jualian_Sa@sicepat.com', 'beben@sicepat.com', 'barizana.arifin@sicepat.com', 'noviaratu@e.sicepat.com', 'tedysicepat@gmail.com'],
     },
   },
   logger: {
