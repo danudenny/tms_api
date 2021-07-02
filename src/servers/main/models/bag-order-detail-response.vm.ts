@@ -15,9 +15,15 @@ export class BagOrderDetailResponseVm {
   totalWeightRealRounded: string;
 }
 
-export class BagOrderResponseVm {
+export class BagOrderResponseTrackingVm {
   @ApiModelProperty({ type: () => [BagOrderDetailResponseVm] })
   data: BagOrderDetailResponseVm[];
+}
+
+export class BagOrderResponseVm {
+  @ApiModelProperty()
+  @Type(() => String)
+  awbNumber: string[];
 }
 
 export class AuditHistVm {
