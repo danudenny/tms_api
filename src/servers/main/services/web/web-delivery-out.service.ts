@@ -55,7 +55,7 @@ import { DoPodDetailBag } from '../../../../shared/orm-entity/do-pod-detail-bag'
 import { BagService } from '../v1/bag.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
-import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm, PhotoResponseVm, BagDeliveryDetailResponseVm } from '../../models/bag-order-detail-response.vm';
+import { BagOrderResponseVm, BagDetailResponseVm, AuditHistVm, PhotoResponseVm, BagDeliveryDetailResponseVm, BagOrderResponseTrackingVm } from '../../models/bag-order-detail-response.vm';
 import { BagAwbVm, BagDetailVm, PhotoDetailVm, BagDeliveryDetailVm, BagAwbExportVm } from '../../models/bag-order-response.vm';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { AwbService } from '../v1/awb.service';
@@ -1347,7 +1347,7 @@ export class WebDeliveryOutService {
     return result;
   }
 
-  async bagOrderDetail(payload: BagAwbVm): Promise<BagOrderResponseVm> {
+  async bagOrderDetailTrack(payload: BagAwbVm): Promise<BagOrderResponseTrackingVm> {
     const dpdd = payload.DoPodDeliverDetail;
     const bag = await BagService.validBagNumber(payload.bagNumber);
     if (bag) {
@@ -1406,16 +1406,59 @@ export class WebDeliveryOutService {
         });
       }
 
-
-      const result = new BagOrderResponseVm();
+      const result = new BagOrderResponseTrackingVm();
       result.data = await qz.getRawMany();
-      // const awb = [];
-      // for (const a in data) {
-      //   awb.push(data[a].awbNumber);
-      // }
-      // if (data) {
-      //   result.awbNumber = awb;
-      // }
+      return result;
+    }
+  }
+
+  async bagOrderDetail(payload: BagAwbVm): Promise<BagOrderResponseVm> {
+    const dpdd = payload.DoPodDeliverDetail;
+    const bag = await BagService.validBagNumber(payload.bagNumber);
+    if (bag) {
+      const qz = createQueryBuilder();
+      qz.addSelect('bag.bag_id', 'bagId');
+      qz.addSelect('bag_item_id.bag_item_id', 'bagItemId');
+      qz.addSelect('bag_item_awb.awb_number', 'awbNumber');
+      qz.from('bag', 'bag');
+      qz.innerJoin(
+        'bag_item',
+        'bag_item_id',
+        'bag_item_id.bag_id = bag.bag_id',
+      );
+      qz.innerJoin(
+        'bag_item_awb',
+        'bag_item_awb',
+        'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
+      );
+
+      if (dpdd) {
+        qz.innerJoin(
+          'do_pod_detail_bag',
+          'do_pod_detail_bag',
+          'do_pod_detail_bag.bag_item_id = bag_item_id.bag_item_id',
+        );
+        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd and bag.is_deleted= false' , {
+          bag: bag.bag.bagNumber,
+          seq: bag.bagSeq,
+          dpdd,
+        });
+      } else {
+        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq and bag.is_deleted= false', {
+          bag: bag.bag.bagNumber,
+          seq: bag.bagSeq,
+        });
+      }
+
+      const data = await qz.getRawMany();
+      const result = new BagOrderResponseVm();
+      const awb = [];
+      for (const a in data) {
+        awb.push(data[a].awbNumber);
+      }
+      if (data) {
+        result.awbNumber = awb;
+      }
       return result;
     }
   }
@@ -1432,7 +1475,7 @@ export class WebDeliveryOutService {
       response.flushHeaders();
       response.write(`${this.ExportHeaderBagOrderDetailList.join(',')}\n`);
 
-      let payloadBagNumber = '0'
+      let payloadBagNumber = '0';
       for (const filter of payload.filters) {
         if ('bagNumber' == filter.field) {
           payloadBagNumber = filter.value;
@@ -1462,8 +1505,8 @@ export class WebDeliveryOutService {
         ['t2.bag_seq', 'bagSeq'],
         ['t3.awb_number', 'awbNumber'],
         ['t5.awb_id', 'awbId'],
-        [`CONCAT(t5.total_weight::numeric(10,2), 'kg')`, 'totalWeight'],//Berat
-        [`CONCAT(t5.total_weight_real_rounded::numeric(10,2), ' kg')`, 'totalWeightRealRounded'],//Berat Asli
+        [`CONCAT(t5.total_weight::numeric(10,2), 'kg')`, 'totalWeight'], // Berat
+        [`CONCAT(t5.total_weight_real_rounded::numeric(10,2), ' kg')`, 'totalWeightRealRounded'], // Berat Asli
         [`COALESCE(t6.package_type_code, '-')`, 'packageTypeCode'],
         [`COALESCE(t6.package_type_name, '-')`, 'packageTypeName'],
       );
@@ -1914,7 +1957,7 @@ export class WebDeliveryOutService {
     temp = await q.getRawMany();
 
     let id = '';
-    temp.map(function (item) {
+    temp.map(function(item) {
       id += id ? ',\'' + item.doPodDeliverId + '\'' : '\'' + item.doPodDeliverId + '\'';
     });
     const qq = createQueryBuilder();
