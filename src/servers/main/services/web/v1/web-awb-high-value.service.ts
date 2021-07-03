@@ -313,7 +313,7 @@ export class V1WebAwbHighValueService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.awbItemAttr.awb.districtTo, 't9', j =>
+    q.leftJoin(e => e.awbItemAttr.awb.branch.district, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -394,7 +394,7 @@ export class V1WebAwbHighValueService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.awbItemAttr.awb.districtTo, 't9', j =>
+    q.leftJoin(e => e.awbItemAttr.awb.branch.district, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -483,7 +483,7 @@ export class V1WebAwbHighValueService {
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
-      q.leftJoin(e => e.awbItemAttr.awb.districtTo, 't9', j =>
+      q.leftJoin(e => e.awbItemAttr.awb.branch.district, 't9', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
