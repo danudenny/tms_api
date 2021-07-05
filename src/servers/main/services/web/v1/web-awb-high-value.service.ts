@@ -258,6 +258,8 @@ export class V1WebAwbHighValueService {
     payload.fieldResolverMap['partnerName'] = 't4.partner_name';
     payload.fieldResolverMap['branchName'] = 't6.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['branchId'] = 't6.branch_id';
+    payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -339,6 +341,8 @@ export class V1WebAwbHighValueService {
     payload.fieldResolverMap['partnerName'] = 't4.partner_name';
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+    payload.fieldResolverMap['branchId'] = 't6.branch_id';
+    payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -428,6 +432,8 @@ export class V1WebAwbHighValueService {
       payload.fieldResolverMap['partnerName'] = 't4.partner_name';
       payload.fieldResolverMap['branchName'] = 't5.branch_name';
       payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+      payload.fieldResolverMap['branchId'] = 't6.branch_id';
+      payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
 
       payload.globalSearchFields = [
         {
