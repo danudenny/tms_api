@@ -53,6 +53,7 @@ import { AwbSunfishV2QueueService } from './services/integration/awb-sunfish-v2-
 import { CodTransferTransactionQueueService } from './services/cod/cod-transfer-transaction-queue.service';
 import { BranchSortirLogQueueService } from './services/branch-sortir-log-queue.service';
 import { DoPodDetailPostMetaInQueueService } from './services/do-pod-detail-post-meta-in-queue.service';
+import { UpsertHubSummaryBagSortirQueueService } from './services/upsert-hub-summary-bag-sortir-queue.service';
 
 // #endregion import
 @Module({
@@ -193,6 +194,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
     if (serverConfig.bullHub) {
       BagItemHistoryQueueService.boot();
       DoPodDetailPostMetaInQueueService.boot();
+      UpsertHubSummaryBagSortirQueueService.boot();
     }
 
 
