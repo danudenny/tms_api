@@ -261,6 +261,7 @@ export class V1WebAwbHighValueService {
     payload.fieldResolverMap['branchId'] = 't6.branch_id';
     payload.fieldResolverMap['branchFromId'] = 't8.branch_id';
     payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
+    payload.fieldResolverMap['awbHistoryDateLast'] = 't5.awb_history_date_last';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -304,7 +305,7 @@ export class V1WebAwbHighValueService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbItemAttr.branchLast, 't6', j =>
+    q.leftJoin(e => e.awbItemAttr.branchLast, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -345,6 +346,7 @@ export class V1WebAwbHighValueService {
     payload.fieldResolverMap['branchId'] = 't6.branch_id';
     payload.fieldResolverMap['branchFromId'] = 't8.branch_id';
     payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
+    payload.fieldResolverMap['awbHistoryDateLast'] = 't5.awb_history_date_last';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -388,7 +390,7 @@ export class V1WebAwbHighValueService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbItemAttr.branchLast, 't6', j =>
+    q.leftJoin(e => e.awbItemAttr.branchLast, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -437,6 +439,7 @@ export class V1WebAwbHighValueService {
       payload.fieldResolverMap['branchId'] = 't6.branch_id';
       payload.fieldResolverMap['branchFromId'] = 't8.branch_id';
       payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
+      payload.fieldResolverMap['awbHistoryDateLast'] = 't5.awb_history_date_last';
 
       payload.globalSearchFields = [
         {
@@ -480,7 +483,7 @@ export class V1WebAwbHighValueService {
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
-      q.innerJoin(e => e.awbItemAttr.branchLast, 't6', j =>
+      q.leftJoin(e => e.awbItemAttr.branchLast, 't6', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
