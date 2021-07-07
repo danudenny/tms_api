@@ -22,7 +22,7 @@ export class BagService {
       const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
       let result = await this.checkFormatWithSeq(bagNumber, seqNumber);
       if (!result) {
-        result = await this.checkFormatAlphanumeric(bagNumber);
+        result = await this.checkFormatAlphanumeric(bagNumberSeq);
       }
       return result;
     } else {
