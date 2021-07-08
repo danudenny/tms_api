@@ -1642,12 +1642,12 @@ export class WebDeliveryOutService {
         'bag_item_awb',
         'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
       );
-      qz.leftJoin(
+      qz.innerJoin(
         'awb_item',
         'awb_item',
         'awb_item.awb_item_id = bag_item_awb.awb_item_id',
       );
-      qz.leftJoin(
+      qz.innerJoin(
         'awb',
         'awb',
         'awb.awb_id = awb_item.awb_id',
