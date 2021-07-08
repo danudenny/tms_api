@@ -1775,10 +1775,10 @@ export class WebDeliveryOutService {
       q.innerJoin(e => e.bagItems.bagItemAwbs, 't3', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-      q.leftJoin(e => e.bagItems.bagItemAwbs.awbItem, 't4', j =>
+      q.innerJoin(e => e.bagItems.bagItemAwbs.awbItem, 't4', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-      q.leftJoin(e => e.bagItems.bagItemAwbs.awbItem.awb, 't5', j =>
+      q.innerJoin(e => e.bagItems.bagItemAwbs.awbItem.awb, 't5', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.leftJoin(e => e.bagItems.bagItemAwbs.awbItem.awb.packageType, 't6', j =>
