@@ -1,7 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { AwbService } from './awb.service';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { DropoffHubDetail } from '../../../../shared/orm-entity/dropoff_hub_detail';

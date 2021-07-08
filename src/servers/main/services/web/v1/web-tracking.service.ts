@@ -19,6 +19,7 @@ import {
   ImageProxyUrlVm,
   ImageProxyUrlParamVm,
   ImageProxyUrlResponseVm,
+  BagHistoryResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -110,26 +111,35 @@ export class V1WebTrackingService {
   static async bag(
     payload: TrackingBagPayloadVm,
   ): Promise<TrackingBagResponseVm> {
-    const result = new TrackingBagResponseVm();
-    const data = await this.getRawBag(payload.bagNumber);
+    let data: TrackingBagResponseVm = null;
+    let isNewFormat = false;
+
+    // TODO: handle format bagNUmber
+    const regexNumber = /^[0-9]+$/;
+    if (regexNumber.test(payload.bagNumber.substring(7, 10))) {
+      const bagNumber: string = payload.bagNumber.substring(0, 7);
+      const seqNumber: number = Number(
+        payload.bagNumber.substring(7, 10),
+      );
+      data = await this.getRawBag(bagNumber, seqNumber);
+    } else {
+      // format Alphanumeric, default set seq = 1
+      isNewFormat = true;
+      data = await this.getRawBag(payload.bagNumber, 1);
+    }
+
     if (data) {
-      result.bagNumber         = data.bagNumber;
-      result.weight            = data.weight;
-      result.bagItemId         = data.bagItemId;
-      result.bagItemStatusId   = data.bagItemStatusId;
-      result.bagItemStatusName = data.bagItemStatusName;
-      result.branchCodeLast    = data.branchCodeLast;
-      result.branchNameLast    = data.branchNameLast;
-      result.branchCodeNext    = data.branchCodeNext;
-      result.branchNameNext    = data.branchNameNext;
-      result.representativeCode = data.representativeCode;
-      const history = await this.getRawBagHistory(data.bagItemId);
+      const finalBagNumber = isNewFormat ? data.bagNumber : data.bagNumber + data.bagSeq.toString().padStart(3, '0');
+      data.bagNumber = finalBagNumber;
+      const history = await this.getRawBagHistory(
+        data.bagItemId,
+      );
       if (history && history.length) {
-        result.bagHistory = history;
+        data.bagHistory = history;
       }
     }
 
-    return result;
+    return data;
   }
 
   // TODO: to be removed
@@ -510,7 +520,7 @@ export class V1WebTrackingService {
     return rawData ? rawData[0] : null;
   }
 
- private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<TrackingBagRepresentativeAwbDetailResponseVm[]> {
+private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<TrackingBagRepresentativeAwbDetailResponseVm[]> {
     const query = `
       SELECT
         bri.ref_awb_number AS "awbNumber",
@@ -552,41 +562,35 @@ export class V1WebTrackingService {
     return await RawQueryService.queryWithParams(query, { bagRepresentativeId });
   }
 
-  private static async getRawBag(bagNumberSeq: string): Promise<any> {
-    const regexNumber = /^[0-9]+$/;
-    if (regexNumber.test(bagNumberSeq.substring(7, 10))) {
-      const bagNumber: string = bagNumberSeq.substring(0, 7);
-      const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
-      const query = `
-        SELECT
-          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as "bagNumber",
-          bi.weight::numeric(10,2) as weight,
-          bi.bag_item_id as "bagItemId",
-          bis.bag_item_status_id as "bagItemStatusId",
-          bis.bag_item_status_name as "bagItemStatusName",
-          blast.branch_code as "branchCodeLast",
-          blast.branch_name as "branchNameLast",
-          bto.branch_code as "branchCodeNext",
-          bto.branch_name as "branchNameNext",
-          b.ref_representative_code as "representativeCode"
-        FROM bag b
-        INNER JOIN bag_item bi ON b.bag_id = bi.bag_id AND bi.is_deleted = false
-        LEFT JOIN bag_item_status bis ON bi.bag_item_status_id_last = bis.bag_item_status_id AND bis.is_deleted = false
-        LEFT JOIN branch blast ON bi.branch_id_last = blast.branch_id AND blast.is_deleted = false
-        LEFT JOIN branch bto ON bi.branch_id_next = bto.branch_id AND bto.is_deleted = false
-        WHERE b.bag_number = :bagNumber AND bi.bag_seq = :seqNumber LIMIT 1
-      `;
-      const rawData = await RawQueryService.queryWithParams(query, {
-        bagNumber,
-        seqNumber,
-      });
-      return rawData ? rawData[0] : null;
-    } else {
-      return null;
-    }
+  private static async getRawBag(bagNumber: string, seqNumber: number): Promise<TrackingBagResponseVm> {
+    const query = `
+      SELECT
+        b.bag_number as "bagNumber",
+        bi.bag_seq as "bagSeq",
+        bi.weight::numeric(10,2) as weight,
+        bi.bag_item_id as "bagItemId",
+        bis.bag_item_status_id as "bagItemStatusId",
+        bis.bag_item_status_name as "bagItemStatusName",
+        blast.branch_code as "branchCodeLast",
+        blast.branch_name as "branchNameLast",
+        bto.branch_code as "branchCodeNext",
+        bto.branch_name as "branchNameNext",
+        b.ref_representative_code as "representativeCode"
+      FROM bag b
+      INNER JOIN bag_item bi ON b.bag_id = bi.bag_id AND bi.is_deleted = false
+      LEFT JOIN bag_item_status bis ON bi.bag_item_status_id_last = bis.bag_item_status_id AND bis.is_deleted = false
+      LEFT JOIN branch blast ON bi.branch_id_last = blast.branch_id AND blast.is_deleted = false
+      LEFT JOIN branch bto ON bi.branch_id_next = bto.branch_id AND bto.is_deleted = false
+      WHERE b.bag_number = :bagNumber AND bi.bag_seq = :seqNumber LIMIT 1
+    `;
+    const rawData = await RawQueryService.queryWithParams(query, {
+      bagNumber,
+      seqNumber,
+    });
+    return rawData ? rawData[0] : null;
   }
 
-  private static async getRawBagHistory(bagItemId: number): Promise<any> {
+  private static async getRawBagHistory(bagItemId: number): Promise<BagHistoryResponseVm[]> {
     const query = `
       SELECT
         bh.bag_item_history_id,
