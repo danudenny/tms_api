@@ -323,8 +323,7 @@ export class BagService {
   }
 
   static async isBagNumberLenght(inputNumber: string): Promise<boolean> {
-    const regexNumber = /^[0-9]+$/;
-    return (inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))) ? true : false;
+    return (inputNumber.length == 10) ? true : false;
   }
 
   // private

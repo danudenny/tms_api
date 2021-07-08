@@ -648,7 +648,7 @@ export class WebDeliveryOutService {
       response.message = 'success';
       let bagData;
       let wordingBagNumberOrSeal;
-      if (bagNumber.length == 10 && regexNumber.test(bagNumber.substring(7, 10))) {
+      if (await BagService.isBagNumberLenght(bagNumber)) {
         bagData = await BagService.validBagNumber(bagNumber);
         wordingBagNumberOrSeal = 'dengan nomor bag ';
       } else {
