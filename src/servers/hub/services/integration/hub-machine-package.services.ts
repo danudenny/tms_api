@@ -27,6 +27,7 @@ import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { DoPodDetailPostMetaInQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-in-queue.service';
+import { TempStt } from '../../../../shared/orm-entity/temp-stt';
 
 export class HubMachineService {
   constructor() { }
@@ -132,6 +133,20 @@ export class HubMachineService {
     return results;
   }
 
+  public static async getTempStts(awbNumbers: string[]): Promise<TempStt[]> {
+    // chunk to 20 records to avoid long query
+    const chunks = chunk(awbNumbers, 20);
+    const pResults = await Promise.all(chunks.map(x => {
+      return TempStt.find({
+        where: { nostt: In(x), isDeleted: false },
+        take: 1000,
+      });
+    }));
+
+    const results = flatMap(pResults, (x) => x);
+    return results;
+  }
+
   public static async getAwbItemAttrs(awbNumbers: string[]): Promise<AwbItemAttr[]> {
     // chunk to 20 records to avoid long query
     const chunks = chunk(awbNumbers, 20);
@@ -191,12 +206,13 @@ export class HubMachineService {
         return result;
       }, []).value();
 
-    const awbs = await this.getAwbs(awbNumbers);
+    // const awbs = await this.getAwbs(awbNumbers);
+    const awbs = await this.getTempStts(awbNumbers);
     const awbItemAttrs = await this.getAwbItemAttrs(awbNumbers);
 
     let totalWeight = 0;
     for (const refNumber of awbNumbers) {
-      const awb = awbs.find(x => x.awbNumber === refNumber);
+      const awb = awbs.find(x => x.nostt === refNumber);
       const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === refNumber);
 
       // validate valid awb numbers in the bag
@@ -208,7 +224,7 @@ export class HubMachineService {
       //   return generateErrorResult(`Nomor resi sudah digabung sortir`);
       // }
 
-      totalWeight += Number(awb.totalWeightRealRounded);
+      totalWeight += Number(awb.berat);
     }
 
     // Process Create GS
@@ -239,14 +255,14 @@ export class HubMachineService {
         };
 
         for (const awbNumber of awbNumbers) {
-          const awb = awbs.find(x => x.awbNumber === awbNumber);
+          const awb = awbs.find(x => x.nostt === awbNumber);
           const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === awbNumber);
 
           bagAwbBatch.awbs.push({
             awbItemId: awbItemAttr.awbItemId,
-            awbNumber: awb.awbNumber,
+            awbNumber: awb.nostt,
             awbItemAttr,
-            totalWeight: awb.totalWeightRealRounded,
+            totalWeight: awb.berat,
           });
         }
 
