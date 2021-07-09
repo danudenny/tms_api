@@ -153,9 +153,11 @@ export class V2MobileInitDataService {
       ['awb_status_id', 'awbStatusId'],
       ['awb_status_name', 'awbStatusCode'],
       ['awb_status_title', 'awbStatusName'],
+      ['is_problem', 'isProblem'],
+      ['is_return', 'isReturn'],
       ['is_deleted', 'isDeleted'],
     );
-    q.andWhere(e => e.isProblem, w => w.isTrue());
+    // q.andWhere(e => e.isProblem, w => w.isTrue());
     q.andWhere(e => e.isMobile, w => w.isTrue());
     if (fromDate) {
       q.andWhereIsolated(qw => {
