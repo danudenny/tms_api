@@ -6,7 +6,7 @@ import { CheckAwbPayloadVm, CheckAwbResponseVM } from '../../models/hub-machine-
 import { BranchSortirLogQueueService } from '../../../queue/services/branch-sortir-log-queue.service';
 import { BranchSortirLogSummary } from '../../../../shared/orm-entity/branch-sortir-log-summary';
 import { getConnection } from 'typeorm';
-import { District } from 'src/shared/orm-entity/district';
+import { District } from '../../../../shared/orm-entity/district';
 
 export class HubMachineSortirService {
 
