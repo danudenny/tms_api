@@ -22,6 +22,7 @@ import { ScanAwbVm } from '../../models/mobile-scanin-awb.response.vm';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { BadRequestException } from '@nestjs/common';
+import { AwbItemAttr } from 'src/shared/orm-entity/awb-item-attr';
 
 // #endregion
 
@@ -251,39 +252,44 @@ export class LastMileDeliveryOutService {
     //   throw new BadRequestException('Surat Jalan bukan milik sigesit!');
     // }
 
+    response.status = 'error';
+    response.awbNumber = awbNumber;
+    response.trouble = true;
+
     if (awb) {
-      response.status = 'error';
-      response.awbNumber = awbNumber;
-      response.trouble = true;
+      // response.status = 'error';
+      // response.awbNumber = awbNumber;
+      // response.trouble = true;
 
-      // #region validation
-      if (awb.awbLastStatus == AWB_STATUS.ANT) {
-        response.message = `Resi ${awbNumber} sudah di proses.`;
-        result.data = response;
-        return result;
-      }
-      if (awb.awbLastStatus != AWB_STATUS.IN_BRANCH) {
-        response.message = `Resi ${awbNumber} belum di Scan In`;
-        result.data = response;
-        return result;
-      }
-      // check resi cancel delivery
-      const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
-      if (isCancel == true) {
-        response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
-        result.data = response;
-        return result;
-      }
-      // #endregion validation
+      // // #region validation
+      // if (awb.awbLastStatus == AWB_STATUS.ANT) {
+      //   response.message = `Resi ${awbNumber} sudah di proses.`;
+      //   result.data = response;
+      //   return result;
+      // }
+      // if (awb.awbLastStatus != AWB_STATUS.IN_BRANCH) {
+      //   response.message = `Resi ${awbNumber} belum di Scan In`;
+      //   result.data = response;
+      //   return result;
+      // }
+      // // check resi cancel delivery
+      // const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
+      // if (isCancel == true) {
+      //   response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
+      //   result.data = response;
+      //   return result;
+      // }
+      // // #endregion validation
 
-      // #region STATE: VALID DATA
-      let notDeliver = true;
-      if (awb.awbLastStatus && awb.awbLastStatus != 0) {
-        notDeliver = awb.awbLastStatus != AWB_STATUS.ANT ? true : false;
-      }
+      // // #region STATE: VALID DATA
+      // let notDeliver = true;
+      // if (awb.awbLastStatus && awb.awbLastStatus != 0) {
+      //   notDeliver = awb.awbLastStatus != AWB_STATUS.ANT ? true : false;
+      // }
 
+      const checkValidAwbStatusIdLast = await this.checkValidAwbStatusIdLast(awb);
       // NOTE: first must scan in branch
-      if (notDeliver) {
+      if (checkValidAwbStatusIdLast.isValid) {
         // Add Locking setnx redis
         const holdRedis = await RedisService.lockingWithExpire(
           `hold:scanoutant:${awb.awbItemId}`,
@@ -355,16 +361,16 @@ export class LastMileDeliveryOutService {
         }
       } else {
         response.status = 'error';
-        response.message = `Resi ${awbNumber} sudah di proses.`;
+        response.message = checkValidAwbStatusIdLast.message;
       }
 
       result.data = response;
       return result;
     } else {
-      response.awbNumber = payload.scanValue;
-      response.status = 'error';
+      // response.awbNumber = payload.scanValue;
+      // response.status = 'error';
       response.message = 'Nomor tidak valid atau tidak ditemukan';
-      response.trouble = true;
+      // response.trouble = true;
       result.data = response;
       return result;
     }
@@ -430,5 +436,39 @@ export class LastMileDeliveryOutService {
       auditHistory.note = note;
       return await AuditHistory.save(auditHistory);
     }
+  }
+
+  private static async checkValidAwbStatusIdLast(awbItemAttr: AwbItemAttr) {
+    let message = null;
+    let isValid = false;
+    const isManifested = await AwbService.isManifested(awbItemAttr.awbItemId)
+    if (awbItemAttr.awbStatusIdLast) {
+      if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
+        return { isValid, message };
+      }
+      if (AWB_STATUS.DLV == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} sudah deliv`;
+        return { isValid, message };
+      }
+      if (AWB_STATUS.CANCEL_DLV == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
+        return { isValid, message };
+      }
+      if (!isManifested) {
+        message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
+        return { isValid, message };
+      }
+      if (AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
+        return { isValid, message };
+      }
+    }
+
+    if (null == message) {
+      isValid = true;
+    }
+
+    return { isValid, message };
   }
 }
