@@ -13,6 +13,11 @@ export class AwbStatusVm {
 
   @ApiModelProperty()
   awbStatusName: string;
+  @ApiModelProperty()
+  isProblem: boolean;
+
+  @ApiModelProperty()
+  isReturn: boolean;
 
   @ApiModelProperty()
   isDeleted: boolean;
