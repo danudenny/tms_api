@@ -49,6 +49,7 @@ export class HubMachineSortirService {
     const rawQueryAwb = `
       SELECT
         codbiaya,
+        codnilai,
         tujuan,
         berat
       FROM temp_stt
