@@ -42,15 +42,6 @@ export class AwbHighValueUploadListDataResponseVm {
 
   @ApiModelProperty()
   awbStatusName: string;
-
-  @ApiModelProperty()
-  awbHistoryDateLast: string;
-
-  @ApiModelProperty()
-  districtCode: string;
-
-  @ApiModelProperty()
-  branchFromName: string;
 }
 
 export class AwbHighValueUploadListResponseVm extends BaseMetaResponseVm {

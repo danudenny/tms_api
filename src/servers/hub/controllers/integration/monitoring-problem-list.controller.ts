@@ -7,56 +7,56 @@ import { MonitoringProblemListService } from '../../services/integration/monitor
 import { MonitoringHubProblemVm, MonitoringHubTotalProblemVm } from '../../models/monitoring-hub-problem.vm';
 
 @ApiUseTags('Monitoring Problem')
-@Controller('monitoring-hub')
+@Controller('monitoring-hub/old')
 export class MonitoringProblemListController {
   constructor() {}
 
   @Post('do-hub/list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubProblemVm })
-  public async getDoHubV2(@Body() payload: BaseMetaPayloadVm) {
-    return MonitoringProblemListService.getDoHubV2(payload);
+  public async getDoHub(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemListService.getDoHub(payload);
   }
 
   @Post('problem/list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubProblemVm })
-  public async getTotalEachStatusV2(@Body() payload: BaseMetaPayloadVm) {
-    return MonitoringProblemListService.getAwbProblemV2(payload);
+  public async getTotalEachStatus(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemListService.getAwbProblem(payload);
   }
 
   @Post('manual/list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubProblemVm })
-  public async getAwbManualSortirV2(@Body() payload: BaseMetaPayloadVm) {
-    return MonitoringProblemListService.getAwbManualSortirV2(payload);
+  public async getAwbManualSortir(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemListService.getAwbManualSortir(payload);
   }
 
   @Post('machine/list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubProblemVm })
-  public async getAwbMachineSortirV2(@Body() payload: BaseMetaPayloadVm) {
-    return MonitoringProblemListService.getAwbMachineSortirV2(payload);
+  public async getAwbMachineSortir(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemListService.getAwbMachineSortir(payload);
   }
 
   @Post('scan-out/list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubProblemVm })
-  public async getScanOutListV2(@Body() payload: BaseMetaPayloadVm) {
-    return MonitoringProblemListService.getAwbScanOutV2(payload);
+  public async getScanOutList(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemListService.getAwbScanOut(payload);
   }
 
   @Post('not-scan-out/list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubProblemVm })
   public async getNotScanOutList(@Body() payload: BaseMetaPayloadVm) {
-    return MonitoringProblemListService.getAwbNotScanOutV2(payload);
+    return MonitoringProblemListService.getAwbNotScanOut(payload);
   }
 
   @Post('total/list')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: MonitoringHubTotalProblemVm })
-  public async getAwbtotalSortirV2(@Body() payload: BaseMetaPayloadVm) {
-    return MonitoringProblemListService.getAwbtotalSortirV2(payload);
+  public async getAwbtotalSortir(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemListService.getAwbtotalSortir(payload);
   }
 }

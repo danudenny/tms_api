@@ -126,8 +126,6 @@ export class HubTransitDeliveryInService {
               authMeta.userId,
               permissonPayload.branchId,
               payload.hubId,
-              bagData.bag.bagId,
-              bagItem.isSortir,
             );
 
             // update first scan in do pod =====================================

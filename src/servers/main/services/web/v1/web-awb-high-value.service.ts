@@ -13,34 +13,26 @@ import moment = require('moment');
 import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-request-detail';
 
 export class V1WebAwbHighValueService {
-  static ExportHeaderUploadResi = [
-    'Tanggal Upload',
-    'Tanggal Status',
-    'Nomor Resi',
-    'Nama Partner',
-    'Nama Penerima',
-    'Telp Penerima',
-    'Isi Parsel',
-    'Status Awb',
-    'Kode Kecamatan',
-    'Gerai Tujuan',
-    'Gerai Asal',
+    static ExportHeaderUploadResi = [
+    'Ref Awb Number',
+    'Partner Name',
+    'Recipient Name',
+    'Recipient Phone Number',
+    'Parcel Content',
+    'Awb Status Name',
+    'Branch Name',
   ];
 
   static streamTransform(doc) {
     // param = doc.awbNumber
     const values = [
-      doc.uploadedDate ? moment(doc.uploadedDate).format('YYYY-MMM-DD') : '-',
-      doc.awbHistoryDateLast ? moment(doc.awbHistoryDateLast).format('YYYY-MMM-DD') : '-',
       `'${doc.awbNumber}`,
       V1WebAwbHighValueService.strReplaceFunc(doc.partnerName),
       V1WebAwbHighValueService.strReplaceFunc(doc.recipientName),
       `'${doc.recipientPhone}`,
       V1WebAwbHighValueService.strReplaceFunc(doc.parcelContent),
       V1WebAwbHighValueService.strReplaceFunc(doc.awbStatusName),
-      V1WebAwbHighValueService.strReplaceFunc(doc.districtCode),
       V1WebAwbHighValueService.strReplaceFunc(doc.branchName),
-      V1WebAwbHighValueService.strReplaceFunc(doc.branchFromName),
     ];
     return `${values.join(',')} \n`;
   }
@@ -48,10 +40,10 @@ export class V1WebAwbHighValueService {
   static strReplaceFunc = str => {
     return str
       ? str
-        .replace(/\n/g, ' ')
-        .replace(/\r/g, ' ')
-        .replace(/;/g, '|')
-        .replace(/,/g, '.')
+          .replace(/\n/g, ' ')
+          .replace(/\r/g, ' ')
+          .replace(/;/g, '|')
+          .replace(/,/g, '.')
       : null;
   }
 
@@ -256,12 +248,8 @@ export class V1WebAwbHighValueService {
     payload.fieldResolverMap['uploadedDate'] = 't1.uploaded_time';
     payload.fieldResolverMap['displayName'] = 't1.display_name';
     payload.fieldResolverMap['partnerName'] = 't4.partner_name';
-    payload.fieldResolverMap['branchName'] = 't6.branch_name';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
-    payload.fieldResolverMap['branchId'] = 't6.branch_id';
-    payload.fieldResolverMap['branchFromId'] = 't8.branch_id';
-    payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
-    payload.fieldResolverMap['awbHistoryDateLast'] = 't5.awb_history_date_last';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -283,11 +271,8 @@ export class V1WebAwbHighValueService {
       ['false', 'isUpload'],
       ['t1.display_name', 'displayName'],
       ['t1.uploaded_time', 'uploadedDate'],
-      ['t6.branch_name', 'branchName'],
-      ['t7.awb_status_name', 'awbStatusName'],
-      ['t5.awb_history_date_last', 'awbHistoryDateLast'],
-      ['t9.district_code', 'districtCode'],
-      ['t8.branch_name', 'branchFromName'],
+      ['t5.branch_name', 'branchName'],
+      ['t6.awb_status_name', 'awbStatusName'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -301,23 +286,11 @@ export class V1WebAwbHighValueService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbItemAttr, 't5', j =>
+    q.innerJoin(e => e.awbItemAttr.branchLast, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.awbItemAttr.branchLast, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.awbItemAttr.awbStatus, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awbItemAttr.awb.branch, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awbItemAttr.awb.branch.district, 't9', j =>
+    q.innerJoin(e => e.awbItemAttr.awbStatus, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -333,7 +306,6 @@ export class V1WebAwbHighValueService {
 
     return result;
   }
-
   static async ApiAwbListCount(payload: BaseMetaPayloadVm): Promise<AwbHighValueUploadListResponseVm> {
     // mapping field
     // payload.fieldResolverMap['isUpload'] = 't1.is_high_value';
@@ -343,10 +315,6 @@ export class V1WebAwbHighValueService {
     payload.fieldResolverMap['partnerName'] = 't4.partner_name';
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
-    payload.fieldResolverMap['branchId'] = 't6.branch_id';
-    payload.fieldResolverMap['branchFromId'] = 't8.branch_id';
-    payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
-    payload.fieldResolverMap['awbHistoryDateLast'] = 't5.awb_history_date_last';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -368,11 +336,8 @@ export class V1WebAwbHighValueService {
       ['true', 'isUpload'],
       ['t1.display_name', 'displayName'],
       ['t1.uploaded_time', 'uploadedDate'],
-      ['t6.branch_name', 'branchName'],
-      ['t7.awb_status_name', 'awbStatusName'],
-      ['t5.awb_history_date_last', 'awbHistoryDateLast'],
-      ['t9.district_code', 'districtCode'],
-      ['t8.branch_name', 'branchFromName'],
+      ['t5.branch_name', 'branchName'],
+      ['t6.awb_status_name', 'awbStatusName'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -386,23 +351,11 @@ export class V1WebAwbHighValueService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbItemAttr, 't5', j =>
+    q.innerJoin(e => e.awbItemAttr.branchLast, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.awbItemAttr.branchLast, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.awbItemAttr.awbStatus, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awbItemAttr.awb.branch, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.leftJoin(e => e.awbItemAttr.awb.branch.district, 't9', j =>
+    q.innerJoin(e => e.awbItemAttr.awbStatus, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -420,7 +373,7 @@ export class V1WebAwbHighValueService {
 
   static async export(payload: BaseMetaPayloadVm, response) {
     try {
-      const fileName = `POD_upload_resi_barang_berharga${new Date().getTime()}.csv`;
+      const fileName = `POD_upload_resi${new Date().getTime()}.csv`;
 
       response.setHeader(
         'Content-disposition',
@@ -436,15 +389,11 @@ export class V1WebAwbHighValueService {
       payload.fieldResolverMap['partnerName'] = 't4.partner_name';
       payload.fieldResolverMap['branchName'] = 't5.branch_name';
       payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
-      payload.fieldResolverMap['branchId'] = 't6.branch_id';
-      payload.fieldResolverMap['branchFromId'] = 't8.branch_id';
-      payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
-      payload.fieldResolverMap['awbHistoryDateLast'] = 't5.awb_history_date_last';
 
       payload.globalSearchFields = [
         {
-          field: 'awbNumber',
-        },
+            field: 'awbNumber',
+          },
       ];
 
       const repo = new OrionRepositoryService(AwbHighValueUpload, 't1');
@@ -461,42 +410,27 @@ export class V1WebAwbHighValueService {
         ['false', 'isUpload'],
         ['t1.display_name', 'displayName'],
         ['t1.uploaded_time', 'uploadedDate'],
-        ['t6.branch_name', 'branchName'],
-        ['t7.awb_status_name', 'awbStatusName'],
-        ['t5.awb_history_date_last', 'awbHistoryDateLast'],
-        ['t9.district_code', 'districtCode'],
-        ['t8.branch_name', 'branchFromName'],
+        ['t5.branch_name', 'branchName'],
+        ['t6.awb_status_name', 'awbStatusName'],
       );
       q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
       q.innerJoin(e => e.pickupRequestDetail.pickupRequest, 't3', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
       q.innerJoin(e => e.pickupRequestDetail.pickupRequest.partner, 't4', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
-      q.innerJoin(e => e.awbItemAttr, 't5', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      q.innerJoin(e => e.awbItemAttr.branchLast, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
-      q.leftJoin(e => e.awbItemAttr.branchLast, 't6', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-
-      q.innerJoin(e => e.awbItemAttr.awbStatus, 't7', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-
-      q.leftJoin(e => e.awbItemAttr.awb.branch, 't8', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-
-      q.leftJoin(e => e.awbItemAttr.awb.branch.district, 't9', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      q.innerJoin(e => e.awbItemAttr.awbStatus, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
       q.andWhere(e => e.isDeleted, w => w.isFalse());
