@@ -1265,7 +1265,6 @@ export class LastMileDeliveryOutService {
     let message = null;
     let isValid = false;
     const isManifested = await AwbService.isManifested(awbItemAttr.awbItemId)
-    console.log(isManifested);
     if (awbItemAttr.awbStatusIdLast) {
       if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
         message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
