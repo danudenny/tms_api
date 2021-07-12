@@ -28,6 +28,7 @@ import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-b
 import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { DoPodDetailPostMetaInQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-in-queue.service';
 import { UpsertHubSummaryBagSortirQueueService } from '../../../queue/services/upsert-hub-summary-bag-sortir-queue.service';
+import { TempStt } from '../../../../shared/orm-entity/temp-stt';
 
 export class HubMachineService {
   constructor() { }
