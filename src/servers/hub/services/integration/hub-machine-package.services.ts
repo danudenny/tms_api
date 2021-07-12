@@ -27,6 +27,7 @@ import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { DoPodDetailPostMetaInQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-in-queue.service';
+import { UpsertHubSummaryBagSortirQueueService } from '../../../queue/services/upsert-hub-summary-bag-sortir-queue.service';
 import { TempStt } from '../../../../shared/orm-entity/temp-stt';
 
 export class HubMachineService {
@@ -421,6 +422,17 @@ export class HubMachineService {
     });
 
     const podScanInHubDetailSaveDatas = batchData.awbs.filter(x => x.awbItemAttr).map(x => {
+      UpsertHubSummaryBagSortirQueueService.perform(
+        batchData.bagId,
+        batchData.bagItemId,
+        batchData.bagNumber,
+        x.awbItemId,
+        x.awbNumber,
+        batchData.userId,
+        batchData.branchId,
+        moment(batchData.timestamp).toDate(),
+      );
+
       return PodScanInHubDetail.create({
         podScanInHubId: batchData.podScanInHubId,
         bagId: batchData.bagId,
