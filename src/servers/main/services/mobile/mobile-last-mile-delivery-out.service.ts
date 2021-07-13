@@ -441,7 +441,6 @@ export class LastMileDeliveryOutService {
   private static async checkValidAwbStatusIdLast(awbItemAttr: AwbItemAttr) {
     let message = null;
     let isValid = false;
-    const isManifested = await AwbService.isManifested(awbItemAttr.awbItemId)
     if (awbItemAttr.awbStatusIdLast) {
       if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
         message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
@@ -451,11 +450,11 @@ export class LastMileDeliveryOutService {
         message = `Resi ${awbItemAttr.awbNumber} sudah deliv`;
         return { isValid, message };
       }
-      if (AWB_STATUS.CANCEL_DLV == awbItemAttr.awbStatusIdLast) {
+      if (await AwbService.isCancelDelivery(awbItemAttr.awbItemId)) {
         message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
         return { isValid, message };
       }
-      if (!isManifested) {
+      if (!await AwbService.isManifested(awbItemAttr.awbItemId)) {
         message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
         return { isValid, message };
       }
@@ -464,11 +463,6 @@ export class LastMileDeliveryOutService {
         return { isValid, message };
       }
     }
-
-    if (null == message) {
-      isValid = true;
-    }
-
-    return { isValid, message };
+    return { isValid: true, message };
   }
 }
