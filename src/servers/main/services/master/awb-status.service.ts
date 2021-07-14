@@ -3,10 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { AwbStatusFindAllResponseVm, AwbStatusNonDeliveFindAllResponseVm } from '../../models/awb-status.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { RepositoryService } from '../../../../shared/services/repository.service';
-import { RolePodManualStatus } from '../../../../shared/orm-entity/role-pod-manual-status';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { ConfigService } from '../../../../shared/services/config.service';
 import { AwbService } from '../v1/awb.service';
 
 @Injectable()

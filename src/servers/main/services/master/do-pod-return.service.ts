@@ -3,8 +3,6 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { DoPodReturn } from '../../../../shared/orm-entity/do-pod-return';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { UserRoleResponse } from 'src/shared/models/get-role-result';
-import { createQueryBuilder } from 'typeorm';
 
 export class DoPodReturnService {
 
