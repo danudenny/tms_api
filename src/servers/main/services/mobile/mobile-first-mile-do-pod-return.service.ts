@@ -33,7 +33,6 @@ import { PinoLoggerService } from '../../../../shared/services/pino-logger.servi
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 import { UploadImagePodQueueService } from '../../../../servers/queue/services/upload-pod-image-queue.service';
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
-import { CodPayment } from '../../../../shared/orm-entity/cod-payment';
 import { DoPodReturn } from '../../../../shared/orm-entity/do-pod-return';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { DoPodReturnAttachment } from '../../../../shared/orm-entity/do-pod-return-attachment';
@@ -114,7 +113,7 @@ export class MobileFirstMileDoPodReturnService {
     response.trouble = true;
 
     if (awb) {
-      const checkValidAwbStatusIdLast = AwbStatusService.checkValidAwbStatusIdLast(awb);
+      const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb);
       if (checkValidAwbStatusIdLast.isValid) {
         // Add Locking setnx redis
         const holdRedis = await RedisService.lockingWithExpire(
@@ -545,62 +544,6 @@ export class MobileFirstMileDoPodReturnService {
               },
             );
 
-            // only awb COD and DLV
-            if (returnsData.isCOD && lastDoPodReturnHistory.awbStatusId == AWB_STATUS.DLV) {
-              // find and update
-              const codPayment = await transactionEntityManager.findOne(
-                CodPayment,
-                {
-                  where: {
-                    awbItemId: returnsData.awbItemId,
-                    isDeleted: false,
-                  },
-                },
-              );
-              if (codPayment) {
-                // update data
-                await transactionEntityManager.update(
-                  CodPayment,
-                  {
-                    codPaymentId: codPayment.codPaymentId,
-                  },
-                  {
-                    codValue: returnsData.totalCodValue,
-                    codPaymentMethod: returnsData.codPaymentMethod,
-                    codPaymentService: returnsData.codPaymentService,
-                    note: returnsData.note,
-                    noReference: returnsData.noReference,
-                    userIdUpdated: authMeta.userId,
-                    userIdDriver: authMeta.userId,
-                    branchId: awbdReturn.branchId,
-                    updatedTime: moment().toDate(),
-                  },
-                );
-              } else {
-                await transactionEntityManager.insert(
-                  CodPayment,
-                  {
-                    awbNumber: returnsData.awbNumber,
-                    codValue: returnsData.totalCodValue,
-                    codPaymentMethod: returnsData.codPaymentMethod,
-                    codPaymentService: returnsData.codPaymentService,
-                    note: returnsData.note,
-                    noReference: returnsData.noReference,
-                    doPodDeliverDetailId: returnsData.doPodReturnDetailId,
-                    awbItemId: returnsData.awbItemId,
-                    branchId: awbdReturn.branchId,
-                    userIdDriver: authMeta.userId,
-                    userIdCreated: authMeta.userId,
-                    userIdUpdated: authMeta.userId,
-                    createdTime: moment().toDate(),
-                    updatedTime: moment().toDate(),
-                  });
-              }
-              // TODO: update transaction_status_id = TRANSACTION_STATUS.SIGESIT
-
-            }
-
-            // MOL NOTE
             // NOTE: handle only awb status return
             if (awbStatus.isReturn) {
               await AwbReturnService.createAwbReturn(
@@ -631,27 +574,6 @@ export class MobileFirstMileDoPodReturnService {
                   1,
                 );
               }
-              // else if (awbStatus.isFinalStatus) {
-              //   await transactionEntityManager.increment(
-              //     DoPodReturn,
-              //     {
-              //       doPodReturnId: delivery.doPodReturnId,
-              //       totalDelivery: LessThan(doPodReturn.totalAwb),
-              //     },
-              //     'totalDelivery',
-              //     1,
-              //   );
-              //   // balance total problem
-              //   await transactionEntityManager.decrement(
-              //     DoPodReturn,
-              //     {
-              //       doPodReturnId: delivery.doPodReturnId,
-              //       totalProblem: MoreThan(0),
-              //     },
-              //     'totalProblem',
-              //     1,
-              //   );
-              // }
             }
           });
           // #endregion of transaction
@@ -674,21 +596,11 @@ export class MobileFirstMileDoPodReturnService {
             lastDoPodReturnHistory.longitudeReturn,
           );
 
-          // NOTE: push data only DLV to Sunfish
-          if (awbStatus.awbStatusId == AWB_STATUS.DLV) {
-            // TODO: add flag
-            // AwbSunfishV2QueueService.perform(
-            //   delivery.awbNumber,
-            //   delivery.employeeId,
-            //   historyDateTime,
-            // );
-          } else {
-            // NOTE: mail notification status problem
-            AwbNotificationMailQueueService.perform(
-              awbdReturn.awbItemId,
-              awbStatus.awbStatusId,
-            );
-          }
+          // NOTE: mail notification status problem
+          AwbNotificationMailQueueService.perform(
+            awbdReturn.awbItemId,
+            awbStatus.awbStatusId,
+          );
           process = true;
         } else {
           PinoLoggerService.log('##### Data Not Valid', returnsData);

@@ -92,7 +92,7 @@ export class FirstMileDoPodReturnService {
 
       const awb = await AwbService.validAwbNumber(awbNumber);
       if (awb) {
-        const checkValidAwbStatusIdLast = AwbStatusService.checkValidAwbStatusIdLast(awb);
+        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb);
         if (checkValidAwbStatusIdLast.isValid) {
           // Add Locking setnx redis
           const holdRedis = await RedisService.lockingWithExpire(
@@ -465,36 +465,7 @@ export class FirstMileDoPodReturnService {
             response.message = `Resi ${returnData.awbNumber
               }, tidak memiliki surat jalan, harap buatkan surat jalan terlebih dahulu!`;
           } else {
-
-            // const awbDeliverDetail = await this.getDeliverDetail(delivery.awbNumber);
             const awbReturnDetail = await DoPodReturnDetailService.getDoPodReturnDetailByAwbNumber(returnData.awbNumber);
-            // let isReturnAwb = false;
-            // let isDeliverAwb = false;
-            // if (awbReturnDetail && awbDeliverDetail) {
-            //   if (awbReturnDetail.updatedTime > awbDeliverDetail.updatedTime) {
-            //     isReturnAwb = true;
-            //   } else {
-            //     isDeliverAwb = true;
-            //   }
-            // } else if (awbReturnDetail) {
-            //   isReturnAwb = true;
-            // } else if (awbDeliverDetail) {
-            //   isDeliverAwb = true;
-            // }
-
-            // if (isDeliverAwb) {
-            //   // hardcode check role sigesit
-            //   await this.deliverProcess(
-            //     permissonPayload,
-            //     awbDeliverDetail,
-            //     authMeta,
-            //     syncManualDelivery,
-            //     onlyDriver,
-            //     awb,
-            //     response,
-            //     delivery,
-            //     payload);
-            // } else if (isReturnAwb) {
             if (awbReturnDetail) {
               const roleIdSigesit = 23;
               if (permissonPayload.roleId == roleIdSigesit) {
