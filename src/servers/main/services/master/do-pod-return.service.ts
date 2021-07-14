@@ -27,11 +27,6 @@ export class DoPodReturnService {
         moment().toDate(),
       );
     }
-
-    const roleId = await this.getUserRole(userIdDriver);
-    console.log('ROLEID::::::', roleId);
-
-
     doPod.userIdDriver = userIdDriver || null;
     doPod.doPodReturnDateTime = moment().toDate();
     doPod.description = desc || null;
@@ -126,22 +121,5 @@ export class DoPodReturnService {
       auditHistory.note = note;
       return await AuditHistory.save(auditHistory);
     }
-  }
-
-  private static async getUserRole(userId: number): Promise<UserRoleResponse[]> {
-    const qb = createQueryBuilder();
-    qb.addSelect('t1.role_id', 'roleId');
-    qb.addSelect('t1.branch_id', 'branchId');
-    qb.addSelect('t2.role_name', 'roleName');
-    qb.from('user_role', 't1');
-    qb.innerJoin(
-      'role',
-      't2',
-      't1.role_id = t2.role_id AND t2.is_deleted = false',
-    );
-    qb.where('t1.user_id = :userId', { userId });
-    qb.andWhere('t1.is_deleted = false');
-
-    return await qb.getRawMany();
   }
 }

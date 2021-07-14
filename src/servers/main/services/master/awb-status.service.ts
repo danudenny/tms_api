@@ -49,20 +49,6 @@ export class AwbStatusService {
     payload: BaseMetaPayloadVm,
   ): Promise<AwbStatusNonDeliveFindAllResponseVm> {
     // mapping search field and operator default ilike
-
-    let roleId = null;
-    for(const filter of payload.filters){
-      if('roleId' == filter.field){
-        roleId = filter.value;
-        filter.value = 1;//back to default roleId
-      }
-    }
-    let isSigesitReturn = false;
-    const configRetur = ConfigService.get('retur');
-    if (configRetur.returnRoleId.includes(Number(roleId))){
-      isSigesitReturn = true;
-     }
-
     payload.globalSearchFields = [
       {
         field: 'awbStatusName',
@@ -88,12 +74,7 @@ export class AwbStatusService {
       ['t1.is_problem', 'isProblem'],
       ['t1.is_final_status', 'isFinalStatus'],
       );
-
     q.innerJoin(e => e.awbStatus, 't1', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
-    if (isSigesitReturn) {
-      const siGesitReturnStatus = [AWB_STATUS.RTC, AWB_STATUS.RTN, AWB_STATUS.UNRTS];
-      q.andWhere(e => e.awbStatusId, w => w.in(siGesitReturnStatus));
-    }
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
