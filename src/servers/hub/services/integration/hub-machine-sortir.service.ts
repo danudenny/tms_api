@@ -6,6 +6,7 @@ import { CheckAwbPayloadVm, CheckAwbResponseVM } from '../../models/hub-machine-
 import { BranchSortirLogQueueService } from '../../../queue/services/branch-sortir-log-queue.service';
 import { BranchSortirLogSummary } from '../../../../shared/orm-entity/branch-sortir-log-summary';
 import { getConnection } from 'typeorm';
+import { District } from '../../../../shared/orm-entity/district';
 
 export class HubMachineSortirService {
 
@@ -23,38 +24,52 @@ export class HubMachineSortirService {
   ): Promise<any> {
     const result = new CheckAwbResponseVM();
     const data = [];
-    let district_id;
+    // let district_id;
     let is_cod;
     let district_code;
     let branchSortirLogSummaryId;
     const ArrChute = [];
     let paramBranchIdLastmile;
     let paramChute;
+    let cod_nilai;
+    let tujuan;
 
     const dateNow = moment().toDate();
+    // const rawQueryAwb = `
+    //   SELECT
+    //     is_cod,
+    //     awb_number,
+    //     to_id
+    //   FROM awb
+    //   WHERE
+    //     awb_number = '${escape(payload.tracking_number)}'
+    //   ;
+    // `;
+
     const rawQueryAwb = `
       SELECT
-        is_cod,
-        awb_number,
-        to_id
-      FROM awb
+        codbiaya,
+        codnilai,
+        tujuan,
+        berat
+      FROM temp_stt
       WHERE
-        awb_number = '${escape(payload.tracking_number)}'
+      nostt = '${escape(payload.tracking_number)}'
       ;
     `;
     const resultDataAwb = await RawQueryService.query(rawQueryAwb);
     if (resultDataAwb.length > 0 ) {
       for (let a = 0; a < resultDataAwb.length; a++) {
-        district_id = resultDataAwb[a].to_id;
-        is_cod = resultDataAwb[a].is_cod;
+        tujuan = resultDataAwb[a].tujuan;
+        cod_nilai = resultDataAwb[a].codnilai;
       }
 
-      if ((is_cod) || (is_cod == true)) {
+      if(cod_nilai > 0) {
         is_cod = true;
       } else {
         is_cod = false;
       }
-      if (!district_id) {
+      if (!tujuan) {
         data.push({
           state: 1,
           tracking_number: payload.tracking_number,
@@ -88,12 +103,52 @@ export class HubMachineSortirService {
 
         return result;
       }
+      // Cek District ID
+      let resultDistrict = await District.findOne({
+        districtCode: tujuan,
+        isDeleted: false,
+      });
+      if (!resultDistrict) {
+        data.push({
+          state: 1,
+          tracking_number: payload.tracking_number,
+        });
+        result.statusCode = HttpStatus.BAD_REQUEST;
+        result.message = `Can't Find District for AWB: ` + payload.tracking_number;
+        result.data = data;
+
+        await this.upsertBranchSortirLog(
+          result.message,
+          dateNow,
+          1,
+          payload.sorting_branch_id,
+          payload.tracking_number,
+          null,
+          null,
+          false,
+          1,
+        );
+
+        branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+          result.message,
+          0,
+          dateNow,
+          payload.sorting_branch_id,
+          payload.tracking_number,
+          null,
+          null,
+          is_cod,
+        );
+
+        return result;
+      }
+
       const rawQuerySubDistrict = `
         SELECT
           branch_id
         FROM district_mapping_detail
         WHERE
-          district_id = '${escape(district_id)}' AND
+          district_id = '${resultDistrict.districtId}' AND
           is_deleted = FALSE
         LIMIT 1
       `;
@@ -118,7 +173,7 @@ export class HubMachineSortirService {
               bs.is_deleted = FALSE AND
               bs.is_cod = ${escape(is_cod)} AND
               bs.branch_id = ${payload.sorting_branch_id} AND
-              dmd.district_id='${escape(district_id)}'
+              dmd.district_id='${resultDistrict.districtId}'
           `;
 
           const resultData = await RawQueryService.query(rawQuery);
@@ -220,7 +275,7 @@ export class HubMachineSortirService {
               bs.is_deleted = FALSE AND
               bs.is_cod = ${escape(is_cod)} AND
               bs.branch_id = ${payload.sorting_branch_id} AND
-              dmd.district_id='${escape(district_id)}'
+              dmd.district_id='${resultDistrict.districtId}'
           `;
           const resultData = await RawQueryService.query(rawQuery);
           // console.log(rawQuery);
