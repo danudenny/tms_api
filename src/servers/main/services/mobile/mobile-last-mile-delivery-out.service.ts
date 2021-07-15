@@ -222,7 +222,7 @@ export class LastMileDeliveryOutService {
     qb.addSelect('pt.package_type_code', 'service');
     qb.addSelect('aia.awb_item_id', 'awbItemId');
     qb.addSelect('aia.awb_id', 'awbId');
-    qb.addSelect('aia.awb_status_id_last', 'awbLastStatus');
+    qb.addSelect('aia.awb_status_id_last', 'awbStatusIdLast');
     qb.from('awb_item_attr', 'aia');
     qb.innerJoin(
       'awb',
@@ -286,7 +286,6 @@ export class LastMileDeliveryOutService {
       // if (awb.awbLastStatus && awb.awbLastStatus != 0) {
       //   notDeliver = awb.awbLastStatus != AWB_STATUS.ANT ? true : false;
       // }
-
       const checkValidAwbStatusIdLast = await this.checkValidAwbStatusIdLast(awb);
       // NOTE: first must scan in branch
       if (checkValidAwbStatusIdLast.isValid) {
