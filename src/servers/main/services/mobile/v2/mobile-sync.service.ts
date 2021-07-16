@@ -99,11 +99,15 @@ export class V2MobileSyncService {
       const lastDoPodDeliverHistory = last(doPodDeliverHistories);
       // NOTE: check data timestamp and time server
       // handle time status offline
-      const historyDateTime =
-        lastDoPodDeliverHistory.awbStatusDateTime <
-          lastDoPodDeliverHistory.syncDateTime
-          ? lastDoPodDeliverHistory.awbStatusDateTime
-          : lastDoPodDeliverHistory.syncDateTime;
+
+      const doPodDeliver = await DoPodDeliver.findOne({
+        where: {
+          doPodDeliverId: delivery.doPodDeliverId,
+          isDeleted: false,
+        },
+      });
+
+      const historyDateTime = this.getHistoryDateTime(lastDoPodDeliverHistory, doPodDeliver);
 
       try {
         const awbdDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
@@ -194,12 +198,6 @@ export class V2MobileSyncService {
 
             }
 
-            const doPodDeliver = await DoPodDeliver.findOne({
-              where: {
-                doPodDeliverId: delivery.doPodDeliverId,
-                isDeleted: false,
-              },
-            });
             if (doPodDeliver) {
 
               if (awbStatus.isProblem) {
@@ -425,5 +423,17 @@ export class V2MobileSyncService {
       doPodDeliverDetailId,
     });
     return rawData.length ? rawData[0] : null;
+  }
+
+  private static getHistoryDateTime(lastDoPodDeliverHistory: DoPodDeliverHistory, doPodDeliver: DoPodDeliver) {
+    if (lastDoPodDeliverHistory.awbStatusDateTime > lastDoPodDeliverHistory.syncDateTime) {
+      return lastDoPodDeliverHistory.syncDateTime;
+    }
+
+    if (doPodDeliver && lastDoPodDeliverHistory.awbStatusDateTime < doPodDeliver.doPodDeliverDateTime) {
+      return moment().toDate();
+    }
+
+    return lastDoPodDeliverHistory.awbStatusDateTime;
   }
 }
