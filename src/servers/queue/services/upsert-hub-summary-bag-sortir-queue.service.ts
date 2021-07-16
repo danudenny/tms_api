@@ -45,42 +45,42 @@ export class UpsertHubSummaryBagSortirQueueService {
           // UPSERT STATUS IN HUB IN AWB SUMMARY
           // Handling case scanin hub to hub using bag sortir
           // when create bag sortir before scanin hub (status in_hub before do_hub)
-        const summary = await HubSummaryAwb.find({
-          where: {
-            awbNumber: data.awbNumber,
-          },
-        });
-        if (summary && summary.length) {
-          await transactional.update(
-            HubSummaryAwb,
-            { awbNumber: data.awbNumber },
-            {
-              scanDateInHub: dateNow,
-              inHub: true,
-              bagItemIdIn: data.bagItemId,
-              bagIdIn: data.bagId,
-              userIdUpdated: data.userId,
-              updatedTime: data.timestamp,
-            },
-          );
-        } else {
-          const hubSummaryAwb = HubSummaryAwb.create(
-            {
-              scanDateInHub: dateNow,
-              branchId: data.branchId,
-              awbNumber: data.awbNumber,
-              inHub: true,
-              bagItemIdIn: data.bagItemId,
-              bagIdIn: data.bagId,
-              awbItemId: data.awbItemId,
-              userIdCreated: data.userId,
-              userIdUpdated: data.userId,
-              createdTime: data.timestamp,
-              updatedTime: data.timestamp,
-            },
-          );
-          await transactional.insert(HubSummaryAwb, hubSummaryAwb);
-        }
+        // const summary = await HubSummaryAwb.find({
+        //   where: {
+        //     awbNumber: data.awbNumber,
+        //   },
+        // });
+        // if (summary && summary.length) {
+        //   await transactional.update(
+        //     HubSummaryAwb,
+        //     { awbNumber: data.awbNumber },
+        //     {
+        //       scanDateInHub: dateNow,
+        //       inHub: true,
+        //       bagItemIdIn: data.bagItemId,
+        //       bagIdIn: data.bagId,
+        //       userIdUpdated: data.userId,
+        //       updatedTime: data.timestamp,
+        //     },
+        //   );
+        // } else {
+        //   const hubSummaryAwb = HubSummaryAwb.create(
+        //     {
+        //       scanDateInHub: dateNow,
+        //       branchId: data.branchId,
+        //       awbNumber: data.awbNumber,
+        //       inHub: true,
+        //       bagItemIdIn: data.bagItemId,
+        //       bagIdIn: data.bagId,
+        //       awbItemId: data.awbItemId,
+        //       userIdCreated: data.userId,
+        //       userIdUpdated: data.userId,
+        //       createdTime: data.timestamp,
+        //       updatedTime: data.timestamp,
+        //     },
+        //   );
+        //   await transactional.insert(HubSummaryAwb, hubSummaryAwb);
+        // }
 
       }); // end transaction
       return true;
