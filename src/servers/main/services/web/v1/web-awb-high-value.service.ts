@@ -25,6 +25,7 @@ export class V1WebAwbHighValueService {
     'Kode Kecamatan',
     'Gerai Tujuan',
     'Gerai Asal',
+    'Tipe Layanan'
   ];
 
   static streamTransform(doc) {
@@ -41,6 +42,7 @@ export class V1WebAwbHighValueService {
       V1WebAwbHighValueService.strReplaceFunc(doc.districtCode),
       V1WebAwbHighValueService.strReplaceFunc(doc.branchName),
       V1WebAwbHighValueService.strReplaceFunc(doc.branchFromName),
+      V1WebAwbHighValueService.strReplaceFunc(doc.packageType),
     ];
     return `${values.join(',')} \n`;
   }
@@ -445,6 +447,9 @@ export class V1WebAwbHighValueService {
       payload.fieldResolverMap['branchFromId'] = 't8.branch_id';
       payload.fieldResolverMap['branchFromName'] = 't8.branch_name';
       payload.fieldResolverMap['awbHistoryDateLast'] = 't5.awb_history_date_last';
+      payload.fieldResolverMap['packageTypeId'] = 't10.package_type_id';
+      payload.fieldResolverMap['packageTypeName'] = 't10.package_type_name';
+      payload.fieldResolverMap['packageTypeCode'] = 't10.package_type_code';
 
       payload.globalSearchFields = [
         {
@@ -471,6 +476,9 @@ export class V1WebAwbHighValueService {
         ['t5.awb_history_date_last', 'awbHistoryDateLast'],
         ['t9.district_code', 'districtCode'],
         ['t8.branch_name', 'branchFromName'],
+        ['t10.package_type_code', 'packageTypeCode'],
+        ['t10.package_type_name', 'packageTypeName'],
+        [`CASE WHEN t10.package_type_code = 'PREM' THEN 'Gold' ELSE 'Berharga' END`, 'packageType'],
       );
       q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -501,6 +509,10 @@ export class V1WebAwbHighValueService {
       );
 
       q.leftJoin(e => e.awbItemAttr.awb.branch.district, 't9', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.leftJoin(e => e.awbItemAttr.awb.packageType, 't10', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
