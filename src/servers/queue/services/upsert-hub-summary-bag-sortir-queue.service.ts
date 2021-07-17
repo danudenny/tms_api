@@ -4,6 +4,8 @@ import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import moment= require('moment');
+import { RawQueryService } from '../../../shared/services/raw-query.service';
+
 
 // DOC: https://optimalbits.github.io/bull/
 
