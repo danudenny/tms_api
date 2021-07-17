@@ -6,6 +6,7 @@ import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue
 import { DropoffHubDetail } from '../../../shared/orm-entity/dropoff_hub_detail';
 import { AwbItem } from '../../../shared/orm-entity/awb-item';
 import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
+import { RawQueryService } from '../../../shared/services/raw-query.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -40,7 +41,7 @@ export class BagDropoffHubQueueService {
       console.log('### SCAN DROP OFF HUB JOB ID =========', job.id);
       const data = job.data;
 
-      const dateNow = moment().toDate();
+      const dateNow = moment().format('YYYY-MM-DD HH:mm:ss');
       const bagItemsAwb = await BagItemAwb.find({
         where: {
           bagItemId: data.bagItemId,
@@ -74,36 +75,42 @@ export class BagDropoffHubQueueService {
               await DropoffHubDetail.save(dropoffDetail);
 
               // HANDLING SCANIN HUB-TO-HUB WHERE STATUS IN_HUB BEFORE DO_HUB
-              if (data.isSortir) {
-                // UPDATE STATUS DO HUB IN AWB SUMMARY
-                await HubSummaryAwb.update(
-                  { awbNumber: itemAwb.awbNumber },
-                  {
-                    scanDateDoHub: dateNow,
-                    doHub: true,
-                    userIdUpdated: data.userId,
-                    updatedTime: data.timestamp,
-                  },
-                );
-              } else {
-                // CREATE STATUS DO HUB IN AWB SUMMARY
-                const hubSummaryAwb = HubSummaryAwb.create(
-                  {
-                    scanDateDoHub: dateNow,
-                    branchId: data.branchId,
-                    awbNumber: itemAwb.awbNumber,
-                    doHub: true,
-                    bagItemIdDo: data.bagItemId,
-                    bagIdDo: data.bagId,
-                    awbItemId: itemAwb.awbItemId,
-                    userIdCreated: data.userId,
-                    userIdUpdated: data.userId,
-                    createdTime: data.timestamp,
-                    updatedTime: data.timestamp,
-                  },
-                );
-                await HubSummaryAwb.insert(hubSummaryAwb);
-              }
+              // if (data.isSortir) {
+              //   // UPDATE STATUS DO HUB IN AWB SUMMARY
+              //   await HubSummaryAwb.update(
+              //     { awbNumber: itemAwb.awbNumber },
+              //     {
+              //       scanDateDoHub: dateNow,
+              //       doHub: true,
+              //       userIdUpdated: data.userId,
+              //       updatedTime: data.timestamp,
+              //     },
+              //   );
+              // } else {
+              //   // CREATE STATUS DO HUB IN AWB SUMMARY
+              //   const hubSummaryAwb = HubSummaryAwb.create(
+              //     {
+              //       scanDateDoHub: dateNow,
+              //       branchId: data.branchId,
+              //       awbNumber: itemAwb.awbNumber,
+              //       doHub: true,
+              //       bagItemIdDo: data.bagItemId,
+              //       bagIdDo: data.bagId,
+              //       awbItemId: itemAwb.awbItemId,
+              //       userIdCreated: data.userId,
+              //       userIdUpdated: data.userId,
+              //       createdTime: data.timestamp,
+              //       updatedTime: data.timestamp,
+              //     },
+              //   );
+              //   await HubSummaryAwb.insert(hubSummaryAwb);
+              // }
+
+              const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_do_hub,do_hub, bag_item_id_do, bag_id_do, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
+                            values ('${escape(itemAwb.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${itemAwb.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
+                            ON CONFLICT (awb_number,branch_id) DO UPDATE SET do_hub = true, scan_date_do_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}', branch_id=${data.branchId};`;
+
+              await RawQueryService.query(upsertRawHubSummaryAwbSql, null, false);
 
               //
 
