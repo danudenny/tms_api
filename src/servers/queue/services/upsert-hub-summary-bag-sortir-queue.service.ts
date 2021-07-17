@@ -90,7 +90,7 @@ export class UpsertHubSummaryBagSortirQueueService {
                             values ('${escape(data.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${data.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
                             ON CONFLICT (awb_number,branch_id) DO 
                             UPDATE SET in_hub = true, scan_date_in_hub = '${dateNow}', bag_item_id_in = ${data.bagItemId}, bag_id_in = ${data.bagId},  user_id_updated=${data.userId}, updated_time='${dateNow}', branch_id=${data.branchId};`;
-      console.log('upsertRawHubSummaryAwbSql', upsertRawHubSummaryAwbSql);
+      // console.log('upsertRawHubSummaryAwbSql', upsertRawHubSummaryAwbSql);
       await RawQueryService.query(upsertRawHubSummaryAwbSql, null, false);
       return true;
     });
