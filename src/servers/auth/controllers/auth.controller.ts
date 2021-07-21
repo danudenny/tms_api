@@ -7,9 +7,12 @@ import {
 import { AuthenticatedGuard } from '../../../shared/guards/authenticated.guard';
 import { AuthService } from '../../../shared/services/auth.service';
 import {
-    AuthLoginByEmailOrUsernamePayloadVM, AuthLoginResponseVM, AuthLoginWithRolesResponseVM,
+    AuthLoginByEmailOrUsernamePayloadVM, AuthLoginOtpByEmailOrUsernamePayloadVM, AuthLoginResponseVM, AuthLoginWithRolesResponseVM,
+    GetOtpPayloadVM,
+    LoginChannelOtpAddressesResponse,
     PermissionAccessPayloadVM, PermissionAccessResponseVM, PermissionRolesPayloadVM,
     PermissionRolesResponseVM,
+    validateOtpPayloadVM,
 } from '../models/auth.vm';
 import {
     RefreshAccessTokenPayload, RefreshTokenLogoutPayload,
@@ -118,4 +121,35 @@ export class AuthController {
   // ) {
   //   return null; // await this.authService.removeToken(id);
   // }
+  @Post('v2/login/otp/channel')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: LoginChannelOtpAddressesResponse })
+  @Transactional()
+  public async authLoginMol(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
+    return await this.authService.loginOtpChannel(
+      payload.clientId,
+      payload.username,
+      payload.password,
+      payload.email,
+    );
+  }
+
+  @Post('v2/login/otp/get-otp')
+  @HttpCode(HttpStatus.OK)
+  @Transactional()
+  public async getOtp(@Body() payload: GetOtpPayloadVM) {
+    return await this.authService.getOtp(
+      payload.token, payload.channel
+    );
+  }
+
+  @Post('v2/login/otp/validate-otp')
+  @HttpCode(HttpStatus.OK)
+  @Transactional()
+  public async validateOtp(@Body() payload: validateOtpPayloadVM) {
+    return await this.authService.validateOtp(
+      payload.code, payload.token
+    );
+  }
+
 }

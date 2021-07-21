@@ -4,8 +4,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TokenExpiredError } from 'jsonwebtoken';
 import { map, toInteger } from 'lodash';
 import ms = require('ms');
+import axios from 'axios';
+const crypto = require('crypto');
 
-import { PermissionAccessResponseVM } from '../../servers/auth/models/auth.vm';
+import { LoginChannelOtpAddresses, LoginChannelOtpAddressesResponse, PermissionAccessResponseVM } from '../../servers/auth/models/auth.vm';
 import {
   JwtAccessTokenPayload,
   JwtPermissionTokenPayload,
@@ -26,6 +28,8 @@ import { RequestContextMetadataService } from './request-context-metadata.servic
 import { PartnerTokenPayload } from '../interfaces/partner-payload.interface';
 import { createQueryBuilder } from 'typeorm';
 import { Employee } from '../orm-entity/employee';
+import moment = require('moment');
+
 
 @Injectable()
 export class AuthService {
@@ -34,6 +38,212 @@ export class AuthService {
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
   ) {}
+
+  async loginOtpChannel(
+    clientId:string,
+    username: string,
+    password: string,
+    email?: string,
+  ): Promise<LoginChannelOtpAddressesResponse>{
+    // find by email or username on table users
+    const user = await this.userRepository.findByEmailOrUsername(
+      email,
+      username,
+    );
+
+    // check user present
+    if (!user) {
+      RequestErrorService.throwObj({
+        message: 'global.error.USER_NOT_FOUND',
+      });
+    }
+
+    // PinoLoggerService.log(user);
+    // validate user password hash md5
+    if (!user.validatePassword(password)) {
+      RequestErrorService.throwObj({
+        message: 'global.error.LOGIN_WRONG_PASSWORD',
+      });
+    }
+
+    const text = `${user.userId}${moment().toDate()}`;
+    const generateToken = crypto
+      .createHash('md5')
+      .update(text)
+      .digest('hex');
+
+    const value = {
+      userId: user.userId,
+      clientId: clientId,
+    }
+
+    await RedisService.setex(
+      `pod:otp:${generateToken}`,
+      JSON.stringify(value),
+      3000,
+    );
+
+    const employee = await Employee.findOne({
+      where: {
+        employeeId: user.employeeId,
+        isDeleted: false,
+      }
+    })
+
+
+    const channelList = ['wa', 'sms'];
+    const addresses = [];
+    for (const channel of channelList) {
+      const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
+      loginChannelOtpAddresses.channel = channel;
+      loginChannelOtpAddresses.adress = employee.phone1;
+      loginChannelOtpAddresses.enable = true;
+
+      addresses.push({ ...loginChannelOtpAddresses });
+    }
+
+    const result = new LoginChannelOtpAddressesResponse();
+    result.token = generateToken;
+    result.addresses = addresses;
+    return result;
+  }
+
+  async getOtp(
+    token: string,
+    channel:string
+  ):Promise<any>{
+
+    const redisData = await RedisService.get(
+      `pod:otp:${token}`,
+      true,
+    );
+
+    console.log(redisData)
+
+    if (!redisData){
+      RequestErrorService.throwObj({
+        message: 'Data not found',
+      });
+    }
+
+    const userId = redisData.userId;
+    const user = await this.userRepository.findByUserId(
+      userId,
+    );
+
+    if (!user) {
+      RequestErrorService.throwObj({
+        message: 'global.error.USER_NOT_FOUND',
+      });
+    }
+
+    const otpRetries = await RedisService.get(`pod:get:otp:${userId}`);
+    let retries = otpRetries ? Number(otpRetries) : 0;
+    if (retries >= 3) {
+      RequestErrorService.throwObj({
+        message: 'To many try otp input, wait a few seconds',
+      });
+    }
+
+    const url = `${ConfigService.get('getOtp.baseUrl')}otp`
+    const jsonData = {
+      channel: channel,
+      id: user.userId
+    }
+
+    const options = {
+      headers: AuthService.headerReqOtp,
+    };
+
+    try {
+      const response = await axios.post(url, jsonData, options);
+      await RedisService.setex(
+        `pod:get:otp:${userId}`,
+        Number(retries + 1),
+        60
+      );
+      return { status: response.status, ...response.data };
+    } catch (error) {
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
+  }
+
+  async validateOtp(
+    code: string,
+    token: string,
+    ){
+
+    const redisData = await RedisService.get(
+      `pod:otp:${token}`,
+      true,
+    );
+
+    if (!redisData) {
+      RequestErrorService.throwObj({
+        message: 'Data not found',
+      });
+    }
+
+    const userId = redisData.userId;
+    const user = await this.userRepository.findByUserId(
+      userId,
+    );
+
+    if (!user) {
+      RequestErrorService.throwObj({
+        message: 'global.error.USER_NOT_FOUND',
+      });
+    }
+
+    // const otpRetries = await RedisService.get(`pod:validate:otp:${userId}`);
+    // let retries = otpRetries ? Number(otpRetries) : 0;
+    // if (retries >= 3) {
+    //   RequestErrorService.throwObj({
+    //     message: 'To many try otp input, wait a few seconds',
+    //   });
+    // }
+
+    const url = `${ConfigService.get('getOtp.baseUrl')}auth/otp`
+    const jsonData = {
+      code: code,
+      id: user.userId,
+      policy: 'pod',
+    }
+
+    const options = {
+      headers: AuthService.headerReqOtp,
+    };
+
+    try {
+      const response = await axios.post(url, jsonData, options);
+      console.log('RESPONSEEE:::', response);
+      // await RedisService.setex(
+      //   `pod:validate:otp:${userId}`,
+      //   Number(retries + 1),
+      //   60
+      // );
+
+      if(HttpStatus.OK != response.data.code){
+        // return error;
+        return null;
+      }
+
+      const loginResultMetadata = this.populateLoginResultMetadataByUser(
+        redisData.clientId,
+        user,
+      );
+      return loginResultMetadata;
+    } catch (error) {
+      console.log('ERRRRORRRRR::::', error);
+      return {
+        status: error.response.status,
+        ...error.response.data,
+      };
+    }
+  }
 
   async login(
     clientId: string,
@@ -501,4 +711,11 @@ export class AuthService {
 
     return await qb.getRawMany();
   }
+
+  private static get headerReqOtp() {
+    return {
+      'Content-Type': 'application/json',
+    };
+  }
 }
+

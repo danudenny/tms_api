@@ -155,4 +155,53 @@ export class PermissionAccessResponseVM {
   isSigesitReturn: boolean;
 }
 
+export class LoginChannelOtpAddresses {
+  @ApiModelProperty()
+  adress: string;
+
+  @ApiModelProperty()
+  channel: string;
+
+  @ApiModelProperty()
+  enable: boolean;
+}
+
+export class LoginChannelOtpAddressesResponse {
+  @ApiModelProperty()
+  token: string;
+
+  @ApiModelProperty({ type: [LoginChannelOtpAddresses]})
+  addresses: LoginChannelOtpAddresses[];
+}
+
+export class AuthLoginOtpByEmailOrUsernamePayloadVM {
+  @ApiModelPropertyOptional()
+  @IsEmail({})
+  @IsOptional({})
+  email?: string;
+
+  @ApiModelPropertyOptional()
+  username: string;
+
+  @ApiModelProperty()
+  @IsNotEmpty()
+  password: string;
+}
+
+export class GetOtpPayloadVM {
+  @ApiModelProperty()
+  channel: string;
+
+  @ApiModelProperty()
+  token: string;
+}
+
+export class validateOtpPayloadVM {
+  @ApiModelProperty()
+  code: string;
+
+  @ApiModelProperty()
+  token: string;
+}
+
 // #endregion

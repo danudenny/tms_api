@@ -39,4 +39,12 @@ export class UserRepository extends Repository<User> {
     });
   }
 
+  findByUserId(user_id: number) {
+    return this.findOne({
+      where: {
+        userId: user_id,
+        isDeleted: false,
+      },
+    });
+  }
 }
