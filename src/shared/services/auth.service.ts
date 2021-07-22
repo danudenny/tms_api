@@ -90,14 +90,13 @@ export class AuthService {
       }
     })
 
-
     const channelList = ['wa', 'sms'];
     const addresses = [];
     for (const channel of channelList) {
       const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
       loginChannelOtpAddresses.channel = channel;
       loginChannelOtpAddresses.adress = employee.phone1;
-      loginChannelOtpAddresses.enable = true;
+      loginChannelOtpAddresses.enable = 'wa' == channel ? false : true;
 
       addresses.push({ ...loginChannelOtpAddresses });
     }
@@ -118,8 +117,6 @@ export class AuthService {
       true,
     );
 
-    console.log(redisData)
-
     if (!redisData){
       RequestErrorService.throwObj({
         message: 'Data not found',
@@ -130,40 +127,48 @@ export class AuthService {
     const user = await this.userRepository.findByUserId(
       userId,
     );
-
     if (!user) {
       RequestErrorService.throwObj({
         message: 'global.error.USER_NOT_FOUND',
       });
     }
 
-    const otpRetries = await RedisService.get(`pod:get:otp:${userId}`);
-    let retries = otpRetries ? Number(otpRetries) : 0;
-    if (retries >= 3) {
-      RequestErrorService.throwObj({
-        message: 'To many try otp input, wait a few seconds',
-      });
-    }
+    // const otpRetries = await RedisService.get(`pod:get:otp:${userId}`);
+    // let retries = otpRetries ? Number(otpRetries) : 0;
+    // if (retries >= 3) {
+    //   RequestErrorService.throwObj({
+    //     message: 'To many try otp input, wait a few seconds',
+    //   });
+    // }
 
     const url = `${ConfigService.get('getOtp.baseUrl')}otp`
     const jsonData = {
       channel: channel,
-      id: user.userId
+      id: user.username
     }
-
     const options = {
       headers: AuthService.headerReqOtp,
     };
 
     try {
       const response = await axios.post(url, jsonData, options);
-      await RedisService.setex(
-        `pod:get:otp:${userId}`,
-        Number(retries + 1),
-        60
-      );
-      return { status: response.status, ...response.data };
+      // await RedisService.setex(
+      //   `pod:get:otp:${userId}`,
+      //   Number(retries + 1),
+      //   60
+      // );
+      if (HttpStatus.NO_CONTENT == response.status){
+        return {
+          status: response.status,
+          success: true};
+      }
+      // return { status: response.status, ...response.data };
     } catch (error) {
+      if (!error.response.data) {
+        RequestErrorService.throwObj({
+          message: 'Error Time Out!!',
+        });
+      }
       return {
         status: error.response.status,
         ...error.response.data,
@@ -174,7 +179,7 @@ export class AuthService {
   async validateOtp(
     code: string,
     token: string,
-    ){
+  ):Promise<AuthLoginResultMetadata>{
 
     const redisData = await RedisService.get(
       `pod:otp:${token}`,
@@ -183,7 +188,7 @@ export class AuthService {
 
     if (!redisData) {
       RequestErrorService.throwObj({
-        message: 'Data not found',
+        message: 'Data Not Found',
       });
     }
 
@@ -198,21 +203,11 @@ export class AuthService {
       });
     }
 
-    // const otpRetries = await RedisService.get(`pod:validate:otp:${userId}`);
-    // let retries = otpRetries ? Number(otpRetries) : 0;
-    // if (retries >= 3) {
-    //   RequestErrorService.throwObj({
-    //     message: 'To many try otp input, wait a few seconds',
-    //   });
-    // }
-
     const url = `${ConfigService.get('getOtp.baseUrl')}auth/otp`
     const jsonData = {
       code: code,
-      id: user.userId,
-      policy: 'pod',
+      id: user.username,
     }
-
     const options = {
       headers: AuthService.headerReqOtp,
     };
@@ -220,24 +215,21 @@ export class AuthService {
     try {
       const response = await axios.post(url, jsonData, options);
       console.log('RESPONSEEE:::', response);
-      // await RedisService.setex(
-      //   `pod:validate:otp:${userId}`,
-      //   Number(retries + 1),
-      //   60
-      // );
 
-      if(HttpStatus.OK != response.data.code){
-        // return error;
-        return null;
+      if(HttpStatus.OK == response.data.code){
+        const loginResultMetadata = this.populateLoginResultMetadataByUser(
+          redisData.clientId,
+          user,
+        );
+        await RedisService.del(`pod:otp:${token}`);
+        return loginResultMetadata;
       }
-
-      const loginResultMetadata = this.populateLoginResultMetadataByUser(
-        redisData.clientId,
-        user,
-      );
-      return loginResultMetadata;
     } catch (error) {
-      console.log('ERRRRORRRRR::::', error);
+      if (!error.response.data){
+        RequestErrorService.throwObj({
+          message: 'Error Time Out!!',
+        });
+      }
       return {
         status: error.response.status,
         ...error.response.data,
