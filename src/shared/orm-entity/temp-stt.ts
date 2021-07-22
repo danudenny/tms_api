@@ -1,9 +1,10 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany, OneToOne, JoinColumn, PrimaryColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { integer } from 'aws-sdk/clients/cloudfront';
+import { BaseActionEntity } from './base-action';
 
 @Entity('temp_stt', { schema: 'public' })
-export class TempStt extends TmsBaseEntity {
+export class TempStt extends BaseActionEntity {
   @PrimaryColumn('character varying', {
     nullable: false,
     length: 50,
@@ -35,7 +36,7 @@ export class TempStt extends TmsBaseEntity {
     nullable: true,
     precision: 20,
     scale: 5,
-    name: 'codilai',
+    name: 'codnilai',
   })
   codnilai: number;
 
@@ -328,11 +329,12 @@ export class TempStt extends TmsBaseEntity {
   })
   dokembali: boolean;
 
-  @Column('boolean', {
-    nullable: false,
-    default: () => 'false',
-  })
-  is_sync_odoo: boolean;
+  // Tidak Ditemukan di LIVE 09 July 2021
+  // @Column('boolean', {
+  //   nullable: false,
+  //   default: () => 'false',
+  // })
+  // is_sync_odoo: boolean;
 
   @Column('boolean', {
     nullable: false,

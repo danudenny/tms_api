@@ -15,6 +15,7 @@ export abstract class PdfHelper {
     res: express.Response,
     templates: any,
     fileName: string,
+    name: string = 'download.pdf',
   ) {
     const config = this.getConfigJsReport();
     const auth = 'Basic ' + new Buffer(config.username + ':' + config.password).toString('base64');
@@ -33,7 +34,7 @@ export abstract class PdfHelper {
       try {
         const mimeType = 'application/pdf';
         res.setHeader('Content-type', mimeType);
-        res.setHeader('Content-disposition', 'attachment; filename=' + 'korwil_monitoring.pdf');
+        res.setHeader('Content-disposition', 'attachment; filename=' + name);
 
         const filestream = fs.createReadStream(fileName);
         filestream.pipe(res);

@@ -409,6 +409,7 @@ export class V1PackageService {
     }
   }
 
+  // TODO: need refactoring
   private static async createBagNumber(
     payload,
     branchCode: string,
@@ -436,7 +437,11 @@ export class V1PackageService {
       today: moment().format('YYYY-MM-DD'),
       tomorrow: moment().add(1, 'd').format('YYYY-MM-DD'),
     });
+    qb.andWhere('a.branch_id = :branchIdHub', {
+      branchIdHub: permissonPayload.branchId,
+    });
     qb.andWhere('a.branch_id_to = :branchId', { branchId });
+    qb.andWhere('a.is_manual = true');
     qb.andWhere('a.is_deleted = false');
 
     const bagData = await qb.getRawOne();

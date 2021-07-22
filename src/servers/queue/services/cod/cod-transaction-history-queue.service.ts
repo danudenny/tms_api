@@ -62,7 +62,6 @@ export class CodTransactionHistoryQueueService {
           select: ['userId', 'firstName', 'username'],
           where: {
             userId: Number(data.userId),
-            isDeleted: false,
           },
           cache: true,
         });

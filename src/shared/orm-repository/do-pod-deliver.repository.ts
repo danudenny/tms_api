@@ -64,7 +64,6 @@ export class DoPodDeliverRepository extends Repository<DoPodDeliver> {
     // if (holdRedis) {
     const doPodDeliver = await DoPodDeliver.findOne(
       { doPodDeliverId },
-      { cache: true },
     );
     return doPodDeliver;
     // } else {

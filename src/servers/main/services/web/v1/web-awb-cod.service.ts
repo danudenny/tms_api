@@ -249,9 +249,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.codPayment.userDriver, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.leftJoin(e => e.codPayment.userDriver, 't4');
 
     q.leftJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -396,9 +394,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.codPayment.userDriver, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.leftJoin(e => e.codPayment.userDriver, 't4');
 
     q.leftJoin(e => e.codPayment.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -472,9 +468,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
     });
 
-    q.innerJoin(e => e.userDriver, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.userDriver, 't3');
 
     q.innerJoin(e => e.branchFinal, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -568,9 +562,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.codPayment.userDriver, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.codPayment.userDriver, 't4');
 
     q.innerJoin(e => e.awb.packageType, 't5');
 
@@ -688,9 +680,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.codPayment.userDriver, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.codPayment.userDriver, 't4');
 
     q.innerJoin(e => e.awb.packageType, 't5');
 
@@ -780,18 +770,12 @@ export class V1WebAwbCodService {
       ['t4.first_name', 'adminName'],
       ['t5.first_name', 'driverName'],
     );
-    q.innerJoin(e => e.userAdmin, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.userDriver, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.userAdmin, 't4');
+    q.innerJoin(e => e.userDriver, 't5');
     q.leftJoin(e => e.transactionBranch.bankStatement, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.transactionBranch.bankStatement.userAdmin, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.leftJoin(e => e.transactionBranch.bankStatement.userAdmin, 't3');
 
     q.andWhere(e => e.isVoid, w => w.isTrue());
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -915,9 +899,7 @@ export class V1WebAwbCodService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.userAdmin, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.userAdmin, 't4');
 
     //#region Cod Merger
     if (
@@ -937,9 +919,7 @@ export class V1WebAwbCodService {
     //#endregion
 
     // TODO: change to inner join
-    q.leftJoin(e => e.userDriver, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.leftJoin(e => e.userDriver, 't5');
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
@@ -1784,7 +1764,6 @@ export class V1WebAwbCodService {
       select: ['userId', 'employeeId', 'firstName', 'username'],
       where: {
         userId: userIdDriver,
-        isDeleted: false,
       },
     });
 

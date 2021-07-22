@@ -5,6 +5,8 @@ import { HubServerServicesModule } from '../services/hub-server-services.module'
 import { HubMachinePackageController } from './integration/hub-machine-package.controller';
 import { HubMachineSortirController } from './integration/hub-machine-sortir.controller';
 import { InternalSortirListController } from './integration/internal-sortir-list.controller';
+import { MonitoringProblemListController } from './integration/monitoring-problem-list.controller';
+import { MonitoringProblemLebihSortirListController } from './integration/monitoring-problem-lebih-sortir-list.controller';
 
 @Module({
   imports: [SharedModule, HubServerServicesModule],
@@ -12,6 +14,8 @@ import { InternalSortirListController } from './integration/internal-sortir-list
     HubMachineSortirController,
     HubMachinePackageController,
     InternalSortirListController,
+    MonitoringProblemListController,
+    MonitoringProblemLebihSortirListController,
   ],
 })
 export class HubServerControllersModule {}

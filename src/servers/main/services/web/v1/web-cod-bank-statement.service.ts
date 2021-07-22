@@ -327,9 +327,7 @@ export class V1WebCodBankStatementService {
     q.innerJoin(e => e.branch, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.userAdmin, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoin(e => e.userAdmin, 't4');
     q.leftJoin(e => e.attachment, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );

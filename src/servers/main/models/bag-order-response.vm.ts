@@ -3,6 +3,13 @@ import {
   ApiModelPropertyOptional,
 } from '../../../shared/external/nestjs-swagger';
 import { IsDefined } from 'class-validator';
+import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
+
+export class BagAwbExportVm extends BaseMetaPayloadVm{
+  @ApiModelPropertyOptional()
+  // @IsDefined({ message: 'Bag Number harus diisi' })
+  bagNumber: string;
+}
 
 export class BagAwbVm {
   @ApiModelProperty()
