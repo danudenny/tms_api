@@ -44,7 +44,10 @@ export class WebAwbDeliverService {
         if (awb) {
           // add handel status Cod problem
           const statusCodProblem = [AWB_STATUS.CODB, AWB_STATUS.CODOC];
-          if (
+          if(AWB_STATUS.RTN == delivery.awbStatusId && AwbService.isManifested(awb.awbItemId)){
+            response.status = 'error';
+            response.message = `Resi ${delivery.awbNumber} belum pernah di MANIFESTED`;
+          } else if (
             awb.awbItem.awb.isCod == false &&
             statusCodProblem.includes(delivery.awbStatusId)
           ) {
