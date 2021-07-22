@@ -26,4 +26,5 @@ export const AWB_STATUS = {
   CANCEL: 1800,
   CANCEL_DLV: 21800,
   LOST: 23500,
+  MANIFESTED: 1500,
 };
