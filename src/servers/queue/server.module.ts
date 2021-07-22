@@ -54,6 +54,7 @@ import { CodTransferTransactionQueueService } from './services/cod/cod-transfer-
 import { BranchSortirLogQueueService } from './services/branch-sortir-log-queue.service';
 import { DoPodDetailPostMetaInQueueService } from './services/do-pod-detail-post-meta-in-queue.service';
 import { UpsertHubSummaryBagSortirQueueService } from './services/upsert-hub-summary-bag-sortir-queue.service';
+import { UpsertHubSummaryAwbQueueService } from './services/upsert-hub-summary-awb-queue.service';
 
 // #endregion import
 @Module({
@@ -154,6 +155,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       CreateBagFirstScanHubQueueService.boot();
       CreateBagAwbScanHubQueueService.boot();
       AwbNotificationMailQueueService.boot();
+      UpsertHubSummaryAwbQueueService.boot();
     }
 
     if (serverConfig.bullPodMobile) {

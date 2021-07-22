@@ -105,6 +105,7 @@ export class BagScanOutHubQueueService {
                 HubSummaryAwb,
               {
                 awbNumber: itemAwb.awbNumber,
+                branchId: data.branchId,
               },
               {
                 scanDateOutHub: dateNow,
