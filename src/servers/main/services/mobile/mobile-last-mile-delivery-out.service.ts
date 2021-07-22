@@ -22,7 +22,7 @@ import { ScanAwbVm } from '../../models/mobile-scanin-awb.response.vm';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { BadRequestException } from '@nestjs/common';
-import { AwbItemAttr } from 'src/shared/orm-entity/awb-item-attr';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 
 // #endregion
 
