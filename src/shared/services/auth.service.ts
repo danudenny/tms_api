@@ -164,7 +164,7 @@ export class AuthService {
       }
       // return { status: response.status, ...response.data };
     } catch (error) {
-      if (!error.response.data) {
+      if (!error.response.data || undefined == error.response.data) {
         RequestErrorService.throwObj({
           message: 'Error Time Out!!',
         });
@@ -225,7 +225,7 @@ export class AuthService {
         return loginResultMetadata;
       }
     } catch (error) {
-      if (!error.response.data){
+      if (!error.response.data || undefined == error.response.data) {
         RequestErrorService.throwObj({
           message: 'Error Time Out!!',
         });
