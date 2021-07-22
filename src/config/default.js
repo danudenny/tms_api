@@ -133,7 +133,7 @@ module.exports = {
       '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',
   },
   getOtp: {
-    baseUrl: 'http://swagger.s.sicepat.tech/core/authsvc/',
+    baseUrl: 'http://swagger.s.sicepat.tech/core/authsvc',
     key: 'key-create-otp',
     algorithm: 'aes256',
   },
