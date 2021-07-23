@@ -283,21 +283,21 @@ export class AuthService {
     // get data employee if employee id not null
     // 10 active, 20 inactive
     const employee = await Employee.findOne({
-      select: ['employeeId', 'employeeName'],
+      select: ['employeeId', 'employeeName', 'statusEmployee'],
       where: {
         employeeId: user.employeeId,
-        statusEmployee: 10,
+        isDeleted: false,
       },
     });
 
-    if (!employee) {
+    // handle validation status employee
+    if (employee && employee.statusEmployee == 20) {
       RequestErrorService.throwObj({
         message: 'global.error.USER_NOT_FOUND',
       });
     }
 
-    const employeeName = employee.employeeName;
-
+    const employeeName = employee ? employee.employeeName : '';
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
       user,
