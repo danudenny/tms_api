@@ -281,11 +281,22 @@ export class AuthService {
   // method populate data user login
   public async populateLoginResultMetadataByUser(clientId: string, user: User) {
     // get data employee if employee id not null
+    // 10 active, 20 inactive
     const employee = await Employee.findOne({
       select: ['employeeId', 'employeeName'],
-      where: { employeeId: user.employeeId },
+      where: {
+        employeeId: user.employeeId,
+        statusEmployee: 10,
+      },
     });
-    const employeeName = employee ? employee.employeeName : '';
+
+    if (!employee) {
+      RequestErrorService.throwObj({
+        message: 'global.error.USER_NOT_FOUND',
+      });
+    }
+
+    const employeeName = employee.employeeName;
 
     const jwtAccessTokenPayload = this.populateJwtAccessTokenPayloadFromUser(
       clientId,
