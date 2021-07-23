@@ -1,4 +1,4 @@
-import { Injectable, Param } from '@nestjs/common';
+import { HttpStatus, Injectable, Param } from '@nestjs/common';
 import moment = require('moment');
 import axios from 'axios';
 import { RedisService } from '../../../../shared/services/redis.service';
@@ -11,6 +11,9 @@ import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-reques
 import { WorkOrderDetail } from '../../../../shared/orm-entity/work-order-detail';
 import { SysCounter } from '../../../../shared/orm-entity/sys-counter';
 import { AwbPartnerLog } from '../../../../shared/orm-entity/awb-partner-log';
+import { Partner } from '../../../../shared/orm-entity/partner';
+import { PartnerSummary } from '../../../../shared/orm-entity/partner-summary';
+import { GlobalVar } from '../../../../shared/orm-entity/global-var';
 
 @Injectable()
 export class PartnerService {
@@ -735,7 +738,6 @@ export class PartnerService {
       return result;
     }
 
-    return result;
   }
 
   private static async getAwbWorkOrderId(awb: string): Promise<any> {
@@ -929,5 +931,57 @@ export class PartnerService {
     });
 
     return syscount;
+  }
+
+  static async getSummary(headers: any): Promise<any> {
+    let result = {};
+    const apiKeyPartner = headers['x-api-key'];    
+    
+    if (!apiKeyPartner) {
+      result = {
+        code: HttpStatus.UNPROCESSABLE_ENTITY,
+        message: 'Invalid API KEY',
+      };
+      return result;
+    }
+
+    const partner = await Partner.findOne({
+      select: ['partnerId'],
+      where: {
+        apiKey: apiKeyPartner,
+        isDeleted: false,
+      }     
+    });
+    
+    if (!partner) {
+      result = {
+        code: HttpStatus.UNPROCESSABLE_ENTITY,
+        message: 'API KEY not found',
+      };
+      return result;
+    } else {
+      const partnerId = partner['partnerId'];
+      const partnerSummary = await PartnerSummary.findOne({
+        select: ['endDate', 'totalOrder'],
+        where: {
+          partnerId,
+          isDeleted: false,
+        }     
+      });
+
+      if (!partnerSummary) {
+        result = {
+          code: HttpStatus.UNPROCESSABLE_ENTITY,
+          message: 'Partner doesn\'t have summary',
+        };
+        return result;
+      } else {
+        result = {
+          endDate: moment(partnerSummary['endDate']).format('YYYY-MM-DD'),
+          totalOrder: partnerSummary['totalOrder'],
+        };
+        return result;
+      }
+    }
   }
 }

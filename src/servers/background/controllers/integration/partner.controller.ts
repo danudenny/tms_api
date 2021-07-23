@@ -1,10 +1,11 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Post, Req, HttpCode, HttpStatus, Get, UseGuards } from '@nestjs/common';
 import { PartnerService } from '../../services/integration/partner.service';
 import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { PosindonesiaPayloadVm } from '../../models/posindonesia.payload.vm';
-import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { ApiUseTags, ApiImplicitHeader } from '../../../../shared/external/nestjs-swagger';
 import { ResponseMaintenanceService } from '../../../../shared/services/response-maintenance.service';
+import { AuthXAPIKeyGuard } from '../../../../shared/guards/auth-x-api-key.guard';
 
 @ApiUseTags('Partner Integration Pos Indonesia')
 @Controller('integration/partner')
@@ -64,5 +65,13 @@ export class PartnerController {
         return result;
       }
     }
+  }
+
+  @Get('summary')
+  @HttpCode(HttpStatus.OK)
+  @ApiImplicitHeader({ name: 'x-api-key' })
+  @UseGuards(AuthXAPIKeyGuard)
+  public async getSummary(@Req() req: any) {
+    return PartnerService.getSummary(req.headers);
   }
 }
