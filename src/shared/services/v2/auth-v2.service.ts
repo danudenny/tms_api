@@ -73,6 +73,12 @@ export class AuthV2Service {
       }
     })
 
+    if(employee && employee.statusEmployee == 20){
+      RequestErrorService.throwObj({
+        message: 'global.error.USER_NOT_FOUND',
+      });
+    }
+
     const channelList = ['wa', 'sms'];
     const addresses = [];
     for (const channel of channelList) {
@@ -102,7 +108,7 @@ export class AuthV2Service {
 
     if (!redisData){
       RequestErrorService.throwObj({
-        message: 'Data not found',
+        message: 'Sesi login habis, Mohon login ulang',
       });
     }
 
@@ -147,9 +153,11 @@ export class AuthV2Service {
       }
     } catch (err) {
       if (err.response && undefined != err.response.data) {
-        console.log('error:::::', err.response)
+        console.log('error:::::', err.response.data)
+        const message = err.response.data.message ?
+          err.response.data.message : err.response.data;
         RequestErrorService.throwObj({
-          message: err.response.data.message,
+          message: message,
         }, err.response.data.code);
       } else {
         RequestErrorService.throwObj({
@@ -182,7 +190,7 @@ export class AuthV2Service {
 
     if (!user) {
       RequestErrorService.throwObj({
-        message: 'global.error.USER_NOT_FOUND',
+        message: 'Sesi login habis, Mohon login ulang',
       });
     }
 
@@ -194,7 +202,7 @@ export class AuthV2Service {
     const options = {
       headers: this.headerReqOtp,
     };
-    console.log('jsonData:::', jsonData);
+
     try {
       const response = await axios.post(url, jsonData, options);
       if (HttpStatus.OK == response.status){
@@ -207,9 +215,11 @@ export class AuthV2Service {
       }
     } catch (err) {
       if(err.response && undefined != err.response.data){
-        console.log('error:::::', err.response)
+        console.log('error:::::', err.response.data)
+        const message = err.response.data.message ?
+          err.response.data.message : err.response.data;
         RequestErrorService.throwObj({
-          message: err.response.data.message,
+          message: message,
         }, err.response.data.code);
       } else {
         RequestErrorService.throwObj({
