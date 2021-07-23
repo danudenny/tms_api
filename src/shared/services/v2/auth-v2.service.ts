@@ -145,16 +145,17 @@ export class AuthV2Service {
           status: response.status,
           success: true};
       }
-    } catch (error) {
-      if (!error.response || undefined == error.response) {
+    } catch (err) {
+      if (err.response && undefined != err.response.data) {
+        console.log('error:::::', err.response)
         RequestErrorService.throwObj({
-          message: 'Error Time Out!!',
-        });
+          message: err.response.data.message,
+        }, err.response.data.code);
+      } else {
+        RequestErrorService.throwObj({
+          message: 'Request Time Out!!',
+        }, HttpStatus.REQUEST_TIMEOUT);
       }
-      return {
-        status: error.response.status,
-        ...error.response.data,
-      };
     }
   }
 
@@ -193,7 +194,7 @@ export class AuthV2Service {
     const options = {
       headers: this.headerReqOtp,
     };
-
+    console.log('jsonData:::', jsonData);
     try {
       const response = await axios.post(url, jsonData, options);
       if (HttpStatus.OK == response.status){
@@ -204,16 +205,17 @@ export class AuthV2Service {
         await RedisService.del(`pod:otp:${token}`);
         return loginResultMetadata;
       }
-    } catch (error) {
-      if (!error.response || undefined == error.response) {
+    } catch (err) {
+      if(err.response && undefined != err.response.data){
+        console.log('error:::::', err.response)
         RequestErrorService.throwObj({
-          message: 'Error Time Out!!',
-        });
+          message: err.response.data.message,
+        }, err.response.data.code);
+      } else {
+        RequestErrorService.throwObj({
+          message: 'Request Time Out!!',
+        }, HttpStatus.REQUEST_TIMEOUT);
       }
-      return {
-        status: error.response.status,
-        ...error.response.data,
-      };
     }
   }
 
