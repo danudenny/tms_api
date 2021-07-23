@@ -2,6 +2,7 @@ import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import moment = require('moment');
 import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
+import { getManager } from 'typeorm';
 
 export class UpsertHubSummaryAwbQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -29,16 +30,20 @@ export class UpsertHubSummaryAwbQueueService {
   );
 
   public static boot() {
-    this.queue.process(5, async job => {
+    this.queue.process(10, async job => {
       console.log('### UPSERT HUB SUMMARY AWB =========', job.id);
       const data = job.data;
       const dateNow = moment().format('YYYY-MM-DD HH:mm:ss');
+      console.log('### UPSERT HUB SUMMARY AWB NUMBER =========', data.awbNumber);
 
-      const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_do_hub,do_hub, bag_item_id_do, bag_id_do, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
+      await getManager().transaction(async transactional => {
+        const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_do_hub,do_hub, bag_item_id_do, bag_id_do, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
                             values ('${escape(data.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${data.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
                             ON CONFLICT (awb_number,branch_id) DO UPDATE SET do_hub = true, scan_date_do_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}';`;
 
-      await HubSummaryAwb.query(upsertRawHubSummaryAwbSql);
+        console.log('### UPSERT HUB SUMMARY AWB QUERY =========', upsertRawHubSummaryAwbSql);
+        await transactional.query(upsertRawHubSummaryAwbSql);
+      });
     });
 
     this.queue.on('completed', job => {
