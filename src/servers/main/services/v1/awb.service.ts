@@ -326,7 +326,7 @@ export class AwbService {
   public static async isManifested(
     awbItemId: number,
   ): Promise<boolean> {
-    const awbCancel = await AwbHistory.findOne({
+    const awbManifested = await AwbHistory.findOne({
       select: ['awbHistoryId'],
       where: {
         awbItemId,
@@ -334,7 +334,7 @@ export class AwbService {
         isDeleted: false,
       },
     });
-    return awbCancel ? true : false;
+    return awbManifested ? true : false;
   }
 
   public static async isAwbNumberLenght(inputNumber: string): Promise<boolean> {
