@@ -111,6 +111,7 @@ export class BagDropoffHubQueueService {
 
               // NOTE: queue by Bull
               // add awb history with background process
+              console.log('### SCAN DROP OFF HUB AWB HISTORY =========', itemAwb.awbNumber);
               DoPodDetailPostMetaQueueService.createJobByDropoffBag(
                 itemAwb.awbItemId,
                 data.branchId,
@@ -127,6 +128,7 @@ export class BagDropoffHubQueueService {
               // });
 
               // run queue upsert raw summary awb
+              console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY =========', itemAwb.awbNumber);
               UpsertHubSummaryAwbQueueService.perform(
                 data.branchId,
                 itemAwb.awbNumber,
@@ -135,7 +137,7 @@ export class BagDropoffHubQueueService {
                 itemAwb.awbItemId,
                 data.userId,
               );
-
+              console.log('### SCAN DROP OFF HUB END =========', itemAwb.awbNumber);
             }
           }
         } // end of loop
