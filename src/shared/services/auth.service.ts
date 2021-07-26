@@ -334,6 +334,12 @@ export class AuthService {
       expireInSeconds,
     );
 
+    await RedisService.setex(
+      `session:v2:${refreshToken}`,
+      JSON.stringify(user),
+      expireInSeconds,
+    );
+
     const result = new AuthLoginResultMetadata();
     // Mapping response data
     result.userId = user.userId;

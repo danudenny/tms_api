@@ -13,6 +13,7 @@ import {
     validateOtpPayloadVM,
 } from '../../models/auth.vm';
 import { AuthService } from 'src/shared/services/auth.service';
+import { RefreshAccessTokenPayload } from '../../models/refresh-access-token.model';
 //#endregion
 
 @ApiUseTags('AuthenticationV2')
@@ -24,7 +25,7 @@ export class AuthV2Controller {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: LoginChannelOtpAddressesResponse })
   @Transactional()
-  public async authLoginMol(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
+  public async authLoginV2(@Body() payload: AuthLoginByEmailOrUsernamePayloadVM) {
     return await this.authv2Service.loginV2(
       payload.clientId,
       payload.username,
@@ -50,5 +51,13 @@ export class AuthV2Controller {
     return await this.authv2Service.validateOtp(
       payload.code, payload.token
     );
+  }
+
+  @Post('refreshToken')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AuthLoginResponseVM })
+  @Transactional()
+  public async refreshAccessTokenV2(@Body() payload: RefreshAccessTokenPayload) {
+    return await this.authv2Service.refreshAccessTokenV2(payload.refreshToken);
   }
 }

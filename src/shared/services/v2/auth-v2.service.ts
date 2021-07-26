@@ -1,9 +1,11 @@
-import axios from 'axios';
 const crypto = require('crypto');
+import axios from 'axios';
 import moment = require('moment');
-import { AuthService } from '../auth.service';
+import { TokenExpiredError } from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AuthService } from '../auth.service';
 import { LoginChannelOtpAddresses, LoginChannelOtpAddressesResponse} from '../../../servers/auth/models/auth.vm';
 import { AuthLoginResultMetadata } from '../../models/auth-login-result-metadata';
 import { UserRepository } from '../../orm-repository/user.repository';
@@ -11,6 +13,8 @@ import { ConfigService } from '../config.service';
 import { RequestErrorService } from '../request-error.service';
 import { RedisService } from '../redis.service';
 import { Employee } from '../../orm-entity/employee';
+import { JwtRefreshTokenPayload } from '../../interfaces/jwt-payload.interface';
+
 
 
 
@@ -18,6 +22,7 @@ import { Employee } from '../../orm-entity/employee';
 export class AuthV2Service {
   constructor(
     private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
     @InjectRepository(UserRepository)
     private readonly userRepository: UserRepository,
   ) {}
@@ -227,6 +232,54 @@ export class AuthV2Service {
         }, HttpStatus.REQUEST_TIMEOUT);
       }
     }
+  }
+
+  async refreshAccessTokenV2(
+    refreshToken: string,
+  ): Promise<AuthLoginResultMetadata> {
+    // TODO: find user on table or redis??
+    const loginSession = await RedisService.get(`session:v2:${refreshToken}`);
+
+    if (!loginSession) {
+      RequestErrorService.throwObj(
+        {
+          message: 'global.error.LOGIN_SESSION_NOT_FOUND',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    let refreshTokenPayload: JwtRefreshTokenPayload;
+    try {
+      refreshTokenPayload = this.jwtService.verify(refreshToken);
+    } catch (e) {
+      if (e instanceof TokenExpiredError) {
+        RequestErrorService.throwObj(
+          {
+            message: 'global.error.REFRESH_TOKEN_EXPIRED',
+          },
+          HttpStatus.FORBIDDEN,
+        );
+      } else {
+        RequestErrorService.throwObj(
+          {
+            message: 'global.error.REFRESH_TOKEN_NOT_VALID',
+          },
+          HttpStatus.FORBIDDEN,
+        );
+      }
+    }
+
+    // TODO: Populate AuthLoginResultMetadata and assign accessToken to the newly generated access token
+    const newLoginMetadata = this.authService.populateLoginResultMetadataByUser(
+      refreshTokenPayload.clientId,
+      JSON.parse(loginSession),
+    );
+    if (newLoginMetadata) {
+      // remove data on redis with refresh token
+      await RedisService.del(`session:v2:${refreshToken}`);
+    }
+    return newLoginMetadata;
   }
 
   private get headerReqOtp() {
