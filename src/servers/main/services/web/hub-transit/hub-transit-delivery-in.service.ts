@@ -120,6 +120,12 @@ export class HubTransitDeliveryInService {
             // NOTE:
             // refactor send to background job for loop awb
             // update status DO_HUB (12600: drop off hub)
+            console.log('### HUB TRANSIT DELIVERY SERVICE DROP OFF HUB QUEUE');
+            console.log('### HUB TRANSIT DELIVERY SERVICE dropoffHub =========', dropoffHub);
+            console.log('### HUB TRANSIT DELIVERY SERVICE bagData =========', bagData);
+            console.log('### HUB TRANSIT DELIVERY SERVICE bagItem =========', bagItem);
+            console.log('### HUB TRANSIT DELIVERY SERVICE isSmd =========', payload.hubId);
+            console.log('### HUB TRANSIT DELIVERY SERVICE userId =========', authMeta.userId);
             BagDropoffHubQueueService.perform(
               dropoffHub.dropoffHubId,
               bagData.bagItemId,
@@ -129,6 +135,7 @@ export class HubTransitDeliveryInService {
               bagData.bag.bagId,
               bagItem.isSortir,
             );
+            console.log('### HUB TRANSIT DELIVERY SERVICE END DROP OFF HUB QUEUE');
 
             // update first scan in do pod =====================================
             // TODO: need refactoring code
