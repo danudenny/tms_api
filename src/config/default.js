@@ -137,6 +137,6 @@ module.exports = {
     key: 'key-create-otp',
     algorithm: 'aes256',
     isBypass: false,
-    bypassCode: 815413,
+    bypassCode: "815413",
   },
 };
