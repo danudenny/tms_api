@@ -174,7 +174,7 @@ export class AuthV2Service {
 
     if (!redisData) {
       RequestErrorService.throwObj({
-        message: 'Data Not Found',
+        message: 'Sesi login habis, Mohon login ulang',
       });
     }
 
@@ -185,7 +185,7 @@ export class AuthV2Service {
 
     if (!user) {
       RequestErrorService.throwObj({
-        message: 'Sesi login habis, Mohon login ulang',
+        message: 'global.error.USER_NOT_FOUND',
       });
     }
 
@@ -239,28 +239,7 @@ export class AuthV2Service {
       );
     }
 
-    let refreshTokenPayload: JwtRefreshTokenPayload;
-    try {
-      refreshTokenPayload = this.jwtService.verify(refreshToken);
-    } catch (e) {
-      if (e instanceof TokenExpiredError) {
-        RequestErrorService.throwObj(
-          {
-            message: 'global.error.REFRESH_TOKEN_EXPIRED',
-          },
-          HttpStatus.FORBIDDEN,
-        );
-      } else {
-        RequestErrorService.throwObj(
-          {
-            message: 'global.error.REFRESH_TOKEN_NOT_VALID',
-          },
-          HttpStatus.FORBIDDEN,
-        );
-      }
-    }
-
-    // TODO: Populate AuthLoginResultMetadata and assign accessToken to the newly generated access token
+    const refreshTokenPayload = this.verifyRefreshToken(refreshToken);
     const newLoginMetadata = this.populateLoginResultMetadataByUser(
       refreshTokenPayload.clientId,
       JSON.parse(userLoginSession),
@@ -359,6 +338,31 @@ export class AuthV2Service {
     });
 
     return refreshToken;
+  }
+
+  private verifyRefreshToken(refreshToken: string){
+    let refreshTokenPayload: JwtRefreshTokenPayload;
+    try {
+      refreshTokenPayload = this.jwtService.verify(refreshToken);
+    } catch (e) {
+      if (e instanceof TokenExpiredError) {
+        RequestErrorService.throwObj(
+          {
+            message: 'global.error.REFRESH_TOKEN_EXPIRED',
+          },
+          HttpStatus.FORBIDDEN,
+        );
+      } else {
+        RequestErrorService.throwObj(
+          {
+            message: 'global.error.REFRESH_TOKEN_NOT_VALID',
+          },
+          HttpStatus.FORBIDDEN,
+        );
+      }
+    }
+
+    return refreshTokenPayload;
   }
 }
 
