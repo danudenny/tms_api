@@ -132,9 +132,11 @@ module.exports = {
     apiKey:
       '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',
   },
-  getOtp: {
+  svcOtp: {
     baseUrl: 'https://api.s.sicepat.io/auth-service',
     key: 'key-create-otp',
     algorithm: 'aes256',
+    isBypass: false,
+    bypassCode: 815413,
   },
 };

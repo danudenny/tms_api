@@ -122,7 +122,7 @@ export class AuthV2Service {
     //   });
     // }
 
-    const url = `${ConfigService.get('getOtp.baseUrl')}/otp`
+    const url = `${ConfigService.get('svcOtp.baseUrl')}/otp`
     const jsonData = {
       channel: channel,
       id: user.username
@@ -186,7 +186,7 @@ export class AuthV2Service {
       });
     }
 
-    const url = `${ConfigService.get('getOtp.baseUrl')}/auth/otp`
+    const url = `${ConfigService.get('svcOtp.baseUrl')}/auth/otp`
     const jsonData = {
       code: code,
       id: user.username,
@@ -196,7 +196,7 @@ export class AuthV2Service {
     };
 
     //bypass condition
-    if (code === 'DIST13' &&process.env.NODE_ENV === 'development'){
+    if (ConfigService.get('svcOtp.bypassCode') === code && ConfigService.get('svcOtp.isBypass')){
       const loginResultMetadata = this.populateLoginResultMetadataByUser(
         redisData.clientId,
         user,
