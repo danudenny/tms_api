@@ -17,6 +17,8 @@ import { UserPasswordResponseVm } from '../../models/user-password.response.vm';
 
 import moment = require('moment');
 import { Role } from '../../../../shared/orm-entity/role';
+import { EmployeePhonePayloadVm } from '../../models/employee-phone.payload.vm';
+import { EmployeePhoneResponseVm } from '../../models/employee-phone.response.vm';
 
 @Injectable()
 export class MasterDataService {
@@ -429,6 +431,66 @@ export class MasterDataService {
     return await RawQueryService.queryWithParams(query, {
       backDate,
     });
+  }
+
+  static async updatePhone(payload: EmployeePhonePayloadVm){
+    const result = new EmployeePhoneResponseVm();
+    result.code = HttpStatus.OK;
+    result.message = 'Success';
+    
+    var numeric = /[0-9]/;
+
+    const nik = payload.nik;
+    const phone = payload.phone;
+
+    if (nik.length > 0 && phone.length > 0){
+      if (phone.match(numeric) && phone.charAt(0) == '0'){
+        //#region Process For Master Data
+        const pool: any = DatabaseConfig.getMasterDataDbPool();
+        const client = await pool.connect();
+        try {  
+          const timeNow = moment().toDate();
+  
+          let employee_id = 0;
+          const res = await client.query(`SELECT employee_id FROM employee WHERE nik = $1 AND is_deleted = FALSE`, [nik]);
+  
+          if (res && res.rows && res.rows.length && res.rows.length > 0) {
+            for (const r of res.rows) {
+              employee_id = r.employee_id;
+            }
+          } else{
+            result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+            result.message = 'NIK is not found';
+            return result;
+          }
+  
+          const query = `
+            UPDATE employee
+            SET phone1 = $1, updated_time = $2, user_id_updated = $3
+            WHERE employee_id = $4 and is_deleted = FALSE
+          `;
+        
+          await client.query(query, [phone, timeNow, 1, employee_id], async function(err) {
+            PinoLoggerService.debug(this.logTitle, this.sql);
+            if (err) {
+              result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+              result.message = 'Error update employee phone';
+              PinoLoggerService.error(this.logTitle, err.message);
+            }
+          });  
+        } finally {
+          client.release();
+        }
+        //#endregion
+      } else {
+        result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+        result.message = 'Phone must contains numeric and started with 0';
+      }
+    } else{
+      result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+      result.message = 'NIK and Phone cannot be empty';
+    }
+    return result;
   }
 
 }
