@@ -65,6 +65,11 @@ export class AuthLoginResponseVM {
   displayName: string;
 }
 
+export class AuthLoginV2ResponseVM extends AuthLoginResponseVM{
+  @ApiModelProperty()
+  statusCode: string;
+}
+
 export class AuthLoginWithRolesResponseVM {
   @ApiModelProperty()
   userId: string;

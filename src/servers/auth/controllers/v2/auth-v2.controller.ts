@@ -7,12 +7,11 @@ import {
 } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import {
     AuthLoginByEmailOrUsernamePayloadVM,
-    AuthLoginResponseVM,
+    AuthLoginV2ResponseVM,
     GetOtpPayloadVM,
     LoginChannelOtpAddressesResponse,
     validateOtpPayloadVM,
 } from '../../models/auth.vm';
-import { AuthService } from 'src/shared/services/auth.service';
 import { RefreshAccessTokenPayload } from '../../models/refresh-access-token.model';
 //#endregion
 
@@ -45,7 +44,7 @@ export class AuthV2Controller {
 
   @Post('token')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: AuthLoginResponseVM })
+  @ApiOkResponse({ type: AuthLoginV2ResponseVM })
   @Transactional()
   public async validateOtp(@Body() payload: validateOtpPayloadVM) {
     return await this.authv2Service.validateOtp(
@@ -55,7 +54,7 @@ export class AuthV2Controller {
 
   @Post('refreshToken')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: AuthLoginResponseVM })
+  @ApiOkResponse({ type: AuthLoginV2ResponseVM })
   @Transactional()
   public async refreshAccessTokenV2(@Body() payload: RefreshAccessTokenPayload) {
     return await this.authv2Service.refreshAccessTokenV2(payload.refreshToken);

@@ -8,7 +8,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from '../auth.service';
 import { LoginChannelOtpAddresses, LoginChannelOtpAddressesResponse} from '../../../servers/auth/models/auth.vm';
-import { AuthLoginResultMetadata } from '../../models/auth-login-result-metadata';
+import { AuthLoginResultMetadataV2 } from '../../models/auth-login-result-metadata';
 import { UserRepository } from '../../orm-repository/user.repository';
 import { ConfigService } from '../config.service';
 import { RequestErrorService } from '../request-error.service';
@@ -16,9 +16,6 @@ import { RedisService } from '../redis.service';
 import { Employee } from '../../orm-entity/employee';
 import { JwtRefreshTokenPayload } from '../../interfaces/jwt-payload.interface';
 import { User } from '../../orm-entity/user';
-
-
-
 
 @Injectable()
 export class AuthV2Service {
@@ -165,7 +162,7 @@ export class AuthV2Service {
   async validateOtp(
     code: string,
     token: string,
-  ):Promise<AuthLoginResultMetadata>{
+  ): Promise<AuthLoginResultMetadataV2>{
 
     const redisData = await RedisService.get(
       `pod:otp:${token}`,
@@ -226,7 +223,7 @@ export class AuthV2Service {
 
   async refreshAccessTokenV2(
     refreshToken: string,
-  ): Promise<AuthLoginResultMetadata> {
+  ): Promise<AuthLoginResultMetadataV2> {
     // TODO: find user on table or redis??
     const userLoginSession = await RedisService.get(`session:v2:${refreshToken}`);
 
@@ -272,7 +269,7 @@ export class AuthV2Service {
       expireInSeconds,
     );
 
-    const result = new AuthLoginResultMetadata();
+    const result = new AuthLoginResultMetadataV2();
     // Mapping response data
     result.userId = user.userId;
     result.accessToken = accessToken;
@@ -281,6 +278,7 @@ export class AuthV2Service {
     result.username = user.username;
     result.employeeId = user.employeeId;
     result.displayName = employeeName;
+    result.statusCode = HttpStatus.OK;
     // result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
 
     return result;
