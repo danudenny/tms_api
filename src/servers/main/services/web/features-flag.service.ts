@@ -9,7 +9,6 @@ export class FeaturesFlagService {
   async featuresList(): Promise<FeaturesFlagResponse> {
     const result = new FeaturesFlagResponse();
     const newLoginVersion = JSON.parse(await RedisService.get(`pod:login:version`));
-    console.log(newLoginVersion);
     if (!newLoginVersion) {
       result.mobileLoginNewVersion = false;
       result.webLoginNewVersion = false;
@@ -18,8 +17,6 @@ export class FeaturesFlagService {
 
     result.webLoginNewVersion = newLoginVersion.web;
     result.mobileLoginNewVersion = newLoginVersion.mobile;
-
-    console.log(result)
     return result;
   }
 }
