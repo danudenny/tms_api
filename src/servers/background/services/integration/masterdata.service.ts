@@ -437,14 +437,13 @@ export class MasterDataService {
     const result = new EmployeePhoneResponseVm();
     result.code = HttpStatus.OK;
     result.message = 'Success';
-    
-    var numeric = /[0-9]/;
 
     const nik = payload.nik;
     const phone = payload.phone;
 
     if (nik.length > 0 && phone.length > 0){
-      if (phone.match(numeric) && phone.charAt(0) == '0'){
+      let isnum = /^\d+$/.test(phone);
+      if (isnum && phone.charAt(0) == '0'){
         //#region Process For Master Data
         const pool: any = DatabaseConfig.getMasterDataDbPool();
         const client = await pool.connect();
