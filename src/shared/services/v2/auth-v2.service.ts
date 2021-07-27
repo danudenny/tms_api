@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 import axios from 'axios';
 import moment = require('moment');
+import ms = require('ms');
 import { TokenExpiredError } from 'jsonwebtoken';
 import { JwtService } from '@nestjs/jwt';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -14,6 +15,7 @@ import { RequestErrorService } from '../request-error.service';
 import { RedisService } from '../redis.service';
 import { Employee } from '../../orm-entity/employee';
 import { JwtRefreshTokenPayload } from '../../interfaces/jwt-payload.interface';
+import { User } from '../../orm-entity/user';
 
 
 
@@ -71,19 +73,7 @@ export class AuthV2Service {
       300,
     );
 
-    const employee = await Employee.findOne({
-      where: {
-        employeeId: user.employeeId,
-        isDeleted: false,
-      }
-    })
-
-    if(employee && employee.statusEmployee == 20){
-      RequestErrorService.throwObj({
-        message: 'global.error.USER_NOT_FOUND',
-      });
-    }
-
+    const employee = await this.getEmployeeById(user.employeeId);
     const channelList = ['wa', 'sms'];
     const addresses = [];
     for (const channel of channelList) {
@@ -211,7 +201,7 @@ export class AuthV2Service {
     try {
       const response = await axios.post(url, jsonData, options);
       if (HttpStatus.OK == response.status){
-        const loginResultMetadata = this.authService.populateLoginResultMetadataByUser(
+        const loginResultMetadata = this.populateLoginResultMetadataByUser(
           redisData.clientId,
           user,
         );
@@ -238,9 +228,9 @@ export class AuthV2Service {
     refreshToken: string,
   ): Promise<AuthLoginResultMetadata> {
     // TODO: find user on table or redis??
-    const loginSession = await RedisService.get(`session:v2:${refreshToken}`);
+    const userLoginSession = await RedisService.get(`session:v2:${refreshToken}`);
 
-    if (!loginSession) {
+    if (!userLoginSession) {
       RequestErrorService.throwObj(
         {
           message: 'global.error.LOGIN_SESSION_NOT_FOUND',
@@ -271,9 +261,9 @@ export class AuthV2Service {
     }
 
     // TODO: Populate AuthLoginResultMetadata and assign accessToken to the newly generated access token
-    const newLoginMetadata = this.authService.populateLoginResultMetadataByUser(
+    const newLoginMetadata = this.populateLoginResultMetadataByUser(
       refreshTokenPayload.clientId,
-      JSON.parse(loginSession),
+      JSON.parse(userLoginSession),
     );
     if (newLoginMetadata) {
       // remove data on redis with refresh token
@@ -282,10 +272,93 @@ export class AuthV2Service {
     return newLoginMetadata;
   }
 
+  // method populate data user login
+  async populateLoginResultMetadataByUser(clientId: string, user: User) {
+    // get data employee if employee id not null
+    const employee = await this.getEmployeeById(user.employeeId);
+    const employeeName = employee.employeeName;
+
+    const accessToken = this.generateAccessToken(clientId, user, employeeName);
+    const refreshToken = this.generateRefreshToken(clientId, user);
+
+    // NOTE: set data user on redis
+    // Set key to hold the string value and set key to timeout after a given number of seconds
+    const expireInSeconds = Math.floor(
+      ms(ConfigService.get('jwt.refreshTokenExpiration')) / 1000,
+    );
+
+    await RedisService.setex(
+      `session:v2:${refreshToken}`,
+      JSON.stringify(user),
+      expireInSeconds,
+    );
+
+    const result = new AuthLoginResultMetadata();
+    // Mapping response data
+    result.userId = user.userId;
+    result.accessToken = accessToken;
+    result.refreshToken = refreshToken;
+    result.email = user.email;
+    result.username = user.username;
+    result.employeeId = user.employeeId;
+    result.displayName = employeeName;
+    // result.roles = map(user.roles, role => pick(role, ['role_id', 'role_name']));
+
+    return result;
+  }
+
   private get headerReqOtp() {
     return {
       'Content-Type': 'application/json',
     };
+  }
+
+  private async getEmployeeById(employeeId:number):Promise<Employee>{
+    const employee = await Employee.findOne({
+      where: {
+        employeeId: employeeId,
+        isDeleted: false,
+      }
+    })
+    if (employee && employee.statusEmployee == 20) {
+      RequestErrorService.throwObj({
+        message: 'global.error.USER_NOT_FOUND',
+      });
+    }
+    return employee;
+  }
+
+  private generateAccessToken(
+    clientId: string,
+    user: User,
+    employeeName: string,
+    ){
+    const jwtAccessTokenPayload = this.authService.populateJwtAccessTokenPayloadFromUser(
+      clientId,
+      user,
+      employeeName,
+    );
+
+    const accessToken = this.jwtService.sign(jwtAccessTokenPayload, {
+      expiresIn: ConfigService.get('jwt.accessTokenExpiration'),
+    });
+
+    return accessToken;
+  }
+
+  private generateRefreshToken(
+    clientId: string,
+    user: User,
+  ){
+    const jwtRefreshTokenPayload = this.authService.populateJwtRefreshTokenPayloadFromUser(
+      clientId,
+      user,
+    );
+    const refreshToken = this.jwtService.sign(jwtRefreshTokenPayload, {
+      expiresIn: ConfigService.get('jwt.refreshTokenExpiration'),
+    });
+
+    return refreshToken;
   }
 }
 
