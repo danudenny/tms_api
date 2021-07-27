@@ -12,7 +12,7 @@ export class InternalPartnerService {
 
   static async updateSummary(payload: any): Promise<any> {
     let result = {};
-    let yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD 23:59:59');
+    let today = moment().format('YYYY-MM-DD 00:00:00');
     let isExist = false;
     const partnerName = [];
     
@@ -39,8 +39,11 @@ export class InternalPartnerService {
 
       for (const item of results) {
         const partnerId = item.partner_id;
-        const createdTime = moment(item.created_time).format('YYYY-MM-DD 00:00:00');
+        const createdTime = moment(item.created_time).format('YYYY-MM-DD HH:mm:ss');
         partnerName.push(item.partner_name);
+        const timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
+        let newTotalOrder = 0;
+        let endDate = timestamp;
 
         let whereStartDate = null;
         let totalOrder = 0;
@@ -55,25 +58,32 @@ export class InternalPartnerService {
         if (!partnerSummaries) {
           whereStartDate = createdTime;
         } else{
-          whereStartDate = moment(partnerSummaries['endDate']).format('YYYY-MM-DD 00:00:00');
+          endDate = moment(partnerSummaries['endDate']).format('YYYY-MM-DD HH:mm:ss');
+          whereStartDate = moment(endDate).add(1, 'seconds').format('YYYY-MM-DD HH:mm:ss');
           totalOrder = partnerSummaries['totalOrder'];
           isExist = true;
         }
         
-        const query = `SELECT COUNT(pr.pickup_request_id)
+        const query = `SELECT COUNT(pr.pickup_request_id), MAX(pr.created_time) AS "last_pickup_request"
           FROM pickup_request pr
           INNER JOIN partner p ON pr.partner_id = p.partner_id AND p.is_deleted = FALSE
-          WHERE pr.partner_id = ${partnerId} AND pr.created_time >= '${whereStartDate}' AND pr.created_time <= '${yesterday}' AND pr.is_deleted = FALSE`;
+          WHERE pr.partner_id = ${partnerId} AND pr.created_time >= '${whereStartDate}' AND pr.created_time < '${today}' AND pr.is_deleted = FALSE`;
 
         const rawData = await RawQueryService.query(query);
-        const newTotalOrder = rawData.length ? rawData[0]['count'] : 0;
-        totalOrder = totalOrder + newTotalOrder;
-        const timestamp = moment().toDate();
+        
+        if(rawData.length > 0){
+          newTotalOrder = rawData[0]['count'];
+          if(rawData[0]['last_pickup_request'] != null){
+            endDate = rawData[0]['last_pickup_request'];
+          }
+        }
+
+        totalOrder = Number(totalOrder) +  Number(newTotalOrder);
         
         let dataPartnerSummary = {
           partnerId: partnerId,
-          endDate: yesterday,
-          totalOrder: totalOrder,
+          endDate: endDate,
+          totalOrder: Number(totalOrder) +  Number(newTotalOrder),
           userIdUpdated: 1,
           updatedTime: timestamp,
         };
