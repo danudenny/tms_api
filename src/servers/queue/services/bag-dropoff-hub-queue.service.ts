@@ -129,6 +129,8 @@ export class BagDropoffHubQueueService {
 
               // run queue upsert raw summary awb
               console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY =========', itemAwb.awbNumber);
+              console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY data =========', data);
+              console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY itemAwb =========', itemAwb);
               UpsertHubSummaryAwbQueueService.perform(
                 data.branchId,
                 itemAwb.awbNumber,
