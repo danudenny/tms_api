@@ -962,7 +962,7 @@ export class PartnerService {
     } else {
       const partnerId = partner['partnerId'];
       const partnerSummary = await PartnerSummary.findOne({
-        select: ['endDate', 'totalOrder'],
+        select: ['endDate', 'totalOrder', 'updatedTime'],
         where: {
           partnerId,
           isDeleted: false,
@@ -977,8 +977,9 @@ export class PartnerService {
         return result;
       } else {
         result = {
-          endDate: moment(partnerSummary['endDate']).format('YYYY-MM-DD'),
+          lastOrderDate: moment(partnerSummary['endDate']).format('YYYY-MM-DD'),
           totalOrder: partnerSummary['totalOrder'],
+          cutOff: moment(partnerSummary['updatedTime']).subtract(1, 'days').format('YYYY-MM-DD'),
         };
         return result;
       }
