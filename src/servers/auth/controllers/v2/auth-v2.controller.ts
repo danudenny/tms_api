@@ -59,18 +59,4 @@ export class AuthV2Controller {
   public async refreshAccessTokenV2(@Body() payload: RefreshAccessTokenPayload) {
     return await this.authv2Service.refreshAccessTokenV2(payload.refreshToken);
   }
-
-  @Post('set/version')
-  @HttpCode(HttpStatus.OK)
-  @Transactional()
-  public async setLoginVersion(@Body() payload: any) {
-    return await this.authv2Service.setLoginVersion(payload);
-  }
-
-  @Get('version')
-  @HttpCode(HttpStatus.OK)
-  @Transactional()
-  public async checkIsNewVersionLogin() {
-    return await this.authv2Service.checkIsNewVersionLogin();
-  }
 }
