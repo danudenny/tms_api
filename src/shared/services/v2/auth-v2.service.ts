@@ -248,6 +248,31 @@ export class AuthV2Service {
     return newLoginMetadata;
   }
 
+  async checkIsNewVersionLogin(){
+    const isNewVersionLogin = await RedisService.get(`pod:login:version`);
+    if (!isNewVersionLogin){
+      RequestErrorService.throwObj(
+        {
+          message: 'Flag version nout found',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return JSON.parse(isNewVersionLogin);
+  }
+
+  async setLoginVersion(payload:any){
+    const object = { isNewVersion: payload.isNewVersion }
+    await RedisService.del(`pod:login:version`);
+    await RedisService.set(
+      `pod:login:version`,
+      JSON.stringify(object)
+    );
+
+    return {succsess : true};
+  }
+
   // method populate data user login
   async populateLoginResultMetadataByUser(clientId: string, user: User) {
     // get data employee if employee id not null

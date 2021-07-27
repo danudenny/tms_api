@@ -1,5 +1,5 @@
 //#region import
-import { Body, Controller, HttpCode, HttpStatus, Post} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post} from '@nestjs/common';
 import { AuthV2Service } from '../../../../shared/services/v2/auth-v2.service';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import {
@@ -58,5 +58,19 @@ export class AuthV2Controller {
   @Transactional()
   public async refreshAccessTokenV2(@Body() payload: RefreshAccessTokenPayload) {
     return await this.authv2Service.refreshAccessTokenV2(payload.refreshToken);
+  }
+
+  @Post('set/version')
+  @HttpCode(HttpStatus.OK)
+  @Transactional()
+  public async setLoginVersion(@Body() payload: any) {
+    return await this.authv2Service.setLoginVersion(payload);
+  }
+
+  @Get('version')
+  @HttpCode(HttpStatus.OK)
+  @Transactional()
+  public async checkIsNewVersionLogin() {
+    return await this.authv2Service.checkIsNewVersionLogin();
   }
 }
