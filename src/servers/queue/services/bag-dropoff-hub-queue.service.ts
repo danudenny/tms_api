@@ -8,6 +8,7 @@ import { AwbItem } from '../../../shared/orm-entity/awb-item';
 import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { getManager } from 'typeorm';
+import { UpsertHubSummaryAwbQueueService } from './upsert-hub-summary-awb-queue.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -110,6 +111,7 @@ export class BagDropoffHubQueueService {
 
               // NOTE: queue by Bull
               // add awb history with background process
+              console.log('### SCAN DROP OFF HUB AWB HISTORY =========', itemAwb.awbNumber);
               DoPodDetailPostMetaQueueService.createJobByDropoffBag(
                 itemAwb.awbItemId,
                 data.branchId,
@@ -117,14 +119,25 @@ export class BagDropoffHubQueueService {
                 data.isSmd,
               );
 
-              await getManager().transaction(async transactional => {
-                const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_do_hub,do_hub, bag_item_id_do, bag_id_do, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
-                            values ('${escape(itemAwb.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${itemAwb.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
-                            ON CONFLICT (awb_number,branch_id) DO UPDATE SET do_hub = true, scan_date_do_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}';`;
+              // await getManager().transaction(async transactional => {
+              //   const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_do_hub,do_hub, bag_item_id_do, bag_id_do, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
+              //               values ('${escape(itemAwb.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${itemAwb.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
+              //               ON CONFLICT (awb_number,branch_id) DO UPDATE SET do_hub = true, scan_date_do_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}';`;
+              //
+              //   await transactional.query(upsertRawHubSummaryAwbSql);
+              // });
 
-                await transactional.query(upsertRawHubSummaryAwbSql);
-              });// end transaction
-
+              // run queue upsert raw summary awb
+              console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY =========', itemAwb.awbNumber);
+              UpsertHubSummaryAwbQueueService.perform(
+                data.branchId,
+                itemAwb.awbNumber,
+                data.bagItemId,
+                data.bagId,
+                itemAwb.awbItemId,
+                data.userId,
+              );
+              console.log('### SCAN DROP OFF HUB END =========', itemAwb.awbNumber);
             }
           }
         } // end of loop
