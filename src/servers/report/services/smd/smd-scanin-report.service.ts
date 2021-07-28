@@ -191,10 +191,10 @@ export class SmdScaninReportService {
     q.selectRaw(
       [`CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'No. Gabung Paket'],
       ['bb.branch_name', 'Gerai'],
-      [`TO_CHAR(b.created_time, 'dd-mm-YYYY HH24:MI:SS')`, 'Tgl Gab. Paket'],
+      [`TO_CHAR(b.created_time, \'DD Mon YYYY HH24:MI\')`, 'Tgl Gab. Paket'],
       [`CASE
           WHEN bhin.history_date IS NULL THEN 'Belum Scan IN'
-          ELSE TO_CHAR(bhin.history_date, 'dd-mm-YYYY HH24:MI:SS')
+          ELSE TO_CHAR(bhin.history_date, \'DD Mon YYYY HH24:MI\')
         END`, 'Tgl Scan Gab. Paket'],
       [`CASE
           WHEN b.representative_id_to IS NULL then 'Belum Upload'
