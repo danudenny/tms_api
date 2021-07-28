@@ -8,6 +8,7 @@ import { SmdScaninReportService } from '../../services/smd/smd-scanin-report.ser
 import { ScanOutSmdScanInReportVm } from '../../../smd/models/scanin-smd.response.vm';
 
 @ApiUseTags('SMD Scan In Report')
+@Controller()
 export class SmdScaninReportController {
   constructor() {}
 
