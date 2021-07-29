@@ -209,11 +209,6 @@ export class SmdScaninReportService {
           bia.is_deleted = FALSE
         GROUP BY bia.bag_item_id)`, 'Jumlah Resi'],
       [`CONCAT(bi.weight::numeric(10,0), ' kg')`, 'Total Berat (Kg)'],
-      [`CONCAT(
-          CASE
-            WHEN bi.weight > 10 THEN bi.weight
-            ELSE 10
-          END,' kg')`, 'weight_accumulative'],
       [`CONCAT(u.first_name, ' ', u.last_name)`, 'User'],
     );
 
