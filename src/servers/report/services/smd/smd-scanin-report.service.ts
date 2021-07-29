@@ -118,6 +118,7 @@ export class SmdScaninReportService {
       },
     ];
 
+
     const repo = new OrionRepositoryService(DoSmdDetail, 'dsd');
     const q = repo.findAllRaw();
 
