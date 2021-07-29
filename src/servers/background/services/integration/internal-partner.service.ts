@@ -77,8 +77,6 @@ export class InternalPartnerService {
             endDate = rawData[0]['last_pickup_request'];
           }
         }
-
-        totalOrder = Number(totalOrder) +  Number(newTotalOrder);
         
         let dataPartnerSummary = {
           partnerId: partnerId,
