@@ -2,6 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { RedisService } from "../../../../shared/services/redis.service";
 import { FeaturesFlagResponse } from "../../models/features-flag.vm";
 
+
+@Injectable()
 export class FeaturesFlagService {
 
   async featuresList(): Promise<FeaturesFlagResponse> {

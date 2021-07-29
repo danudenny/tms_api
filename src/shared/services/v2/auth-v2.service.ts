@@ -53,6 +53,60 @@ export class AuthV2Service {
       });
     }
 
+    const url = `${ConfigService.get('svcOtp.baseUrl')}/auth/otp/lookup`
+    const jsonData = {
+      id: user.username,
+    }
+    const options = {
+      headers: this.headerReqOtp,
+    };
+
+    const addresses = [];
+    try {
+      const response = await axios.post(url, jsonData, options);
+      if(response.data && response.data.result){
+        if (response.data.result.addresses.length < 1){
+          RequestErrorService.throwObj({
+            message: 'Nomor Handpone belum terdaftar, silahkan hubungi admin.',
+          });
+        }
+
+        for (const address of response.data.result.addresses) {
+          const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
+          loginChannelOtpAddresses.channel = address.channel;
+          loginChannelOtpAddresses.adress = address.address;
+          loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
+
+          addresses.push({ ...loginChannelOtpAddresses });
+        }
+      }
+    } catch (err) {
+      if (err.response && undefined != err.response.data) {
+        console.log('error:::::', err.response.data)
+        const message = err.response.data.message ?
+          err.response.data.message : err.response.data;
+        RequestErrorService.throwObj({
+          message: message,
+        }, err.response.data.code);
+      } else {
+        RequestErrorService.throwObj({
+          message: 'Request Time Out!!',
+        }, HttpStatus.REQUEST_TIMEOUT);
+      }
+    }
+
+    // const employee = await this.getEmployeeById(user.employeeId);
+    // const channelList = ['wa', 'sms'];
+    // const addresses = [];
+    // // for (const channel of channelList) {
+    // //   const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
+    // //   loginChannelOtpAddresses.channel = channel;
+    // //   loginChannelOtpAddresses.adress = employee.phone1;
+    // //   loginChannelOtpAddresses.enable = 'wa' == channel ? false : true;
+
+    // //   addresses.push({ ...loginChannelOtpAddresses });
+    // // }
+
     const text = `${user.userId}${moment().toDate()}`;
     const generateToken = crypto
       .createHash('md5')
@@ -69,18 +123,6 @@ export class AuthV2Service {
       JSON.stringify(value),
       300,
     );
-
-    const employee = await this.getEmployeeById(user.employeeId);
-    const channelList = ['wa', 'sms'];
-    const addresses = [];
-    for (const channel of channelList) {
-      const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
-      loginChannelOtpAddresses.channel = channel;
-      loginChannelOtpAddresses.adress = employee.phone1;
-      loginChannelOtpAddresses.enable = 'wa' == channel ? false : true;
-
-      addresses.push({ ...loginChannelOtpAddresses });
-    }
 
     const result = new LoginChannelOtpAddressesResponse();
     result.token = generateToken;
