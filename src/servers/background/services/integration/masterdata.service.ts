@@ -444,6 +444,11 @@ export class MasterDataService {
     if (nik.length > 0 && phone.length > 0){
       let isnum = /^\d+$/.test(phone);
       if (isnum && phone.charAt(0) == '0'){
+        if(phone.length < 10 || phone.length > 15){
+          result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+          result.message = 'Phone number length minimum 10 digits and maximal 15 digits';
+          return result;
+        }
         //#region Process For Master Data
         const pool: any = DatabaseConfig.getMasterDataDbPool();
         const client = await pool.connect();
@@ -460,6 +465,18 @@ export class MasterDataService {
           } else{
             result.code = HttpStatus.UNPROCESSABLE_ENTITY;
             result.message = 'NIK is not found';
+            return result;
+          }
+          
+          const res2 = await client.query(`SELECT nik FROM employee WHERE phone1 = $1 AND nik <> $2 AND is_deleted = FALSE`, [phone, nik]);
+  
+          if (res2 && res2.rows && res2.rows.length && res2.rows.length > 0) {
+            let r_nik = '';
+            for (const r of res2.rows) {
+              r_nik = r.nik;
+            }
+            result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+            result.message = 'Phone number is already used by NIK ' + r_nik;
             return result;
           }
   
