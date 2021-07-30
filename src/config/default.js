@@ -133,7 +133,7 @@ module.exports = {
       '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',
   },
   svcOtp: {
-    baseUrl: 'https://api.s.sicepat.io/auth-service',
+    baseUrl: 'http://api-internal.s.sicepat.io/authsvc',
     key: 'key-create-otp',
     algorithm: 'aes256',
     isBypass: false,
