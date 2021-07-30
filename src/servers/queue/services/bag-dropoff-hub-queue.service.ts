@@ -10,6 +10,7 @@ import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { getManager } from 'typeorm';
 import { UpsertHubSummaryAwbQueueService } from './upsert-hub-summary-awb-queue.service';
 
+
 // DOC: https://optimalbits.github.io/bull/
 
 export class BagDropoffHubQueueService {
@@ -120,15 +121,18 @@ export class BagDropoffHubQueueService {
               );
 
               // await getManager().transaction(async transactional => {
-              //   const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_do_hub,do_hub, bag_item_id_do, bag_id_do, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
-              //               values ('${escape(itemAwb.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${itemAwb.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
-              //               ON CONFLICT (awb_number,branch_id) DO UPDATE SET do_hub = true, scan_date_do_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}';`;
-              //
+              const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_do_hub,do_hub, bag_item_id_do, bag_id_do, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
+                          values ('${escape(itemAwb.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${itemAwb.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
+                          ON CONFLICT (awb_number,branch_id) DO UPDATE SET do_hub = true, scan_date_do_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}';`;
+            
               //   await transactional.query(upsertRawHubSummaryAwbSql);
               // });
 
               // run queue upsert raw summary awb
               console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY =========', itemAwb.awbNumber);
+              console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY data =========', data);
+              console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY itemAwb =========', itemAwb);
+              console.log(upsertRawHubSummaryAwbSql);
               UpsertHubSummaryAwbQueueService.perform(
                 data.branchId,
                 itemAwb.awbNumber,
