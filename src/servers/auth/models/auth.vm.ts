@@ -162,7 +162,7 @@ export class PermissionAccessResponseVM {
 
 export class LoginChannelOtpAddresses {
   @ApiModelProperty()
-  adress: string;
+  address: string;
 
   @ApiModelProperty()
   channel: string;
@@ -201,12 +201,11 @@ export class GetOtpPayloadVM {
   token: string;
 }
 
-export class validateOtpPayloadVM {
+export class ValidateOtpPayloadVM {
   @ApiModelProperty()
   code: string;
 
   @ApiModelProperty()
   token: string;
 }
-
 // #endregion

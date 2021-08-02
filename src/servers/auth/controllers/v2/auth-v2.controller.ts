@@ -10,7 +10,7 @@ import {
     AuthLoginV2ResponseVM,
     GetOtpPayloadVM,
     LoginChannelOtpAddressesResponse,
-    validateOtpPayloadVM,
+    ValidateOtpPayloadVM,
 } from '../../models/auth.vm';
 import { RefreshAccessTokenPayload } from '../../models/refresh-access-token.model';
 //#endregion
@@ -46,7 +46,7 @@ export class AuthV2Controller {
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: AuthLoginV2ResponseVM })
   @Transactional()
-  public async validateOtp(@Body() payload: validateOtpPayloadVM) {
+  public async validateOtp(@Body() payload: ValidateOtpPayloadVM) {
     return await this.authv2Service.validateOtp(
       payload.code, payload.token
     );

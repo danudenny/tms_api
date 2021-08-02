@@ -38,24 +38,23 @@ export class AuthV2Service {
       username,
     );
 
-    // check user present
-    if (!user) {
-      RequestErrorService.throwObj({
-        message: 'global.error.USER_NOT_FOUND',
-      });
-    }
+    // // check user present
+    // if (!user) {
+    //   RequestErrorService.throwObj({
+    //     message: 'global.error.USER_NOT_FOUND',
+    //   });
+    // }
 
-    // PinoLoggerService.log(user);
-    // validate user password hash md5
-    if (!user.validatePassword(password)) {
-      RequestErrorService.throwObj({
-        message: 'global.error.LOGIN_WRONG_PASSWORD',
-      });
-    }
+    // // validate user password hash md5
+    // if (!user.validatePassword(password)) {
+    //   RequestErrorService.throwObj({
+    //     message: 'global.error.LOGIN_WRONG_PASSWORD',
+    //   });
+    // }
 
     const url = `${ConfigService.get('svcOtp.baseUrl')}/auth/otp/lookup`
     const jsonData = {
-      id: user.username,
+      id: username,
     }
     const options = {
       headers: this.headerReqOtp,
@@ -64,48 +63,44 @@ export class AuthV2Service {
     const addresses = [];
     try {
       const response = await axios.post(url, jsonData, options);
-      if(response.data && response.data.result){
+      if (response.data && response.data.result){
         if (response.data.result.addresses.length < 1){
           RequestErrorService.throwObj({
             message: 'Nomor Handpone belum terdaftar, silahkan hubungi admin.',
-          });
+          }, HttpStatus.FORBIDDEN);
         }
 
         for (const address of response.data.result.addresses) {
           const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
           loginChannelOtpAddresses.channel = address.channel;
-          loginChannelOtpAddresses.adress = address.address;
+          loginChannelOtpAddresses.address = address.address;
           loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
 
           addresses.push({ ...loginChannelOtpAddresses });
         }
-      }
-    } catch (err) {
-      if (err.response && undefined != err.response.data) {
-        console.log('error:::::', err.response.data)
-        const message = err.response.data.message ?
-          err.response.data.message : err.response.data;
-        RequestErrorService.throwObj({
-          message: message,
-        }, err.response.data.code);
       } else {
         RequestErrorService.throwObj({
-          message: 'Request Time Out!!',
-        }, HttpStatus.REQUEST_TIMEOUT);
+          message: 'User tidak terdaftar, silahkan hubungi admin.',
+        }, HttpStatus.FORBIDDEN);
       }
+    } catch (err) {
+      let message = 'Request Time Out!';
+      let statusCode = HttpStatus.REQUEST_TIMEOUT
+      if (err.response && undefined != err.response.data) {
+        console.log('error:::::', err.response.data)
+        message = err.response.data.message ?
+          err.response.data.message : err.response.data;
+        statusCode = err.response.data.code;
+      }
+      if (err.response.message) {
+        message = err.response.message;
+        statusCode = err.response.statusCode;
+      }
+
+      RequestErrorService.throwObj({
+        message: message,
+      }, statusCode);
     }
-
-    // const employee = await this.getEmployeeById(user.employeeId);
-    // const channelList = ['wa', 'sms'];
-    // const addresses = [];
-    // // for (const channel of channelList) {
-    // //   const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
-    // //   loginChannelOtpAddresses.channel = channel;
-    // //   loginChannelOtpAddresses.adress = employee.phone1;
-    // //   loginChannelOtpAddresses.enable = 'wa' == channel ? false : true;
-
-    // //   addresses.push({ ...loginChannelOtpAddresses });
-    // // }
 
     const text = `${user.userId}${moment().toDate()}`;
     const generateToken = crypto
@@ -300,7 +295,6 @@ export class AuthV2Service {
     return newLoginMetadata;
   }
 
-  // method populate data user login
   async populateLoginResultMetadataByUser(clientId: string, user: User) {
     // get data employee if employee id not null
     const employee = await this.getEmployeeById(user.employeeId);
