@@ -16,6 +16,7 @@ import { RedisService } from '../redis.service';
 import { Employee } from '../../orm-entity/employee';
 import { JwtRefreshTokenPayload } from '../../interfaces/jwt-payload.interface';
 import { User } from '../../orm-entity/user';
+import { MESSAGE_ERROR_OTP } from '../../constants/auth-otp-error.constant';
 
 @Injectable()
 export class AuthV2Service {
@@ -422,8 +423,16 @@ export class AuthV2Service {
   }
 
   private async isDeactivatedUser(message: string): Promise<boolean>{
-    const deactivatedUserRegex = new RegExp(`${ConfigService.get('svcOtp.deactivatedUser')}`, 'i');
+    const deactivatedUserRegex = new RegExp(`${MESSAGE_ERROR_OTP.DEACTIVATED}`, 'i');
     if(deactivatedUserRegex.test(message)){
+      return true;
+    }
+    return false;
+  }
+
+  private async isInvalidCode(message: string): Promise<boolean> {
+    const invalidCodeRegex = new RegExp(`${MESSAGE_ERROR_OTP.INVALID_CODE}`, 'i');
+    if (invalidCodeRegex.test(message)) {
       return true;
     }
     return false;
@@ -436,7 +445,14 @@ export class AuthV2Service {
 
     const countDown = await this.getOtpCountDown(message);
     if (countDown.status) {
-      return `Mohon tunggu ${countDown.seconds} detik lagi`;
+      if(countDown.seconds.length > 1){
+        return `Sudah melakukan request sebanyak ${Number(countDown.seconds[0])}x. Mohon tunggu ${Number(countDown.seconds[1])} detik lagi`;
+      }
+      return `Mohon tunggu ${Number(countDown.seconds[0])} detik lagi`;
+    }
+
+    if(await this.isInvalidCode){
+      return 'Kode Otp Salah'
     }
 
     return message;
