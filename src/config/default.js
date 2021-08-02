@@ -138,6 +138,5 @@ module.exports = {
     algorithm: 'aes256',
     isBypass: false,
     bypassCode: "815413",
-    deactivatedUser: 'deactivated',
   },
 };
