@@ -38,23 +38,23 @@ export class AuthV2Service {
       username,
     );
 
-    // // check user present
-    // if (!user) {
-    //   RequestErrorService.throwObj({
-    //     message: 'global.error.USER_NOT_FOUND',
-    //   });
-    // }
+    // check user present
+    if (!user) {
+      RequestErrorService.throwObj({
+        message: 'global.error.USER_NOT_FOUND',
+      });
+    }
 
-    // // validate user password hash md5
-    // if (!user.validatePassword(password)) {
-    //   RequestErrorService.throwObj({
-    //     message: 'global.error.LOGIN_WRONG_PASSWORD',
-    //   });
-    // }
+    // validate user password hash md5
+    if (!user.validatePassword(password)) {
+      RequestErrorService.throwObj({
+        message: 'global.error.LOGIN_WRONG_PASSWORD',
+      });
+    }
 
     const url = `${ConfigService.get('svcOtp.baseUrl')}/auth/otp/lookup`
     const jsonData = {
-      id: username,
+      id: user.username,
     }
     const options = {
       headers: this.headerReqOtp,
