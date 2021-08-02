@@ -92,7 +92,7 @@ export class AuthV2Service {
           err.response.data.message : err.response.data;
         statusCode = err.response.data.code;
       }
-      if (err.response.message) {
+      if (undefined != err.response.message) {
         message = err.response.message;
         statusCode = err.response.statusCode;
       }
@@ -183,10 +183,11 @@ export class AuthV2Service {
     } catch (err) {
       if (err.response && undefined != err.response.data) {
         console.log('error:::::', err.response.data)
-        const message = err.response.data.message ?
+        const messageResponse = err.response.data.message ?
           err.response.data.message : err.response.data;
+
         RequestErrorService.throwObj({
-          message: message,
+          message: await this.messageErrorAuthOtp(messageResponse),
         }, err.response.data.code);
       } else {
         RequestErrorService.throwObj({
@@ -255,10 +256,11 @@ export class AuthV2Service {
     } catch (err) {
       if(err.response && undefined != err.response.data){
         console.log('error:::::', err.response.data)
-        const message = err.response.data.message ?
+        const messageResponse = err.response.data.message ?
           err.response.data.message : err.response.data;
+
         RequestErrorService.throwObj({
-          message: message,
+          message: await this.messageErrorAuthOtp(messageResponse),
         }, err.response.data.code);
       } else {
         RequestErrorService.throwObj({
@@ -407,6 +409,37 @@ export class AuthV2Service {
     }
 
     return refreshTokenPayload;
+  }
+
+  private async getOtpCountDown(message : string){
+    const numberPattern = /\d+/g;
+    console.log('numberPattern:::', message.match(numberPattern))
+    const countDown = message.match(numberPattern)
+    if (countDown != null){
+      return { seconds: countDown, status : true};
+    }
+    return { seconds: countDown, status: false };
+  }
+
+  private async isDeactivatedUser(message: string): Promise<boolean>{
+    const deactivatedUserRegex = new RegExp(`${ConfigService.get('svcOtp.deactivatedUser')}`, 'i');
+    if(deactivatedUserRegex.test(message)){
+      return true;
+    }
+    return false;
+  }
+
+  private async messageErrorAuthOtp(message: string): Promise<string>{
+    if (await this.isDeactivatedUser(message)){
+      return 'User ini tidak aktif, mohon hubungi admin.';
+    }
+
+    const countDown = await this.getOtpCountDown(message);
+    if (countDown.status) {
+      return `Mohon tunggu ${countDown.seconds} detik lagi`;
+    }
+
+    return message;
   }
 }
 
