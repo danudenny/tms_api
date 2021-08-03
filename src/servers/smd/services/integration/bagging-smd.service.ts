@@ -220,6 +220,34 @@ export class BaggingSmdService {
     result.baggingCode = baggingCode;
     result.weight = dataPackage.weight;
 
+    // NOTE: representativeCode digunakan untul validasi kode tujuan gabung paket
+    let representative = null;
+    result.validRepresentativeCode = dataPackage.representative_code;
+    if (payload.representativeCode) {
+      payload.representativeCode = payload.representativeCode.toUpperCase();
+      rawQuery = `
+        SELECT
+          r.representative_id AS representative_id
+        FROM representative AS r
+        WHERE
+          r.representative_code = '${payload.representativeCode}' AND
+          r.representative_id = '${dataPackage.representative_id_to}'
+        LIMIT 1;
+      `;
+      representative = await RawQueryService.query(rawQuery);
+      if (representative.length == 0) {
+        result.message = 'Kode tujuan ' + payload.representativeCode +
+          ' tidak valid untuk gabung paket ' + payload.bagNumber;
+        return result;
+      }
+    } else {
+      representative = [
+        {
+          representative_id: dataPackage.representative_id_to,
+        },
+      ];
+    }
+
     // NOTE: baggingId untuk mencocokkan bagging yg sedang di scan
     // dengan bagging yg di-scan sebelumnya
     if (payload.baggingId) {
@@ -298,34 +326,6 @@ export class BaggingSmdService {
           representativeIdTo: dataPackage.representative_id_to,
         }, {transaction: false});
       }
-    }
-
-    // NOTE: representativeCode digunakan untul validasi kode tujuan gabung paket
-    let representative = null;
-    result.validRepresentativeCode = dataPackage.representative_code;
-    if (payload.representativeCode) {
-      payload.representativeCode = payload.representativeCode.toUpperCase();
-      rawQuery = `
-        SELECT
-          r.representative_id AS representative_id
-        FROM representative AS r
-        WHERE
-          r.representative_code = '${payload.representativeCode}' AND
-          r.representative_id = '${dataPackage.representative_id_to}'
-        LIMIT 1;
-      `;
-      representative = await RawQueryService.query(rawQuery);
-      if (representative.length == 0) {
-        result.message = 'Kode tujuan ' + payload.representativeCode +
-          ' tidak valid untuk gabung paket ' + payload.bagNumber;
-        return result;
-      }
-    } else {
-      representative = [
-        {
-          representative_id: dataPackage.representative_id_to,
-        },
-      ];
     }
 
     if (!payload.baggingId) {

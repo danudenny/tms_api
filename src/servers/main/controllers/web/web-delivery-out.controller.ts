@@ -11,6 +11,7 @@ import {
   Get,
   Query,
   Response,
+  Res,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -63,12 +64,14 @@ import {
   BagDetailResponseVm,
   PhotoResponseVm,
   BagDeliveryDetailResponseVm,
+  BagOrderResponseTrackingVm,
 } from '../../models/bag-order-detail-response.vm';
 import {
   BagAwbVm,
   BagDetailVm,
   PhotoDetailVm,
   BagDeliveryDetailVm,
+  BagAwbExportVm,
 } from '../../models/bag-order-response.vm';
 import { LastMileDeliveryOutService } from '../../services/web/last-mile/last-mile-delivery-out.service';
 import { LastMileDeliveryService } from '../../services/web/last-mile/last-mile-delivery.service';
@@ -398,6 +401,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.bagOrderDetail(payload);
   }
 
+  @Post('bagOrderDetail/tracking')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: BagOrderResponseTrackingVm })
+  public async bagOrderDetailExport(@Body() payload: BagAwbVm) {
+    return this.webDeliveryOutService.bagOrderDetailTrack(payload);
+  }
+
   @Post('doPodDetail')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -437,7 +449,10 @@ export class WebDeliveryOutController {
     @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
   ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams);
+    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(
+      serverResponse,
+      queryParams,
+    );
   }
 
   @Get('hubTransit/excel/export')
@@ -445,21 +460,33 @@ export class WebDeliveryOutController {
     @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
   ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams, false, true);
+    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(
+      serverResponse,
+      queryParams,
+      false,
+      true,
+    );
   }
   @Get('hubSortir/excel/export')
   public async exportExcelBagSortir(
     @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
   ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(serverResponse, queryParams, true);
+    return WebDeliveryOutReportService.generateScanOutDeliveryCSV(
+      serverResponse,
+      queryParams,
+      true,
+    );
   }
   @Get('transit/excel/export')
   public async exportExcelDeliveryTransit(
     @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
   ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryTransitCSV(serverResponse, queryParams);
+    return WebDeliveryOutReportService.generateScanOutDeliveryTransitCSV(
+      serverResponse,
+      queryParams,
+    );
   }
 
   @Get('deliver/excel/export')
@@ -467,6 +494,22 @@ export class WebDeliveryOutController {
     @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
   ) {
-    return WebDeliveryOutReportService.generateScanOutDeliveryDeliverCSV(serverResponse, queryParams);
+    return WebDeliveryOutReportService.generateScanOutDeliveryDeliverCSV(
+      serverResponse,
+      queryParams,
+    );
+  }
+
+  @Post('bagOrderDetail/list/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async exportListAwbReturn(
+    @Body() payload: BagAwbExportVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await this.webDeliveryOutService.exportbagOrderDetailList(
+      payload,
+      outgoingHTTP,
+    );
   }
 }

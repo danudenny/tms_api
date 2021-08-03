@@ -369,4 +369,13 @@ export class TrackingBagRepresentativeDetailResponseVm {
 export class TrackingBagRepresentativeAwbDetailResponseVm {
   @ApiModelProperty()
   awbNumber: string;
+
+  @ApiModelProperty()
+  totalWeightRealRounded: string;
+
+  @ApiModelProperty()
+  packageTypeCode: string;
+
+  @ApiModelProperty()
+  totalWeight: string;
 }

@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import {
     ApiImplicitHeader, ApiOkResponse, ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
@@ -43,5 +43,14 @@ export class PartnerFastpayController {
     // NOTE: handle for message disable this service
     // await ResponseMaintenanceService.dropService();
     return PartnerFastpayService.dropCashless(payload);
+  }
+
+  @Post('list')
+  @HttpCode(HttpStatus.OK)
+  @ApiImplicitHeader({ name: 'x-api-key' })
+  @UseGuards(AuthXAPIKeyGuard)
+  // @ApiOkResponse({ type: DropCashLessResponseVM })
+  public async getDataBranch() {
+    return PartnerFastpayService.getBranchList();
   }
 }

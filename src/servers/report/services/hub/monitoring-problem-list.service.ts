@@ -5,9 +5,9 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { POD_TYPE } from '../../../../shared/constants/pod-type.constant';
 import { MonitoringHubProblemVm, MonitoringHubTotalProblemVm } from '../../models/monitoring-hub-problem.vm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub-monitoring.service';
 import { DropoffHub } from '../../../../shared/orm-entity/dropoff_hub';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { HubMonitoringService } from '../../../hub/services/integration/hub-monitoring.service';
 
 @Injectable()
 export class MonitoringProblemListService {
