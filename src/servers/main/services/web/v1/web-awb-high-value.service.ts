@@ -295,7 +295,7 @@ export class V1WebAwbHighValueService {
       ['t8.branch_name', 'branchFromName'],
       ['t10.package_type_code', 'packageTypeCode'],
       ['t10.package_type_name', 'packageTypeName'],
-      [`CASE WHEN t10.package_type_code = 'PREM' THEN 'Gold' ELSE 'Berharga' END`, 'packageType'],
+      [`CASE WHEN t10.package_type_code = 'KEPO' THEN 'Gold' ELSE 'Berharga' END`, 'packageType'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -478,7 +478,7 @@ export class V1WebAwbHighValueService {
         ['t8.branch_name', 'branchFromName'],
         ['t10.package_type_code', 'packageTypeCode'],
         ['t10.package_type_name', 'packageTypeName'],
-        [`CASE WHEN t10.package_type_code = 'PREM' THEN 'Gold' ELSE 'Berharga' END`, 'packageType'],
+        [`CASE WHEN t10.package_type_code = 'KEPO' THEN 'Gold' ELSE 'Berharga' END`, 'packageType'],
       );
       q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
