@@ -186,10 +186,10 @@ export class AuthV2Service {
         console.log('error:::::', err.response.data)
         const messageResponse = err.response.data.message ?
           err.response.data.message : err.response.data;
-
+        const codeResponse = err.response.data.code;
         RequestErrorService.throwObj({
-          message: await this.messageErrorAuthOtp(messageResponse),
-        }, err.response.data.code);
+          message: await this.messageErrorAuthOtp(messageResponse, codeResponse),
+        }, err.response.status);
       } else {
         RequestErrorService.throwObj({
           message: 'Request Time Out!!',
@@ -259,10 +259,10 @@ export class AuthV2Service {
         console.log('error:::::', err.response.data)
         const messageResponse = err.response.data.message ?
           err.response.data.message : err.response.data;
-
+        const codeResponse = err.response.data.code;
         RequestErrorService.throwObj({
-          message: await this.messageErrorAuthOtp(messageResponse),
-        }, err.response.data.code);
+          message: await this.messageErrorAuthOtp(messageResponse, codeResponse),
+        }, err.response.status);
       } else {
         RequestErrorService.throwObj({
           message: 'Request Time Out!!',
@@ -412,50 +412,54 @@ export class AuthV2Service {
     return refreshTokenPayload;
   }
 
-  private async getOtpCountDown(message : string){
+  private async getOtpCountDown(message : string, code: string){
     const numberPattern = /\d+/g;
     console.log('numberPattern:::', message.match(numberPattern))
     const countDown = message.match(numberPattern)
-    if (countDown != null){
+    if (null != countDown && countDown.length > 0 ){
       return { seconds: countDown, status : true};
     }
     return { seconds: countDown, status: false };
   }
 
-  private async isDeactivatedUser(message: string): Promise<boolean>{
+  private async isDeactivatedUser(message: string, code: string): Promise<boolean>{
     const deactivatedUserRegex = new RegExp(`${MESSAGE_ERROR_OTP.DEACTIVATED}`, 'i');
-    if(deactivatedUserRegex.test(message)){
+    if (deactivatedUserRegex.test(message) && code == MESSAGE_ERROR_OTP.DEACTIVATED_CODE){
       return true;
     }
     return false;
   }
 
-  private async isInvalidCode(message: string): Promise<boolean> {
-    const invalidCodeRegex = new RegExp(`${MESSAGE_ERROR_OTP.INVALID_CODE}`, 'i');
-    if (invalidCodeRegex.test(message)) {
+  private async isInvalidCode(message: string, code: string): Promise<boolean> {
+    const invalidCodeRegex = new RegExp(`${MESSAGE_ERROR_OTP.INVALID_CODE_MESSAGE}`, 'i');
+    if (invalidCodeRegex.test(message) && code == MESSAGE_ERROR_OTP.INVALID_CODE) {
       return true;
     }
     return false;
   }
 
-  private async messageErrorAuthOtp(message: string): Promise<string>{
-    if (await this.isDeactivatedUser(message)){
+  private async messageErrorAuthOtp(message: string, code: string): Promise<string>{
+    if (await this.isDeactivatedUser(message, code)){
       return 'User ini tidak aktif, mohon hubungi admin.';
     }
 
-    const countDown = await this.getOtpCountDown(message);
+    const countDown = await this.getOtpCountDown(message, code);
     if (countDown.status) {
-      if(countDown.seconds.length > 1){
+      if (countDown.seconds.length > 1 && code == MESSAGE_ERROR_OTP.COUNTDOWN_ATTEMPT_CODE){
         return `Sudah melakukan request sebanyak ${Number(countDown.seconds[0])}x. Mohon tunggu ${Number(countDown.seconds[1])} detik lagi`;
       }
       return `Mohon tunggu ${Number(countDown.seconds[0])} detik lagi`;
     }
 
-    if(await this.isInvalidCode){
+    if(await this.isInvalidCode(message, code)){
       return 'Kode Otp Salah'
     }
 
     return message;
   }
+
+  //403 : count down
+  //403 : count down + attempt hit
+  //403 : deactivated
 }
 
