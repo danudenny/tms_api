@@ -680,7 +680,7 @@ export class ScaninSmdService {
     q.leftJoinRaw(
       'bag_item_history',
       'bhin',
-      'bhin.bag_item_id = bi.bag_item_id AND bhin.bag_item_status_id IN (3550 , 3500) AND bhin.is_deleted = FALSE',
+      'bhin.bag_item_id = bi.bag_item_id AND bhin.is_deleted = FALSE',
     );
     q.leftJoin(e => e.representative, 'r', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
