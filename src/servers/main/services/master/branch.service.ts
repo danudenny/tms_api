@@ -92,7 +92,7 @@ export class BranchService {
     let branchList = [];
     if (
       merger &&
-      RoleGroupService.roleCodMerge(
+      RoleGroupService.isRoleCodMerge(
         permissionPayload.roleName,
         permissionPayload.isHeadOffice,
       )

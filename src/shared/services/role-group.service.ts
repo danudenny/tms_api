@@ -10,7 +10,7 @@ export class RoleGroupService {
    * @returns {boolean}
    * @memberof RoleGroupService
    */
-  public static roleCodMerge(roleName: string, isHeadOffice: boolean): boolean {
+  public static isRoleCodMerge(roleName: string, isHeadOffice: boolean): boolean {
     const arrMerge = [
       'Admin COD - Merger',
       'Ops - Koordinator Sigesit Antar (COD)',
@@ -23,7 +23,6 @@ export class RoleGroupService {
     }
   }
 
-
   /**
    * Handle role COD Admin
    * must not isHeadOffice
@@ -33,10 +32,10 @@ export class RoleGroupService {
    * @returns {boolean}
    * @memberof RoleGroupService
    */
-  public static roleCodAdmin(roleName: string, isHeadOffice: boolean): boolean {
-    const arrMerge = ['Ops - Admin COD', 'Ops - Admin Operational ( COD )'];
+  public static isRoleCodAdmin(roleName: string, isHeadOffice: boolean): boolean {
+    const arrAdmin = ['Ops - Admin COD', 'Ops - Admin Operational ( COD )'];
 
-    if (arrMerge.includes(roleName) && !isHeadOffice) {
+    if (arrAdmin.includes(roleName) && !isHeadOffice) {
       return true;
     } else {
       return false;
