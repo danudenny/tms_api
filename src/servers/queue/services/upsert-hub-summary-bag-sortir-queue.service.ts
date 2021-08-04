@@ -2,9 +2,7 @@ import { getManager } from 'typeorm';
 import { PodScanInHubBag } from '../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
-import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import moment= require('moment');
-import { RawQueryService } from '../../../shared/services/raw-query.service';
 
 
 // DOC: https://optimalbits.github.io/bull/
@@ -83,7 +81,6 @@ export class UpsertHubSummaryBagSortirQueueService {
       // }); // end transaction
       try {
         const dateNow = moment().format('YYYY-MM-DD HH:mm:ss');
-        const timeStamp = moment(data.timestamp).format('YYYY-MM-DD HH:mm:ss');
         await getManager().transaction(async transactional => {
           const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_in_hub, in_hub, bag_item_id_in, bag_id_in, awb_item_id, user_id_updated, updated_time, branch_id, user_id_created, created_time)
                             values ('${escape(data.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${data.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')

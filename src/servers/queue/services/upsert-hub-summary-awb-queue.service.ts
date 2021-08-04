@@ -1,7 +1,6 @@
 import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import moment = require('moment');
-import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import { getManager } from 'typeorm';
 
 export class UpsertHubSummaryAwbQueueService {
