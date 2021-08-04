@@ -9,6 +9,7 @@ import { QueueBullBoard } from './queue-bull-board';
 import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import moment = require('moment');
 import * as _ from 'lodash';
+import { UpsertHubSummaryBagSortirQueueService } from './upsert-hub-summary-bag-sortir-queue.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -153,11 +154,23 @@ export class CreateBagFirstScanHubQueueService {
           //   await HubSummaryAwb.insert(hubSummaryAwb);
           // }
 
-          const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_in_hub,in_hub, bag_item_id_in, bag_id_in, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
-                            values ('${escape(data.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${data.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
-                            ON CONFLICT (awb_number,branch_id) DO UPDATE SET in_hub = true, scan_date_in_hub = '${dateNow}', bag_item_id_in = ${data.bagItemId}, bag_id_in = ${data.bagId}, user_id_updated=${data.userId}, updated_time='${dateNow}', branch_id=${data.branchId};`;
+          // const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_in_hub,in_hub, bag_item_id_in, bag_id_in, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
+          //                   values ('${escape(data.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${data.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
+          //                   ON CONFLICT (awb_number,branch_id) DO UPDATE SET in_hub = true, scan_date_in_hub = '${dateNow}', bag_item_id_in = ${data.bagItemId}, bag_id_in = ${data.bagId}, user_id_updated=${data.userId}, updated_time='${dateNow}', branch_id=${data.branchId};`;
+          //
+          // await transactional.query(upsertRawHubSummaryAwbSql);
 
-          await transactional.query(upsertRawHubSummaryAwbSql);
+          console.log('### CREATE BAG FIRST SCAN HUB ========= UPSERT HUB SUMMARY BAG SORTIR');
+          UpsertHubSummaryBagSortirQueueService.perform(
+            data.bagId,
+            data.bagItemId,
+            data.bagNumber,
+            data.awbItemId,
+            data.awbNumber,
+            data.userId,
+            data.branchId,
+            moment(data.timestamp).toDate(),
+          );
 
           // update status awb
           DoPodDetailPostMetaQueueService.createJobByAwbFilter(

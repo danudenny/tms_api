@@ -27,10 +27,6 @@ export class UpsertHubSummaryBagSortirQueueService {
           delay: ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
         },
       },
-      limiter: {
-        max: 1000,
-        duration: 5000, // on seconds
-      },
     },
   );
 
