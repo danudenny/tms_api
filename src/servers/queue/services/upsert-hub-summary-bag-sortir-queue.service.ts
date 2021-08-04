@@ -1,5 +1,4 @@
 import { getManager } from 'typeorm';
-import { PodScanInHubBag } from '../../../shared/orm-entity/pod-scan-in-hub-bag';
 import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import moment= require('moment');
@@ -32,9 +31,9 @@ export class UpsertHubSummaryBagSortirQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
       const data = job.data;
-      const podScanInHubBag = await PodScanInHubBag.findOne({
-        where: { bagItemId: data.bagItemId },
-      });
+      // const podScanInHubBag = await PodScanInHubBag.findOne({
+      //   where: { bagItemId: data.bagItemId },
+      // });
       // await getManager().transaction(async transactional => {
       //   const dateNow = moment().toDate();
       //
