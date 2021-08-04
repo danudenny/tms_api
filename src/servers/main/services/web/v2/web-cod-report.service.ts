@@ -5,6 +5,7 @@ import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
 import { CodTransactionDetail } from '../../../../../shared/orm-entity/cod-transaction-detail';
 import { TRANSACTION_STATUS } from '../../../../../shared/constants/transaction-status.constant';
 import { AuthService } from '../../../../../shared/services/auth.service';
+import { RoleGroupService } from '../../../../../shared/services/role-group.service';
 
 export class V2WebCodReportService {
   static CodHeader = [
@@ -639,7 +640,7 @@ export class V2WebCodReportService {
   static async exportAwb(payload: BaseMetaPayloadVm, response) {
     try {
       const authMeta = AuthService.getAuthData();
-      const permissonPayload = AuthService.getPermissionTokenPayload();
+      const permissionPayload = AuthService.getPermissionTokenPayload();
       const fileName = `COD_resi_${new Date().getTime()}.csv`;
 
       response.setHeader(
@@ -757,8 +758,10 @@ export class V2WebCodReportService {
 
       //#region Cod Merger
       if (
-        permissonPayload.roleName === 'Admin COD - Merger' &&
-        !permissonPayload.isHeadOffice
+        RoleGroupService.roleCodMerge(
+          permissionPayload.roleName,
+          permissionPayload.isHeadOffice,
+        )
       ) {
         q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
           j
@@ -768,10 +771,15 @@ export class V2WebCodReportService {
       }
       //#endregion
 
-      if (permissonPayload.roleName === 'Ops - Admin COD') {
+      if (
+        RoleGroupService.roleCodAdmin(
+          permissionPayload.roleName,
+          permissionPayload.isHeadOffice,
+        )
+      ) {
         q.andWhere(
           e => e.codPayment.branchId,
-          w => w.equals(permissonPayload.branchId),
+          w => w.equals(permissionPayload.branchId),
         );
       }
 
