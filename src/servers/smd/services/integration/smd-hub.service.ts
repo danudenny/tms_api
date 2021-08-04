@@ -855,12 +855,12 @@ export class SmdHubService {
     }
 
     if (bagNumberRaw) {
-      const re = /^[0-9]+$/;
+      // const re = /^[0-9]+$/;
       const bagNumberStr = bagNumberRaw.substring(0, 7);
       const seqNumberStr = bagNumberRaw.substring(7, 10);
-      const isValid = re.test(bagNumberStr) && re.test(seqNumberStr);
+      // const isValid = re.test(bagNumberStr) && re.test(seqNumberStr);
 
-      if (isValid) {
+      // if (isValid) {
         const repo = new OrionRepositoryService(BagItemAwb, 'bia').findAllRaw();
 
         payload.applyPaginationToOrionRepositoryQuery(repo);
@@ -882,7 +882,7 @@ export class SmdHubService {
 
         data = await repo.exec();
         totalData = await repo.countWithoutTakeAndSkip();
-      }
+      // }
     }
 
     result.data = data;
