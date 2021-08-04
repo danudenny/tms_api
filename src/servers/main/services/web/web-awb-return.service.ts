@@ -462,7 +462,7 @@ export class WebAwbReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
+    // q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -630,7 +630,7 @@ export class WebAwbReturnService {
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
-      q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
+      // q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
 
       await q.stream(response, this.streamTransformReturList);
 
