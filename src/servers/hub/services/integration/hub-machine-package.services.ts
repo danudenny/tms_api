@@ -229,8 +229,10 @@ export class HubMachineService {
     }
 
     // Process Create GS
-    const redlockKey = `redlock:createMachineGS:${payload.sorting_branch_id}-${payload.chute_number}`;
-    const redlock = await RedisService.redlock(redlockKey, 10);
+    // const redlockKey = `redlock:createMachineGS:${payload.sorting_branch_id}-${payload.chute_number}`;
+    // const redlock = await RedisService.redlock(redlockKey, 10);
+    const redlockKey = `redlock:createMachineGS:${payload.tag_seal_number}`;
+    const redlock = await RedisService.redlock(redlockKey, 15);
 
     if (!redlock) {
       return generateErrorResult(`Nomor resi sedang di PROSESS !`);
