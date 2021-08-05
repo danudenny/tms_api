@@ -319,7 +319,7 @@ export class HubMachineService {
       // throw error;
     } finally {
       // release lock
-      RedisService.del(redlockKey).then();
+      // RedisService.del(redlockKey).then();
     }
   }  
 
