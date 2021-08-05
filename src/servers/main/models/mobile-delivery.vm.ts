@@ -57,6 +57,9 @@ export class MobileDeliveryVm {
   packageTypeName: string;
 
   @ApiModelProperty()
+  packageTypeCode: string;
+
+  @ApiModelProperty()
   productType: string;
 
   @ApiModelProperty()
