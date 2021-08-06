@@ -19,6 +19,8 @@ import moment = require('moment');
 import { Role } from '../../../../shared/orm-entity/role';
 import { EmployeePhonePayloadVm } from '../../models/employee-phone.payload.vm';
 import { EmployeePhoneResponseVm } from '../../models/employee-phone.response.vm';
+import { ConfigService } from '../../../../shared/services/config.service';
+import axios from 'axios';
 
 @Injectable()
 export class MasterDataService {
@@ -437,6 +439,8 @@ export class MasterDataService {
     const result = new EmployeePhoneResponseVm();
     result.code = HttpStatus.OK;
     result.message = 'Success';
+    result.clearCacheMobile = 'Failed';
+    result.clearCacheWeb = 'Failed';
 
     const nik = payload.nik;
     const phone = payload.phone;
@@ -455,12 +459,12 @@ export class MasterDataService {
         try {  
           const timeNow = moment().toDate();
   
-          let employee_id = 0;
+          let employeeId = 0;
           const res = await client.query(`SELECT employee_id FROM employee WHERE nik = $1 AND is_deleted = FALSE`, [nik]);
   
           if (res && res.rows && res.rows.length && res.rows.length > 0) {
             for (const r of res.rows) {
-              employee_id = r.employee_id;
+              employeeId = r.employee_id;
             }
           } else{
             result.code = HttpStatus.UNPROCESSABLE_ENTITY;
@@ -486,14 +490,20 @@ export class MasterDataService {
             WHERE employee_id = $4 and is_deleted = FALSE
           `;
         
-          await client.query(query, [phone, timeNow, 1, employee_id], async function(err) {
+          await client.query(query, [phone, timeNow, 1, employeeId], async function(err) {
             PinoLoggerService.debug(this.logTitle, this.sql);
             if (err) {
               result.code = HttpStatus.UNPROCESSABLE_ENTITY;
               result.message = 'Error update employee phone';
               PinoLoggerService.error(this.logTitle, err.message);
             }
-          });  
+          });
+          
+          if(result.code = HttpStatus.OK){
+            const sendDataClearCache = await MasterDataService.clearCache(employeeId, phone);
+            result.clearCacheMobile = sendDataClearCache['clearCacheMobile'];
+            result.clearCacheWeb = sendDataClearCache['clearCacheWeb'];
+          }
         } finally {
           client.release();
         }
@@ -509,4 +519,57 @@ export class MasterDataService {
     return result;
   }
 
+  public static async clearCache(employeeId, phone) {
+    const urlTMSMobile = `${ConfigService.get('clearCacheTMS.urlTMSMobile')}`;
+    const urlTMSWeb = `${ConfigService.get('clearCacheTMS.urlTMSWeb')}`;
+
+    const headers = {
+      'Authorization': ConfigService.get('clearCacheTMS.auth'),
+      'Content-Type': 'application/json',
+    };
+    
+    const options = {
+      headers: headers,
+    };
+
+    const jsonData = {
+      employee_id: employeeId,
+      phone_number: phone,
+    };
+    
+    const clearCacheMobile = await this.clearCacheTMMobile(urlTMSMobile, jsonData, options);
+    const clearCacheWeb = await this.clearCacheTMSWeb(urlTMSWeb, jsonData, options);
+    
+    return { clearCacheMobile: clearCacheMobile, clearCacheWeb: clearCacheWeb };
+  }
+
+  public static async clearCacheTMMobile(urlTMSMobile, jsonData, options) {
+    let clearCacheMobile = 'Failed';
+    try {
+      const resMobile = await axios.post(urlTMSMobile, jsonData, options);
+      console.log('RESPONSE FROM CLEAR CACHE TMS Mobile: ' + JSON.stringify(resMobile.data));
+      
+      if(resMobile.status == 200 && resMobile.data.code == 200){
+        clearCacheMobile = 'Success';
+      }
+    } catch (error) {
+      console.log('RESPONSE ERROR FROM CLEAR CACHE TMS Mobile2: ' + error.code);
+    }
+    return clearCacheMobile;
+  }
+
+  public static async clearCacheTMSWeb(urlTMSWeb, jsonData, options) {
+    let clearCacheWeb = 'Failed';
+    try {
+      const resWeb = await axios.post(urlTMSWeb, jsonData, options);
+      console.log('RESPONSE FROM CLEAR CACHE TMS Web: ' + JSON.stringify(resWeb.data));
+      
+      if(resWeb.status == 200 && resWeb.data.code == 200){
+        clearCacheWeb = 'Success';
+      }
+    } catch (error) {
+      console.log('RESPONSE ERROR FROM CLEAR CACHE TMS Web2: ' + error.code);
+    }
+    return clearCacheWeb;
+  }
 }

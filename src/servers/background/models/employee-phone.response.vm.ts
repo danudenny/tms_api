@@ -7,4 +7,10 @@ export class EmployeePhoneResponseVm {
   @ApiModelProperty()
   message: string;
 
+  @ApiModelProperty()
+  clearCacheMobile: string;
+
+  @ApiModelProperty()
+  clearCacheWeb: string;
+
 }
