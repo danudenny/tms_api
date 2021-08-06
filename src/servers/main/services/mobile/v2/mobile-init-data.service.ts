@@ -157,7 +157,7 @@ export class V2MobileInitDataService {
       ['is_return', 'isReturn'],
       ['is_deleted', 'isDeleted'],
     );
-    // q.andWhere(e => e.isProblem, w => w.isTrue());
+
     q.andWhere(e => e.isMobile, w => w.isTrue());
     if (fromDate) {
       q.andWhereIsolated(qw => {
@@ -172,28 +172,39 @@ export class V2MobileInitDataService {
       });
     }
 
-    const result = await q.exec();
-
-    // NOTE: add status RTC if role Ops - Sigesit Transit
-    if (Number(permissonPayload.roleId) == 50) {
-      const statusRTC = await repository
-        .findAllRaw()
-        .selectRaw(
-          ['awb_status_id', 'awbStatusId'],
-          ['awb_status_name', 'awbStatusCode'],
-          ['awb_status_title', 'awbStatusName'],
-          ['is_deleted', 'isDeleted'],
-        )
-        .andWhere(e => e.awbStatusId, w => w.equals(AWB_STATUS.RTC))
-        .take(1)
-        .exec();
-
-      if (statusRTC.length) {
-        result.push(statusRTC[0]);
-      }
+    if (Number(permissonPayload.roleId) == 15){
+      q.andWhere(e => e.isReturn, w => w.isTrue());
+      q.andWhere(e => e.awbStatusId, w => w.notEquals(AWB_STATUS.RTC));
+      return await q.exec();
+    }
+    if (Number(permissonPayload.roleId) == 50){
+      q.andWhere(e => e.awbStatusId, w => w.notIn([AWB_STATUS.RTS, AWB_STATUS.UNRTS]));
+      return await q.exec();
     }
 
-    return result;
+    q.andWhere(e => e.isReturn, w => w.isFalse());
+    return await q.exec();
+
+    // // NOTE: add status RTC if role Ops - Sigesit Transit
+    // if (Number(permissonPayload.roleId) == 50) {
+    //   const statusRTC = await repository
+    //     .findAllRaw()
+    //     .selectRaw(
+    //       ['awb_status_id', 'awbStatusId'],
+    //       ['awb_status_name', 'awbStatusCode'],
+    //       ['awb_status_title', 'awbStatusName'],
+    //       ['is_deleted', 'isDeleted'],
+    //     )
+    //     .andWhere(e => e.awbStatusId, w => w.equals(AWB_STATUS.RTC))
+    //     .take(1)
+    //     .exec();
+
+    //   if (statusRTC.length) {
+    //     result.push(statusRTC[0]);
+    //   }
+    // }
+
+    // return result;
   }
 
   private static async getDelivery(fromDate?: string) {
@@ -346,14 +357,14 @@ export class V2MobileInitDataService {
         },
       },
     );
-    if (employeeJourneyCheck) {
-      result.status = 'error';
-      result.isCheckIn = true;
-      result.message =
-        'Check In sedang aktif, Harap CheckOut terlebih dahulu';
-      result.checkInDate = moment(employeeJourneyCheck.checkInDate)
-        .format('YYYY-MM-DD HH:mm:ss');
-    }
+    // if (employeeJourneyCheck) {
+    //   result.status = 'error';
+    //   result.isCheckIn = true;
+    //   result.message =
+    //     'Check In sedang aktif, Harap CheckOut terlebih dahulu';
+    //   result.checkInDate = moment(employeeJourneyCheck.checkInDate)
+    //     .format('YYYY-MM-DD HH:mm:ss');
+    // }
     return result;
   }
 }
