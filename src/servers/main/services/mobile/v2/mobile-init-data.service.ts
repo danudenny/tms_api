@@ -357,14 +357,14 @@ export class V2MobileInitDataService {
         },
       },
     );
-    // if (employeeJourneyCheck) {
-    //   result.status = 'error';
-    //   result.isCheckIn = true;
-    //   result.message =
-    //     'Check In sedang aktif, Harap CheckOut terlebih dahulu';
-    //   result.checkInDate = moment(employeeJourneyCheck.checkInDate)
-    //     .format('YYYY-MM-DD HH:mm:ss');
-    // }
+    if (employeeJourneyCheck) {
+      result.status = 'error';
+      result.isCheckIn = true;
+      result.message =
+        'Check In sedang aktif, Harap CheckOut terlebih dahulu';
+      result.checkInDate = moment(employeeJourneyCheck.checkInDate)
+        .format('YYYY-MM-DD HH:mm:ss');
+    }
     return result;
   }
 }
