@@ -159,30 +159,33 @@ export class V2MobileInitDataService {
     );
 
     q.andWhere(e => e.isMobile, w => w.isTrue());
-    if (fromDate) {
-      q.andWhereIsolated(qw => {
-        qw.where(
-          e => e.updatedTime,
-          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-        );
-        qw.orWhere(
-          e => e.createdTime,
-          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-        );
-      });
-    }
+    // if (fromDate) {
+    //   q.andWhereIsolated(qw => {
+    //     qw.where(
+    //       e => e.updatedTime,
+    //       w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+    //     );
+    //     qw.orWhere(
+    //       e => e.createdTime,
+    //       w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+    //     );
+    //   });
+    // }
 
     if (Number(permissonPayload.roleId) == 15){
       q.andWhere(e => e.isReturn, w => w.isTrue());
-      q.andWhere(e => e.awbStatusId, w => w.notEquals(AWB_STATUS.RTC));
-      return await q.exec();
-    }
-    if (Number(permissonPayload.roleId) == 50){
-      q.andWhere(e => e.awbStatusId, w => w.notIn([AWB_STATUS.RTS, AWB_STATUS.UNRTS]));
+      q.andWhere(e => e.awbStatusId, w => w.in([AWB_STATUS.RTS, AWB_STATUS.UNRTS]));
       return await q.exec();
     }
 
     q.andWhere(e => e.isReturn, w => w.isFalse());
+    q.andWhere(e => e.isProblem, w => w.isTrue());
+
+    if (Number(permissonPayload.roleId) == 50){
+      return await q.exec();
+    }
+
+    q.andWhere(e => e.awbStatusId, w => w.notEquals(AWB_STATUS.RTC));
     return await q.exec();
 
     // // NOTE: add status RTC if role Ops - Sigesit Transit
