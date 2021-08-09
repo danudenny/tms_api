@@ -23,6 +23,7 @@ import { ScanInSmdMorePayloadVm, ScanInSmdPayloadVm, ScaninDetailScanPayloadVm }
 import { getManager, createQueryBuilder, EntityManager } from 'typeorm';
 import { Todos } from '../../../../shared/orm-entity/todos';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
+import { BagService } from '../../../main/services/v1/bag.service';
 
 @Injectable()
 export class ScaninSmdService {
@@ -40,32 +41,26 @@ export class ScaninSmdService {
     let receivedBagCode = '';
     let receivedBagDate = '';
 
-    if (payload.bag_item_number.length == 15 && payload.bag_item_number.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
+    if (payload.bag_item_number.length == 15 && payload.bag_item_number.match(/^[A-Z0-9]{10}[0-9]{5}$/)) {
       const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
       const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
-      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
-      const paramSeq = await paramBagSeq * 1;
+      const paramBagNumberWithSeq = await payload.bag_item_number.substr(0, payload.bag_item_number.length - 5);
+      let paramBagSeq = '';
       let weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let paramBagItemId = null;
-      if (paramBagNumber == null || paramBagNumber == undefined) {
+
+      const bagDetail = await BagService.validBagNumber(paramBagNumberWithSeq);
+
+      if (!bagDetail) {
         result.message = 'Bag Number Not Found';
         return result;
       } else {
-        const bag = await Bag.findOne({
-          select: ['bagId'],
-          where: {
-            bagNumber: paramBagNumber,
-            isDeleted: false,
-          },
-          order: {
-            createdTime: 'DESC',
-          },
-        });
-
+        paramBagSeq = '0'.repeat(3 - bagDetail.bagSeq.toString().length) + bagDetail.bagSeq;
         let paramBagId;
         let exist = false;
-        if (bag) {
-          paramBagId = bag.bagId;
+        paramBagId = bagDetail.bagId;
+        if (bagDetail.bagId) {
+          paramBagId = bagDetail.bagId;
         } else {
           paramBagId = await this.createBag(
             paramBagNumber,
@@ -86,7 +81,7 @@ export class ScaninSmdService {
           LEFT JOIN users u ON u.user_id = bih.user_id AND u.is_deleted = false
           WHERE
             bi.bag_id = ${paramBagId} AND
-            bi.bag_seq = ${paramSeq} AND
+            bi.bag_seq = ${bagDetail.bagSeq} AND
             bi.is_deleted = false
         `;
         const resultData = await RawQueryService.query(rawQuery);
@@ -193,7 +188,7 @@ export class ScaninSmdService {
 
           if (exist == false) {
             paramBagItemId = await this.createBagItem(
-              paramSeq,
+              bagDetail.bagSeq,
               weight,
               paramBagId,
               authMeta.userId,
@@ -202,7 +197,7 @@ export class ScaninSmdService {
             await BagItem.update(
               { bagItemId : paramBagItemId },
               {
-                bagSeq: paramSeq,
+                bagSeq: bagDetail.bagSeq,
                 bagId: paramBagId,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
@@ -277,34 +272,26 @@ export class ScaninSmdService {
         result.message = errMessage;
         return result;
       }
-    } else if (payload.bag_item_number.length == 10 && payload.bag_item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
+    } else if (payload.bag_item_number.length == 10 && payload.bag_item_number.match(/^[A-Z0-9]{10}$/)) {
       const paramBagNumber = (payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 )).toUpperCase();
       // const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
-      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 3 , 3);
-      const paramSeq = await paramBagSeq * 1;
       // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+      let paramBagSeq = '';
       let weight = 0;
       let paramBagItemId = null;
 
-      if (paramBagNumber == null || paramBagNumber == undefined) {
+      const bagDetail = await BagService.validBagNumber(payload.bag_item_number);
+
+      if (!bagDetail) {
         result.message = 'Bag Number Not Found';
         return result;
       } else {
-        const bag = await Bag.findOne({
-          select: ['bagId'],
-          where: {
-            bagNumber: paramBagNumber,
-            isDeleted: false,
-          },
-          order: {
-            createdTime: 'DESC',
-          },
-        });
+        paramBagSeq = '0'.repeat(3 - bagDetail.bagSeq.toString().length) + bagDetail.bagSeq;
 
         let paramBagId;
         let exist = false;
-        if (bag) {
-          paramBagId = bag.bagId;
+        if (bagDetail.bagId) {
+          paramBagId = bagDetail.bagId;
         } else {
           paramBagId = await this.createBag(
             paramBagNumber,
@@ -325,7 +312,7 @@ export class ScaninSmdService {
           LEFT JOIN users u ON u.user_id = bih.user_id AND u.is_deleted = false
           WHERE
             bi.bag_id = ${paramBagId} AND
-            bi.bag_seq = ${paramSeq} AND
+            bi.bag_seq = ${bagDetail.bagSeq} AND
             bi.is_deleted = false
         `;
         const resultData = await RawQueryService.query(rawQuery);
@@ -430,7 +417,7 @@ export class ScaninSmdService {
 
           if (exist == false) {
             paramBagItemId = await this.createBagItem(
-              paramSeq,
+              bagDetail.bagSeq,
               weight,
               paramBagId,
               authMeta.userId,
@@ -439,7 +426,7 @@ export class ScaninSmdService {
             await BagItem.update(
               { bagItemId : paramBagItemId },
               {
-                bagSeq: paramSeq,
+                bagSeq: bagDetail.bagSeq,
                 bagId: paramBagId,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
