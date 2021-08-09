@@ -42,12 +42,13 @@ export class ScaninSmdService {
     let receivedBagDate = '';
 
     if (payload.bag_item_number.length == 15 && payload.bag_item_number.match(/^[A-Z0-9]{10}[0-9]{5}$/)) {
-      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
       const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
       const paramBagNumberWithSeq = await payload.bag_item_number.substr(0, payload.bag_item_number.length - 5);
       let paramBagSeq = '';
       let weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let paramBagItemId = null;
+      let paramBagNumber = '';
+      let formatedBagNumber = '';
 
       const bagDetail = await BagService.validBagNumber(paramBagNumberWithSeq);
 
@@ -56,6 +57,11 @@ export class ScaninSmdService {
         return result;
       } else {
         paramBagSeq = '0'.repeat(3 - bagDetail.bagSeq.toString().length) + bagDetail.bagSeq;
+        paramBagNumber = bagDetail.bag.bagNumber;
+
+        // handle bagDetail.bag.bagNumber with 10 digit
+        formatedBagNumber = bagDetail.bag.bagNumber.length == 7 ? (bagDetail.bag.bagNumber + paramBagSeq) : bagDetail.bag.bagNumber;
+
         let paramBagId;
         let exist = false;
         paramBagId = bagDetail.bagId;
@@ -63,7 +69,7 @@ export class ScaninSmdService {
           paramBagId = bagDetail.bagId;
         } else {
           paramBagId = await this.createBag(
-            paramBagNumber,
+            bagDetail.bag.bagNumber,
             authMeta.userId,
             timeNow,
           );
@@ -148,7 +154,7 @@ export class ScaninSmdService {
                 WHERE
                   received_bag_id = ${paramReceivedBagId}
               `;
-              const updReceivedBag = await RawQueryService.query(rawQuery,null,false);
+              const updReceivedBag = await RawQueryService.query(rawQuery, null, false);
               isNew = false;
             }
           }
@@ -179,7 +185,7 @@ export class ScaninSmdService {
 
           const paramReceivedBagDetailId = await this.createReceivedBagDetail(
             paramReceivedBagId,
-            paramBagNumber,
+            formatedBagNumber,
             paramBagSeq,
             payload.bag_item_number,
             weight,
@@ -257,7 +263,7 @@ export class ScaninSmdService {
         const data = [];
         data.push({
           show_number: showNumber,
-          id: paramBagNumber + paramBagSeq,
+          id: formatedBagNumber,
           received_bag_id: paramReceivedBagId,
           received_bag_code: receivedBagCode,
           received_bag_date: receivedBagDate,
@@ -273,12 +279,13 @@ export class ScaninSmdService {
         return result;
       }
     } else if (payload.bag_item_number.length == 10 && payload.bag_item_number.match(/^[A-Z0-9]{10}$/)) {
-      const paramBagNumber = (payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 )).toUpperCase();
+      let paramBagNumber = '';
       // const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
       // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let paramBagSeq = '';
       let weight = 0;
       let paramBagItemId = null;
+      let formatedBagNumber = null;
 
       const bagDetail = await BagService.validBagNumber(payload.bag_item_number);
 
@@ -287,14 +294,18 @@ export class ScaninSmdService {
         return result;
       } else {
         paramBagSeq = '0'.repeat(3 - bagDetail.bagSeq.toString().length) + bagDetail.bagSeq;
+        paramBagNumber = bagDetail.bag.bagNumber;
 
+        // handle bagDetail.bag.bagNumber with 10 digit
+        formatedBagNumber = bagDetail.bag.bagNumber.length == 7 ? (bagDetail.bag.bagNumber + paramBagSeq) : bagDetail.bag.bagNumber;
         let paramBagId;
         let exist = false;
+
         if (bagDetail.bagId) {
           paramBagId = bagDetail.bagId;
         } else {
           paramBagId = await this.createBag(
-            paramBagNumber,
+            bagDetail.bag.bagNumber,
             authMeta.userId,
             timeNow,
           );
@@ -377,7 +388,7 @@ export class ScaninSmdService {
                 WHERE
                   received_bag_id = ${paramReceivedBagId}
               `;
-              const updReceivedBag = await RawQueryService.query(rawQuery,null,false);
+              const updReceivedBag = await RawQueryService.query(rawQuery, null, false);
               isNew = false;
             }
           }
@@ -408,7 +419,7 @@ export class ScaninSmdService {
 
           const paramReceivedBagDetailId = await this.createReceivedBagDetail(
             paramReceivedBagId,
-            paramBagNumber,
+            formatedBagNumber,
             paramBagSeq,
             payload.bag_item_number,
             weight,
@@ -479,12 +490,12 @@ export class ScaninSmdService {
           authMeta.userId,
           permissonPayload.branchId,
         );
-        const showNumber = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ';
-        const message = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
+        const showNumber = formatedBagNumber + ' ('  + weight.toString() + ' Kg) ';
+        const message = formatedBagNumber + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
         const data = [];
         data.push({
           show_number: showNumber,
-          id: paramBagNumber + paramBagSeq,
+          id: formatedBagNumber,
           received_bag_id: paramReceivedBagId,
           received_bag_code: receivedBagCode,
           received_bag_date: receivedBagDate,
