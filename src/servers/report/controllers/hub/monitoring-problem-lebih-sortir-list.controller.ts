@@ -24,4 +24,18 @@ export class MonitoringProblemLebihSortirListController {
   public async getAwbtotalLebihSortir(@Body() payload: BaseMetaPayloadVm) {
     return MonitoringProblemLebihSortirListService.getAwbtotalLebihSortir(payload);
   }
+
+  @Post('lebih-sortir-old/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: MonitoringHubProblemVm })
+  public async getLebihSortirOld(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemLebihSortirListService.getLebihSortirOld(payload);
+  }
+
+  @Post('lebih-sortir-total-old/list')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: MonitoringHubProblemLebihSortirVm })
+  public async getAwbtotalLebihSortirOld(@Body() payload: BaseMetaPayloadVm) {
+    return MonitoringProblemLebihSortirListService.getAwbtotalLebihSortirOld(payload);
+  }
 }
