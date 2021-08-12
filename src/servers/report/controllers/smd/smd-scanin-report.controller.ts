@@ -8,22 +8,30 @@ import { SmdScaninReportService } from '../../services/smd/smd-scanin-report.ser
 import { ScanOutSmdScanInReportVm } from '../../../smd/models/scanin-smd.response.vm';
 
 @ApiUseTags('SMD Scan In Report')
-@Controller('smd')
+@Controller()
 export class SmdScaninReportController {
   constructor() {}
 
-  @Post('scanIn/excel/store')
+  @Post('smd/scanIn/excel/store')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
   public async storePayloadExcel(@Body() payloadBody: BaseMetaPayloadVm) {
     return SmdScaninReportService.storeExcelPayload(payloadBody);
   }
 
-  @Get('scanIn/excel/export')
-  public async exportExcelBranch(
+  @Get('smd/scanIn/excel/export')
+  public async exportExcelScanInSmd(
     @Query() queryParams: ScanOutSmdScanInReportVm,
     @Response() serverResponse: express.Response,
   ) {
     return SmdScaninReportService.generateScanInCSV(serverResponse, queryParams);
+  }
+
+  @Get('branch/scanIn/excel/export')
+  public async exportExcelScanInBranchSmd(
+    @Query() queryParams: ScanOutSmdScanInReportVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    return SmdScaninReportService.generateScanInBranchCSV(serverResponse, queryParams);
   }
 }

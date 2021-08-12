@@ -80,7 +80,7 @@ export class SmdBagCityReportService {
     q.selectRaw(
       ['t1.bag_representative_code', 'No Gabung Sortir Kota'],
       ['t2.representative_code', 'Kode Gerai'],
-      ['t3.branch_name', 'Gerai'],
+      ['t2.representative_name', 'Gerai'],
       ['TO_CHAR(t1.bag_representative_date, \'dd Mon YYYY HH24:MI:SS\')', 'Tgl Gab. Paket kota'],
       ['COUNT(t4.bag_representative_item_id)', 'Jumlah Resi'],
       ['CONCAT(CAST(t1.total_weight AS DECIMAL(18,0)), \' Kg\')', 'Total Berat'],

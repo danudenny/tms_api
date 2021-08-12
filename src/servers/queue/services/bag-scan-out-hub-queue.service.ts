@@ -10,6 +10,7 @@ import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import { getManager } from 'typeorm';
 import { AwbHistory } from '../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
+import { UpdateHubSummaryAwbOutQueueService } from './update-hub-summary-awb-out-queue.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -101,18 +102,24 @@ export class BagScanOutHubQueueService {
               doPodDetail.userIdCreated = data.userId;
               await transactionalEntityManager.insert(DoPodDetail, doPodDetail);
 
-              await transactionalEntityManager.update(
-                HubSummaryAwb,
-              {
-                awbNumber: itemAwb.awbNumber,
-                branchId: data.branchId,
-              },
-              {
-                scanDateOutHub: dateNow,
-                outHub: true,
-                userIdUpdated: data.userId,
-                updatedTime: data.timestamp,
-              });
+              // await transactionalEntityManager.update(
+              //   HubSummaryAwb,
+              // {
+              //   awbNumber: itemAwb.awbNumber,
+              //   branchId: data.branchId,
+              // },
+              // {
+              //   scanDateOutHub: dateNow,
+              //   outHub: true,
+              //   userIdUpdated: data.userId,
+              //   updatedTime: data.timestamp,
+              // });
+
+              UpdateHubSummaryAwbOutQueueService.perform(
+                data.branchId,
+                itemAwb.awbNumber,
+                data.userId,
+              );
 
               // TODO: if isTransit auto IN
               if (data.doPodType == 3020) {

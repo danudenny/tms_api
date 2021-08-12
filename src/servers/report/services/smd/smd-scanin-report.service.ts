@@ -10,7 +10,8 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { ScanOutVendorReportVm } from '../../../smd/models/scanout-smd-vendor.response.vm';
-import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
+import { CsvHelper } from '../../../../shared/helpers/csv-helpers';
+import { Bag } from '../../../../shared/orm-entity/bag';
 
 @Injectable()
 export class SmdScaninReportService {
@@ -54,6 +55,33 @@ export class SmdScaninReportService {
     await CsvHelper.generateCSV(res, data, fileName);
   }
 
+  static async generateScanInBranchCSV(
+    res: express.Response,
+    queryParams: ScanOutVendorReportVm,
+  ): Promise<any> {
+    const payload = await CsvHelper.retrieveGenericData<any>(
+      'scan-in-smd',
+      queryParams.id,
+    );
+    if (!payload) {
+      RequestErrorService.throwObj(
+        {
+          message: 'body cannot be null or undefined',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const p = new BaseMetaPayloadVm();
+    p.filters = payload.filters ? payload.filters : payload;
+    p.limit = null;
+
+    const data = await this.getDataCsvScanInBranchSmd(p);
+
+    const fileName = 'data_' + moment().format('YYMMDD_HHmmss') + '.csv';
+
+    await CsvHelper.generateCSV(res, data, fileName);
+  }
+
   static async getDataCsvScanInSmd(
     payload: BaseMetaPayloadVm,
   ): Promise<any> {
@@ -89,6 +117,7 @@ export class SmdScaninReportService {
         field: 'is_intercity',
       },
     ];
+
 
     const repo = new OrionRepositoryService(DoSmdDetail, 'dsd');
     const q = repo.findAllRaw();
@@ -141,6 +170,75 @@ export class SmdScaninReportService {
     );
     q.andWhereRaw('ds.is_vendor = false');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const data = await q.exec();
+    return data;
+  }
+
+  static async getDataCsvScanInBranchSmd(
+    payload: BaseMetaPayloadVm,
+  ): Promise<any> {
+
+    payload.fieldResolverMap['bagging_datetime'] =  'b.created_time';
+    payload.fieldResolverMap['branch_id'] = 'bhin.branch_id';
+    payload.fieldResolverMap['bag_number_seq'] = `CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`;
+    payload.fieldResolverMap['scan_in_datetime'] = 'bhin.history_date';
+
+    const repo = new OrionRepositoryService(Bag, 'b');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q);
+
+    q.selectRaw(
+      [`CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'No. Gabung Paket'],
+      ['bb.branch_name', 'Gerai'],
+      [`TO_CHAR(b.created_time, \'DD Mon YYYY HH24:MI\')`, 'Tgl Gab. Paket'],
+      [`CASE
+          WHEN bhin.history_date IS NULL THEN 'Belum Scan IN'
+          ELSE TO_CHAR(bhin.history_date, \'DD Mon YYYY HH24:MI\')
+        END`, 'Tgl Scan Gab. Paket'],
+      [`CASE
+          WHEN b.representative_id_to IS NULL then 'Belum Upload'
+          ELSE r.representative_name
+        END`, 'Tujuan'],
+      [`(
+        SELECT
+          count(bia.awb_number)
+        FROM bag_item_awb bia
+        WHERE
+          bia.bag_item_id = bi.bag_item_id AND
+          bia.is_deleted = FALSE
+        GROUP BY bia.bag_item_id)`, 'Jumlah Resi'],
+      [`CONCAT(bi.weight::numeric(10,0), ' kg')`, 'Total Berat (Kg)'],
+      [`CONCAT(u.first_name, ' ', u.last_name)`, 'User'],
+    );
+
+    q.innerJoin(e => e.bagItems, 'bi', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branch, 'br', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoinRaw(
+      'bag_item_history',
+      'bhin',
+      'bhin.bag_item_id = bi.bag_item_id AND bhin.is_deleted = FALSE',
+    );
+    q.leftJoin(e => e.representative, 'r', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoinRaw(
+      'branch',
+      'bb',
+      'bhin.branch_id=bb.branch_id and bb.is_deleted = FALSE ',
+    );
+    q.leftJoinRaw(
+      'users',
+      'u',
+      'u.user_id=bhin.user_id_updated and u.is_deleted = FALSE ',
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhereRaw('bhin.bag_item_status_id in( 3550, 3500)');
 
     const data = await q.exec();
     return data;
