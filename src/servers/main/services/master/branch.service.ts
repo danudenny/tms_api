@@ -4,6 +4,7 @@ import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.v
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { BranchFindAllResponseVm } from '../../models/branch.response.vm';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { RoleGroupService } from '../../../../shared/services/role-group.service';
 
 @Injectable()
 export class BranchService {
@@ -89,7 +90,13 @@ export class BranchService {
     });
 
     let branchList = [];
-    if (permissionPayload.roleName === 'Admin COD - Merger' && merger) {
+    if (
+      merger &&
+      RoleGroupService.isRoleCodMerge(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
+    ) {
       const branchIdAll = [];
       const branchCodeAll = [];
 

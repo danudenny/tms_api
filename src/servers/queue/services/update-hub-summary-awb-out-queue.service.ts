@@ -29,23 +29,29 @@ export class UpdateHubSummaryAwbOutQueueService {
     this.queue.process(5, async job => {
       console.log('### UPDATE HUB SUMMARY AWB OUT =========', job.id);
       const data = job.data;
-      const dateNow = moment().toDate();
+      const dateNow = moment().format('YYYY-MM-DD HH:mm:ss');
       console.log('### UPDATE HUB SUMMARY AWB NUMBER OUT =========', data.awbNumber);
 
       try {
         await getManager().transaction(async transactional => {
-          await transactional.update(
-            HubSummaryAwb,
-            {
-              awbNumber: data.awbNumber,
-              branchId: data.branchId,
-            },
-            {
-              scanDateOutHub: dateNow,
-              outHub: true,
-              userIdUpdated: data.userId,
-              updatedTime: dateNow,
-            });
+          const upsertRawHubSummaryAwbOutSql = `insert into hub_summary_awb (awb_number,user_id_updated, updated_time, branch_id,user_id_created, created_time, out_hub)
+                              values ('${escape(data.awbNumber)}', ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}', true)
+                              ON CONFLICT (awb_number,branch_id) DO UPDATE SET out_hub = true, scan_date_out_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}';`;
+
+          console.log('### UPSERT HUB SUMMARY AWB OUT QUERY =========', upsertRawHubSummaryAwbOutSql);
+          await transactional.query(upsertRawHubSummaryAwbOutSql);
+          // await transactional.update(
+          //   HubSummaryAwb,
+          //   {
+          //     awbNumber: data.awbNumber,
+          //     branchId: data.branchId,
+          //   },
+          //   {
+          //     scanDateOutHub: dateNow,
+          //     outHub: true,
+          //     userIdUpdated: data.userId,
+          //     updatedTime: dateNow,
+          //   });
         });
       } catch (error) {
         console.error('### ERROR UPSERT', error);
