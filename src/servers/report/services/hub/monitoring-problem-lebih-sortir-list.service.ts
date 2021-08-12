@@ -21,37 +21,36 @@ export class MonitoringProblemLebihSortirListService {
 
     // Mapping order by key
     const mappingSortBy = {
-      scanDate:  'hsa.scan_date_in_hub',
+      scanDate: 'hsa.scan_date_in_hub',
       scanDateInHub: 'hsa.scan_date_in_hub',
-      createdTime : 'hsa.scan_date_in_hub',
-      branchIdFrom : 'hsa.branch_id',
-      branchNameFrom : 'br.branch_name',
-      branchId : 'hsa.branch_id',
-      branchName : 'br.branch_name',
-      awbNumber : 'hsa.awb_number',
-      bagNumber : 'g.bag_number',
-      bagSortir : 'g.bag_number',
-      bagSeqSortir : 'f.bag_seq',
-      cityId : 'b.city_id',
+      createdTime: 'hsa.scan_date_in_hub',
+      branchIdFrom: 'hsa.branch_id',
+      branchId: 'hsa.branch_id',
+      branchName: 'br.branch_name',
+      awbNumber: 'hsa.awb_number',
+      bagNumber: 'g.bag_number',
+      bagSortir: 'g.bag_number',
+      bagSeqSortir: 'f.bag_seq',
+      cityId: 'b.city_id',
     };
 
     // replace fieldResolverMap in Orion as Query Raw
     const mappingFilter = {
-      scanDate:  'hsa.scan_date_in_hub',
+      scanDate: 'hsa.scan_date_in_hub',
       scanDateInHub: 'hsa.scan_date_in_hub',
-      createdTime : 'hsa.scan_date_in_hub',
-      branchIdFrom : 'hsa.branch_id',
-      branchNameFrom : 'br.branch_name',
-      branchId : 'hsa.branch_id',
-      branchName : 'br.branch_name',
-      awbNumber : 'hsa.awb_number',
-      bagNumber : 'g.bag_number',
-      bagSortir : 'g.bag_number',
-      bagSeqSortir : 'f.bag_seq',
-      cityId : 'b.city_id',
+      createdTime: 'hsa.scan_date_in_hub',
+      branchIdFrom: 'hsa.branch_id',
+      branchNameFrom: 'br.branch_name',
+      branchId: 'hsa.branch_id',
+      awbNumber: 'hsa.awb_number',
+      bagNumber: 'g.bag_number',
+      bagSortir: 'g.bag_number',
+      bagSeqSortir: 'f.bag_seq',
+      cityId: 'b.city_id',
     };
 
     // const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dohd.created_time', ['gt', 'gte'], 'scanDateDoHub');
+    console.log('payload.filters', payload.filters);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
     payload.filters = [];
 
@@ -64,6 +63,7 @@ export class MonitoringProblemLebihSortirListService {
     if (payload.sortBy) {
       sortByRaw = mappingSortBy[payload.sortBy];
     }
+    console.log('sortByRaw', sortByRaw);
     payload.sortBy = '';
     payload = this.formatPayloadFiltersAwbProblem(payload);
     let sql = `SELECT a.scan_date_in_hub as "scanDateInHub", c.city_id as "cityId", c.city_name as "cityName", a.branch_id as "branchId", b.branch_code as "branchCode", b.branch_name as "branchName", a.total as "lebihSortir"`;
@@ -71,14 +71,18 @@ export class MonitoringProblemLebihSortirListService {
     if (whereQuery.includes('f.bag_seq') || whereQuery.includes('g.bag_number')) {
       sql = sql + ` INNER JOIN bag_item f ON hsa.bag_item_id_in = f.bag_item_id INNER JOIN bag g on g.bag_id = f.bag_id`;
     }
-    if (whereQuery.includes('br.branch_name')) {
-      sql = sql + ` INNER JOIN branch br ON hsa.branch_id = br.branch_id AND br.is_deleted = FALSE`;
-    }
-    sql = sql + ` WHERE hsa.do_hub = FALSE AND hsa.in_hub = TRUE `;
+
     if (whereQuery) {
-      sql = sql + ` AND ${whereQuery} `;
+      sql = sql + ` WHERE ${whereQuery} `;
+      sql = sql + ` AND hsa.do_hub = FALSE AND hsa.in_hub = TRUE `;
+    } else {
+      sql = sql + ` WHERE hsa.do_hub = FALSE AND hsa.in_hub = TRUE `;
     }
-    sql = sql + ` GROUP BY hsa.scan_date_in_hub, hsa.branch_id ) a `;
+    sql = sql + ` GROUP BY hsa.scan_date_in_hub, hsa.branch_id`;
+    if (sortByRaw !== '') {
+      sql = sql + ` ORDER BY ${sortByRaw} ${payload.sortDir.toUpperCase()}`;
+    }
+    sql = sql + ` ) a`;
     sql = sql + ` INNER JOIN branch b ON a.branch_id = b.branch_id AND b.is_deleted = FALSE INNER JOIN district d ON d.district_id = b.district_id AND d.is_deleted = FALSE INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE `;
     sql = sql + ` LIMIT ${payload.limit} `;
     const data = await RawQueryService.query(sql, [], false);
@@ -99,38 +103,36 @@ export class MonitoringProblemLebihSortirListService {
 
     // Mapping order by key
     const mappingSortBy = {
-      scanDate:  '"hsa"."scan_date_in_hub"::DATE',
+      scanDate: '"hsa"."scan_date_in_hub"::DATE',
       scanDateInHub: '"hsa"."scan_date_in_hub"::DATE',
-      createdTime : '"hsa"."scan_date_in_hub"::DATE',
-      branchIdFrom : 'hsa.branch_id',
-      branchNameFrom : 'br.branch_name',
-      branchId : 'hsa.branch_id',
-      branchName : 'br.branch_name',
-      awbNumber : 'hsa.awb_number',
-      bagNumber : 'b.bag_number',
-      bagSortir : 'b.bag_number',
-      bagSeqSortir : 'bi.bag_seq',
-      cityId : 'c.city_id',
+      createdTime: '"hsa"."scan_date_in_hub"::DATE',
+      branchIdFrom: 'hsa.branch_id',
+      branchId: 'hsa.branch_id',
+      branchName: 'br.branch_name',
+      awbNumber: 'hsa.awb_number',
+      bagNumber: 'b.bag_number',
+      bagSortir: 'b.bag_number',
+      bagSeqSortir: 'bi.bag_seq',
+      cityId: 'c.city_id',
     };
 
     // replace fieldResolverMap in Orion as Query Raw
     const mappingFilter = {
-      scanDate:  '"hsa"."scan_date_in_hub"::DATE',
+      scanDate: '"hsa"."scan_date_in_hub"::DATE',
       scanDateInHub: '"hsa"."scan_date_in_hub"::DATE',
-      createdTime : '"hsa"."scan_date_in_hub"::DATE',
-      branchIdFrom : 'hsa.branch_id',
-      branchNameFrom : 'br.branch_name',
-      branchId : 'hsa.branch_id',
-      branchName : 'br.branch_name',
-      awbNumber : 'hsa.awb_number',
-      bagNumber : 'b.bag_number',
-      bagSortir : 'b.bag_number',
-      bagSeqSortir : 'bi.bag_seq',
-      cityId : 'c.city_id',
+      createdTime: '"hsa"."scan_date_in_hub"::DATE',
+      branchIdFrom: 'hsa.branch_id',
+      branchId: 'hsa.branch_id',
+      branchName: 'br.branch_name',
+      awbNumber: 'hsa.awb_number',
+      bagNumber: 'b.bag_number',
+      bagSortir: 'b.bag_number',
+      bagSeqSortir: 'bi.bag_seq',
+      cityId: 'c.city_id',
     };
 
     const mappingScanOutFilter = {
-      branchIdFrom : 'hsa.branch_id',
+      branchIdFrom: 'hsa.branch_id',
     };
 
     // let whereSubQueryScanOut = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter2(payload.filters, 'dpdb2.created_time', ['gt', 'gte'], ['scanDate', 'createdTime', 'scanDateInHub']);
@@ -164,12 +166,18 @@ export class MonitoringProblemLebihSortirListService {
     sql = sql + ` LEFT JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE`;
     sql = sql + ` LEFT JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE`;
     sql = sql + ` LEFT JOIN bag_item_awb e ON hsa.awb_number = e.awb_number`;
-    sql = sql + ` WHERE hsa.do_hub = FALSE AND hsa.in_hub = TRUE`;
 
     if (whereQuery) {
-      sql = sql + ` AND ${whereQuery}`;
+      sql = sql + ` WHERE ${whereQuery}`;
+      sql = sql + ` AND hsa.do_hub = FALSE AND hsa.in_hub = TRUE`;
+    } else {
+      sql = sql + ` WHERE hsa.do_hub = FALSE AND hsa.in_hub = TRUE`;
     }
+
     sql = sql + ` GROUP BY hsa.scan_date_in_hub, hsa.awb_number, b.bag_number, bi.bag_seq, hsa.do_hub, hsa.in_hub, hsa.out_hub`;
+    if (sortByRaw !== '') {
+      sql = sql + ` ORDER BY ${sortByRaw} ${payload.sortDir.toUpperCase()}`;
+    }
     sql = sql + ` LIMIT ${payload.limit}`;
     const data = await RawQueryService.query(sql, [], false);
     const total = data.length;
