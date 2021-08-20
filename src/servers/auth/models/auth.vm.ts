@@ -175,6 +175,9 @@ export class LoginChannelOtpAddressesResponse {
   @ApiModelProperty()
   token: string;
 
+  @ApiModelProperty()
+  isOtpRequired: boolean;
+
   @ApiModelProperty({ type: [LoginChannelOtpAddresses]})
   addresses: LoginChannelOtpAddresses[];
 }

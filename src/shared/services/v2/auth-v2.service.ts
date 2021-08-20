@@ -120,8 +120,13 @@ export class AuthV2Service {
       300,
     );
 
+
+    //TODO: check username whitelist on bucket if array user includes username then otpRequire true
+    let isOtpRequired = true;
+
     const result = new LoginChannelOtpAddressesResponse();
     result.token = generateToken;
+    result.isOtpRequired = isOtpRequired; //deafult
     result.addresses = addresses;
     return result;
   }
