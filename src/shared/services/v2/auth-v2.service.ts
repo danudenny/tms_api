@@ -189,12 +189,10 @@ export class AuthV2Service {
     } catch (err) {
       if (err.response && undefined != err.response.data) {
         console.log('error:::::', err.response.data)
-        // const messageResponse = err.response.data.message ?
-        //   err.response.data.message : err.response.data;
-        // const codeResponse = err.response.data.code;
+        const messageResponse = await this.messageErrorAuthOtp(err.response.data);
         RequestErrorService.throwObj({
-          message: await this.messageErrorAuthOtp(err.response.data),
-        }, err.response.status);
+          message: messageResponse,
+        }, err.response.status == 500 ? HttpStatus.BAD_REQUEST : err.response.status);
       } else {
         RequestErrorService.throwObj({
           message: 'Request Time Out!!',
@@ -265,9 +263,10 @@ export class AuthV2Service {
         // const messageResponse = err.response.data.message ?
         //   err.response.data.message : err.response.data;
         // const codeResponse = err.response.data.code;
+        const messageResponse = await this.messageErrorAuthOtp(err.response.data);
         RequestErrorService.throwObj({
-          message: await this.messageErrorAuthOtp(err.response.data),
-        }, err.response.status);
+          message: messageResponse,
+        }, err.response.status == 500 ? HttpStatus.BAD_REQUEST : err.response.status);
       } else {
         RequestErrorService.throwObj({
           message: 'Request Time Out!!',
@@ -451,17 +450,17 @@ export class AuthV2Service {
     // const deactivatedUserRegex = new RegExp(`${MESSAGE_ERROR_OTP.DEACTIVATED}`, 'i');
     if (code == MESSAGE_ERROR_OTP.DEACTIVATED_CODE){
       message = 'User ini tidak aktif, mohon hubungi admin.';
-      return {isDeactivatedUser: true, message: message}
+      return { status: true, message: message}
     }
 
     if (code == MESSAGE_ERROR_OTP.DEACTIVATED_ATTEMPT_CODE){
       if(null != args){
         message = `User ini tidak aktif karena sudah melakukan request sebanyak ${args[0]}x, mohon hubungi admin.`
-        return { isDeactivatedUser: true, message: message }
+        return { status: true, message: message }
       }
     }
 
-    return { isDeactivatedUser: false, message: message }
+    return { status: false, message: message }
   }
 
   private async isInvalidCode(code: string): Promise<boolean> {
@@ -472,13 +471,23 @@ export class AuthV2Service {
     return false;
   }
 
+  // private async isInvalidMsisdn (code: string, message: string){
+  //   if (parseInt(code) == HttpStatus.INTERNAL_SERVER_ERROR && undefined != message) {
+  //     const jsonParse = JSON.parse(message);
+  //     if (MESSAGE_ERROR_OTP.INVALID_MSISDN_VALUE == jsonParse.code) {
+  //       return { status : true, message: jsonParse.message};
+  //     }
+  //   }
+  //   return { status: false, message: message };
+  // }
+
   private async messageErrorAuthOtp(data: any): Promise<string>{
-    const message = data.message ? data.message : data;
+    // const message = data.message ? data.message : null;
     const code = data.code;
     const args = data.args ? data.args : null;
 
     const deactivatedUser = await this.isDeactivatedUser(code, args);
-    if (deactivatedUser.isDeactivatedUser){
+    if (deactivatedUser.status){
       return deactivatedUser.message;
     }
 
@@ -488,10 +497,15 @@ export class AuthV2Service {
     }
 
     if(await this.isInvalidCode(code)){
-      return 'Kode OTP Salah'
+      return 'Kode OTP Salah';
     }
 
-    return message;
+    // const invalidMsisdn = await this.isInvalidMsisdn(code, message);
+    // if (invalidMsisdn.status){
+    //   return invalidMsisdn.message;
+    // }
+
+    return 'Terjadi kesalahan, Mohon hubungi admin.';
   }
 
 }
