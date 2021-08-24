@@ -250,11 +250,11 @@ export class FirstMileDoPodReturnService {
       ],
       [
         'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 25650)',
-        'totalSuccess',
+        'totalProblem',
       ],
       [
         'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last IN (24550, 25000))',
-        'totalProblem',
+        'totalSuccess',
       ],
       // [
       //   'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000 AND t3.awb_status_id_last <> 14000)',
@@ -333,11 +333,11 @@ export class FirstMileDoPodReturnService {
       ['t1.description', 'description'],
       [
         'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 25650)',
-        'totalSuccess',
+        'totalProblem',
       ],
       [
         'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last IN (24550, 25000))',
-        'totalProblem',
+        'totalSuccess',
       ],
       [
         'COUNT (t3.awbNumber) FILTER (WHERE t3.awb_status_id_last = 14000)',
@@ -890,7 +890,7 @@ export class FirstMileDoPodReturnService {
           },
         });
         if (doPodReturn) {
-          if ([AWB_STATUS.RTC, AWB_STATUS.RTS].includes(awbStatus.awbStatusId)) {
+          if (AWB_STATUS.UNRTS == awbStatus.awbStatusId) {
             await transactionEntityManager.increment(
               DoPodReturn,
               {
@@ -900,7 +900,7 @@ export class FirstMileDoPodReturnService {
               'totalProblem',
               1,
             );
-          } else if (AWB_STATUS.UNRTS == awbStatus.awbStatusId) {
+          } else if ([AWB_STATUS.RTC, AWB_STATUS.RTS].includes(awbStatus.awbStatusId)) {
             await transactionEntityManager.increment(
               DoPodReturn,
               {

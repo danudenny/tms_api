@@ -562,19 +562,38 @@ export class MobileFirstMileDoPodReturnService {
               },
             });
             if (doPodReturn) {
-
-              if (awbStatus.isProblem) {
-                await transactionEntityManager.increment(
-                  DoPodReturn,
-                  {
-                    doPodReturnId: returnsData.doPodReturnId,
-                    totalReturn: LessThan(doPodReturn.totalAwb),
-                  },
-                  'totalReturn',
-                  1,
-                );
-              }
-            }
+          if (AWB_STATUS.UNRTS == awbStatus.awbStatusId) {
+            await transactionEntityManager.increment(
+              DoPodReturn,
+              {
+                doPodReturnId: returnsData.doPodReturnId,
+                totalProblem: LessThan(doPodReturn.totalAwb),
+              },
+              'totalProblem',
+              1,
+            );
+          } else if ([AWB_STATUS.RTC, AWB_STATUS.RTS].includes(awbStatus.awbStatusId)) {
+            await transactionEntityManager.increment(
+              DoPodReturn,
+              {
+                doPodReturnId: returnsData.doPodReturnId,
+                totalReturn: LessThan(doPodReturn.totalAwb),
+              },
+              'totalReturn',
+              1,
+            );
+            // balance total problem
+            await transactionEntityManager.decrement(
+              DoPodReturn,
+              {
+                doPodReturnId: returnsData.doPodReturnId,
+                totalProblem: MoreThan(0),
+              },
+              'totalProblem',
+              1,
+            );
+          }
+        }
           });
           // #endregion of transaction
 
