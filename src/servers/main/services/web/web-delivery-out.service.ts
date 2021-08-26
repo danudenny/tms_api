@@ -1816,7 +1816,8 @@ export class WebDeliveryOutService {
 
     payload.fieldResolverMap[
       'bagNumber'
-    ] = `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`;
+    ] = `CASE LENGTH(t3.bag_number) WHEN 10 THEN t3.bag_number
+         ELSE CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0')) END`;
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -1832,7 +1833,8 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       [
-        `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`,
+        `CASE LENGTH(t3.bag_number) WHEN 10 THEN t3.bag_number
+         ELSE CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0')) END`,
         'bagNumber',
       ],
       ['t1.created_time', 'createdTime'],

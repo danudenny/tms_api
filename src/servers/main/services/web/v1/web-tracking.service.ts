@@ -408,7 +408,10 @@ export class V1WebTrackingService {
         COALESCE(ar.partner_logistic_awb, '') as "partnerLogisticAwb",
         COALESCE(ar.partner_logistic_name, '') as "partnerLogisticName",
         a.total_cod_value as "totalCodValue",
-        CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
+        CASE LENGTH(ba.bag_number)
+            WHEN 10 THEN ba.bag_number
+            ELSE CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0'))
+        END as "bagNumber",
         dpd.do_pod_deliver_detail_id as "doPodDeliverDetailId",
         dprd.do_pod_return_detail_id as "doPodReturnDetailId",
         COALESCE(ai.doreturn_new_awb, ai.doreturn_new_awb_3pl) as "doReturnAwb",
