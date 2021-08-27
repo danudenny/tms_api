@@ -53,76 +53,15 @@ export class AuthV2Service {
       });
     }
 
-    const url = `${ConfigService.get('svcOtp.baseUrl')}/auth/otp/lookup`
-    const jsonData = {
-      id: user.username,
-    }
-    const options = {
-      headers: this.headerReqOtp,
-    };
-
-    const addresses = [];
-    try {
-      const response = await axios.post(url, jsonData, options);
-      if (response.data && response.data.result){
-        if (response.data.result.addresses.length < 1){
-          RequestErrorService.throwObj({
-            message: 'Nomor Handpone belum terdaftar, silahkan hubungi admin.',
-          }, HttpStatus.FORBIDDEN);
-        }
-
-        for (const address of response.data.result.addresses) {
-          const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
-          loginChannelOtpAddresses.channel = address.channel;
-          loginChannelOtpAddresses.address = address.address;
-          loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
-
-          addresses.push({ ...loginChannelOtpAddresses });
-        }
-      } else {
-        RequestErrorService.throwObj({
-          message: 'User tidak terdaftar, silahkan hubungi admin.',
-        }, HttpStatus.FORBIDDEN);
-      }
-    } catch (err) {
-      let message = 'Request Time Out!';
-      let statusCode = HttpStatus.REQUEST_TIMEOUT
-      if (err.response && undefined != err.response.data) {
-        console.log('error:::::', err.response.data)
-        message = err.response.data.message ?
-          err.response.data.message : err.response.data;
-        statusCode = err.response.data.code;
-      }
-      if (undefined != err.response.message) {
-        message = err.response.message;
-        statusCode = err.response.statusCode;
-      }
-
-      RequestErrorService.throwObj({
-        message: message,
-      }, statusCode);
-    }
-
-    const text = `${user.userId}${moment().toDate()}`;
-    const generateToken = crypto
-      .createHash('md5')
-      .update(text)
-      .digest('hex');
-
-    const value = {
-      userId: user.userId,
-      clientId: clientId,
-    }
+    const addresses = await this.getAddress(user.username);
+    const generateToken = await this.generateToken(user.userId, clientId);
+    const isOtpRequired = await this.isOtpRequired(clientId, user.username);
 
     await RedisService.setex(
       `pod:otp:${generateToken}`,
-      JSON.stringify(value),
+      JSON.stringify({ userId: user.userId, clientId: clientId,}),
       300,
     );
-
-
-    //TODO: check username whitelist on bucket if array user includes username then otpRequire true
-    let isOtpRequired = true;
 
     const result = new LoginChannelOtpAddressesResponse();
     result.token = generateToken;
@@ -157,13 +96,13 @@ export class AuthV2Service {
       });
     }
 
-    // const otpRetries = await RedisService.get(`pod:get:otp:${userId}`);
-    // let retries = otpRetries ? Number(otpRetries) : 0;
-    // if (retries >= 3) {
-    //   RequestErrorService.throwObj({
-    //     message: 'To many try otp input, wait a few seconds',
-    //   });
-    // }
+    const isRequiredOtp = await this.isOtpRequired(redisData.clientId, user.username);
+    if(!isRequiredOtp){
+      return {
+        status: HttpStatus.OK,
+        success: true
+      };
+    }
 
     const url = `${ConfigService.get('svcOtp.baseUrl')}/otp`
     const jsonData = {
@@ -176,11 +115,6 @@ export class AuthV2Service {
 
     try {
       const response = await axios.post(url, jsonData, options);
-      // await RedisService.setex(
-      //   `pod:get:otp:${userId}`,
-      //   Number(retries + 1),
-      //   60
-      // );
       if (HttpStatus.NO_CONTENT == response.status){
         return {
           status: response.status,
@@ -228,6 +162,23 @@ export class AuthV2Service {
       });
     }
 
+    const isOtpRequired = await this.isOtpRequired(redisData.clientId, user.username);
+    if (isOtpRequired && code == '') {
+      RequestErrorService.throwObj({
+        message: 'kode otp tidak boleh kosong.',
+      });
+    }
+
+    //bypass condition
+    if (!isOtpRequired || (ConfigService.get('svcOtp.bypassCode') === code && ConfigService.get('svcOtp.isBypass'))){
+      const loginResultMetadata = this.populateLoginResultMetadataByUser(
+        redisData.clientId,
+        user,
+      );
+      await RedisService.del(`pod:otp:${token}`);
+      return loginResultMetadata;
+    }
+
     const url = `${ConfigService.get('svcOtp.baseUrl')}/auth/otp`
     const jsonData = {
       code: code,
@@ -236,16 +187,6 @@ export class AuthV2Service {
     const options = {
       headers: this.headerReqOtp,
     };
-
-    //bypass condition
-    if (ConfigService.get('svcOtp.bypassCode') === code && ConfigService.get('svcOtp.isBypass')){
-      const loginResultMetadata = this.populateLoginResultMetadataByUser(
-        redisData.clientId,
-        user,
-      );
-      await RedisService.del(`pod:otp:${token}`);
-      return loginResultMetadata;
-    }
 
     try {
       const response = await axios.post(url, jsonData, options);
@@ -343,6 +284,108 @@ export class AuthV2Service {
     };
   }
 
+  private async getAddress(userName: string): Promise<Array<LoginChannelOtpAddresses>> {
+
+    //START - PISAH 1 PRIVATE FUNCTION
+    const url = `${ConfigService.get('svcOtp.baseUrl')}/auth/otp/lookup`
+    const jsonData = {
+      id: userName,
+    }
+    const options = {
+      headers: this.headerReqOtp,
+    };
+
+    const addresses = [];
+    try {
+      const response = await axios.post(url, jsonData, options);
+      if (response.data && response.data.result) {
+        if (response.data.result.addresses.length < 1) {
+          RequestErrorService.throwObj({
+            message: 'Nomor Handpone belum terdaftar, silahkan hubungi admin.',
+          }, HttpStatus.FORBIDDEN);
+        }
+
+        for (const address of response.data.result.addresses) {
+          const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
+          loginChannelOtpAddresses.channel = address.channel;
+          loginChannelOtpAddresses.address = address.address;
+          loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
+
+          addresses.push({ ...loginChannelOtpAddresses });
+        }
+        return addresses;
+      } else {
+        RequestErrorService.throwObj({
+          message: 'User tidak terdaftar, silahkan hubungi admin.',
+        }, HttpStatus.FORBIDDEN);
+      }
+    } catch (err) {
+      let message = 'Request Time Out!';
+      let statusCode = HttpStatus.REQUEST_TIMEOUT
+      if (err.response && undefined != err.response.data) {
+        console.log('error:::::', err.response.data)
+        message = err.response.data.message ?
+          err.response.data.message : err.response.data;
+        statusCode = err.response.data.code;
+      }
+      if (undefined != err.response.message) {
+        message = err.response.message;
+        statusCode = err.response.statusCode;
+      }
+
+      RequestErrorService.throwObj({
+        message: message,
+      }, statusCode);
+    }
+    //END - PISAH 1 PRIVATE FUNCTION
+
+  }
+
+  private async generateToken(userId: number, clientId: string): Promise<string> {
+    //START - PISAH 1 PRIVATE FUNCTION
+    const text = `${userId}${moment().toDate()}`;
+    const generateToken = crypto
+      .createHash('md5')
+      .update(text)
+      .digest('hex');
+    //END - PISAH 1 PRIVATE FUNCTION
+
+    return generateToken;
+  }
+
+  private async isOtpRequired(clientId: string, userName: string): Promise<boolean> {
+    let whiteListUserData  = await RedisService.get(
+      `pod:required:otp`,
+      true,
+    );
+
+    if (!whiteListUserData) {
+      console.log('CALL THIS API AGAIN:::::')
+      try {
+        const response = await axios.get(ConfigService.get('svcOtp.otpRequiredUrl'));
+        whiteListUserData = response.data;
+        await RedisService.setex(
+          `pod:required:otp`,
+          JSON.stringify(whiteListUserData),
+          1800,
+        );
+      } catch (err) {
+        RequestErrorService.throwObj({
+          message: 'Bad Request',
+        }, HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    let isRequired = false;
+    if ((clientId.toLowerCase() == 'web' && whiteListUserData.podweb)
+      || (clientId.toLowerCase() == 'mobile' && whiteListUserData.podmobile)) {
+      if (whiteListUserData.userlist.includes(userName)) {
+        isRequired = true;
+      }
+    }
+    return isRequired;
+  }
+
   private async getEmployeeById(employeeId:number):Promise<Employee>{
     const employee = await Employee.findOne({
       where: {
@@ -436,18 +479,11 @@ export class AuthV2Service {
       }
     }
 
-    // const numberPattern = /\d+/g;
-    // console.log('numberPattern:::', message.match(numberPattern))
-    // const countDown = message.match(numberPattern)
-    // if (null != countDown && countDown.length > 0 ){
-    //   return { seconds: countDown, status : true};
-    // }
     return { status: false, message: message };
   }
 
   private async isDeactivatedUser(code: string, args: Array<any>){
     let message;
-    // const deactivatedUserRegex = new RegExp(`${MESSAGE_ERROR_OTP.DEACTIVATED}`, 'i');
     if (code == MESSAGE_ERROR_OTP.DEACTIVATED_CODE){
       message = 'User ini tidak aktif, mohon hubungi admin.';
       return { status: true, message: message}
@@ -464,22 +500,11 @@ export class AuthV2Service {
   }
 
   private async isInvalidCode(code: string): Promise<boolean> {
-    // const invalidCodeRegex = new RegExp(`${MESSAGE_ERROR_OTP.INVALID_CODE_MESSAGE}`, 'i');
     if (code == MESSAGE_ERROR_OTP.INVALID_CODE) {
       return true;
     }
     return false;
   }
-
-  // private async isInvalidMsisdn (code: string, message: string){
-  //   if (parseInt(code) == HttpStatus.INTERNAL_SERVER_ERROR && undefined != message) {
-  //     const jsonParse = JSON.parse(message);
-  //     if (MESSAGE_ERROR_OTP.INVALID_MSISDN_VALUE == jsonParse.code) {
-  //       return { status : true, message: jsonParse.message};
-  //     }
-  //   }
-  //   return { status: false, message: message };
-  // }
 
   private async messageErrorAuthOtp(data: any): Promise<string>{
     // const message = data.message ? data.message : null;
@@ -500,13 +525,7 @@ export class AuthV2Service {
       return 'Kode OTP Salah';
     }
 
-    // const invalidMsisdn = await this.isInvalidMsisdn(code, message);
-    // if (invalidMsisdn.status){
-    //   return invalidMsisdn.message;
-    // }
-
     return 'Terjadi kesalahan, Mohon hubungi admin.';
   }
-
 }
 
