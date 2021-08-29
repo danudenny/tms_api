@@ -86,6 +86,13 @@ export class DoSmd extends TmsBaseEntity {
   })
   doSmdVehicleIdLast: number | null;
 
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_empty',
+  })
+  isEmpty: boolean;
+
   @Column('bigint', {
     nullable: false,
     default: () => 1000,

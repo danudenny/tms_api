@@ -31,6 +31,42 @@ export class ScanOutVehicleVm {
 
 }
 
+export class ScanOutSmdEmptyVehicleResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutEmptyVehicleVm]})
+  data: ScanOutEmptyVehicleVm[];
+}
+
+export class ScanOutEmptyVehicleVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  do_smd_vehicle_id: number;
+
+  @ApiModelProperty()
+  departure_schedule_date_time: Date;
+
+  @ApiModelProperty()
+  branch_code: string;
+
+  @ApiModelProperty()
+  employee_id_driver: number;
+
+}
+
 export class ScanOutSmdRouteResponseVm {
   @ApiModelProperty()
   statusCode: number;
