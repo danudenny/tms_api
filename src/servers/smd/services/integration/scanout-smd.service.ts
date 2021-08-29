@@ -233,7 +233,7 @@ export class ScanoutSmdService {
       if (redlock) {
         const paramDoSmdId = await this.createDoSmd(
           paramDoSmdCode,
-          payload.smd_date,
+          payload.smd_city_date,
           permissonPayload.branchId,
           authMeta.userId,
           null,
@@ -252,7 +252,7 @@ export class ScanoutSmdService {
           paramDoSmdId,
           paramDoSmdVehicleId,
           null,
-          payload.smd_date,
+          payload.smd_city_date,
           permissonPayload.branchId,
           resultbranchTo.branchId,
           authMeta.userId,
@@ -274,7 +274,7 @@ export class ScanoutSmdService {
           do_smd_code: paramDoSmdCode,
           do_smd_vehicle_id: paramDoSmdVehicleId,
           do_smd_detail_id: paramDoSmdDetailId,
-          departure_schedule_date_time: payload.smd_date,
+          departure_schedule_date_time: payload.smd_city_date,
           branch_code: resultbranchTo.branchCode + ' ' + resultbranchTo.branchName,
           employee_id_driver: payload.employee_id_driver,
         });
