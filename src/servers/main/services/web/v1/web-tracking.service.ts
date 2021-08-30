@@ -122,6 +122,10 @@ export class V1WebTrackingService {
         payload.bagNumber.substring(7, 10),
       );
       data = await this.getRawBag(bagNumber, seqNumber);
+      if(!data){
+        isNewFormat = true;
+        data = await this.getRawBag(payload.bagNumber, 1);
+      }
     } else {
       // format Alphanumeric, default set seq = 1
       isNewFormat = true;
