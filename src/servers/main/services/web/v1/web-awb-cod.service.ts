@@ -59,13 +59,14 @@ import { RedisService } from '../../../../../shared/services/redis.service';
 import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { AuthLoginMetadata } from '../../../../../shared/models/auth-login-metadata.model';
 import { JwtPermissionTokenPayload } from '../../../../../shared/interfaces/jwt-payload.interface';
+import { RoleGroupService } from '../../../../../shared/services/role-group.service';
 // #endregion
 export class V1WebAwbCodService {
   static async awbSummary(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodSummaryResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
 
     // mapping field
     payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
@@ -105,10 +106,12 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    //#region Cod Merger
+    //#region handle Role COD
     if (
-      permissonPayload.roleName === 'Admin COD - Merger' &&
-      !permissonPayload.isHeadOffice
+      RoleGroupService.isRoleCodMerge(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
     ) {
       q.innerJoin(e => e.codPayment.codUserToBranch, 'codmerger', j =>
         j
@@ -116,14 +119,19 @@ export class V1WebAwbCodService {
           .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
       );
     }
-    //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
+    if (
+      RoleGroupService.isRoleCodAdmin(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
+    ) {
       q.andWhere(
         e => e.codPayment.branchId,
-        w => w.equals(permissonPayload.branchId),
+        w => w.equals(permissionPayload.branchId),
       );
     }
+    //#endregion
 
     q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -149,7 +157,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -257,8 +265,10 @@ export class V1WebAwbCodService {
 
     //#region Cod Merger
     if (
-      permissonPayload.roleName === 'Admin COD - Merger' &&
-      !permissonPayload.isHeadOffice
+      RoleGroupService.isRoleCodMerge(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
     ) {
       q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
         j
@@ -266,14 +276,19 @@ export class V1WebAwbCodService {
           .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
       );
     }
-    //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
+    if (
+      RoleGroupService.isRoleCodAdmin(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
+    ) {
       q.andWhere(
         e => e.codPayment.branchId,
-        w => w.equals(permissonPayload.branchId),
+        w => w.equals(permissionPayload.branchId),
       );
     }
+    //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     // q.andWhere(e => e.awb.isCod, w => w.isTrue());
@@ -296,7 +311,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebCodCountResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -402,8 +417,10 @@ export class V1WebAwbCodService {
 
     //#region Cod Merger
     if (
-      permissonPayload.roleName === 'Admin COD - Merger' &&
-      !permissonPayload.isHeadOffice
+      RoleGroupService.isRoleCodMerge(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
     ) {
       q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
         j
@@ -411,14 +428,19 @@ export class V1WebAwbCodService {
           .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
       );
     }
-    //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
+    if (
+      RoleGroupService.isRoleCodAdmin(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
+    ) {
       q.andWhere(
         e => e.codPayment.branchId,
-        w => w.equals(permissonPayload.branchId),
+        w => w.equals(permissionPayload.branchId),
       );
     }
+    //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     // q.andWhere(e => e.awb.isCod, w => w.isTrue());
@@ -495,7 +517,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodDlvListResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -580,8 +602,10 @@ export class V1WebAwbCodService {
 
     //#region Cod Merger
     if (
-      permissonPayload.roleName === 'Admin COD - Merger' &&
-      !permissonPayload.isHeadOffice
+      RoleGroupService.isRoleCodMerge(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
     ) {
       q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
         j
@@ -589,14 +613,19 @@ export class V1WebAwbCodService {
           .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
       );
     }
-    //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
-      q.andWhere(
-        e => e.codPayment.branchId,
-        w => w.equals(permissonPayload.branchId),
+    if (
+      RoleGroupService.isRoleCodAdmin(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+        )
+    ) {
+    q.andWhere(
+      e => e.codPayment.branchId,
+      w => w.equals(permissionPayload.branchId),
       );
     }
+      //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.transactionStatusId, w => w.isNull());
@@ -619,7 +648,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebCodCountResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -698,8 +727,10 @@ export class V1WebAwbCodService {
 
     //#region Cod Merger
     if (
-      permissonPayload.roleName === 'Admin COD - Merger' &&
-      !permissonPayload.isHeadOffice
+      RoleGroupService.isRoleCodMerge(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
     ) {
       q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
         j
@@ -709,10 +740,15 @@ export class V1WebAwbCodService {
     }
     //#endregion
 
-    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
+    if (
+      RoleGroupService.isRoleCodAdmin(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
+    ) {
       q.andWhere(
         e => e.codPayment.branchId,
-        w => w.equals(permissonPayload.branchId),
+        w => w.equals(permissionPayload.branchId),
       );
     }
 
@@ -795,7 +831,7 @@ export class V1WebAwbCodService {
     payload: WebCodTransferPayloadVm,
   ): Promise<WebCodTransferBranchResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
 
@@ -804,7 +840,7 @@ export class V1WebAwbCodService {
       codTransactionCash = await this.transferBranchCash(
         payload,
         authMeta,
-        permissonPayload,
+        permissionPayload,
         uuidString,
       );
     }
@@ -814,7 +850,7 @@ export class V1WebAwbCodService {
       codTransactionCashless = await this.transferBranchCashless(
         payload,
         authMeta,
-        permissonPayload,
+        permissionPayload,
         uuidString,
       );
     }
@@ -848,7 +884,7 @@ export class V1WebAwbCodService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodListTransactionResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     // mapping field
     payload.fieldResolverMap['transactionStatus'] = 't2.status_title';
     payload.fieldResolverMap['driverName'] = 't5.first_name';
@@ -903,8 +939,10 @@ export class V1WebAwbCodService {
 
     //#region Cod Merger
     if (
-      permissonPayload.roleName === 'Admin COD - Merger' &&
-      !permissonPayload.isHeadOffice
+      RoleGroupService.isRoleCodMerge(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
     ) {
       q.innerJoin(e => e.codUserToBranch, 't10', j =>
         j
@@ -913,8 +951,16 @@ export class V1WebAwbCodService {
       );
     }
 
-    if (permissonPayload.roleName === 'Ops - Admin COD' || permissonPayload.roleName === 'Ops - Admin Operational ( COD )') {
-      q.andWhere(e => e.branchId, w => w.equals(permissonPayload.branchId));
+    if (
+      RoleGroupService.isRoleCodAdmin(
+        permissionPayload.roleName,
+        permissionPayload.isHeadOffice,
+      )
+    ) {
+      q.andWhere(
+        e => e.branchId,
+        w => w.equals(permissionPayload.branchId),
+      );
     }
     //#endregion
 
@@ -1102,7 +1148,7 @@ export class V1WebAwbCodService {
     codTransactionId: string,
   ): Promise<WebCodTransferBranchResponseVm> {
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
 
     const dataPrint: WebCodAwbPrintVm[] = [];
     let printId = null;
@@ -1132,7 +1178,7 @@ export class V1WebAwbCodService {
         transaction.transactionCode,
         authMeta.displayName,
         authMeta.username,
-        permissonPayload.branchId,
+        permissionPayload.branchId,
         transaction.userIdDriver,
         transaction.transactionDate,
       );
@@ -1803,7 +1849,7 @@ export class V1WebAwbCodService {
   private static async transferBranchCash(
     payload: WebCodTransferPayloadVm,
     authMeta: AuthLoginMetadata,
-    permissonPayload: JwtPermissionTokenPayload,
+    permissionPayload: JwtPermissionTokenPayload,
     uuidString: string,
   ): Promise<WebCodTransferBranchCashResponseVm> {
     const timestamp = moment().toDate();
@@ -1821,7 +1867,7 @@ export class V1WebAwbCodService {
       randomCode,
       authMeta.displayName,
       authMeta.username,
-      permissonPayload.branchId,
+      permissionPayload.branchId,
       userIdDriver,
     );
 
@@ -1841,7 +1887,7 @@ export class V1WebAwbCodService {
           const handleData = await this.handleAwbCod(
             item,
             uuidString,
-            permissonPayload.branchId,
+            permissionPayload.branchId,
             authMeta.userId,
           );
           if (handleData) {
@@ -1874,7 +1920,7 @@ export class V1WebAwbCodService {
       codBranchCash.transactionType = 'CASH';
       codBranchCash.totalCodValue = totalCodValueCash;
       codBranchCash.totalAwb = totalAwbCash;
-      codBranchCash.branchId = permissonPayload.branchId;
+      codBranchCash.branchId = permissionPayload.branchId;
       codBranchCash.userIdDriver = payload.userIdDriver;
       await CodTransaction.save(codBranchCash);
 
@@ -1898,7 +1944,7 @@ export class V1WebAwbCodService {
   private static async transferBranchCashless(
     payload: WebCodTransferPayloadVm,
     authMeta: AuthLoginMetadata,
-    permissonPayload: JwtPermissionTokenPayload,
+    permissionPayload: JwtPermissionTokenPayload,
     uuidString: string,
   ): Promise<WebCodTransferBranchCashlessResponseVm> {
     const timestamp = moment().toDate();
@@ -1916,7 +1962,7 @@ export class V1WebAwbCodService {
       randomCode,
       authMeta.displayName,
       authMeta.username,
-      permissonPayload.branchId,
+      permissionPayload.branchId,
       userIdDriver,
     );
 
@@ -1935,7 +1981,7 @@ export class V1WebAwbCodService {
           const handleData = await this.handleAwbCod(
             item,
             uuidString,
-            permissonPayload.branchId,
+            permissionPayload.branchId,
             authMeta.userId,
           );
 
@@ -1970,7 +2016,7 @@ export class V1WebAwbCodService {
       codBranchCashless.transactionType = 'CASHLESS';
       codBranchCashless.totalCodValue = totalCodValueCashless;
       codBranchCashless.totalAwb = totalAwbCashless;
-      codBranchCashless.branchId = permissonPayload.branchId;
+      codBranchCashless.branchId = permissionPayload.branchId;
       codBranchCashless.userIdDriver = payload.userIdDriver;
       await CodTransaction.save(codBranchCashless);
 

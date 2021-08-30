@@ -225,6 +225,7 @@ export class V2MobileInitDataService {
     qb.addSelect('awb.notes', 'consigneeNote');
     qb.addSelect('awb.consignee_phone', 'consigneeNumber');
     qb.addSelect('package_type.package_type_name', 'packageTypeName');
+    qb.addSelect('package_type.package_type_code', 'packageTypeCode');
     qb.addSelect('awb.total_cod_value', 'totalCodValue');
     qb.addSelect('awb.is_cod', 'isCOD');
     qb.addSelect('reason.reason_code', 'reasonCode');

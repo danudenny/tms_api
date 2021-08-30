@@ -9,11 +9,184 @@ import moment= require('moment');
 import { MonitoringHubProblemVm, MonitoringHubProblemLebihSortirVm } from '../../models/monitoring-hub-problem.vm';
 import { HubMonitoringService } from '../../../hub/services/integration/hub-monitoring.service';
 import { MonitoringProblemListService } from './monitoring-problem-list.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 @Injectable()
 export class MonitoringProblemLebihSortirListService {
 
+  static async getAwbtotalLebihSortir(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubProblemLebihSortirVm> {
+    payload = this.formatPayloadFiltersAwbProblem(payload);
+
+    // Mapping order by key
+    const mappingSortBy = {
+      scanDate: 'hsa.scan_date_in_hub',
+      scanDateInHub: 'hsa.scan_date_in_hub',
+      createdTime: 'hsa.scan_date_in_hub',
+      branchIdFrom: 'hsa.branch_id',
+      branchId: 'hsa.branch_id',
+      awbNumber: 'hsa.awb_number',
+      bagNumber: 'g.bag_number',
+      bagSortir: 'g.bag_number',
+      bagSeqSortir: 'f.bag_seq',
+      cityId: 'b.city_id',
+    };
+
+    // replace fieldResolverMap in Orion as Query Raw
+    const mappingFilter = {
+      scanDate: 'hsa.scan_date_in_hub',
+      scanDateInHub: 'hsa.scan_date_in_hub',
+      createdTime: 'hsa.scan_date_in_hub',
+      branchIdFrom: 'hsa.branch_id',
+      branchId: 'hsa.branch_id',
+      awbNumber: 'hsa.awb_number',
+      bagNumber: 'g.bag_number',
+      bagSortir: 'g.bag_number',
+      bagSeqSortir: 'f.bag_seq',
+      cityId: 'b.city_id',
+    };
+
+    // const whereQueryDropOffHub = await HubMonitoringService.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dohd.created_time', ['gt', 'gte'], 'scanDateDoHub');
+    const offset = (payload.page === 1) ? 0 : ((payload.page - 1) * payload.limit);
+    const filterScanDateInHub = [];
+    const otherFilter = [];
+    for (const filterValue of payload.filters) {
+      if (filterValue.field === 'scanDate') {
+        filterScanDateInHub.push(filterValue);
+      } else {
+        otherFilter.push(filterValue);
+      }
+    }
+    const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(otherFilter, mappingFilter, true);
+    const whereScanDateQuery = await HubMonitoringService.orionFilterToQueryRaw(filterScanDateInHub, mappingFilter, true);
+
+    let sortByRaw = '';
+    if (payload.sortBy) {
+      sortByRaw = mappingSortBy[payload.sortBy];
+    }
+    payload.sortBy = '';
+    payload = this.formatPayloadFiltersAwbProblem(payload);
+    let sql = `SELECT a.scan_date_in_hub as "scanDateInHub", c.city_id as "cityId", c.city_name as "cityName", a.branch_id as "branchId", b.branch_code as "branchCode", b.branch_name as "branchName", a.total as "lebihSortir", count(*) OVER() AS "fullCount"`;
+    sql = sql + ` FROM ( SELECT hsa.scan_date_in_hub, hsa.branch_id, count(hsa.awb_number) as total FROM hub_summary_awb hsa`;
+    if (whereQuery.includes('f.bag_seq') || whereQuery.includes('g.bag_number')) {
+      sql = sql + ` INNER JOIN bag_item f ON hsa.bag_item_id_in = f.bag_item_id INNER JOIN bag g on g.bag_id = f.bag_id`;
+    }
+
+    if (whereScanDateQuery != '') {
+      sql = sql + ` WHERE ${whereScanDateQuery} `;
+      if (whereQuery != '') {
+        sql = sql + ` AND ${whereQuery} `;
+      }
+    }
+
+    sql = sql + ` AND hsa.do_hub = FALSE AND hsa.in_hub = TRUE `;
+    sql = sql + ` GROUP BY hsa.scan_date_in_hub, hsa.branch_id`;
+    if (sortByRaw !== '') {
+      sql = sql + ` ORDER BY ${sortByRaw} ${payload.sortDir.toUpperCase()}`;
+    }
+    sql = sql + ` ) a`;
+    sql = sql + ` INNER JOIN branch b ON a.branch_id = b.branch_id AND b.is_deleted = FALSE INNER JOIN district d ON d.district_id = b.district_id AND d.is_deleted = FALSE INNER JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE `;
+    sql = sql + ` LIMIT ${payload.limit} OFFSET ${offset}`;
+    const data = await RawQueryService.query(sql, [], false);
+    const total = (data.length > 0) ? data[0].fullCount : 0;
+    for (const value of data) {
+      delete value.fullCount;
+    }
+    const result = new MonitoringHubProblemLebihSortirVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
   static async getLebihSortir(
+    payload: BaseMetaPayloadVm,
+  ): Promise<MonitoringHubProblemVm> {
+    const statusProblemStr = (await MonitoringProblemListService.getListStatusAwbProblem()).join(',');
+    payload = this.formatPayloadFiltersAwbProblem(payload);
+
+    // Mapping order by key
+    const mappingSortBy = {
+      scanDate: 'hsa.scan_date_in_hub',
+      scanDateInHub: 'hsa.scan_date_in_hub',
+      createdTime: 'hsa.scan_date_in_hub',
+      branchIdFrom: 'hsa.branch_id',
+      branchId: 'hsa.branch_id',
+      awbNumber: 'hsa.awb_number',
+      bagNumber: 'b.bag_number',
+      bagSortir: 'b.bag_number',
+      bagSeqSortir: 'bi.bag_seq',
+      cityId: 'c.city_id',
+    };
+
+    // replace fieldResolverMap in Orion as Query Raw
+    const mappingFilter = {
+      scanDate: 'hsa.scan_date_in_hub',
+      scanDateInHub: 'hsa.scan_date_in_hub',
+      createdTime: 'hsa.scan_date_in_hub',
+      branchIdFrom: 'hsa.branch_id',
+      branchId: 'hsa.branch_id',
+      awbNumber: 'hsa.awb_number',
+      bagNumber: 'b.bag_number',
+      bagSortir: 'b.bag_number',
+      bagSeqSortir: 'bi.bag_seq',
+      cityId: 'c.city_id',
+    };
+    const offset = (payload.page === 1) ? 0 : ((payload.page - 1) * payload.limit);
+    const filterScanDateInHub = [];
+    const otherFilter = [];
+    for (const filterValue of payload.filters) {
+      if (filterValue.field === 'scanDate') {
+        filterScanDateInHub.push(filterValue);
+      } else {
+        otherFilter.push(filterValue);
+      }
+    }
+    const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(otherFilter, mappingFilter, true);
+    const whereScanDateQuery = await HubMonitoringService.orionFilterToQueryRaw(filterScanDateInHub, mappingFilter, true);
+
+    let sortByRaw = '';
+    if (payload.sortBy) {
+      sortByRaw = mappingSortBy[payload.sortBy];
+    }
+    let sql = `SELECT hsa.scan_date_in_hub as "scanDateInHub", hsa.awb_number as "awbNumber", CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as "bagNumber", CASE WHEN hsa.do_hub THEN 'Yes' ELSE 'No' END  as "do", CASE WHEN hsa.in_hub THEN 'Yes' ELSE 'No' END  as "in", CASE WHEN hsa.out_hub THEN 'Yes' ELSE 'No' END  as "out", count(*) OVER() AS "fullCount"`;
+    sql = sql + ` FROM hub_summary_awb hsa`;
+    sql = sql + ` LEFT JOIN bag_item bi ON hsa.bag_item_id_in = bi.bag_item_id AND bi.is_deleted = FALSE`;
+    sql = sql + ` LEFT JOIN bag b ON bi.bag_id = b.bag_id AND b.is_deleted = FALSE`;
+    sql = sql + ` LEFT JOIN branch br ON br.branch_id = hsa.branch_id AND br.is_deleted = FALSE `;
+    sql = sql + ` LEFT JOIN district d ON d.district_id = br.district_id AND d.is_deleted = FALSE`;
+    sql = sql + ` LEFT JOIN city c ON c.city_id = d.city_id AND c.is_deleted = FALSE`;
+
+    if (whereScanDateQuery != '') {
+      sql = sql + ` WHERE ${whereScanDateQuery} `;
+      if (whereQuery != '') {
+        sql = sql + ` AND ${whereQuery} `;
+      }
+    }
+
+    sql = sql + ` AND hsa.do_hub = FALSE AND hsa.in_hub = TRUE`;
+
+    if (sortByRaw !== '') {
+      sql = sql + ` ORDER BY ${sortByRaw} ${payload.sortDir.toUpperCase()}`;
+    }
+    // add limit
+    sql = sql + ` LIMIT ${payload.limit} OFFSET ${offset}`;
+    const data = await RawQueryService.query(sql, [], false);
+    const total = (data.length > 0) ? data[0].fullCount : 0;
+    for (const value of data) {
+      delete value.fullCount;
+    }
+    const result = new MonitoringHubProblemVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+
+  }
+
+  static async getLebihSortirOld(
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringHubProblemVm> {
     const statusProblemStr = (await MonitoringProblemListService.getListStatusAwbProblem()).join(',');
@@ -175,7 +348,7 @@ export class MonitoringProblemLebihSortirListService {
     return result;
   }
 
-  static async getAwbtotalLebihSortir(
+  static async getAwbtotalLebihSortirOld(
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringHubProblemLebihSortirVm> {
     payload = this.formatPayloadFiltersAwbProblem(payload);
