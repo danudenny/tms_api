@@ -92,6 +92,9 @@ export class MobileSmdListService {
         paramUserId,
       },
     );
+    qb.andWhere(
+      'ds.is_empty = FALSE',
+    );
     // qb.andWhere('ds.do_smd_status_id_last <> 6000');
     qb.andWhere('dsd.do_smd_status_id_last not in (5000, 6000) ');
     qb.andWhere('dsd.seal_number is not null');
@@ -180,6 +183,9 @@ export class MobileSmdListService {
     if (do_smd_status == 6000) {
       qb.andWhere('ds.do_smd_status_id_last <>  6000');
     }
+    qb.andWhere(
+      'ds.is_empty = FALSE',
+    );
     qb.andWhere('ds.is_vendor = false');
     qb.andWhere('ds.is_deleted = false');
     return await qb.getRawMany();
@@ -373,6 +379,9 @@ export class MobileSmdListService {
       {
         paramUserId,
       },
+    );
+    qb.andWhere(
+      'ds.is_empty = FALSE',
     );
     qb.andWhere('ds.is_vendor = false');
     qb.andWhere('ds.is_deleted = false');
