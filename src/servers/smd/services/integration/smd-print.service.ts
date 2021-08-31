@@ -667,7 +667,7 @@ export class SmdPrintService {
 
     dataVm.doSmdDetails = dataSmdDetailsVm;
     response.data = dataVm;
-
+    const isEmpty = true;
     this.printDoSmdAndQueryMeta(
       res,
       dataVm as any,
@@ -678,6 +678,7 @@ export class SmdPrintService {
       {
         printCopy: queryParams.printCopy,
       },
+      isEmpty,
     );
   }
 
@@ -693,6 +694,7 @@ export class SmdPrintService {
     } = {
         printCopy: 1,
       },
+    isEmpty = false,
   ) {
     const currentUser = await RepositoryService.user
       .loadById(metaQuery.userId)
@@ -734,6 +736,7 @@ export class SmdPrintService {
         time: currentDate.format('HH:mm'),
       },
       templateConfig,
+      isEmpty,
     );
   }
 
@@ -751,18 +754,19 @@ export class SmdPrintService {
     } = {
         printCopy: 1,
       },
+    isEmpty = false,
   ) {
     const jsreportParams = {
       data,
       meta,
     };
-
+    const templateName = isEmpty ? 'surat-jalan-kosong' : 'surat-muatan-darat';
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
       templates: [
         {
-          templateName: 'surat-muatan-darat',
+          templateName,
           templateData: jsreportParams,
           printCopy: templateConfig.printCopy,
         },
