@@ -405,8 +405,17 @@ export class FirstMileDoPodReturnService {
       [`CONCAT(CAST(t2.total_weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['COALESCE(t1.consignee_name, t2.consignee_name)', 'consigneeName'],
       ['t3.awb_status_title', 'awbStatusTitle'],
-      ['t4.do_return', 'isDoReturn'],
-      ['t4.do_return_number', 'doReturnNumber'],
+      [`CASE
+          WHEN (COALESCE(t4.doreturn_new_awb, t4.doreturn_new_awb_3pl))
+            IS NULL THEN false
+            ELSE true
+          END`, 'isDoReturn'],
+      [`CASE
+        WHEN (COALESCE(t4.doreturn_new_awb, t4.doreturn_new_awb_3pl))
+          IS NULL THEN NULL
+          ELSE CONCAT('SiCepat ',
+          COALESCE(t4.doreturn_new_awb, t4.doreturn_new_awb_3pl))
+        END`, 'doReturnNumber'],
       [
         'CONCAT(CAST(t2.total_cod_value AS NUMERIC(20,2)))',
         'totalCodValue',
@@ -419,7 +428,7 @@ export class FirstMileDoPodReturnService {
     q.innerJoin(e => e.awbStatus, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.pickupRequestDetail, 't4', j =>
+    q.leftJoin(e => e.awbItemAttr, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
