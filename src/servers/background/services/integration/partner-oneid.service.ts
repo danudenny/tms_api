@@ -1,6 +1,8 @@
+import { MoreThan } from 'typeorm';
 import { PartnerOneidPayloadVm, ListOneidOrderActivityResponseVm } from '../../models/partner/oneid-task.vm';
 import moment = require('moment');
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { Awb } from '../../../../shared/orm-entity/awb';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
@@ -158,5 +160,63 @@ export class PartnerOneidService {
     result.statusCode = HttpStatus.OK;
     result.message = "Success";
     return result;
+  }
+
+  static async getOrder(query){
+    try {
+
+      const endDate =  moment().subtract(30, "days").format("YYYY-MM-DD HH:mm:ss");
+      const filter: any = {};
+
+      // default filter
+      filter.isDeleted = false;
+      filter.awbDate =  MoreThan(endDate);
+      // Pagination
+      const limitValue = parseFloat(query.limit) || 10;
+      const page = parseFloat(query.page);
+      const offsetValue =limitValue * ((page || 1) - 1);
+
+      // filter
+      if(query.awbNumber){
+        filter.awbNumber = query.awbNumber;
+      }
+
+      const results = await Awb.find({
+        select: ['awbId','awbNumber','consigneeName', 'awbDate', 'totalBasePrice', 'createdTime'],
+        relations: ['packageType','awbStatus'],
+        where: filter,
+        take: limitValue,
+        skip: offsetValue
+      });
+      
+      // mapping
+
+      const mapping = [];
+      for(let i = 0; i < results.length; i += 1){
+        mapping.push({
+          awbId: results[i].awbId,
+          awbNumber: results[i].awbNumber,
+          receiver: results[i].consigneeName,
+          date: results[i].awbDate,
+          service: (results[i].packageType) ? results[i].packageType.packageTypeCode : null,
+          price: results[i].totalBasePrice,
+          status: results[i].awbStatus.awbStatusName,
+        })
+      }
+
+      return {
+        status: true,
+        statusCode: 200,
+        limit: limitValue,
+        page,
+        data: mapping
+      }
+    } catch (error) {
+      return {
+        status: false,
+        statusCode: 500,
+        message: (error) ? error.message : null
+      };
+    }
   }
 }

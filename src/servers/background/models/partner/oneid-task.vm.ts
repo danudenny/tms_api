@@ -49,3 +49,16 @@ export class ListOneidOrderActivityResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [ListOneidOrderActivityDetailVm] })
   data: ListOneidOrderActivityDetailVm[];
 }
+
+export class ListResiVm {
+
+  @ApiModelProperty()
+  limit: string;
+
+  @ApiModelProperty()
+  page: string;
+
+  @ApiModelPropertyOptional()
+  awbNumber: string;
+
+}
