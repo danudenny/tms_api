@@ -238,6 +238,7 @@ export class ScanoutSmdService {
           authMeta.userId,
           null,
           payload.description,
+          true,
         );
 
         const paramDoSmdVehicleId = await this.createDoSmdVehicle(
@@ -2137,6 +2138,7 @@ export class ScanoutSmdService {
     userId: number,
     paramCounterTrip: number,
     description: string,
+    isEmpty = false,
   ) {
     const dataDoSmd = DoSmd.create({
       doSmdCode: paramDoSmdCode,
@@ -2149,6 +2151,7 @@ export class ScanoutSmdService {
       doSmdNote: description,
       isVendor: false,
       isIntercity: 0,
+      isEmpty,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,
