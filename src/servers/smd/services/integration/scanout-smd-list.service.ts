@@ -83,7 +83,7 @@ export class ScanoutSmdListService {
     q.selectRaw(
       ['ds.do_smd_id', 'do_smd_id'],
       ['ds.do_smd_code', 'do_smd_code'],
-      [`CASE WHEN ds.is_empty = 1 THEN 'SURAT JALAN KOSONG' ELSE 'SURAT JALAN DARAT' END`, 'do_smd_empty'],
+      [`CASE WHEN ds.is_empty = TRUE THEN 'SURAT JALAN KOSONG' ELSE 'SURAT JALAN DARAT' END`, 'do_smd_empty'],
       ['ds.do_smd_time', 'do_smd_time'],
       ['e.fullname', 'fullname'],
       ['e.employee_id', 'employee_id'],
@@ -160,7 +160,7 @@ export class ScanoutSmdListService {
       ['ds.do_smd_code', 'do_smd_code'],
       [`CASE
         WHEN ds.is_intercity = 1 THEN 'DALAM KOTA'
-        WHEN ds.is_empty = 1 THEN 'SURAT JALAN KOSONG'
+        WHEN ds.is_empty = TRUE THEN 'SURAT JALAN KOSONG'
         ELSE 'LUAR KOTA' END`, 'do_smd_intercity'],
       ['ds.do_smd_time', 'do_smd_time'],
       ['e.fullname', 'fullname'],
