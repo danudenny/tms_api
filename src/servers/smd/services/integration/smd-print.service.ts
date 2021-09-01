@@ -639,7 +639,6 @@ export class SmdPrintService {
         message: 'Tujuan perwakilan atau kecamatan surat jalan tidak valid',
       });
     }
-
     const response = new PrintDoSmdVm();
     const dataVm = new PrintDoSmdDataVm();
     dataVm.doSmdId = doSmd.doSmdId;
@@ -651,13 +650,14 @@ export class SmdPrintService {
     dataVm.totalBagRepresentative = doSmd.totalBagRepresentative;
     const dataSmdDetailsVm: PrintDoSmdDataDoSmdDetailVm[] = [];
 
-    const idDetail = doSmd.doSmdDetails.filter(e => e.doSmdDetailId);
+    // const idDetail = doSmd.doSmdDetails.filter(e => e.doSmdDetailId);
 
     // tslint:disable-next-line: prefer-for-of
-    for (let l = 0; l < idDetail.length; l++) {
+    for (let l = 0; l < doSmd.doSmdDetails.length; l++) {
       const dataSmdDetailVm = new PrintDoSmdDataDoSmdDetailVm();
 
-      dataSmdDetailVm.doSmdDetailId = idDetail[l].doSmdDetailId; // set ID
+      dataSmdDetailVm.doSmdDetailId = doSmd.doSmdDetails[l].doSmdDetailId; // set ID
+      dataSmdDetailVm.branchTo = doSmd.doSmdDetails[l].branchTo;
       dataSmdDetailVm.doSmdDetailItems = [];
       dataSmdDetailVm.doSmdBaggingItems = [];
       dataSmdDetailVm.doSmdBagRepresentativeItems = [];
