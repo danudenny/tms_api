@@ -67,7 +67,7 @@ export class ScanOutEmptyVehicleVm {
 
 }
 
-export class ScanOutEmptyListResponseVm {
+export class ScanOutEmptyListDataResponseVm {
 
   @ApiModelProperty()
   do_smd_id: string;
@@ -98,6 +98,12 @@ export class ScanOutEmptyListResponseVm {
 
   @ApiModelProperty()
   vehicle_number: String;
+}
+
+export class ScanOutEmptyListResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanOutEmptyListDataResponseVm] })
+  data: ScanOutEmptyListDataResponseVm[];
 }
 
 export class ScanOutSmdRouteResponseVm {

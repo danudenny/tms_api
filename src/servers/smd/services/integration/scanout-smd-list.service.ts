@@ -111,17 +111,14 @@ export class ScanoutSmdListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.groupByRaw('do_smd_id, do_smd_code, is_empty, do_smd_time, fullname, employee_id, vehicle_number, branch_from_name, branch_to_name, nik');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.isEmpty, w => w.isTrue());
-    const result = {
-      data: null,
-      total: null,
-    };
+
+    const result = new ScanOutHistoryResponseVm();
+
     result.data = await q.exec();
-    if (isGetTotal) {
-      result.total = await q.countWithoutTakeAndSkip();
-    }
+    const total = await q.countWithoutTakeAndSkip();
+    result.paging = MetaService.set(payload.page, payload.limit, total);
     return result;
   }
 
