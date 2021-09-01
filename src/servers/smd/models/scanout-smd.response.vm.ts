@@ -67,6 +67,39 @@ export class ScanOutEmptyVehicleVm {
 
 }
 
+export class ScanOutEmptyListResponseVm {
+
+  @ApiModelProperty()
+  do_smd_id: string;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  do_smd_empty: string;
+
+  @ApiModelProperty()
+  do_smd_time: string;
+
+  @ApiModelProperty()
+  fullname: Date;
+
+  @ApiModelProperty()
+  employee_id: string;
+
+  @ApiModelProperty()
+  branch_from_name: string;
+
+  @ApiModelProperty()
+  nik: string;
+
+  @ApiModelProperty()
+  branch_to_name: string;
+
+  @ApiModelProperty()
+  vehicle_number: String;
+}
+
 export class ScanOutSmdRouteResponseVm {
   @ApiModelProperty()
   statusCode: number;
