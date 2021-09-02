@@ -52,7 +52,7 @@ export class ScanoutSmdListService {
   static async FindscanOutEmptyList(payload: BaseMetaPayloadVm, isGetTotal = true): Promise<any> {
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
-    // payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
+    payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
     payload.fieldResolverMap['is_empty'] = 'ds.is_empty';
     payload.fieldResolverMap['nik'] = 'e.nik';
@@ -62,16 +62,13 @@ export class ScanoutSmdListService {
         field: 'do_smd_time',
       },
       {
-        field: 'branch_id_from',
+        field: 'branch_name_from',
       },
-      // {
-      //   field: 'branch_id_to',
-      // },
+      {
+        field: 'branch_name_to',
+      },
       {
         field: 'do_smd_code',
-      },
-      {
-        field: 'is_empty',
       },
     ];
 
@@ -93,11 +90,11 @@ export class ScanoutSmdListService {
       ['e.nik', 'nik'],
     );
 
-    // q.innerJoinRaw(
-    //   'do_smd_detail',
-    //   'dsd',
-    //   'dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE',
-    // );
+    q.innerJoinRaw(
+      'do_smd_detail',
+      'dsd',
+      'dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE',
+    );
     // q.innerJoin(e => e.doSmdDetail, 'dsd', j =>
     //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
     // );
