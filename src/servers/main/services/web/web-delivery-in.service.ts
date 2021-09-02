@@ -562,6 +562,28 @@ export class WebDeliveryInService {
       },
     ];
 
+    let payloadBagNumber ='0';
+    let payloadSealNumber;
+
+    for (let i = 0; i < payload.filters.length; i++) {
+      if ('bagNumber' == payload.filters[i].field) {
+        payloadBagNumber = payload.filters[i].value;
+        payload.filters.splice(i, 1);
+      }
+      if ('sealNumber' == payload.filters[i].field) {
+        payloadSealNumber = payload.filters[i].value;
+        payload.filters.splice(i, 1);
+      }
+    }
+
+    let bagNumber;
+    let bagSeq;
+    const bag = await BagService.validBagNumber(payloadBagNumber);
+    if (bag) {
+      bagNumber = bag.bag.bagNumber;
+      bagSeq = bag.bagSeq;
+    }
+
     const repo = new OrionRepositoryService(Bag, 't1');
     const q = repo.findAllRaw();
 
@@ -601,6 +623,14 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
+    if(bagNumber && bagSeq){
+      q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
+      q.andWhere(e => e.bagItems.bagSeq, w => w.equals(bagSeq));
+    }
+    if(payloadSealNumber){
+      q.andWhere(e => e.sealNumber, w => w.equals(payloadSealNumber));
+    }
+
 
     q.groupByRaw(`
       t2.created_time,
