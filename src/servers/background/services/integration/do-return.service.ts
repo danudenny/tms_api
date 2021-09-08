@@ -19,38 +19,53 @@ export class DoReturnService {
   }
 
   private static async searchDoKembali(): Promise<any> {
-    await RawQueryService.query(`
-        INSERT INTO do_return_awb
-        (                        branch_id_last,
-                                  awb_number,
-                                  awb_status_id_last,
-                                  customer_account_id,
-                                  customer_id,
-                                  pod_datetime,
-                                  user_id_created,
-                                  user_id_updated,
-                                  do_return_awb_number,
-                                  created_time,
-                                  updated_time
-          )
+    const startDate = moment().format('YYYY-MM-DD 00:00:00');
+    const endDate = moment().format('YYYY-MM-DD 23:59:59');
+    await RawQueryService.query(
+      `
+          insert
+          into
+          do_return_awb ( branch_id_last,
+          awb_number,
+          awb_status_id_last,
+          customer_account_id,
+          customer_id,
+          pod_datetime,
+          user_id_created,
+          user_id_updated,
+          do_return_awb_number,
+          created_time,
+          updated_time )
           (
-      SELECT aia.branch_id_last,
-      aia.awb_number,
-      aia.awb_status_id_last,
-      a.customer_account_id AS "customeAccountId",
-      ca.customer_id AS "customerId",
-      a.history_date_last AS "pod_datetime",
-      a.user_id_created,
-      a.user_id_updated,
-      prd.do_return_number,
-      a.created_time,
-      a.updated_time
-      from pickup_request_detail prd
-      inner join awb_item_attr aia on prd.ref_awb_number=aia.awb_number and aia.is_deleted=false
-      inner join awb a on aia.awb_id=a.awb_id and a.is_deleted=false
-      left join customer_account ca on a.customer_account_id=ca.customer_account_id and ca.is_deleted=false
-      left join customer cust on ca.customer_id=cust.customer_id and cust.is_deleted=false
-      where prd.do_return = true and prd.is_doreturn_sync is null and aia.awb_status_id_last >= 1500 limit 3000
+            SELECT
+            aia.branch_id_last,
+            aia.awb_number,
+            aia.awb_status_id_last,
+            A.customer_account_id AS "customeAccountId",
+            ca.customer_id AS "customerId",
+            A.history_date_last AS "pod_datetime",
+            A.user_id_created,
+            A.user_id_updated,
+            prd.do_return_number,
+            A.created_time,
+            A.updated_time
+          FROM
+            pickup_request_detail prd
+            INNER JOIN awb_item_attr aia ON prd.ref_awb_number = aia.awb_number
+            AND aia.is_deleted =
+            FALSE INNER JOIN awb A ON aia.awb_id = A.awb_id
+            AND A.is_deleted =
+            FALSE LEFT JOIN customer_account ca ON A.customer_account_id = ca.customer_account_id
+            AND ca.is_deleted =
+            FALSE LEFT JOIN customer cust ON ca.customer_id = cust.customer_id
+            AND cust.is_deleted = FALSE
+          WHERE
+            prd.created_time >= ${startDate}
+            AND prd.created_time < ${endDate}
+            AND prd.do_return = TRUE
+            AND prd.is_doreturn_sync IS NULL
+            AND aia.awb_status_id_last >= 1500
+            LIMIT 100;
       );
       `,
       null,
@@ -61,14 +76,17 @@ export class DoReturnService {
   }
 
   private static async updatePickReqDetail(): Promise<any> {
-    await RawQueryService.query(` UPDATE pickup_request_detail prd
+    await RawQueryService.query(
+      ` UPDATE pickup_request_detail prd
       SET is_doreturn_sync = true
       FROM do_return_awb p2
       WHERE prd.ref_awb_number = p2.awb_number
-      AND prd.is_doreturn_sync is null;`, null, false);
+      AND prd.is_doreturn_sync is null;`,
+      null,
+      false,
+    );
     return true;
-
-}
+  }
 
   static async syncDoReturn(): Promise<DoReturnSyncResponseVm> {
     const insertReturn = await this.searchDoKembali();
