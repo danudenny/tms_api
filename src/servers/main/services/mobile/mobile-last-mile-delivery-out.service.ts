@@ -23,6 +23,7 @@ import { CustomCounterCode } from '../../../../shared/services/custom-counter-co
 import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { BadRequestException } from '@nestjs/common';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 
 // #endregion
 
@@ -397,8 +398,15 @@ export class LastMileDeliveryOutService {
     doPod.branchId = permissonPayload.branchId;
     doPod.userId = authMeta.userId;
 
-    // await for get do pod id
-    await DoPodDeliver.save(doPod);
+    try {
+      // await for get do pod id
+      await DoPodDeliver.save(doPod);
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
 
     await this.createAuditDeliveryHistory(doPod.doPodDeliverId, false);
 
