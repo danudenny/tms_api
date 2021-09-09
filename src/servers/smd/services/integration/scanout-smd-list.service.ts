@@ -49,7 +49,7 @@ export class ScanoutSmdListService {
     return result;
   }
 
-  static async FindscanOutEmptyList(payload: BaseMetaPayloadVm, isGetTotal = true): Promise<any> {
+  static async findscanOutEmptyList(payload: BaseMetaPayloadVm, isGetTotal = true): Promise<any> {
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';

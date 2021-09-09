@@ -25,7 +25,7 @@ export class ScanOutListController {
   @ApiOkResponse({type: ScanOutEmptyListResponseVm})
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async FindscanOutEmptyList(@Body() payload: BaseMetaPayloadVm) {
-    return ScanoutSmdListService.FindscanOutEmptyList(payload);
+    return ScanoutSmdListService.findscanOutEmptyList(payload);
   }
 
   @Post('scanOut/history')
