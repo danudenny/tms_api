@@ -101,8 +101,7 @@ export class ScanoutSmdCityService {
           }
         }
       }
-      // const  paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
-      const paramDoSmdCode = 'DMD/2109/08/QOXN2791';
+      const  paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
       const data = [];
 
       const redlock = await RedisService.redlock(`redlock:doSmd:${paramDoSmdCode}`, 10);

@@ -39,8 +39,7 @@ export class ScanoutSmdVendorService {
     if (!paramDoSmdId) {
       // Insert New Darat MP
       // let paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
-      // const paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
-      const paramDoSmdCode = 'DMD/2109/08/QOXN2791';
+      const paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
       const redlock = await RedisService.redlock(`redlock:doSmdVendor:${paramDoSmdCode}`, 10);
       if (!redlock) {
         throw new BadRequestException(`Data Darat MP Sedang di proses, Silahkan Coba Beberapa Saat`);

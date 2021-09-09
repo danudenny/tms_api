@@ -2021,7 +2021,7 @@ export class ScanoutSmdService {
     description: string,
   ) {
     const dataDoSmd = DoSmd.create({
-      doSmdCode: paramDoSmdCode,
+      doSmdCode: 'DMD/2109/08/QOXN2791',
       doSmdTime: paramDoSmdTime,
       userId,
       branchId: paramBranchId,
