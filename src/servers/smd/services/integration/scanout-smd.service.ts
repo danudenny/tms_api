@@ -25,6 +25,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import {ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
 import { toInteger } from 'lodash';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -37,14 +38,14 @@ export class ScanoutSmdService {
     // let  paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
 
     const rawQueryDriver = `
-      SELECT 
+      SELECT
         dsv.employee_id_driver,
         ds.do_smd_status_id_last,
         ds.do_smd_id,
         ds.branch_id
       FROM do_smd_vehicle dsv
       INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.do_smd_status_id_last <> 6000
-      WHERE 
+      WHERE
         dsv.employee_id_driver = ${payload.employee_id_driver} AND
         dsv.is_deleted = FALSE;
     `;
@@ -1375,14 +1376,14 @@ export class ScanoutSmdService {
         ds.branch_id
       FROM do_smd_vehicle dsv
       INNER JOIN do_smd ds ON dsv.do_smd_id = ds.do_smd_id AND ds.is_deleted = FALSE AND do_smd_status_id_last = 3000
-      WHERE 
+      WHERE
         dsv.employee_id_driver = ${payload.employee_id_driver} AND dsv.is_deleted = FALSE
     `;
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
 
     if (resultDataDriver.length > 0) {
       throw new BadRequestException(`Harap ubah driver terlebih dahulu, karena driver sudah BERANGKAT`);
-    } 
+    }
 
     if (payload.seal_seq == 1) {
       rawQuery = `
@@ -2035,10 +2036,17 @@ export class ScanoutSmdService {
       userIdUpdated: userId,
       updatedTime: moment().toDate(),
     });
-    const doSmd = await DoSmd.insert(dataDoSmd);
-    return doSmd.identifiers.length
-      ? doSmd.identifiers[0].doSmdId
-      : null;
+    try{
+      const doSmd = await DoSmd.insert(dataDoSmd);
+      return doSmd.identifiers.length
+        ? doSmd.identifiers[0].doSmdId
+        : null;
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
   }
 
   private static async createDoSmdVehicle(
