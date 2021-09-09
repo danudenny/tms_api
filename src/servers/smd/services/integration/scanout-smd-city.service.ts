@@ -969,18 +969,10 @@ export class ScanoutSmdCityService {
       userIdUpdated: userId,
       updatedTime: moment().toDate(),
     });
-
-    try {
-      const doSmd = await DoSmd.insert(dataDoSmd);
-      return doSmd.identifiers.length
-        ? doSmd.identifiers[0].doSmdId
-        : null;
-    } catch (err) {
-      console.log('ERROR INSERT:::::: ', err);
-      RequestErrorService.throwObj({
-        message: 'global.error.SERVER_BUSY',
-      });
-    }
+    const doSmd = await DoSmd.insert(dataDoSmd);
+    return doSmd.identifiers.length
+      ? doSmd.identifiers[0].doSmdId
+      : null;
   }
 
   private static async createDoSmdCityVehicle(

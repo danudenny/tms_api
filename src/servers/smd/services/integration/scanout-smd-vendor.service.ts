@@ -21,7 +21,6 @@ import { BagScanVendorQueueService } from '../../../queue/services/bag-scan-vend
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { ScanOutSmdVendorItemMorePayloadVm, ScanOutSmdVendorItemPayloadVm } from '../../models/scanout-smd-vendor.payload.vm';
-import { RequestErrorService } from '../../../../shared/services/request-error.service';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -40,6 +39,7 @@ export class ScanoutSmdVendorService {
       // Insert New Darat MP
       // let paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
       const paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
+
       const redlock = await RedisService.redlock(`redlock:doSmdVendor:${paramDoSmdCode}`, 10);
       if (!redlock) {
         throw new BadRequestException(`Data Darat MP Sedang di proses, Silahkan Coba Beberapa Saat`);
@@ -1300,18 +1300,10 @@ export class ScanoutSmdVendorService {
       userIdUpdated: userId,
       updatedTime: moment().toDate(),
     });
-
-    try {
-      const doSmd = await DoSmd.insert(dataDoSmd);
-      return doSmd.identifiers.length
-        ? doSmd.identifiers[0].doSmdId
-        : null;
-    } catch (err) {
-      console.log('ERROR INSERT:::::: ', err);
-      RequestErrorService.throwObj({
-        message: 'global.error.SERVER_BUSY',
-      });
-    }
+    const doSmd = await DoSmd.insert(dataDoSmd);
+    return doSmd.identifiers.length
+      ? doSmd.identifiers[0].doSmdId
+      : null;
   }
 
   private static async createDoSmdVehicle(
