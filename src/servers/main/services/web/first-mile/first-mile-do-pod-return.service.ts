@@ -380,6 +380,7 @@ export class FirstMileDoPodReturnService {
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbNumber'] = 't2.awb_number';
     payload.fieldResolverMap['consigneeName'] = 't1.consignee_name';
+    payload.fieldResolverMap['doReturnNumber'] = 'doReturnNumber';
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
