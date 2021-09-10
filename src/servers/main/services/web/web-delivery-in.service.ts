@@ -388,7 +388,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['totalCodValue'] = 't3.total_cod_value';
     payload.fieldResolverMap['branchId'] = 't3.branch_id';
     payload.fieldResolverMap['branchName'] = 't4.branch_name';
-    payload.fieldResolverMap['totalWeightFinal'] = 't3.total_weight_final';
+    payload.fieldResolverMap['totalWeightFinal'] = 't3.total_weight';
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
