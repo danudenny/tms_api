@@ -864,7 +864,6 @@ export class SmdPrintService {
       data,
       meta,
     };
-    console.log('__templatedata: ', jsreportParams);
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
