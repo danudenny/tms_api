@@ -24,6 +24,7 @@ import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/
 import { RedisService } from '../../../../shared/services/redis.service';
 import {ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
 import { toInteger } from 'lodash';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -1049,8 +1050,15 @@ export class ScanoutSmdService {
                 , },
               ]);
 
-              const id = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
-
+              const bagItemHistoryId = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
+              await BagItem.update(
+                { bagItemId : resultDataBag[0].bag_item_id },
+                {
+                  bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
+                  branchIdLast: permissonPayload.branchId,
+                  bagItemHistoryId: Number(bagItemHistoryId),
+                },
+              );
               // Generate history bag and its awb IN_HUB
               BagScanDoSmdQueueService.perform(
                 Number(resultDataBag[0].bag_item_id),
@@ -1213,8 +1221,15 @@ export class ScanoutSmdService {
                   params:  { doSmdId: resultDoSmd.doSmdId }
                 , },
               ]);
-              const id = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
-
+              const bagItemHistoryId = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
+              await BagItem.update(
+                { bagItemId : resultDataBag[0].bag_item_id },
+                {
+                  bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
+                  branchIdLast: permissonPayload.branchId,
+                  bagItemHistoryId: Number(bagItemHistoryId),
+                },
+              );
               // Generate history bag and its awb IN_HUB
               BagScanDoSmdQueueService.perform(
                 Number(resultDataBag[0].bag_item_id),
