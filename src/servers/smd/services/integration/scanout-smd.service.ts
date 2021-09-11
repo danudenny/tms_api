@@ -1049,7 +1049,7 @@ export class ScanoutSmdService {
                 , },
               ]);
 
-              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
+              const id = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
               BagScanDoSmdQueueService.perform(
@@ -1213,7 +1213,7 @@ export class ScanoutSmdService {
                   params:  { doSmdId: resultDoSmd.doSmdId }
                 , },
               ]);
-              await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
+              const id = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
               BagScanDoSmdQueueService.perform(
@@ -1337,7 +1337,10 @@ export class ScanoutSmdService {
     resultbagItemHistory.createdTime = moment().toDate();
     resultbagItemHistory.userIdUpdated = userId;
     resultbagItemHistory.updatedTime = moment().toDate();
-    await BagItemHistory.insert(resultbagItemHistory);
+    const bagItemHistory = await BagItemHistory.insert(resultbagItemHistory);
+    return bagItemHistory.identifiers.length
+      ? bagItemHistory.identifiers[0].bagItemHistoryId
+      : null;
   }
 
   static async scanOutSeal(payload: any): Promise<any> {
