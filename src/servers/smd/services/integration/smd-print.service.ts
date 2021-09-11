@@ -773,7 +773,7 @@ export class SmdPrintService {
 
     dataVm.doSmdDetails = dataSmdDetailsVm;
     response.data = dataVm;
-    const adminName = doSmd.admin.firstName + ' ' + doSmd.admin.lastName;
+    const adminName = doSmd.admin.firstName + (doSmd.admin.lastName ? (' ' + doSmd.admin.lastName) : '');
     this.printVendorAndQueryMeta(
       res,
       dataVm as any,
@@ -864,7 +864,7 @@ export class SmdPrintService {
       data,
       meta,
     };
-
+    console.log('__templatedata: ', jsreportParams);
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
