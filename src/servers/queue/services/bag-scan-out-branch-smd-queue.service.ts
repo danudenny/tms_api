@@ -10,6 +10,7 @@ import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
 import { BagRepresentativeHistory } from '../../../shared/orm-entity/bag-representative-history';
 import { BAG_REPRESENTATIVE_STATUS } from '../../../shared/constants/bag-representative-status.constant';
+import { BagItem } from '../../../shared/orm-entity/bag-item';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -195,6 +196,15 @@ export class BagScanOutBranchSmdQueueService {
         resultbagItemHistory.userIdUpdated = Number(data.userId);
         resultbagItemHistory.updatedTime = moment().toDate();
         await BagItemHistory.insert(resultbagItemHistory);
+
+        await BagItem.update(
+          { bagItemId : item.bag_item_id },
+          {
+            bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
+            branchIdLast: data.branchId,
+            bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
+          },
+        );
 
         if (bagItemsAwb && bagItemsAwb.length) {
           for (const itemAwb of bagItemsAwb) {

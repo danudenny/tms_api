@@ -25,6 +25,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import {ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
 import { ScanOutSmdCitySealResponseVm, ScanOutSmdCityVehicleResponseVm } from '../../models/scanout-smd-city.response.vm';
 import { toInteger } from 'lodash';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
 
 @Injectable()
 export class ScanoutSmdCityService {
@@ -589,11 +590,19 @@ export class ScanoutSmdCityService {
             {
               sql: queryDoSmd,
               params:  {
-                doSmdId: resultDoSmd.doSmdId
+                doSmdId: resultDoSmd.doSmdId,
               },
             },
           ]);
-          await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
+          const bagItemHistoryId = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
+          await BagItem.update(
+            { bagItemId : resultDataBag[0].bag_item_id },
+            {
+              bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
+              branchIdLast: permissonPayload.branchId,
+              bagItemHistoryId: Number(bagItemHistoryId),
+            },
+          );
 
               // Generate history bag and its awb IN_HUB
           BagScanDoSmdQueueService.perform(
@@ -732,12 +741,19 @@ export class ScanoutSmdCityService {
             {
               sql: queryDoSmd,
               params:  {
-                doSmdId: resultDoSmd.doSmdId
+                doSmdId: resultDoSmd.doSmdId,
               },
             },
           ]);
-          await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
-
+          const bagItemHistoryId = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
+          await BagItem.update(
+            { bagItemId : resultDataBag[0].bag_item_id },
+            {
+              bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
+              branchIdLast: permissonPayload.branchId,
+              bagItemHistoryId: Number(bagItemHistoryId),
+            },
+          );
           // Generate history bag and its awb IN_HUB
           BagScanDoSmdQueueService.perform(
             Number(resultDataBag[0].bag_item_id),
@@ -922,7 +938,11 @@ export class ScanoutSmdCityService {
     resultbagItemHistory.createdTime = moment().toDate();
     resultbagItemHistory.userIdUpdated = userId;
     resultbagItemHistory.updatedTime = moment().toDate();
-    await BagItemHistory.insert(resultbagItemHistory);
+    const bagItemHistory = await BagItemHistory.insert(resultbagItemHistory);
+
+    return bagItemHistory.identifiers.length
+      ? bagItemHistory.identifiers[0].bagItemHistoryId
+      : null;
   }
 
   private static async createDoSmdCity(

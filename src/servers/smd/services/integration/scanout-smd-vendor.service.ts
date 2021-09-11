@@ -1267,7 +1267,11 @@ export class ScanoutSmdVendorService {
     resultbagItemHistory.createdTime = moment().toDate();
     resultbagItemHistory.userIdUpdated = userId;
     resultbagItemHistory.updatedTime = moment().toDate();
-    await BagItemHistory.insert(resultbagItemHistory);
+    const bagItemHistory = await BagItemHistory.insert(resultbagItemHistory);
+
+    return bagItemHistory.identifiers.length
+      ? bagItemHistory.identifiers[0].bagItemHistoryId
+      : null;
   }
 
   private static async createDoSmd(
