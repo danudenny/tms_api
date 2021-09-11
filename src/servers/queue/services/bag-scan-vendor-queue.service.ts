@@ -10,6 +10,7 @@ import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
 import {In} from 'typeorm';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
+import { BagItem } from '../../../shared/orm-entity/bag-item';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -92,6 +93,15 @@ export class BagScanVendorQueueService {
           resultbagItemOutHistory.userIdUpdated = data.userId;
           resultbagItemOutHistory.updatedTime = moment().add(1, 'minutes').toDate();
           await BagItemHistory.insert(resultbagItemOutHistory);
+
+          await BagItem.update(
+            { bagItemId : bagItemIdEach },
+            {
+              bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
+              branchIdLast: data.branchId,
+              bagItemHistoryId: Number(resultbagItemOutHistory.bagItemHistoryId),
+            },
+          );
         }
       }
 
