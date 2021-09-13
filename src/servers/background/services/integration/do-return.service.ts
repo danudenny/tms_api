@@ -65,7 +65,6 @@ export class DoReturnService {
             AND prd.do_return = TRUE
             AND prd.is_doreturn_sync IS NULL
             AND aia.awb_status_id_last >= 1500
-            LIMIT 100;
       );
       `,
       null,
