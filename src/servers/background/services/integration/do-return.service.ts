@@ -19,10 +19,9 @@ export class DoReturnService {
   }
 
   private static async searchDoKembali(): Promise<any> {
-    const startDate = moment().format('YYYY-MM-DD 00:00:00');
-    const endDate = moment().format('YYYY-MM-DD 23:59:59');
-    await RawQueryService.query(
-      `
+    const startDate = moment().format('YYYY-MM-DD 00:00:00').toString();
+    const endDate = moment().format('YYYY-MM-DD 23:59:59').toString();
+    const query = `
           insert
           into
           do_return_awb ( branch_id_last,
@@ -60,23 +59,21 @@ export class DoReturnService {
             FALSE LEFT JOIN customer cust ON ca.customer_id = cust.customer_id
             AND cust.is_deleted = FALSE
           WHERE
-            prd.created_time >= ${startDate}
-            AND prd.created_time < ${endDate}
+            prd.created_time >= :startDate
+            AND prd.created_time < :endDate
             AND prd.do_return = TRUE
             AND prd.is_doreturn_sync IS NULL
             AND aia.awb_status_id_last >= 1500
       );
-      `,
-      null,
-      false,
-    );
+      `;
+    await RawQueryService.queryWithParams(query, { startDate, endDate }, false);
 
     return true;
   }
 
   private static async updatePickReqDetail(): Promise<any> {
     await RawQueryService.query(
-      ` UPDATE pickup_request_detail prd
+      `UPDATE pickup_request_detail prd
       SET is_doreturn_sync = true
       FROM do_return_awb p2
       WHERE prd.ref_awb_number = p2.awb_number
