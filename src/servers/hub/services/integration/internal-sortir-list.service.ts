@@ -72,7 +72,7 @@ export class InternalSortirListService {
     payload.fieldResolverMap['updatedTime'] = 'bsls.updated_time';
     payload.fieldResolverMap['branchId'] = 'b.branch_id';
     payload.fieldResolverMap['branchName'] = 'b.branch_name';
-    payload.fieldResolverMap['sealNumber'] = 'bag.seal_number';
+    payload.fieldResolverMap['sealNumber'] = 'bsls.seal_number';
     payload.fieldResolverMap['branchdLastmile'] = 'bl.branch_id';
     payload.fieldResolverMap['branchNameLastmile'] = 'bl.branch_name';
     payload.fieldResolverMap['scanDate'] = 'bsls.scan_date';
@@ -104,7 +104,7 @@ export class InternalSortirListService {
       b.branch_name AS "branchName",
       bsls.chute_number AS "noChute",
       bsls.awb_number AS "awbNumber",
-      bag.seal_number AS "sealNumber",
+      bsls.seal_number AS "sealNumber",
       bl.branch_id AS "branchIdLastmile",
       bl.branch_name AS "branchNameLastmile",
       bsls.is_cod AS "isCod",
@@ -117,22 +117,6 @@ export class InternalSortirListService {
     q.leftJoin(e => e.branchLastmile, 'bl', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.bagItemAwb, 'bia', j =>
-    (
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      j.andWhere(e => e.isSortir, w => w.isTrue())
-    ),
-    );
-    q.leftJoin(e => e.bagItemAwb.bagItem, 'bi', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.bagItemAwb.bagItem.bag, 'bag', j =>
-      (
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-        j.andWhere(e => e.isManual, w => w.isFalse()),
-        j.andWhere(e => e.isSortir, w => w.isTrue())
-      ),
-    );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.awbNumber, w => w.notEquals(''));
     q.groupByRaw(`
@@ -142,7 +126,6 @@ export class InternalSortirListService {
       b.branch_name,
       bsls.chute_number,
       bsls.awb_number,
-      bag.seal_number,
       bl.branch_id,
       bl.branch_name,
       bsls.is_cod,
