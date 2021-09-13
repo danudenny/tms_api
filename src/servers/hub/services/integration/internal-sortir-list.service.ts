@@ -130,7 +130,8 @@ export class InternalSortirListService {
       bl.branch_name,
       bsls.is_cod,
       bsls.is_succeed,
-      bsls.reason
+      bsls.reason,
+      bsls.seal_number
     `);
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
