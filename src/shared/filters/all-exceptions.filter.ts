@@ -4,7 +4,6 @@ import fclone from 'fclone';
 
 import { ErrorParserService } from '../services/error-parser.service';
 import { PinoLoggerService } from '../services/pino-logger.service';
-import { SentryService } from '../services/sentry.service';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -31,7 +30,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
           exception,
           host,
         );
-        SentryService.trackFromExceptionAndNestHostOrContext(exception, host);
         PinoLoggerService.error(exception);
       } else {
         PinoLoggerService.warn(requestErrorResponse);

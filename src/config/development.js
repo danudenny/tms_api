@@ -45,9 +45,6 @@ module.exports = {
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
-  sentry: {
-    dsn: 'http://8d763ea5cbaf4321ad5d58778e08d589@sentry.sicepat.com/2',
-  },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',
