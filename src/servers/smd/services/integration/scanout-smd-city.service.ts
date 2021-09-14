@@ -26,7 +26,6 @@ import {ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm} from '../../models
 import { ScanOutSmdCitySealResponseVm, ScanOutSmdCityVehicleResponseVm } from '../../models/scanout-smd-city.response.vm';
 import { toInteger } from 'lodash';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
-import { RequestErrorService } from '../../../../shared/services/request-error.service';
 
 @Injectable()
 export class ScanoutSmdCityService {
