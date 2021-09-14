@@ -3,5 +3,6 @@
   "LOGIN_WRONG_PASSWORD": "Password salah",
   "REFRESH_TOKEN_EXPIRED": "Refresh token expired",
   "REFRESH_TOKEN_NOT_VALID": "Refresh token tidak valid",
-  "USER_NOT_FOUND": "User tidak ditemukan"
+  "USER_NOT_FOUND": "User tidak ditemukan",
+  "SERVER_BUSY": "sistem sedang bermasalah, silahkan coba lagi"
 }
