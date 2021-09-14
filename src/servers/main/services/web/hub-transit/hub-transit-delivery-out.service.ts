@@ -21,6 +21,7 @@ import {
 import { WebScanOutAwbVm, WebScanOutCreateVm } from '../../../models/web-scan-out.vm';
 import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
+import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 
 export class HubTransitDeliveryOutService {
   /**
@@ -58,8 +59,16 @@ export class HubTransitDeliveryOutService {
       doPod.partnerLogisticName = payload.partnerLogisticName;
     }
 
-    // await for get do pod id
-    await DoPod.save(doPod);
+    try {
+      // await for get do pod id
+      await DoPod.save(doPod);
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
+
     this.createAuditHistory(doPod.doPodId, false);
 
     // Populate return value
