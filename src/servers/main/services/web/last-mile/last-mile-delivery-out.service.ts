@@ -48,6 +48,7 @@ import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-req
 import { BadRequestException } from '@nestjs/common';
 import { PrintDoPodDeliverDataDoPodDeliverDetailVm } from '../../../models/print-do-pod-deliver.vm';
 import { User } from '../../../../../shared/orm-entity/user';
+import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -85,8 +86,15 @@ export class LastMileDeliveryOutService {
     // NOTE: check if delivery with sigesit
     doPod.isPartner = false;
 
-    // await for get do pod id
-    await DoPodDeliver.save(doPod);
+    try {
+      // await for get do pod id
+      await DoPodDeliver.save(doPod);
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
 
     await this.createAuditDeliveryHistory(doPod.doPodDeliverId, false);
 
@@ -170,8 +178,15 @@ export class LastMileDeliveryOutService {
       }
     }
 
-    // await for get do pod id
-    await DoPodDeliver.save(doPod);
+    try {
+      // await for get do pod id
+      await DoPodDeliver.save(doPod);
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
 
     await this.createAuditDeliveryHistory(
       doPod.doPodDeliverId,

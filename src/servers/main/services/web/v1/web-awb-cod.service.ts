@@ -69,7 +69,7 @@ export class V1WebAwbCodService {
     const permissionPayload = AuthService.getPermissionTokenPayload();
 
     // mapping field
-    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
+    payload.fieldResolverMap['transactionDate'] = 'cp.updated_time';
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
     payload.fieldResolverMap['branchIdFinal'] = 'cp.branch_id';
@@ -162,7 +162,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
+    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
@@ -316,7 +316,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
+    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't1.branch_id_last';
     payload.fieldResolverMap['branchIdFinal'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
@@ -522,7 +522,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
+    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';
@@ -653,7 +653,7 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
     payload.fieldResolverMap['manifestedDate'] = 't2.awb_date';
-    payload.fieldResolverMap['transactionDate'] = 't1.awb_history_date_last';
+    payload.fieldResolverMap['transactionDate'] = 't8.updated_time';
     payload.fieldResolverMap['branchIdLast'] = 't8.branch_id';
     payload.fieldResolverMap['awbStatusIdLast'] = 't1.awb_status_id_last';
     payload.fieldResolverMap['awbStatusIdFinal'] = 't1.awb_status_id_final';

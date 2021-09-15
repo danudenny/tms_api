@@ -35,22 +35,24 @@ export class BagItemHistoryQueueService {
       // }); // end transaction
       const data = job.data;
 
-      const bagItemHistory = BagItemHistory.create();
-      bagItemHistory.branchId = data.branchId;
-      bagItemHistory.userId = data.userId;
-      bagItemHistory.bagItemId = data.bagItemId;
-      bagItemHistory.bagItemStatusId = data.bagItemStatusId;
-      bagItemHistory.historyDate = data.timestamp;
-      bagItemHistory.userIdCreated = data.userId;
-      bagItemHistory.userIdUpdated = data.userId;
-      await BagItemHistory.insert(bagItemHistory);
+      if (data.bagItemId) {
+        const bagItemHistory = BagItemHistory.create();
+        bagItemHistory.branchId = data.branchId;
+        bagItemHistory.userId = data.userId;
+        bagItemHistory.bagItemId = data.bagItemId;
+        bagItemHistory.bagItemStatusId = data.bagItemStatusId;
+        bagItemHistory.historyDate = data.timestamp;
+        bagItemHistory.userIdCreated = data.userId;
+        bagItemHistory.userIdUpdated = data.userId;
+        await BagItemHistory.insert(bagItemHistory);
 
-      await BagItem.update({ bagItemId: data.bagItemId }, {
-        bagItemStatusIdLast: data.bagItemStatusId,
-        bagItemHistoryId: Number(bagItemHistory.bagItemHistoryId),
-        branchIdLast: data.branchId,
-      });
-      return true;
+        // await BagItem.update({ bagItemId: data.bagItemId }, {
+        //   bagItemStatusIdLast: data.bagItemStatusId,
+        //   bagItemHistoryId: Number(bagItemHistory.bagItemHistoryId),
+        //   branchIdLast: data.branchId,
+        // });
+        return true;
+      }
     });
 
     this.queue.on('completed', job => {

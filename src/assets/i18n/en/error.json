@@ -3,5 +3,6 @@
   "LOGIN_WRONG_PASSWORD": "Login Wrong Password",
   "REFRESH_TOKEN_EXPIRED": "Refresh Token Expired",
   "REFRESH_TOKEN_NOT_VALID": "Refresh Token Not Valid",
-  "USER_NOT_FOUND": "User Not Found"
+  "USER_NOT_FOUND": "User Not Found",
+  "SERVER_BUSY": "the system is having problems, please try again"
 }
