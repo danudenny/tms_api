@@ -29,6 +29,7 @@ import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hu
 import { DoPodDetailPostMetaInQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-in-queue.service';
 import { UpsertHubSummaryBagSortirQueueService } from '../../../queue/services/upsert-hub-summary-bag-sortir-queue.service';
 import { TempStt } from '../../../../shared/orm-entity/temp-stt';
+import { UpdateBranchSortirLogSummaryQueueService } from '../../../queue/services/update-branch-sortir-log-summary-queue.service';
 
 export class HubMachineService {
   constructor() { }
@@ -255,6 +256,7 @@ export class HubMachineService {
           branchId: branch.branchId,
           timestamp: currentTimeStr,
           awbs: [],
+          tagSeal: payload.tag_seal_number,
         };
 
         for (const awbNumber of awbNumbers) {
@@ -435,6 +437,12 @@ export class HubMachineService {
         moment(batchData.timestamp).toDate(),
       );
 
+      UpdateBranchSortirLogSummaryQueueService.perform(
+        batchData.branchId,
+        x.awbNumber,
+        batchData.tagSeal,
+      );
+
       return PodScanInHubDetail.create({
         podScanInHubId: batchData.podScanInHubId,
         bagId: batchData.bagId,
@@ -528,6 +536,7 @@ interface CreateBagFirstScanHubQueueServiceBatch {
   branchId: number;
   timestamp: Date | string;
   awbs: CreateBagFirstScanHubQueueServiceBatchAwb[];
+  tagSeal: string;
 }
 
 interface CreateBagFirstScanHubQueueServiceBatchAwb {
