@@ -22,7 +22,7 @@ import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/serv
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdEmptyVehiclePayloadVm } from '../../models/scanout-smd.payload.vm';
+import { ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdEmptyVehiclePayloadVm, SealChangeManualPayloadVm } from '../../models/scanout-smd.payload.vm';
 import { toInteger } from 'lodash';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 
@@ -2701,6 +2701,97 @@ export class ScanoutSmdService {
       totalSuccess, totalError,
     };
     return response;
+  }
+
+  static async changeSealManual(payload: SealChangeManualPayloadVm): Promise<any> {
+    const doSmd = await DoSmd.findOne({
+      where: {
+        doSmdCode: payload.doSmdCode,
+        isDeleted: false,
+        // sealNumberLast: IsNull(),
+      },
+    });
+
+    if (doSmd && !doSmd.sealNumberLast) {
+      const doSmdDetails = await DoSmdDetail.find({
+        where: {
+          doSmdId: doSmd.doSmdId,
+          isDeleted: false,
+          // sealNumber: IsNull(),
+        },
+      });
+
+      const doSmdVehicle = await DoSmdVehicle.findOne({
+        where: {
+          doSmdId: doSmd.doSmdId,
+          isDeleted: false,
+        },
+      });
+
+      const doSmdHistory = await DoSmdHistory.findOne({
+        where: {
+          doSmdId: doSmd.doSmdId,
+          doSmdStatusId: 1200, // status change seal
+          userIdCreated: 1,
+          sealNumber: payload.sealNumber,
+        },
+      });
+
+      const doSmdId = doSmd.doSmdId;
+      const doSmdVehicleId = doSmdVehicle.doSmdVehicleId;
+      const timeNow = moment().toDate();
+
+      if (!doSmdHistory) {
+        await DoSmd.update(
+          { doSmdId : doSmd.doSmdId },
+          {
+            sealNumberLast: payload.sealNumber,
+            userIdUpdated: 1,
+            updatedTime: timeNow,
+          },
+        );
+        for (const doSmdDetail of doSmdDetails) {
+          await DoSmdDetail.update(
+            { doSmdDetailId : doSmdDetail.doSmdDetailId },
+            {
+              sealNumber: payload.sealNumber,
+              userIdUpdated: 1,
+              updatedTime: timeNow,
+            },
+          );
+        }
+
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          doSmdId,
+          doSmdDetails[0].doSmdDetailId,
+          doSmdVehicleId,
+          null,
+          null,
+          doSmd.doSmdTime,
+          121, // branch kantor pusat
+          1200, // status seal change
+          payload.sealNumber,
+          null,
+          1, // user superadmin
+        );
+      }
+
+      const response = {
+        status: 'ok',
+        message: 'Update seal number success',
+      };
+
+      return response;
+    }
+    if (doSmd && doSmd.sealNumberLast) {
+      RequestErrorService.throwObj({
+        message: 'SMD code: ' + payload.doSmdCode + ' already has seal number',
+      });
+    } else {
+      RequestErrorService.throwObj({
+        message: 'SMD code: ' + payload.doSmdCode + ' not found',
+      });
+    }
   }
 
   static async getSmdCodeByRequestData(data: any): Promise<any> {
