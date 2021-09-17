@@ -373,6 +373,7 @@ export class MobileFirstMileDoPodReturnService {
       ['t1.awb_item_id', 'awbItemId'],
       ['t1.awb_status_date_time_last', 'awbStatusDateTimeLast'],
       ['t1.consignee_name', 'consigneeNameNote'],
+      ['t1.desc_last', 'reasonNotes'],
       ['t2.do_pod_return_id', 'doPodReturnId'],
       ['t2.do_pod_return_date_time', 'doPodReturnDateTime'],
       ['t3.awb_id', 'awbId'],

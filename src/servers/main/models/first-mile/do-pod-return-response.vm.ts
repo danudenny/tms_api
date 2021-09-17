@@ -401,6 +401,9 @@ export class MobileReturnVm {
   @ApiModelProperty()
   reasonName: string;
 
+  @ApiModelProperty()
+  reasonNotes: string;
+
   @ApiModelProperty({ type: [MobileReturnHistoryVm] })
   returnHistory: MobileReturnHistoryVm[];
 }
