@@ -99,10 +99,10 @@ export class AwbStatusService {
         message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
         return { isValid, message };
       }
-      // if (!await AwbService.isManifested(awbItemAttr.awbItemId)) {
-      //   message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
-      //   return { isValid, message };
-      // }
+      if (!await AwbService.isManifested(awbItemAttr.awbItemId)) {
+        message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
+        return { isValid, message };
+      }
       if (AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast) {
         message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
         return { isValid, message };

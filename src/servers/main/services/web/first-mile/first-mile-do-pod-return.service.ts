@@ -464,7 +464,10 @@ export class FirstMileDoPodReturnService {
         if (awb) {
           // add handel status Cod problem
           const statusCodProblem = [AWB_STATUS.CODB, AWB_STATUS.CODOC];
-          if (
+          if (AWB_STATUS.RTN == returnData.awbStatusId && !await AwbService.isManifested(awb.awbItemId)) {
+            response.status = 'error';
+            response.message = `Resi ${returnData.awbNumber} belum pernah di MANIFESTED`;
+          } else if (
             awb.awbItem.awb.isCod == false &&
             statusCodProblem.includes(returnData.awbStatusId)
           ) {
