@@ -30,6 +30,7 @@ export class DoPodReturnService {
     doPod.description = desc || null;
     doPod.branchId = branchId;
     doPod.userId = userId;
+    doPod.isMobile = isMobile;
     return await DoPodReturn.save(doPod);
   }
 
