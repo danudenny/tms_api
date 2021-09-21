@@ -443,7 +443,7 @@ export class MobileFirstMileDoPodReturnService {
     } else {
       q.andWhere(e => e.awbItemAttr.awbStatus.awbStatusId, w => w.equals('14000'));
 
-      const dateFrom = moment().utc().hour(0).minute(0).second(0).millisecond(0).subtract(5, 'd');
+      const dateFrom = moment().utc().hour(0).minute(0).second(0).millisecond(0).subtract(1, 'd');
       const dateTo = moment().utc().hour(23).minute(59).second(59).millisecond(999);
 
       q.andWhere(
