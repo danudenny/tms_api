@@ -443,16 +443,17 @@ export class MobileFirstMileDoPodReturnService {
     } else {
       q.andWhere(e => e.awbItemAttr.awbStatus.awbStatusId, w => w.equals('14000'));
 
-      const dateFrom = moment().subtract(7, 'd').format('YYYY-MM-DD 00:00:00');
-      const dateTo = moment().format('YYYY-MM-DD 23:59:59');
+      const dateFrom = moment().utc().hour(0).minute(0).second(0).millisecond(0).subtract(5, 'd');
+      const dateTo = moment().utc().hour(23).minute(59).second(59).millisecond(999);
+
       q.andWhere(
         e => e.doPodReturn.doPodReturnDateTime,
-        w => w.greaterThanOrEqual(moment(dateFrom).toDate()),
+        w => w.greaterThanOrEqual(dateFrom.toDate()),
       );
 
       q.andWhere(
         e => e.doPodReturn.doPodReturnDateTime,
-        w => w.lessThanOrEqual(moment(dateTo).toDate()),
+        w => w.lessThanOrEqual(dateTo.toDate()),
       );
 
       if (payloadDateFrom) {
