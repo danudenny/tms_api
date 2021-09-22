@@ -61,4 +61,9 @@ export class ListResiVm {
   @ApiModelPropertyOptional()
   awbNumber: string;
 
+  @ApiModelPropertyOptional()
+  consigneePhone: string;
+
+  @ApiModelPropertyOptional()
+  senderPhone: string;
 }

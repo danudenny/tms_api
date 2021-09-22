@@ -1,8 +1,9 @@
-import { MoreThan } from 'typeorm';
+import { MoreThan, Not } from 'typeorm';
 import { PartnerOneidPayloadVm, ListOneidOrderActivityResponseVm } from '../../models/partner/oneid-task.vm';
 import moment = require('moment');
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { Awb } from '../../../../shared/orm-entity/awb';
+import { CustomerAccount } from '../../../../shared/orm-entity/customer-account';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
@@ -180,9 +181,24 @@ export class PartnerOneidService {
       if(query.awbNumber){
         filter.awbNumber = query.awbNumber;
       }
+      if(query.consigneePhone){
+        filter.consigneeNumber = query.consigneePhone;
+      }
+
+      let getSenderPhone;
+      if(query.senderPhone){
+          getSenderPhone = await CustomerAccount.findOne( {
+          select:['customerAccountId', 'mobile1'],
+          where: {
+            mobile1: query.senderPhone,
+            customerAccountIdBilling: Not(0)
+          }
+        });
+        filter.customerAccountId = (getSenderPhone) ? getSenderPhone.customerAccountId : 0;
+      }
 
       const results = await Awb.find({
-        select: ['awbId','awbNumber','consigneeName', 'awbDate', 'totalBasePrice', 'createdTime'],
+        select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'awbDate', 'customerAccountId', 'totalBasePrice', 'createdTime'],
         relations: ['packageType','awbStatus'],
         where: filter,
         take: limitValue,
@@ -200,7 +216,7 @@ export class PartnerOneidService {
           date: results[i].awbDate,
           service: (results[i].packageType) ? results[i].packageType.packageTypeCode : null,
           price: results[i].totalBasePrice,
-          status: results[i].awbStatus.awbStatusName,
+          status: (results[i].awbStatus) ? results[i].awbStatus.awbStatusName : null,
         })
       }
 
