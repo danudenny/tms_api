@@ -464,6 +464,7 @@ export class FirstMileDoPodReturnService {
         if (awb) {
           // add handel status Cod problem
           const statusCodProblem = [AWB_STATUS.CODB, AWB_STATUS.CODOC];
+          const statusReturns = [AWB_STATUS.RTS, AWB_STATUS.UNRTS];
           if (AWB_STATUS.RTN == returnData.awbStatusId && !await AwbService.isManifested(awb.awbItemId)) {
             response.status = 'error';
             response.message = `Resi ${returnData.awbNumber} belum pernah di MANIFESTED`;
@@ -473,7 +474,7 @@ export class FirstMileDoPodReturnService {
           ) {
             response.status = 'error';
             response.message = `Resi ${returnData.awbNumber} bukan resi COD !`;
-          } else if (returnData.awbStatusId == AWB_STATUS.RTS && awb.awbStatusIdLast != AWB_STATUS.ANT) {
+          } else if (statusReturns.includes(returnData.awbStatusId) && awb.awbStatusIdLast != AWB_STATUS.ANT) {
             response.status = 'error';
             response.message = `Resi ${returnData.awbNumber
               }, tidak memiliki surat jalan, harap buatkan surat jalan terlebih dahulu!`;
