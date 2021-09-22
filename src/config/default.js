@@ -105,7 +105,7 @@ module.exports = {
     korwilHrdRoleId: 154,
   },
   retur: {
-    returnRoleId: [15, 146],
+    returnRoleId: [15],
   },
   masterData: {
     apiKey:
