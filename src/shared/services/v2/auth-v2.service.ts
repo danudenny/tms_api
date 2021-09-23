@@ -320,7 +320,7 @@ export class AuthV2Service {
         }, HttpStatus.FORBIDDEN);
       }
     } catch (err) {
-      let message = 'Request Time Out!';
+      let message = 'Terjadi Kesalahan Sistem';
       let statusCode = HttpStatus.REQUEST_TIMEOUT
       if (err.response && undefined != err.response.data) {
         console.log('error:::::', err.response.data)
@@ -328,11 +328,12 @@ export class AuthV2Service {
           err.response.data.message : err.response.data;
         statusCode = err.response.data.code;
       }
-      if (undefined != err.response.message) {
-        message = err.response.message;
-        statusCode = err.response.statusCode;
-      }
+      // if (undefined != err.response.message) {
+      //   message = err.response.message;
+      //   statusCode = err.response.statusCode;
+      // }
 
+      console.log('ERRRROOORRRR:::', err)
       RequestErrorService.throwObj({
         message: message,
       }, statusCode);
