@@ -31,7 +31,7 @@ import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import { createQueryBuilder, In, Not } from 'typeorm';
-import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm, ScanOutSmdEndManualResponseVm } from '../../models/mobile-smd.response.vm';
+import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm, ScanOutSmdEndManualResponseVm, UnfinishedSmdResponseVm } from '../../models/mobile-smd.response.vm';
 import { MobileUploadImagePayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
@@ -1257,6 +1257,58 @@ export class MobileSmdService {
     return doSmdVehicleAttachment.identifiers.length
       ? doSmdVehicleAttachment.identifiers[0].doSmdVehicleAttachmentId
       : null;
+  }
+
+  static async unfinishedSmd(payload: any): Promise<any> {
+    const employeeRawQuery = `
+      SELECT * 
+      FROM employee 
+      WHERE 
+        nik IN ('${payload.nik}');
+    `;
+    const resultDataEmployee = await RawQueryService.query(employeeRawQuery);
+
+    if (!resultDataEmployee.length) {
+      throw new BadRequestException(`Can't Find Employee NIK : ` + payload.nik);
+    }
+
+    const doSmdVehicleRawQuery = `
+      SELECT
+        dsv.employee_id_driver,
+        ds.do_smd_status_id_last,
+        ds.do_smd_id,
+        ds.branch_id
+      FROM
+        do_smd_vehicle dsv
+        INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last
+        AND ds.is_deleted = FALSE
+        AND ds.do_smd_status_id_last <> 6000
+      WHERE
+        dsv.employee_id_driver IN ('${resultDataEmployee[0].employee_id}')
+        AND dsv.is_deleted = FALSE;
+    `;
+    const resultDataDoSmdVehicle = await RawQueryService.query(doSmdVehicleRawQuery);
+
+    if (!resultDataDoSmdVehicle.length) {
+      throw new BadRequestException(`Can't Find DO SMD VEHICLE`);
+    }
+
+    const doSmdRawQuery = `
+      SELECT do_smd_code FROM do_smd WHERE do_smd_id IN ('${resultDataDoSmdVehicle[0].do_smd_id}');
+    `;
+    const resultDataDoSmd = await RawQueryService.query(doSmdRawQuery);
+
+    if (!resultDataDoSmd.length) {
+      throw new BadRequestException(`Can't Find DO SMD CODE`);
+    }
+
+    const result = new UnfinishedSmdResponseVm();
+
+    result.statusCode = HttpStatus.OK;
+    result.message = 'SMD Available';
+    result.data = resultDataDoSmd;
+
+    return result;
   }
 
 }
