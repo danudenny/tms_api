@@ -68,6 +68,8 @@ export class V1WebTrackingService {
       result.isDoReturnPartner         = data.isDoReturnPartner;
       result.isHighValue               = data.isHighValue;
       result.awbSubstituteNumber       = data.awbSubstituteNumber;
+      result.doPodReturnDetailId      = data.doPodReturnDetailId;
+      result.isHasPhotoReturnRecevier  = data.doPodReturnDetailId ? true : false;
       // TODO: partial load data
       const history = await this.getRawAwbHistory(data.awbItemId);
       if (history && history.length) {
@@ -306,6 +308,7 @@ export class V1WebTrackingService {
         COALESCE(bg.bagging_code, '') as "baggingCode",
         COALESCE(s.smu_code, '') as "smuCode",
         dpd.do_pod_deliver_detail_id as "doPodDeliverDetailId",
+        dprd.do_pod_return_detail_id as "doPodReturnDetailId",
         COALESCE(ai.doreturn_new_awb, ai.doreturn_new_awb_3pl) as "doReturnAwb",
         CASE
             WHEN ai.doreturn_new_awb_3pl IS NOT NULL THEN true
@@ -334,6 +337,8 @@ export class V1WebTrackingService {
         LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id
           AND dpd.awb_status_id_last <> 14000 AND dpd.is_deleted = false
+        LEFT JOIN do_pod_return_detail dprd ON dprd.awb_id = a.awb_id
+          AND dprd.awb_status_id_last in (25650, 25000) AND dprd.is_deleted = false
         LEFT JOIN awb_return ar ON ar.origin_awb_id = ai.awb_id AND ar.is_deleted = false
         LEFT JOIN awb_substitute asub ON asub.awb_number = a.awb_number
       WHERE a.awb_number = :awbNumber
