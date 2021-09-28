@@ -278,16 +278,15 @@ export class V2MobileInitDataService {
       'employee',
       'employee.employee_id = users.employee_id',
     );
-
-    qb.leftJoin(
-      'package_type',
-      'package_type',
-      'package_type.package_type_id = awb.package_type_id',
-    );
     qb.leftJoin(
       'pickup_request_detail',
       'pickup_request_detail',
       'pickup_request_detail.awb_item_id = do_pod_deliver_detail.awb_item_id',
+    );
+    qb.leftJoin(
+      'package_type',
+      'package_type',
+      'package_type.package_type_id = awb.package_type_id',
     );
     qb.leftJoin(
       'reason',
