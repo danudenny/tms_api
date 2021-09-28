@@ -86,6 +86,13 @@ export class AwbReturn extends TmsBaseEntity {
   })
   userIdDriver: number | null;
 
+  @Column('boolean', {
+    nullable: true,
+    default: () => 'false',
+    name: 'is_mobile_return',
+  })
+  isMobileReturn: boolean;
+
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'origin_awb_id', referencedColumnName: 'awbId'})
   originAwb: AwbItemAttr;

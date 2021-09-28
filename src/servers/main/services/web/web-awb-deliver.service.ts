@@ -18,6 +18,7 @@ import { AwbService } from '../v1/awb.service';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { AwbNotificationMailQueueService } from '../../../queue/services/notification/awb-notification-mail-queue.service';
+import { AwbReturnService } from '../master/awb-return.service';
 // //#endregion
 export class WebAwbDeliverService {
   constructor() {}
@@ -95,11 +96,12 @@ export class WebAwbDeliverService {
                     await this.syncDeliver(delivery);
                     // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
                     if (payload.isReturn) {
-                      await this.createAwbReturn(
+                      await AwbReturnService.createAwbReturn(
                         delivery.awbNumber,
                         awb.awbId,
                         permissonPayload.branchId,
                         authMeta.userId,
+                        false,
                       );
                     }
                     response.status = 'ok';
@@ -293,11 +295,12 @@ export class WebAwbDeliverService {
       if (isReturn) {
         // TODO: handle is return status??
         // NOTES: Insert into table awb return
-        await this.createAwbReturn(
+        await AwbReturnService.createAwbReturn(
           delivery.awbNumber,
           awbId,
           branchId,
           userId,
+          false,
         );
       }
       // TODO: queue by Bull need refactoring
@@ -339,6 +342,7 @@ export class WebAwbDeliverService {
         branchId: true,
         userIdDriver: true,
       },
+      updatedTime: true,
     });
     q.where(
       e => e.awbNumber,
@@ -350,39 +354,4 @@ export class WebAwbDeliverService {
     return await q.exec();
   }
 
-  private static async createAwbReturn(
-    awbNumber: string,
-    awbId: number,
-    branchId: number,
-    userId: number,
-  ): Promise<boolean> {
-    // NOTE: Insert into table awb return
-    // check duplicate data
-    let awbReturnData = await AwbReturn.findOne({
-      where: {
-        originAwbNumber: awbNumber,
-        isDeleted: false,
-      },
-    });
-    if (!awbReturnData) {
-      awbReturnData = AwbReturn.create({
-          originAwbId: awbId,
-          originAwbNumber: awbNumber,
-          branchId,
-          branchFromId: branchId,
-          userIdCreated: userId,
-          userIdUpdated: userId,
-          createdTime: moment().toDate(),
-          updatedTime: moment().toDate(),
-      });
-      await AwbReturn.insert(awbReturnData);
-    } else {
-      AwbReturn.update(awbReturnData.awbReturnId, {
-          branchId,
-          userIdUpdated: userId,
-          updatedTime: moment().toDate(),
-      });
-    }
-    return true;
-  }
 }
