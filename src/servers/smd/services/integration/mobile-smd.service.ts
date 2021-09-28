@@ -1272,35 +1272,43 @@ export class MobileSmdService {
       throw new BadRequestException(`Can't Find Employee NIK : ` + payload.nik);
     }
 
-    const doSmdVehicleRawQuery = `
-      SELECT
-        dsv.employee_id_driver,
-        ds.do_smd_status_id_last,
-        ds.do_smd_id,
-        ds.branch_id
-      FROM
-        do_smd_vehicle dsv
-        INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last
-        AND ds.is_deleted = FALSE
-        AND ds.do_smd_status_id_last <> 6000
-      WHERE
-        dsv.employee_id_driver IN ('${resultDataEmployee[0].employee_id}')
-        AND dsv.is_deleted = FALSE;
-    `;
-    const resultDataDoSmdVehicle = await RawQueryService.query(doSmdVehicleRawQuery);
+    let resultDataDoSmd = [];
 
-    if (!resultDataDoSmdVehicle.length) {
-      throw new BadRequestException(`Can't Find DO SMD VEHICLE`);
-    }
+    await Promise.all(
+      resultDataEmployee.map(async (employee: any) => {
+        const doSmdVehicleRawQuery = `
+          SELECT
+            dsv.employee_id_driver,
+            ds.do_smd_status_id_last,
+            ds.do_smd_id,
+            ds.branch_id
+          FROM
+            do_smd_vehicle dsv
+            INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last
+            AND ds.is_deleted = FALSE
+            AND ds.do_smd_status_id_last <> 6000
+          WHERE
+            dsv.employee_id_driver IN ('${employee.employee_id}')
+            AND dsv.is_deleted = FALSE;
+        `;
+        const resultDataDoSmdVehicle = await RawQueryService.query(doSmdVehicleRawQuery);
 
-    const doSmdRawQuery = `
-      SELECT do_smd_code FROM do_smd WHERE do_smd_id IN ('${resultDataDoSmdVehicle[0].do_smd_id}');
-    `;
-    const resultDataDoSmd = await RawQueryService.query(doSmdRawQuery);
+        if (!resultDataDoSmdVehicle.length) {
+          return false;
+        }
 
-    if (!resultDataDoSmd.length) {
-      throw new BadRequestException(`Can't Find DO SMD CODE`);
-    }
+        await Promise.all(
+          resultDataDoSmdVehicle.map(async(doSmd: any) => {
+            const doSmdRawQuery = `
+              SELECT * FROM do_smd WHERE do_smd_id IN ('${doSmd.do_smd_id}') AND is_deleted = false;
+            `;
+            const doSmdResult = await RawQueryService.query(doSmdRawQuery);
+    
+            resultDataDoSmd = resultDataDoSmd.concat(doSmdResult);
+          }),
+        );
+      }),
+    );
 
     const result = new UnfinishedSmdResponseVm();
 
