@@ -24,6 +24,7 @@ import { AuditHistory } from '../../../../shared/orm-entity/audit-history';
 import { BadRequestException } from '@nestjs/common';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { AwbStatusService } from '../master/awb-status.service';
 
 // #endregion
 
@@ -287,7 +288,7 @@ export class LastMileDeliveryOutService {
       // if (awb.awbLastStatus && awb.awbLastStatus != 0) {
       //   notDeliver = awb.awbLastStatus != AWB_STATUS.ANT ? true : false;
       // }
-      const checkValidAwbStatusIdLast = await this.checkValidAwbStatusIdLast(awb);
+      const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb);
       // NOTE: first must scan in branch
       if (checkValidAwbStatusIdLast.isValid) {
         // Add Locking setnx redis
@@ -443,33 +444,5 @@ export class LastMileDeliveryOutService {
       auditHistory.note = note;
       return await AuditHistory.save(auditHistory);
     }
-  }
-
-  private static async checkValidAwbStatusIdLast(awbItemAttr: AwbItemAttr) {
-    let message = null;
-    let isValid = false;
-    if (awbItemAttr.awbStatusIdLast) {
-      if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
-        return { isValid, message };
-      }
-      if (AWB_STATUS.DLV == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} sudah deliv`;
-        return { isValid, message };
-      }
-      if (await AwbService.isCancelDelivery(awbItemAttr.awbItemId)) {
-        message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
-        return { isValid, message };
-      }
-      if (!await AwbService.isManifested(awbItemAttr.awbItemId)) {
-        message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
-        return { isValid, message };
-      }
-      if (AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
-        return { isValid, message };
-      }
-    }
-    return { isValid: true, message };
   }
 }

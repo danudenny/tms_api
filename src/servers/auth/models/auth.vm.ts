@@ -150,6 +150,9 @@ export class PermissionAccessResponseVM {
 
   @ApiModelProperty()
   isSmd: boolean;
+
+  @ApiModelProperty()
+  isSigesitReturn: boolean;
 }
 
 // #endregion

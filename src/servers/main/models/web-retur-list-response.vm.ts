@@ -21,6 +21,9 @@ export class ItemReturResponseVm {
   createdTime: string;
 
   @ApiModelProperty()
+  updatedTime: string;
+
+  @ApiModelProperty()
   branchIdTo: string;
 
   @ApiModelProperty()

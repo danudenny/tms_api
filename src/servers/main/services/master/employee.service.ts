@@ -1,4 +1,6 @@
 import { HttpStatus, Injectable, BadRequestException } from '@nestjs/common';
+import { Employee } from '../../../../shared/orm-entity/employee';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -311,5 +313,19 @@ export class EmployeeService {
     result.buildPaging(payload.page, payload.limit, total);
 
     return result;
+  }
+
+  static async findByUserIdDriver(userIdDriver: number): Promise<Employee> {
+    const repo = new OrionRepositoryService(Employee, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(['t1.nik', 'nik'], ['t1.nickname', 'nickname']);
+    q.innerJoin(e => e.user, 't2');
+    q.where(e => e.user.userId, w => w.equals(userIdDriver));
+    const dataUser = await q.exec();
+    if (dataUser) {
+      return dataUser;
+    }
+    return null;
   }
 }

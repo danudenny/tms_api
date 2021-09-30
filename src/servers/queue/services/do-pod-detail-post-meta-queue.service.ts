@@ -964,4 +964,32 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
+    // NOTE: ONLY awb status ANT(retur awb)
+  public static async createJobByAwbReturn(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    employeeIdDriver: number,
+    employeeName: string,
+  ) {
+    const noteInternal = `Paket Retur dibawa [SIGESIT - ${employeeName}]`;
+    const notePublic = `Paket Retur dibawa [SIGESIT - ${employeeName}]`;
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
 }
