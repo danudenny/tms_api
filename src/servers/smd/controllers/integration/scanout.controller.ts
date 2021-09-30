@@ -2,13 +2,14 @@ import { Body, Controller, Post, Req, UseGuards, Delete, Param } from '@nestjs/c
 import { ScanoutSmdService } from '../../services/integration/scanout-smd.service';
 // import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
-import { ScanOutSmdVehiclePayloadVm, ScanOutSmdRoutePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdSealPayloadVm, ScanOutSmdHandoverPayloadVm, ScanOutSmdDetailPayloadVm, ScanOutSmdAssignItemPayloadVm, ScanOutSmdEditPayloadVm, ScanOutSmdEditDetailPayloadVm, ScanOutSmdItemMorePayloadVm, ScanOutSmdEmptyVehiclePayloadVm } from '../../models/scanout-smd.payload.vm';
-import { ApiUseTags, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
+import { ScanOutSmdVehiclePayloadVm, ScanOutSmdRoutePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdSealPayloadVm, ScanOutSmdHandoverPayloadVm, ScanOutSmdDetailPayloadVm, ScanOutSmdAssignItemPayloadVm, ScanOutSmdEditPayloadVm, ScanOutSmdEditDetailPayloadVm, ScanOutSmdItemMorePayloadVm, ScanOutSmdEmptyVehiclePayloadVm, SealChangeManualPayloadVm } from '../../models/scanout-smd.payload.vm';
+import { ApiUseTags, ApiOkResponse, ApiImplicitHeader } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import {ScanOutSmdItemMoreResponseVm, ScanOutSmdEmptyVehicleResponseVm} from '../../models/scanout-smd.response.vm';
 import { ScanOutSmdCityVehiclePayloadVm } from '../../models/scanout-smd-city.payload.vm';
+import { AuthXAPIKeyGuard } from '../../../../shared/guards/auth-x-api-key.guard';
 
 @ApiUseTags('SCAN OUT SMD')
 @Controller('smd')
@@ -57,6 +58,14 @@ export class ScanOutController {
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanOutSeal(@Req() request: any, @Body() payload: ScanOutSmdSealPayloadVm) {
     return ScanoutSmdService.scanOutSeal(payload);
+  }
+
+  @Post('scanOut/seal-manual')
+  @Transactional()
+  @ApiImplicitHeader({ name: 'x-api-key' })
+  @UseGuards(AuthXAPIKeyGuard)
+  public async changeSealManual(@Req() request: any, @Body() payload: SealChangeManualPayloadVm) {
+    return ScanoutSmdService.changeSealManual(payload);
   }
 
   @Delete('scanOut/deleted/:id')
