@@ -216,6 +216,8 @@ export class FirstMileDoPodReturnService {
     // mapping field
     payload.fieldResolverMap['doPodRetrunDateTime'] =
       't1.do_pod_return_date_time';
+    payload.fieldResolverMap['doPodRetrunDate'] =
+      't1.do_pod_return_date';
     payload.fieldResolverMap['datePOD'] = 'datePOD';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
