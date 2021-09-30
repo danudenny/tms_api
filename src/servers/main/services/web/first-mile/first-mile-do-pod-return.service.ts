@@ -239,7 +239,8 @@ export class FirstMileDoPodReturnService {
     q.selectRaw(
       ['t1.user_id_driver', 'userIdDriver'],
       ['t2.fullname', 'nickname'],
-      ['t1.do_pod_return_date_time::date', 'datePOD'],
+      ['t1.do_pod_return_date_time', 'datePodReturnDateTime'],
+      ['t1.do_pod_return_date', 'datePOD'],
       ['t5.branch_name', 'branchName'],
       ['t1.branch_id', 'branchId'],
       ['COUNT(DISTINCT(t1.do_pod_return_id))', 'totalSuratJalan'],
