@@ -345,35 +345,35 @@ export class MobileSmdListService {
     qb.innerJoin(
       'do_smd_detail',
       'dsd',
-      'ds.do_smd_id = dsd.do_smd_id and dsd.is_deleted = false ',
+      `ds.do_smd_id = dsd.do_smd_id and dsd.is_deleted = false and dsd.arrival_time >= '${startDate}' and dsd.arrival_time < '${endDate}' `,
     );
     qb.innerJoin(
       'do_smd_vehicle',
       'dsv',
       'ds.vehicle_id_last = dsv.do_smd_vehicle_id  and dsv.is_deleted = false',
     );
-    qb.leftJoin(
+    qb.innerJoin(
       'users',
       'u',
       'dsv.employee_id_driver = u.employee_id and u.is_deleted = false',
     );
-    qb.leftJoin(
+    qb.innerJoin(
       'branch',
       'b',
       'dsd.branch_id_to = b.branch_id and b.is_deleted = false',
     );
-    qb.where(
-      'dsd.arrival_time >= :startDate',
-      {
-        startDate,
-      },
-    );
-    qb.andWhere(
-      'dsd.arrival_time < :endDate',
-      {
-        endDate,
-      },
-    );
+    // qb.where(
+    //   'dsd.arrival_time >= :startDate',
+    //   {
+    //     startDate,
+    //   },
+    // );
+    // qb.andWhere(
+    //   'dsd.arrival_time < :endDate',
+    //   {
+    //     endDate,
+    //   },
+    // );
     qb.andWhere(
       'u.user_id = :paramUserId',
       {

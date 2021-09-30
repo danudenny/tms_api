@@ -207,7 +207,7 @@ export class ScanoutSmdListService {
       'ds.do_smd_status_id_last = dss.do_smd_status_id AND dss.is_deleted = FALSE',
     );
     q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title');
-    q.andWhereRaw('ds.is_deleted = FALSE');
+    // q.andWhereRaw('ds.is_deleted = FALSE');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     const result = {
       data: null,
