@@ -20,6 +20,7 @@ import { WebScanOutAwbVm, WebScanOutCreateVm } from '../../../models/web-scan-ou
 import { AwbService } from '../../v1/awb.service';
 
 import moment = require('moment');
+import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 // #endregion
 
 export class LastMileTransitOutService {
@@ -57,8 +58,16 @@ export class LastMileTransitOutService {
       doPod.partnerLogisticName = payload.partnerLogisticName;
     }
 
-    // await for get do pod id
-    await DoPod.save(doPod);
+    try {
+      // await for get do pod id
+      await DoPod.save(doPod);
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
+
     // this.createAuditHistory(doPod.doPodId, false);
 
     // Populate return value

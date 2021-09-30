@@ -3,7 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { AwbStatusFindAllResponseVm, AwbStatusNonDeliveFindAllResponseVm } from '../../models/awb-status.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { RepositoryService } from '../../../../shared/services/repository.service';
-import { RolePodManualStatus } from '../../../../shared/orm-entity/role-pod-manual-status';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { AwbService } from '../v1/awb.service';
 
 @Injectable()
 export class AwbStatusService {
@@ -79,5 +81,33 @@ export class AwbStatusService {
     result.buildPaging(payload.page, payload.limit, total);
     result.data = data;
     return result;
+  }
+
+  static async checkValidAwbStatusIdLast(awbItemAttr: AwbItemAttr) {
+    let message = null;
+    let isValid = false;
+    if (awbItemAttr.awbStatusIdLast) {
+      if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
+        return { isValid, message };
+      }
+      if (AWB_STATUS.DLV == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} sudah deliv`;
+        return { isValid, message };
+      }
+      if (await AwbService.isCancelDelivery(awbItemAttr.awbItemId)) {
+        message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
+        return { isValid, message };
+      }
+      if (!await AwbService.isManifested(awbItemAttr.awbItemId)) {
+        message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
+        return { isValid, message };
+      }
+      if (AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
+        return { isValid, message };
+      }
+    }
+    return { isValid: true, message };
   }
 }

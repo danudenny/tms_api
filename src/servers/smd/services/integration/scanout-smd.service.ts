@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm, ScanOutSmdEditResponseVm, ScanOutSmdEditDetailResponseVm, ScanOutSmdItemMoreDataResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdItemMoreResponseVm, ScanOutSmdEditResponseVm, ScanOutSmdEditDetailResponseVm, ScanOutSmdItemMoreDataResponseVm, ScanOutSmdEmptyVehicleResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -22,7 +22,7 @@ import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/serv
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import {ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
+import { ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdEmptyVehiclePayloadVm } from '../../models/scanout-smd.payload.vm';
 import { toInteger } from 'lodash';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 
@@ -37,14 +37,14 @@ export class ScanoutSmdService {
     // let  paramDoSmdCode = await CustomCounterCode.doSmdCodeCounter(timeNow);
 
     const rawQueryDriver = `
-      SELECT 
+      SELECT
         dsv.employee_id_driver,
         ds.do_smd_status_id_last,
         ds.do_smd_id,
         ds.branch_id
       FROM do_smd_vehicle dsv
       INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.do_smd_status_id_last <> 6000
-      WHERE 
+      WHERE
         dsv.employee_id_driver = ${payload.employee_id_driver} AND
         dsv.is_deleted = FALSE;
     `;
@@ -154,6 +154,144 @@ export class ScanoutSmdService {
     result.message = 'SMD berhasil dibuat';
     result.data = data;
     return result;
+  }
+
+  static async scanOutEmptyVehicle(payload: ScanOutSmdEmptyVehiclePayloadVm): Promise<ScanOutSmdEmptyVehicleResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new ScanOutSmdEmptyVehicleResponseVm();
+    const timeNow = moment().toDate();
+    const resultbranchTo = await Branch.findOne({
+      where: {
+        branchId: payload.branch_id,
+        isDeleted: false,
+      },
+    });
+    if (resultbranchTo) {
+      const rawQueryDriver = `
+        SELECT
+          dsv.employee_id_driver,
+          ds.do_smd_status_id_last,
+          ds.do_smd_id,
+          ds.branch_id
+        FROM do_smd_vehicle dsv
+        INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.do_smd_status_id_last <> 6000
+        WHERE
+          dsv.employee_id_driver = ${payload.employee_id_driver} AND
+          dsv.is_deleted = FALSE;
+      `;
+      const resultDataDriver = await RawQueryService.query(rawQueryDriver);
+
+      if (resultDataDriver.length > 0) {
+        // Cek Status OTW
+        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
+          throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
+        }
+        // Cek Status PROBLEM
+        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 8000) {
+          throw new BadRequestException(`Driver tidak bisa di assign, karena sedang PROBLEM !!`);
+        }
+        // Cek Status HAS ARRIVED
+        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4000) {
+          throw new BadRequestException(`Driver tidak bisa di assign, karena baru tiba !!`);
+        }
+        // Cek Status INVALID
+        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4050) {
+          throw new BadRequestException(`Driver tidak bisa di assign, karena INVALID  !!`);
+        }
+        // Cek Status VALID
+        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4100) {
+          throw new BadRequestException(`Driver tidak bisa di assign, karena belum DITERIMA !!`);
+        }
+        // Cek Status Created, Assigned, Driver Changed
+        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 1000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 2000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 1050) {
+          if (toInteger(resultDataDriver[0].branch_id) != toInteger(permissonPayload.branchId)) {
+            throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
+          }
+        } else if ( toInteger(resultDataDriver[0].do_smd_status_id_last) < 3000 ) {
+          throw new BadRequestException(`Driver Tidak boleh di assign`);
+        }
+        // Cek Status Received, Finish
+        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 5000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 6000 ) {
+          const resultDoSmdDetail = await DoSmdDetail.findOne({
+            where: {
+              doSmdId: resultDataDriver[0].do_smd_id,
+              doSmdStatusIdLast: 5000,
+              branchIdTo: permissonPayload.branchId,
+              isDeleted: false,
+            },
+          });
+          if (!resultDoSmdDetail) {
+            throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + resultDataDriver[0].do_smd_id + ` beda cabang.`);
+          }
+        }
+      }
+      const  paramDoSmdCode = await CustomCounterCode.doSmdEmptyCodeRandomCounter(timeNow);
+      const data = [];
+
+      const redlock = await RedisService.redlock(`redlock:doSmd:${paramDoSmdCode}`, 10);
+      if (redlock) {
+        const paramDoSmdId = await this.createDoSmd(
+          paramDoSmdCode,
+          payload.smd_city_date,
+          permissonPayload.branchId,
+          authMeta.userId,
+          null,
+          payload.description,
+          true,
+        );
+
+        const paramDoSmdVehicleId = await this.createDoSmdVehicle(
+          paramDoSmdId,
+          payload.vehicle_number,
+          payload.employee_id_driver,
+          permissonPayload.branchId,
+          authMeta.userId,
+        );
+
+        const paramDoSmdDetailId = await this.createDoSmdDetail(
+          paramDoSmdId,
+          paramDoSmdVehicleId,
+          null,
+          payload.smd_city_date,
+          permissonPayload.branchId,
+          resultbranchTo.branchId,
+          authMeta.userId,
+        );
+
+        await DoSmd.update(
+          { doSmdId : paramDoSmdId },
+          {
+            branchToNameList: resultbranchTo.branchName,
+            doSmdDetailIdLast: paramDoSmdDetailId,
+            doSmdVehicleIdLast: paramDoSmdVehicleId,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+
+        data.push({
+          do_smd_id: paramDoSmdId,
+          do_smd_code: paramDoSmdCode,
+          do_smd_vehicle_id: paramDoSmdVehicleId,
+          do_smd_detail_id: paramDoSmdDetailId,
+          departure_schedule_date_time: payload.smd_city_date,
+          branch_code: resultbranchTo.branchCode + ' ' + resultbranchTo.branchName,
+          employee_id_driver: payload.employee_id_driver,
+        });
+
+        result.statusCode = HttpStatus.OK;
+        result.message = 'SMD Kosong berhasil dibuat';
+        result.data = data;
+        return result;
+      } else {
+        throw new BadRequestException('Data Surat Muatan Darat Sedang di proses, Silahkan Coba Beberapa Saat');
+      }
+
+    } else {
+      throw new BadRequestException('Branch Tidak Ditemukan');
+    }
   }
 
   static async scanOutRouteOld(payload: any): Promise<any> {
@@ -1375,14 +1513,14 @@ export class ScanoutSmdService {
         ds.branch_id
       FROM do_smd_vehicle dsv
       INNER JOIN do_smd ds ON dsv.do_smd_id = ds.do_smd_id AND ds.is_deleted = FALSE AND do_smd_status_id_last = 3000
-      WHERE 
+      WHERE
         dsv.employee_id_driver = ${payload.employee_id_driver} AND dsv.is_deleted = FALSE
     `;
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
 
     if (resultDataDriver.length > 0) {
       throw new BadRequestException(`Harap ubah driver terlebih dahulu, karena driver sudah BERANGKAT`);
-    } 
+    }
 
     if (payload.seal_seq == 1) {
       rawQuery = `
@@ -2018,6 +2156,7 @@ export class ScanoutSmdService {
     userId: number,
     paramCounterTrip: number,
     description: string,
+    isEmpty = false,
   ) {
     const dataDoSmd = DoSmd.create({
       doSmdCode: paramDoSmdCode,
@@ -2030,6 +2169,7 @@ export class ScanoutSmdService {
       doSmdNote: description,
       isVendor: false,
       isIntercity: 0,
+      isEmpty,
       userIdCreated: userId,
       createdTime: moment().toDate(),
       userIdUpdated: userId,

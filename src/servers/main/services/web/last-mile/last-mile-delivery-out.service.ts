@@ -48,6 +48,8 @@ import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-req
 import { BadRequestException } from '@nestjs/common';
 import { PrintDoPodDeliverDataDoPodDeliverDetailVm } from '../../../models/print-do-pod-deliver.vm';
 import { User } from '../../../../../shared/orm-entity/user';
+import { RequestErrorService } from '../../../../../shared/services/request-error.service';
+import { AwbStatusService } from '../../master/awb-status.service';
 // #endregion
 
 export class LastMileDeliveryOutService {
@@ -85,8 +87,15 @@ export class LastMileDeliveryOutService {
     // NOTE: check if delivery with sigesit
     doPod.isPartner = false;
 
-    // await for get do pod id
-    await DoPodDeliver.save(doPod);
+    try {
+      // await for get do pod id
+      await DoPodDeliver.save(doPod);
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
 
     await this.createAuditDeliveryHistory(doPod.doPodDeliverId, false);
 
@@ -170,8 +179,15 @@ export class LastMileDeliveryOutService {
       }
     }
 
-    // await for get do pod id
-    await DoPodDeliver.save(doPod);
+    try {
+      // await for get do pod id
+      await DoPodDeliver.save(doPod);
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
 
     await this.createAuditDeliveryHistory(
       doPod.doPodDeliverId,
@@ -419,7 +435,7 @@ export class LastMileDeliveryOutService {
         // }
         // #endregion validation
 
-        const checkValidAwbStatusIdLast = await this.checkValidAwbStatusIdLast(awb);
+        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb);
         if (checkValidAwbStatusIdLast.isValid) {
           // Add Locking setnx redis
           const holdRedis = await RedisService.lockingWithExpire(
@@ -1259,33 +1275,4 @@ export class LastMileDeliveryOutService {
     meta.awbItem.awb.totalWeight = awb.awbItem.awb.totalWeightFinalRounded;
     return meta;
   }
-
-  private static async checkValidAwbStatusIdLast(awbItemAttr: AwbItemAttr) {
-    let message = null;
-    let isValid = false;
-    if (awbItemAttr.awbStatusIdLast) {
-      if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
-        return { isValid, message };
-      }
-      if (AWB_STATUS.DLV == awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} sudah deliv`;
-        return { isValid, message };
-      }
-      if (await AwbService.isCancelDelivery(awbItemAttr.awbItemId)) {
-        message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
-        return { isValid, message };
-      }
-      if (!await AwbService.isManifested(awbItemAttr.awbItemId)) {
-        message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
-        return { isValid, message };
-      }
-      if (AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast) {
-        message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
-        return { isValid, message };
-      }
-    }
-    return { isValid:true, message };
-  }
-
 }

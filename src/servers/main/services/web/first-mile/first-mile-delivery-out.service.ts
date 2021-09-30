@@ -40,6 +40,7 @@ import { OrionRepositoryService } from '../../../../../shared/services/orion-rep
 import { Employee } from '../../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { PartnerLogistic } from '../../../../../shared/orm-entity/partner-logistic';
+import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 // #endregion
 
 // Surat Jalan Keluar Gerai
@@ -80,8 +81,16 @@ export class FirstMileDeliveryOutService {
       doPod.partnerLogisticName = payload.partnerLogisticName;
     }
 
-    // await for get do pod id
-    await DoPod.save(doPod);
+    try {
+      // await for get do pod id
+      await DoPod.save(doPod);
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
+
     this.createAuditHistory(doPod.doPodId, false);
 
     // Populate return value

@@ -48,6 +48,18 @@ export class CustomCounterCode {
     return prefix + randomCode;
   }
 
+    public static async doPodReturn(dateTime: Date, digit: number = 8) {
+    const prefix = `DOPR/${moment(dateTime).format('YYMM/DD/')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
+  }
+
+    public static async doPodReturnMobile(dateTime: Date, digit: number = 8) {
+    const prefix = `DOPRM/${moment(dateTime).format('YYMM/DD/')}`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode;
+  }
+
   public static async awbTrouble(dateTime: Date, digit: number = 8) {
     const prefix = `ATR/${moment(dateTime).format('YYMM/DD/')}`;
     const randomCode = this.randomCode(digit);
@@ -107,6 +119,12 @@ export class CustomCounterCode {
   public static async doSmdCodeRandomCounter(dateTime: Date, digit: number = 8) {
     // Format Code: GSK/1907/13/XYZA1234
     const prefix = `DMD/${moment(dateTime).format('YYMM/DD')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
+  public static async doSmdEmptyCodeRandomCounter(dateTime: Date, digit: number = 8) {
+    const prefix = `DME/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
   }

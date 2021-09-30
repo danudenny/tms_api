@@ -49,6 +49,76 @@ export class ScanoutSmdListService {
     return result;
   }
 
+  static async findscanOutEmptyList(payload: BaseMetaPayloadVm, isGetTotal = true): Promise<any> {
+    payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
+    payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
+    payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
+    payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
+    payload.fieldResolverMap['is_empty'] = 'ds.is_empty';
+    payload.fieldResolverMap['nik'] = 'e.nik';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_time',
+      },
+      {
+        field: 'branch_name_from',
+      },
+      {
+        field: 'branch_name_to',
+      },
+      {
+        field: 'do_smd_code',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoSmd, 'ds');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['ds.do_smd_id', 'do_smd_id'],
+      ['ds.do_smd_code', 'do_smd_code'],
+      [`CASE WHEN ds.is_empty = TRUE THEN 'SURAT JALAN KOSONG' ELSE 'SURAT JALAN DARAT' END`, 'do_smd_empty'],
+      ['ds.do_smd_time', 'do_smd_time'],
+      ['e.fullname', 'fullname'],
+      ['e.employee_id', 'employee_id'],
+      ['dsv.vehicle_number', 'vehicle_number'],
+      ['b.branch_name', 'branch_from_name'],
+      ['ds.branch_to_name_list', 'branch_to_name'],
+      ['e.nik', 'nik'],
+    );
+
+    q.innerJoinRaw(
+      'do_smd_detail',
+      'dsd',
+      'dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE',
+    );
+    // q.innerJoin(e => e.doSmdDetail, 'dsd', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
+    q.innerJoin(e => e.doSmdVehicle, 'dsv', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isEmpty, w => w.isTrue());
+
+    const result = new ScanOutHistoryResponseVm();
+
+    result.data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+    return result;
+  }
+
   static async getQueryScanoutList(payload: BaseMetaPayloadVm, isGetTotal = true): Promise<any> {
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
@@ -82,7 +152,10 @@ export class ScanoutSmdListService {
     q.selectRaw(
       ['ds.do_smd_id', 'do_smd_id'],
       ['ds.do_smd_code', 'do_smd_code'],
-      [`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'do_smd_intercity'],
+      [`CASE
+        WHEN ds.is_intercity = 1 THEN 'DALAM KOTA'
+        WHEN ds.is_empty = TRUE THEN 'SURAT JALAN KOSONG'
+        ELSE 'LUAR KOTA' END`, 'do_smd_intercity'],
       ['ds.do_smd_time', 'do_smd_time'],
       ['e.fullname', 'fullname'],
       ['e.employee_id', 'employee_id'],

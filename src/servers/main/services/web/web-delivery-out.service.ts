@@ -67,6 +67,7 @@ import { Branch } from '../../../../shared/orm-entity/branch';
 import { BagScanOutHubQueueService } from '../../../queue/services/bag-scan-out-hub-queue.service';
 import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 import { Bag } from '../../../../shared/orm-entity/bag';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 // #endregion
 
 @Injectable()
@@ -131,7 +132,17 @@ export class WebDeliveryOutService {
       doPod.transactionStatusId = 800; // BRANCH
     }
 
-    // await for get do pod id
+
+    try {
+      // await for get do pod id
+      await this.doPodRepository.save(doPod);
+    } catch (err) {
+      console.log('ERROR INSERT:::::: ', err);
+      RequestErrorService.throwObj({
+        message: 'global.error.SERVER_BUSY',
+      });
+    }
+
     await this.doPodRepository.save(doPod);
     await this.createAuditHistory(doPod.doPodId, false);
 
