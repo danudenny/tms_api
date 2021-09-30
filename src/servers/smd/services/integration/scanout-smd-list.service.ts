@@ -50,6 +50,15 @@ export class ScanoutSmdListService {
   }
 
   static async findscanOutEmptyList(payload: BaseMetaPayloadVm, isGetTotal = true): Promise<any> {
+
+    let employeeDriverId = 0;
+    payload.filters.forEach((filter, index, obj) => {
+      if (filter.field == 'employee_id_driver') {
+        employeeDriverId = filter.value;
+        obj.splice(index, 1);
+      }
+    });
+
     payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
     payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
@@ -80,7 +89,7 @@ export class ScanoutSmdListService {
     q.selectRaw(
       ['ds.do_smd_id', 'do_smd_id'],
       ['ds.do_smd_code', 'do_smd_code'],
-      [`CASE WHEN ds.is_empty = TRUE THEN 'SURAT JALAN KOSONG' ELSE 'SURAT JALAN DARAT' END`, 'do_smd_empty'],
+      [`'SURAT JALAN KOSONG'`, 'do_smd_empty'],
       ['ds.do_smd_time', 'do_smd_time'],
       ['e.fullname', 'fullname'],
       ['e.employee_id', 'employee_id'],
@@ -104,9 +113,14 @@ export class ScanoutSmdListService {
     q.leftJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.doSmdVehicle.employee, 'e', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+
+    if (employeeDriverId === 0) {
+      q.innerJoin(e => e.doSmdVehicle.employee, 'e', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+    } else {
+      q.innerJoinRaw('employee', 'e', `"e"."employee_id"="dsv"."employee_id_driver" and e.is_deleted = FALSE and e.employee_id = ${employeeDriverId}`);
+    }
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.isEmpty, w => w.isTrue());
@@ -193,7 +207,7 @@ export class ScanoutSmdListService {
       'ds.do_smd_status_id_last = dss.do_smd_status_id AND dss.is_deleted = FALSE',
     );
     q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title');
-    q.andWhereRaw('ds.is_deleted = FALSE');
+    // q.andWhereRaw('ds.is_deleted = FALSE');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     const result = {
       data: null,

@@ -574,7 +574,7 @@ export class SmdPrintService {
     queryParams: PrintDoSmdPayloadQueryVm,
   ) {
     const q = RepositoryService.doSmd.findOne();
-    q.leftJoin(e => e.doSmdDetails, 'doSmdDetails', j =>
+    q.innerJoin(e => e.doSmdDetails, 'doSmdDetails', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.doSmdDetails.branchTo);
@@ -582,7 +582,7 @@ export class SmdPrintService {
     q.leftJoin(e => e.doSmdDetails.branchTo.district);
     q.leftJoin(e => e.doSmdDetails.branchTo.district.city);
     q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
-    q.leftJoin(e => e.doSmdVehicle);
+    q.innerJoin(e => e.doSmdVehicle);
 
     const doSmd = await q
       .select({

@@ -22,7 +22,7 @@ import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/serv
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import { ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdEmptyVehiclePayloadVm } from '../../models/scanout-smd.payload.vm';
+import { ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdEmptyVehiclePayloadVm, SealChangeManualPayloadVm } from '../../models/scanout-smd.payload.vm';
 import { toInteger } from 'lodash';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 
@@ -49,51 +49,96 @@ export class ScanoutSmdService {
         dsv.is_deleted = FALSE;
     `;
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
-
-    if (resultDataDriver.length > 0) {
+    for (const dataDriver of resultDataDriver) {
       // Cek Status OTW
-      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
+      if ( toInteger(dataDriver.do_smd_status_id_last) == 3000) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
       }
       // Cek Status PROBLEM
-      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 8000) {
+      if ( toInteger(dataDriver.do_smd_status_id_last) == 8000) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena sedang PROBLEM !!`);
       }
       // Cek Status HAS ARRIVED
-      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4000) {
+      if ( toInteger(dataDriver.do_smd_status_id_last) == 4000) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena baru tiba !!`);
       }
       // Cek Status INVALID
-      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4050) {
+      if ( toInteger(dataDriver.do_smd_status_id_last) == 4050) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena INVALID  !!`);
       }
       // Cek Status VALID
-      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4100) {
+      if ( toInteger(dataDriver.do_smd_status_id_last) == 4100) {
         throw new BadRequestException(`Driver tidak bisa di assign, karena belum DITERIMA !!`);
       }
       // Cek Status Created, Assigned, Driver Changed
-      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 1000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 2000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 1050) {
-        if (toInteger(resultDataDriver[0].branch_id) != toInteger(permissonPayload.branchId)) {
+      if ( toInteger(dataDriver.do_smd_status_id_last) == 1000 || toInteger(dataDriver.do_smd_status_id_last) == 2000 || toInteger(dataDriver.do_smd_status_id_last) == 1050) {
+        if (toInteger(dataDriver.branch_id) != toInteger(permissonPayload.branchId)) {
           throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
         }
-      } else if( toInteger(resultDataDriver[0].do_smd_status_id_last) < 3000 ) {
+      } else if ( toInteger(dataDriver.do_smd_status_id_last) < 3000 ) {
         throw new BadRequestException(`Driver Tidak boleh di assign`);
       }
       // Cek Status Received, Finish
-      if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 5000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 6000 ) {
+      if ( toInteger(dataDriver.do_smd_status_id_last) == 5000 || toInteger(dataDriver.do_smd_status_id_last) == 6000 ) {
         const resultDoSmdDetail = await DoSmdDetail.findOne({
           where: {
-            doSmdId: resultDataDriver[0].do_smd_id,
+            doSmdId: dataDriver.do_smd_id,
             doSmdStatusIdLast: 5000,
             branchIdTo: permissonPayload.branchId,
             isDeleted: false,
           },
         });
         if (!resultDoSmdDetail) {
-          throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + resultDataDriver[0].do_smd_id + ` beda cabang.`);
+          throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + dataDriver.do_smd_id + ` beda cabang.`);
         }
       }
     }
+
+
+    // if (resultDataDriver.length > 0) {
+    //   // Cek Status OTW
+    //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
+    //     throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
+    //   }
+    //   // Cek Status PROBLEM
+    //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 8000) {
+    //     throw new BadRequestException(`Driver tidak bisa di assign, karena sedang PROBLEM !!`);
+    //   }
+    //   // Cek Status HAS ARRIVED
+    //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4000) {
+    //     throw new BadRequestException(`Driver tidak bisa di assign, karena baru tiba !!`);
+    //   }
+    //   // Cek Status INVALID
+    //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4050) {
+    //     throw new BadRequestException(`Driver tidak bisa di assign, karena INVALID  !!`);
+    //   }
+    //   // Cek Status VALID
+    //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4100) {
+    //     throw new BadRequestException(`Driver tidak bisa di assign, karena belum DITERIMA !!`);
+    //   }
+    //   // Cek Status Created, Assigned, Driver Changed
+    //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 1000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 2000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 1050) {
+    //     if (toInteger(resultDataDriver[0].branch_id) != toInteger(permissonPayload.branchId)) {
+    //       throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
+    //     }
+    //   } else if( toInteger(resultDataDriver[0].do_smd_status_id_last) < 3000 ) {
+    //     throw new BadRequestException(`Driver Tidak boleh di assign`);
+    //   }
+    //   // Cek Status Received, Finish
+    //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 5000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 6000 ) {
+    //     const resultDoSmdDetail = await DoSmdDetail.findOne({
+    //       where: {
+    //         doSmdId: resultDataDriver[0].do_smd_id,
+    //         doSmdStatusIdLast: 5000,
+    //         branchIdTo: permissonPayload.branchId,
+    //         isDeleted: false,
+    //       },
+    //     });
+    //     if (!resultDoSmdDetail) {
+    //       throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + resultDataDriver[0].do_smd_id + ` beda cabang.`);
+    //     }
+    //   }
+    // }
 
     const  paramDoSmdCode = await CustomCounterCode.doSmdCodeRandomCounter(timeNow);
     const data = [];
@@ -182,51 +227,95 @@ export class ScanoutSmdService {
           dsv.is_deleted = FALSE;
       `;
       const resultDataDriver = await RawQueryService.query(rawQueryDriver);
-
-      if (resultDataDriver.length > 0) {
+      for (const dataDriver of resultDataDriver) {
         // Cek Status OTW
-        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
+        if ( toInteger(dataDriver.do_smd_status_id_last) == 3000) {
           throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
         }
         // Cek Status PROBLEM
-        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 8000) {
+        if ( toInteger(dataDriver.do_smd_status_id_last) == 8000) {
           throw new BadRequestException(`Driver tidak bisa di assign, karena sedang PROBLEM !!`);
         }
         // Cek Status HAS ARRIVED
-        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4000) {
+        if ( toInteger(dataDriver.do_smd_status_id_last) == 4000) {
           throw new BadRequestException(`Driver tidak bisa di assign, karena baru tiba !!`);
         }
         // Cek Status INVALID
-        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4050) {
+        if ( toInteger(dataDriver.do_smd_status_id_last) == 4050) {
           throw new BadRequestException(`Driver tidak bisa di assign, karena INVALID  !!`);
         }
         // Cek Status VALID
-        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4100) {
+        if ( toInteger(dataDriver.do_smd_status_id_last) == 4100) {
           throw new BadRequestException(`Driver tidak bisa di assign, karena belum DITERIMA !!`);
         }
         // Cek Status Created, Assigned, Driver Changed
-        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 1000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 2000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 1050) {
-          if (toInteger(resultDataDriver[0].branch_id) != toInteger(permissonPayload.branchId)) {
+        if ( toInteger(dataDriver.do_smd_status_id_last) == 1000 || toInteger(dataDriver.do_smd_status_id_last) == 2000 || toInteger(dataDriver.do_smd_status_id_last) == 1050) {
+          if (toInteger(dataDriver.branch_id) != toInteger(permissonPayload.branchId)) {
             throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
           }
-        } else if ( toInteger(resultDataDriver[0].do_smd_status_id_last) < 3000 ) {
+        } else if ( toInteger(dataDriver.do_smd_status_id_last) < 3000 ) {
           throw new BadRequestException(`Driver Tidak boleh di assign`);
         }
         // Cek Status Received, Finish
-        if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 5000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 6000 ) {
+        if ( toInteger(dataDriver.do_smd_status_id_last) == 5000 || toInteger(dataDriver.do_smd_status_id_last) == 6000 ) {
           const resultDoSmdDetail = await DoSmdDetail.findOne({
             where: {
-              doSmdId: resultDataDriver[0].do_smd_id,
+              doSmdId: dataDriver.do_smd_id,
               doSmdStatusIdLast: 5000,
               branchIdTo: permissonPayload.branchId,
               isDeleted: false,
             },
           });
           if (!resultDoSmdDetail) {
-            throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + resultDataDriver[0].do_smd_id + ` beda cabang.`);
+            throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + dataDriver.do_smd_id + ` beda cabang.`);
           }
         }
       }
+
+      // if (resultDataDriver.length > 0) {
+      //   // Cek Status OTW
+      //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 3000) {
+      //     throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
+      //   }
+      //   // Cek Status PROBLEM
+      //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 8000) {
+      //     throw new BadRequestException(`Driver tidak bisa di assign, karena sedang PROBLEM !!`);
+      //   }
+      //   // Cek Status HAS ARRIVED
+      //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4000) {
+      //     throw new BadRequestException(`Driver tidak bisa di assign, karena baru tiba !!`);
+      //   }
+      //   // Cek Status INVALID
+      //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4050) {
+      //     throw new BadRequestException(`Driver tidak bisa di assign, karena INVALID  !!`);
+      //   }
+      //   // Cek Status VALID
+      //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 4100) {
+      //     throw new BadRequestException(`Driver tidak bisa di assign, karena belum DITERIMA !!`);
+      //   }
+      //   // Cek Status Created, Assigned, Driver Changed
+      //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 1000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 2000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 1050) {
+      //     if (toInteger(resultDataDriver[0].branch_id) != toInteger(permissonPayload.branchId)) {
+      //       throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
+      //     }
+      //   } else if ( toInteger(resultDataDriver[0].do_smd_status_id_last) < 3000 ) {
+      //     throw new BadRequestException(`Driver Tidak boleh di assign`);
+      //   }
+      //   // Cek Status Received, Finish
+      //   if ( toInteger(resultDataDriver[0].do_smd_status_id_last) == 5000 || toInteger(resultDataDriver[0].do_smd_status_id_last) == 6000 ) {
+      //     const resultDoSmdDetail = await DoSmdDetail.findOne({
+      //       where: {
+      //         doSmdId: resultDataDriver[0].do_smd_id,
+      //         doSmdStatusIdLast: 5000,
+      //         branchIdTo: permissonPayload.branchId,
+      //         isDeleted: false,
+      //       },
+      //     });
+      //     if (!resultDoSmdDetail) {
+      //       throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + resultDataDriver[0].do_smd_id + ` beda cabang.`);
+      //     }
+      //   }
+      // }
       const  paramDoSmdCode = await CustomCounterCode.doSmdEmptyCodeRandomCounter(timeNow);
       const data = [];
 
@@ -2701,6 +2790,97 @@ export class ScanoutSmdService {
       totalSuccess, totalError,
     };
     return response;
+  }
+
+  static async changeSealManual(payload: SealChangeManualPayloadVm): Promise<any> {
+    const doSmd = await DoSmd.findOne({
+      where: {
+        doSmdCode: payload.doSmdCode,
+        isDeleted: false,
+        // sealNumberLast: IsNull(),
+      },
+    });
+
+    if (doSmd && !doSmd.sealNumberLast) {
+      const doSmdDetails = await DoSmdDetail.find({
+        where: {
+          doSmdId: doSmd.doSmdId,
+          isDeleted: false,
+          // sealNumber: IsNull(),
+        },
+      });
+
+      const doSmdVehicle = await DoSmdVehicle.findOne({
+        where: {
+          doSmdId: doSmd.doSmdId,
+          isDeleted: false,
+        },
+      });
+
+      const doSmdHistory = await DoSmdHistory.findOne({
+        where: {
+          doSmdId: doSmd.doSmdId,
+          doSmdStatusId: 1200, // status change seal
+          userIdCreated: 1,
+          sealNumber: payload.sealNumber,
+        },
+      });
+
+      const doSmdId = doSmd.doSmdId;
+      const doSmdVehicleId = doSmdVehicle.doSmdVehicleId;
+      const timeNow = moment().toDate();
+
+      if (!doSmdHistory) {
+        await DoSmd.update(
+          { doSmdId : doSmd.doSmdId },
+          {
+            sealNumberLast: payload.sealNumber,
+            userIdUpdated: 1,
+            updatedTime: timeNow,
+          },
+        );
+        for (const doSmdDetail of doSmdDetails) {
+          await DoSmdDetail.update(
+            { doSmdDetailId : doSmdDetail.doSmdDetailId },
+            {
+              sealNumber: payload.sealNumber,
+              userIdUpdated: 1,
+              updatedTime: timeNow,
+            },
+          );
+        }
+
+        const paramDoSmdHistoryId = await this.createDoSmdHistory(
+          doSmdId,
+          doSmdDetails[0].doSmdDetailId,
+          doSmdVehicleId,
+          null,
+          null,
+          doSmd.doSmdTime,
+          121, // branch kantor pusat
+          1200, // status seal change
+          payload.sealNumber,
+          null,
+          1, // user superadmin
+        );
+      }
+
+      const response = {
+        status: 'ok',
+        message: 'Update seal number success',
+      };
+
+      return response;
+    }
+    if (doSmd && doSmd.sealNumberLast) {
+      RequestErrorService.throwObj({
+        message: 'SMD code: ' + payload.doSmdCode + ' already has seal number',
+      });
+    } else {
+      RequestErrorService.throwObj({
+        message: 'SMD code: ' + payload.doSmdCode + ' not found',
+      });
+    }
   }
 
   static async getSmdCodeByRequestData(data: any): Promise<any> {

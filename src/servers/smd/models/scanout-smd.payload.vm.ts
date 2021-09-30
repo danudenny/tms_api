@@ -87,6 +87,14 @@ export class ScanOutSmdSealPayloadVm {
 
 }
 
+export class SealChangeManualPayloadVm {
+  @ApiModelProperty()
+  doSmdCode: string;
+
+  @ApiModelProperty()
+  sealNumber: string;
+}
+
 export class ScanOutSmdHandoverPayloadVm {
   @ApiModelProperty()
   do_smd_id: number;

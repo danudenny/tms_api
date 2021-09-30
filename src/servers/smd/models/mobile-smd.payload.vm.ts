@@ -127,3 +127,8 @@ export class MobileSmdEndManuallPayloadVm {
 
 }
 
+export class UnfinishedSmdPayloadVm {
+  @ApiModelProperty()
+  nik: string;
+
+}
