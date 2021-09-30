@@ -27,6 +27,7 @@ export class DoPodReturnService {
     }
     doPod.userIdDriver = userIdDriver || null;
     doPod.doPodReturnDateTime = moment().toDate();
+    doPod.doPodReturnDate = moment().toDate();
     doPod.description = desc || null;
     doPod.branchId = branchId;
     doPod.userId = userId;

@@ -25,6 +25,12 @@ export class DoPodReturn extends TmsBaseEntity {
   })
   doPodReturnDateTime: Date;
 
+  @Column('date', {
+    nullable: false,
+    name: 'do_pod_return_date',
+  })
+  doPodReturnDate: Date;
+
   @Column('text', {
     nullable: true,
   })

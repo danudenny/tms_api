@@ -79,8 +79,11 @@ export class WebScanAwbReturnResponseVm {
 }
 
 export class WebScanInReturnGroupResponseVm {
-  @ApiModelProperty({ format: 'date' })
+  @ApiModelProperty()
   datePOD: string;
+
+  @ApiModelProperty()
+  datePodRetunDateTime: string;
 
   @ApiModelProperty()
   totalSuratJalan: number;

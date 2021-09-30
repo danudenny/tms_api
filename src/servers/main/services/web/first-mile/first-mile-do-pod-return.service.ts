@@ -214,8 +214,10 @@ export class FirstMileDoPodReturnService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanOutReturnGroupListResponseVm> {
     // mapping field
-    payload.fieldResolverMap['doPodRetrunDateTime'] =
+    payload.fieldResolverMap['doPodReturnDateTime'] =
       't1.do_pod_return_date_time';
+    payload.fieldResolverMap['doPodReturnDate'] =
+      't1.do_pod_return_date';
     payload.fieldResolverMap['datePOD'] = 'datePOD';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
@@ -239,7 +241,7 @@ export class FirstMileDoPodReturnService {
     q.selectRaw(
       ['t1.user_id_driver', 'userIdDriver'],
       ['t2.fullname', 'nickname'],
-      ['t1.do_pod_return_date_time::date', 'datePOD'],
+      ['t1.do_pod_return_date', 'datePOD'],
       ['t5.branch_name', 'branchName'],
       ['t1.branch_id', 'branchId'],
       ['COUNT(DISTINCT(t1.do_pod_return_id))', 'totalSuratJalan'],
