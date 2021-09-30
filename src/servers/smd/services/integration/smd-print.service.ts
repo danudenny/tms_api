@@ -574,7 +574,7 @@ export class SmdPrintService {
     queryParams: PrintDoSmdPayloadQueryVm,
   ) {
     const q = RepositoryService.doSmd.findOne();
-    q.leftJoin(e => e.doSmdDetails, 'doSmdDetails', j =>
+    q.innerJoin(e => e.doSmdDetails, 'doSmdDetails', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.doSmdDetails.branchTo);
