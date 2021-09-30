@@ -456,12 +456,10 @@ export class MobileFirstMileDoPodReturnService {
         w => w.lessThanOrEqual(dateTo.toDate()),
       );
 
-      if (payloadDateFrom) {
-        q.andWhere(
-            e => e.createdTime,
-            w => w.lessThanOrEqual(moment(payloadDateFrom).toDate()),
-          );
-      }
+      q.andWhere(
+        e => e.createdTime,
+        w => w.greaterThanOrEqual(moment(payloadDateFrom).toDate()),
+      );
 
       if (awbNumber) {
         q.andWhere(e => e.awb.awbNumber, w => w.equals(awbNumber));
