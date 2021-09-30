@@ -17,6 +17,22 @@ export class ScanOutSmdVehiclePayloadVm {
   @ApiModelPropertyOptional()
   description: string;
 }
+export class ScanOutSmdEmptyVehiclePayloadVm {
+  @ApiModelProperty()
+  branch_id: number;
+
+  @ApiModelProperty()
+  employee_id_driver: number;
+
+  @ApiModelProperty()
+  smd_city_date: Date;
+
+  @ApiModelProperty()
+  vehicle_number: string;
+
+  @ApiModelPropertyOptional()
+  description: string;
+}
 
 export class ScanOutSmdRoutePayloadVm {
   @ApiModelProperty()

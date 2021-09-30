@@ -86,6 +86,17 @@ export class SmdPrintController {
     return SmdPrintService.printDoSmdByRequest(serverResponse, queryParams);
   }
 
+  @Get('empty/do-smd')
+  @ApiBearerAuth()
+  @ResponseSerializerOptions({ disable: true })
+  public async printDoSmdEmpty(
+    @Query() queryParams: PrintDoSmdPayloadQueryVm,
+    @Response() serverResponse: express.Response,
+  ) {
+    await ResponseMaintenanceService.userIdNotNull(queryParams.userId);
+    return SmdPrintService.printDoSmdEmptyByRequest(serverResponse, queryParams);
+  }
+
   @Get('vendor')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })

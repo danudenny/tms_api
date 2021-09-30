@@ -31,6 +31,81 @@ export class ScanOutVehicleVm {
 
 }
 
+export class ScanOutSmdEmptyVehicleResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanOutEmptyVehicleVm]})
+  data: ScanOutEmptyVehicleVm[];
+}
+
+export class ScanOutEmptyVehicleVm {
+
+  @ApiModelProperty()
+  do_smd_id: number;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  do_smd_detail_id: number;
+
+  @ApiModelProperty()
+  do_smd_vehicle_id: number;
+
+  @ApiModelProperty()
+  departure_schedule_date_time: Date;
+
+  @ApiModelProperty()
+  branch_code: string;
+
+  @ApiModelProperty()
+  employee_id_driver: number;
+
+}
+
+export class ScanOutEmptyListDataResponseVm {
+
+  @ApiModelProperty()
+  do_smd_id: string;
+
+  @ApiModelProperty()
+  do_smd_code: string;
+
+  @ApiModelProperty()
+  do_smd_empty: string;
+
+  @ApiModelProperty()
+  do_smd_time: string;
+
+  @ApiModelProperty()
+  fullname: Date;
+
+  @ApiModelProperty()
+  employee_id: string;
+
+  @ApiModelProperty()
+  branch_from_name: string;
+
+  @ApiModelProperty()
+  nik: string;
+
+  @ApiModelProperty()
+  branch_to_name: string;
+
+  @ApiModelProperty()
+  vehicle_number: String;
+}
+
+export class ScanOutEmptyListResponseVm extends BaseMetaResponseVm {
+
+  @ApiModelProperty({ type: () => [ScanOutEmptyListDataResponseVm] })
+  data: ScanOutEmptyListDataResponseVm[];
+}
+
 export class ScanOutSmdRouteResponseVm {
   @ApiModelProperty()
   statusCode: number;
