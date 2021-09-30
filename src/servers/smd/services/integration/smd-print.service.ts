@@ -582,7 +582,7 @@ export class SmdPrintService {
     q.leftJoin(e => e.doSmdDetails.branchTo.district);
     q.leftJoin(e => e.doSmdDetails.branchTo.district.city);
     q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
-    q.leftJoin(e => e.doSmdVehicle);
+    q.innerJoin(e => e.doSmdVehicle);
 
     const doSmd = await q
       .select({
