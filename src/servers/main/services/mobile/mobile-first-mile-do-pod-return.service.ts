@@ -365,109 +365,132 @@ export class MobileFirstMileDoPodReturnService {
     isHistoryReturn?: boolean) {
     const authMeta = AuthService.getAuthMetadata();
 
-    const repo = new OrionRepositoryService(DoPodReturnDetail, 't1');
-    const q = repo.findAllRaw();
 
-    q.selectRaw(
-      ['t1.do_pod_return_detail_id', 'doPodReturnDetailId'],
-      ['t1.awb_item_id', 'awbItemId'],
-      ['t1.awb_status_date_time_last', 'awbStatusDateTimeLast'],
-      ['t1.consignee_name', 'consigneeNameNote'],
-      ['t1.desc_last', 'reasonNotes'],
-      ['t2.do_pod_return_id', 'doPodReturnId'],
-      ['t2.do_pod_return_date_time', 'doPodReturnDateTime'],
-      ['t3.awb_id', 'awbId'],
-      ['t3.awb_date', 'awbDate'],
-      ['t3.awb_number', 'awbNumber'],
-      ['t3.ref_customer_account_id', 'merchant'],
-      ['t3.consignee_name', 'consigneeName'],
-      ['t3.consignee_address', 'consigneeAddress'],
-      ['t3.notes', 'consigneeNote'],
-      ['t3.consignee_phone', 'consigneeNumber'],
-      ['t3.total_cod_value', 'totalCodValue'],
-      ['t3.is_cod', 'isCOD'],
-      [`COALESCE(t4.is_high_value, t8.is_high_value, false)`, 'isHighValue'],
-      ['t5.awb_status_id', 'awbStatusId'],
-      ['t5.awb_status_name', 'awbStatusName'],
-      ['t6.employee_id', 'employeeId'],
-      ['t6.fullname', 'employeeName'],
-      ['t7.package_type_name', 'packageTypeName'],
-      ['t8.recipient_longitude', 'longitudeReturn'],
-      ['t8.recipient_latitude', 'latitudeReturn'],
-      ['t8.do_return', 'isDoReturn'],
-      ['t8.do_return_number', 'doReturnNumber'],
-      ['t9.reason_id', 'reasonId'],
-      ['t9.reason_code', 'reasonCode'],
-      ['t9.reason_name', 'reasonName'],
-    );
+    const qb = createQueryBuilder();
+    qb.addSelect('t1.do_pod_return_detail_id', 'doPodReturnDetailId');
+    qb.addSelect('t1.awb_item_id', 'awbItemId');
+    qb.addSelect('t1.awb_status_date_time_last', 'awbStatusDateTimeLast');
+    qb.addSelect('t1.consignee_name', 'consigneeNameNote');
+    qb.addSelect('t1.desc_last', 'reasonNotes');
+    qb.addSelect('t2.do_pod_return_id', 'doPodReturnId');
+    qb.addSelect('t2.do_pod_return_date_time', 'doPodReturnDateTime');
+    qb.addSelect('t3.awb_id', 'awbId');
+    qb.addSelect('t3.awb_date', 'awbDate');
+    qb.addSelect('t3.awb_number', 'awbNumber');
+    qb.addSelect('t3.ref_customer_account_id', 'merchant');
+    qb.addSelect('t3.consignee_name', 'consigneeName');
+    qb.addSelect('t3.consignee_address', 'consigneeAddress');
+    qb.addSelect('t3.notes', 'consigneeNote');
+    qb.addSelect('t3.consignee_phone', 'consigneeNumber');
+    qb.addSelect('t3.total_cod_value', 'totalCodValue');
+    qb.addSelect('t3.is_cod', 'isCOD');
+    qb.addSelect(`COALESCE(t4.is_high_value, t8.is_high_value, false)`, 'isHighValue');
+    qb.addSelect('t5.awb_status_id', 'awbStatusId');
+    qb.addSelect('t5.awb_status_name', 'awbStatusName');
+    qb.addSelect('t6.employee_id', 'employeeId');
+    qb.addSelect('t6.fullname', 'employeeName');
+    qb.addSelect('t7.package_type_name', 'packageTypeName');
+    qb.addSelect('t8.recipient_longitude', 'longitudeReturn');
+    qb.addSelect('t8.recipient_latitude', 'latitudeReturn');
+    qb.addSelect('t8.do_return', 'isDoReturn');
+    qb.addSelect('t8.do_return_number', 'doReturnNumber');
+    qb.addSelect('t9.reason_id', 'reasonId');
+    qb.addSelect('t9.reason_code', 'reasonCode');
+    qb.addSelect('t9.reason_name', 'reasonName');
 
-    q.innerJoin(e => e.doPodReturn, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.awb, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.awbItemAttr, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.awbItemAttr.awbStatus, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.doPodReturn.userDriver.employee, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.awb.packageType, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.pickupRequestDetail, 't8', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.reasonLast, 't9', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.andWhere(e => e.doPodReturn.userIdDriver, w => w.equals(authMeta.userId));
-
-    if (!isHistoryReturn) {
-      q.andWhere(e => e.awbItemAttr.awbStatus.awbStatusId, w => w.notEquals('14000'));
-      q.andWhere(
-        e => e.updatedTime,
-        w => w.greaterThan(moment(payloadDateFrom).toDate()),
+    qb.from('do_pod_return_detail', 't1');
+    qb.innerJoin(
+      'do_pod_return',
+      't2',
+      't2.do_pod_return_id = t1.do_pod_return_id AND t2.is_deleted = false',
       );
-      if (payloadDateTo) {
-        q.andWhere(
-          e => e.updatedTime,
-          w => w.lessThanOrEqual(moment(payloadDateTo).toDate()),
-        );
+    qb.innerJoin(
+      'awb',
+      't3',
+      't3.awb_id = t1.awb_id AND t3.is_deleted = false',
+      );
+    qb.innerJoin(
+      'awb_item_attr',
+      't4',
+      't4.awb_item_id = t1.awb_item_id AND t4.is_deleted = false',
+      );
+    qb.innerJoin(
+      'awb_status',
+      't5',
+      't5.awb_status_id = t4.awb_status_id_last AND t5.is_deleted = false',
+      );
+    qb.innerJoin(
+      'users',
+      'users',
+      'users.user_id = t2.user_id_driver',
+      );
+    qb.innerJoin(
+      'employee',
+      't6',
+      't6.employee_id = users.employee_id AND t6.is_deleted = false',
+      );
+    qb.leftJoin(
+      'package_type',
+      't7',
+      't7.package_type_id = t3.package_type_id AND t7.is_deleted = false',
+      );
+    qb.leftJoin(
+      'pickup_request_detail',
+      't8',
+      't8.awb_item_id = t1.awb_item_id AND t8.is_deleted = false',
+      );
+    qb.leftJoin(
+      'reason',
+      't9',
+      't9.reason_id = t1.reason_id_last AND t9.is_deleted = false',
+      );
+
+      qb.andWhere('t2.user_id_driver = :userIdDriver',{
+        userIdDriver: authMeta.userId,
+      });
+
+      if (!isHistoryReturn) {
+        qb.andWhere('t5.awb_status_id != 14000',{
+          userIdDriver: authMeta.userId,
+        });
+
+        qb.andWhere('t1.updated_time > :dateFrom',{
+          dateFrom: payloadDateFrom,
+        });
+
+        if(payloadDateTo){
+          qb.andWhere('t1.updated_time <= :dateTo',{
+            dateTo: payloadDateTo,
+          });
+        }
+      } else {
+        qb.andWhere('t5.awb_status_id = 14000',{
+          userIdDriver: authMeta.userId,
+        });
+
+        const dateFrom = moment().subtract(1, 'd');
+        const dateTo = moment();
+
+        qb.andWhere('t2.do_pod_return_date_time >= :currentDateTimeStart',{
+          currentDateTimeStart: dateFrom.format('YYYY-MM-DD 00:00:00'),
+        });
+
+        qb.andWhere('t2.do_pod_return_date_time <= :currentDateTimeEnd',{
+          currentDateTimeEnd: dateTo.format('YYYY-MM-DD 23:59:59'),
+        });
+
+        qb.andWhere('t1.created_time >= :dateFrom',{
+          dateFrom: payloadDateFrom,
+        });
+
+        if(awbNumber){
+          qb.andWhere('t3.awb_number = :awbNumber',{
+            awbNumber: awbNumber,
+          });
+        }
       }
-    } else {
-      q.andWhere(e => e.awbItemAttr.awbStatus.awbStatusId, w => w.equals('14000'));
 
-      const dateFrom = moment().utc().hour(0).minute(0).second(0).millisecond(0).subtract(1, 'd');
-      const dateTo = moment().utc().hour(23).minute(59).second(59).millisecond(999);
-
-      q.andWhere(
-        e => e.doPodReturn.doPodReturnDateTime,
-        w => w.greaterThanOrEqual(dateFrom.toDate()),
-      );
-
-      q.andWhere(
-        e => e.doPodReturn.doPodReturnDateTime,
-        w => w.lessThanOrEqual(dateTo.toDate()),
-      );
-
-      q.andWhere(
-        e => e.createdTime,
-        w => w.greaterThanOrEqual(moment(payloadDateFrom).toDate()),
-      );
-
-      if (awbNumber) {
-        q.andWhere(e => e.awb.awbNumber, w => w.equals(awbNumber));
-      }
-
-    }
-
-    return await q.exec();
+      return await qb.getRawMany();
   }
 
   private static async syncReturn(returnsData: MobileReturnVm) {
