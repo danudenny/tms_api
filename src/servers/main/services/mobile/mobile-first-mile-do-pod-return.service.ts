@@ -457,16 +457,10 @@ export class MobileFirstMileDoPodReturnService {
       );
 
       if (payloadDateFrom) {
-        q.andWhereIsolated(qw => {
-          qw.andWhere(
-            e => e.updatedTime,
-            w => w.greaterThanOrEqual(moment(payloadDateFrom).toDate()),
-          );
-          qw.orWhere(
+        q.andWhere(
             e => e.createdTime,
             w => w.lessThanOrEqual(moment(payloadDateFrom).toDate()),
           );
-        });
       }
 
       if (awbNumber) {
