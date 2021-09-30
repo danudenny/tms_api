@@ -25,6 +25,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdEmptyVehiclePayloadVm, SealChangeManualPayloadVm } from '../../models/scanout-smd.payload.vm';
 import { toInteger } from 'lodash';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 
 @Injectable()
 export class ScanoutSmdService {
