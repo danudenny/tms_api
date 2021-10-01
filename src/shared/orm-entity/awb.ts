@@ -783,6 +783,10 @@ export class Awb extends BaseEntity {
   @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerAccountId' })
   partner: Partner;
 
+  @OneToOne(() => Partner)
+  @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerAccountId' })
+  partnerInfo: Partner;
+
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)
   // pod_scan: PodScan[];
