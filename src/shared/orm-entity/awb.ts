@@ -1,5 +1,6 @@
 import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 
+import { Partner } from './partner';
 import { AwbItem } from './awb-item';
 import { Branch } from './branch';
 import { District } from './district';
@@ -11,8 +12,6 @@ import { User } from './user';
 import { Representative } from './representative';
 import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { PickupRequestDetail } from './pickup-request-detail';
-import { Partner } from './partner';
-
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
 @Index('awb_awb_date_idx', ['awbDate'])
