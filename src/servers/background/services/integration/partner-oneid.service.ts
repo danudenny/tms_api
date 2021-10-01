@@ -166,12 +166,12 @@ export class PartnerOneidService {
   static async getOrder(query){
     try {
 
-      const endDate =  moment().subtract(30, "days").format("YYYY-MM-DD HH:mm:ss");
+     const endDate =  moment().subtract(30, "days").format("YYYY-MM-DD HH:mm:ss");
       const filter: any = {};
 
       // default filter
       filter.isDeleted = false;
-      filter.awbDate =  MoreThan(endDate);
+     filter.awbDate =  MoreThan(endDate);
       // Pagination
       const limitValue = parseFloat(query.limit) || 10;
       const page = parseFloat(query.page);
@@ -198,8 +198,8 @@ export class PartnerOneidService {
       }
 
       const results = await Awb.find({
-        select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'awbDate', 'customerAccountId', 'totalBasePrice', 'createdTime'],
-        relations: ['packageType','awbStatus'],
+        select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'totalBasePrice', 'createdTime'],
+        relations: ['packageType','awbStatus', 'partner','pickupRequestDetail'],
         where: filter,
         take: limitValue,
         skip: offsetValue
@@ -213,6 +213,10 @@ export class PartnerOneidService {
           awbId: results[i].awbId,
           awbNumber: results[i].awbNumber,
           receiver: results[i].consigneeName,
+          recipientAddress: results[i].consigneeAddress,
+          senderName: (results[i].pickupRequestDetail) ? results[i].pickupRequestDetail.shipperName : null,
+          shipperAddress: (results[i].pickupRequestDetail) ? results[i].pickupRequestDetail.shipperAddress : null,
+          partnerName: (results[i].partner) ? results[i].partner.partnerName : null,
           date: results[i].awbDate,
           service: (results[i].packageType) ? results[i].packageType.packageTypeCode : null,
           price: results[i].totalBasePrice,
