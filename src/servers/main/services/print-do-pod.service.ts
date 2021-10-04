@@ -115,6 +115,17 @@ export class PrintDoPodService {
     }
 
     const currentDate = moment();
+    let totalWeight = 0;
+    // loop data and sum data totalCodValue
+    if (data.doPodDetails.length) {
+      data.doPodDetails.map(function(detail) {
+        if (detail.awbItem && detail.awbItem.awb){
+            if(detail.awbItem.awb.totalWeight){
+              totalWeight += Number(detail.awbItem.awb.totalWeight);
+            }
+          }
+      });
+    }
 
     return this.printDoPod(
       res,
@@ -125,6 +136,7 @@ export class PrintDoPodService {
         date: currentDate.format('DD/MM/YY'),
         time: currentDate.format('HH:mm'),
         totalItems: data.doPodDetails.length,
+        totalWeight,
       },
       templateConfig,
     );
@@ -175,17 +187,23 @@ export class PrintDoPodService {
 
     const currentDate = moment();
     let totalCod = 0;
+    let totalWeight = 0;
     // loop data and sum data totalCodValue
     if (data.doPodDetails.length) {
       data.doPodDetails.map(function(detail) {
-        if (
-          detail.awbItem &&
-          detail.awbItem.awb &&
-          detail.awbItem.awb.totalCodValue
-        ) {
-          totalCod += Number(detail.awbItem.awb.totalCodValue);
-        }
+        if (detail.awbItem && detail.awbItem.awb){
+            if(detail.awbItem.awb.totalCodValue) {
+              totalCod += Number(detail.awbItem.awb.totalCodValue);
+             }
+            if(detail.awbItem.awb.totalWeight){
+              totalWeight += Number(detail.awbItem.awb.totalWeight);
+            }
+          }
+
       });
+
+
+
     }
 
     return this.printDoPodTransit(
@@ -198,6 +216,7 @@ export class PrintDoPodService {
         time: currentDate.format('HH:mm'),
         totalItems: data.doPodDetails.length,
         totalCod,
+        totalWeight,
       },
       templateConfig,
     );
@@ -286,6 +305,7 @@ export class PrintDoPodService {
       date: string;
       time: string;
       totalItems: number;
+      totalWeight: number;
     },
     templateConfig: {
       printCopy?: number;
@@ -322,6 +342,7 @@ export class PrintDoPodService {
       time: string;
       totalItems: number;
       totalCod: number;
+      totalWeight: number;
     },
     templateConfig: {
       printCopy?: number;
