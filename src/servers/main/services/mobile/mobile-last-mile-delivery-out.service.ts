@@ -288,7 +288,7 @@ export class LastMileDeliveryOutService {
       // if (awb.awbLastStatus && awb.awbLastStatus != 0) {
       //   notDeliver = awb.awbLastStatus != AWB_STATUS.ANT ? true : false;
       // }
-      const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb);
+      const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false);
       // NOTE: first must scan in branch
       if (checkValidAwbStatusIdLast.isValid) {
         // Add Locking setnx redis
