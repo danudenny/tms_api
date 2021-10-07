@@ -198,7 +198,7 @@ export class PartnerOneidService {
       }
 
       const results = await Awb.find({
-        select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'totalBasePrice', 'createdTime'],
+        select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'basePrice', 'createdTime'],
         relations: ['packageType','awbStatus', 'partnerInfo','pickupRequestDetail'],
         where: filter,
         take: limitValue,
