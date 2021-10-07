@@ -220,6 +220,7 @@ export class PartnerOneidService {
           date: results[i].awbDate,
           service: (results[i].packageType) ? results[i].packageType.packageTypeCode : null,
           price: results[i].basePrice,
+          description: (results[i].pickupRequestDetail) ? results[i].pickupRequestDetail.parcelContent : null,
           status: (results[i].awbStatus) ? results[i].awbStatus.awbStatusName : null,
         })
       }
