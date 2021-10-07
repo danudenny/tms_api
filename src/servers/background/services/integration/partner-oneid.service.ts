@@ -219,7 +219,7 @@ export class PartnerOneidService {
           partnerName: (results[i].partner) ? results[i].partner.partnerName : null,
           date: results[i].awbDate,
           service: (results[i].packageType) ? results[i].packageType.packageTypeCode : null,
-          price: results[i].totalBasePrice,
+          price: results[i].basePrice,
           status: (results[i].awbStatus) ? results[i].awbStatus.awbStatusName : null,
         })
       }
