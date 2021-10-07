@@ -199,7 +199,7 @@ export class PartnerOneidService {
 
       const results = await Awb.find({
         select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'totalBasePrice', 'createdTime'],
-        relations: ['packageType','awbStatus', 'partner','pickupRequestDetail'],
+        relations: ['packageType','awbStatus', 'partnerInfo','pickupRequestDetail'],
         where: filter,
         take: limitValue,
         skip: offsetValue
@@ -216,7 +216,7 @@ export class PartnerOneidService {
           recipientAddress: results[i].consigneeAddress,
           senderName: (results[i].pickupRequestDetail) ? results[i].pickupRequestDetail.shipperName : null,
           shipperAddress: (results[i].pickupRequestDetail) ? results[i].pickupRequestDetail.shipperAddress : null,
-          partnerName: (results[i].partner) ? results[i].partner.partnerName : null,
+          partnerName: (results[i].partnerInfo) ? results[i].partnerInfo.partnerName : null,
           date: results[i].awbDate,
           service: (results[i].packageType) ? results[i].packageType.packageTypeCode : null,
           price: results[i].basePrice,

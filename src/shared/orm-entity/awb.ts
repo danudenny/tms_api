@@ -1,5 +1,6 @@
 import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 
+import { Partner } from './partner';
 import { AwbItem } from './awb-item';
 import { Branch } from './branch';
 import { District } from './district';
@@ -11,8 +12,6 @@ import { User } from './user';
 import { Representative } from './representative';
 import { DoPodDeliverDetail } from './do-pod-deliver-detail';
 import { PickupRequestDetail } from './pickup-request-detail';
-import { Partner } from './partner';
-
 @Entity('awb', { schema: 'public' })
 @Index('awb_booking_idx', ['awbBookingId'])
 @Index('awb_awb_date_idx', ['awbDate'])
@@ -782,6 +781,10 @@ export class Awb extends BaseEntity {
   @OneToOne(() => Partner)
   @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerAccountId' })
   partner: Partner;
+
+  @OneToOne(() => Partner)
+  @JoinColumn({ name: 'customer_account_id', referencedColumnName: 'customerAccountId' })
+  partnerInfo: Partner;
 
   // TODO: mapping for join on scaninlist
   // @OneToMany(() => PodScan, pod_scan => pod_scan.awb)
