@@ -40,6 +40,7 @@ export class PrintDoPodDeliverService {
               consigneeZip: true,
               totalCodValue: true,
               isCod: true,
+              totalWeight: true,
             },
           },
         },
