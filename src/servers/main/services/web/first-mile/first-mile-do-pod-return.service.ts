@@ -804,6 +804,7 @@ export class FirstMileDoPodReturnService {
         time: currentDate.format('HH:mm'),
         totalItems: data.doPodReturnDetails.length,
         totalCod: totalAllCod,
+        totalWeight
       },
       templateConfig,
     );
@@ -819,6 +820,7 @@ export class FirstMileDoPodReturnService {
       time: string;
       totalItems: number;
       totalCod: number;
+      totalWeight: number;
     },
     templateConfig: {
       printCopy?: number;
