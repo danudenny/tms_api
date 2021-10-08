@@ -647,6 +647,7 @@ export class FirstMileDoPodReturnService {
               consigneeZip: true,
               totalCodValue: true,
               isCod: true,
+              totalWeight: true,
             },
           },
         },
@@ -773,6 +774,7 @@ export class FirstMileDoPodReturnService {
 
     const currentDate = moment();
     let totalAllCod = 0;
+    let totalWeight = 0;
 
     // sum totalCodValue from object
     // loop data and sum data totalCodValue
@@ -781,11 +783,14 @@ export class FirstMileDoPodReturnService {
         if (
           doPod &&
           doPod.awbItem &&
-          doPod.awbItem.awb &&
-          doPod.awbItem.awb.totalCodValue
-        ) {
-          totalAllCod += Number(doPod.awbItem.awb.totalCodValue);
-        }
+          doPod.awbItem.awb){
+            if(doPod.awbItem.awb.totalCodValue){
+              totalAllCod += Number(doPod.awbItem.awb.totalCodValue);
+            }
+            if(doPod.awbItem.awb.totalWeight){
+              totalWeight += Number(doPod.awbItem.awb.totalWeight);
+            }
+          }
       });
     }
 
