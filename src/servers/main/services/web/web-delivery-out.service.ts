@@ -1,7 +1,7 @@
 // #region import
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createQueryBuilder, IsNull } from 'typeorm';
+import { createQueryBuilder, IsNull, In, Transaction, getManager } from 'typeorm';
 import moment = require('moment');
 
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
@@ -131,7 +131,6 @@ export class WebDeliveryOutService {
     } else {
       doPod.transactionStatusId = 800; // BRANCH
     }
-
 
     try {
       // await for get do pod id
@@ -646,6 +645,12 @@ export class WebDeliveryOutService {
     });
 
     // TODO:bagNumbers changes to Values,cause list of value can the bagNumber or sealNumber
+    const doPodDetailBagArr = [];
+    const bagItemIds = [];
+    const paramsBull1 = [];
+    const paramsBull2 = [];
+    const paramsBull3 = [];
+
     for (const bagNumber of payload.bagNumber) {
       const response = new ScanBagVm();
       response.status = 'ok';
@@ -700,7 +705,8 @@ export class WebDeliveryOutService {
             doPodDetailBag.bagId = bagData.bagId;
             doPodDetailBag.bagItemId = bagData.bagItemId;
             doPodDetailBag.transactionStatusIdLast = transactionStatusId;
-            await DoPodDetailBag.insert(doPodDetailBag);
+            doPodDetailBagArr.push(doPodDetailBag);
+
             // Assign print metadata
             response.printDoPodDetailBagMetadata.bagItem.bagItemId = bagData.bagItemId;
             response.printDoPodDetailBagMetadata.bagItem.bagSeq = bagData.bagSeq;
@@ -711,36 +717,41 @@ export class WebDeliveryOutService {
             // AFTER Scan OUT ===============================================
             // #region after scanout
             // Update bag_item set bag_item_status_id = 1000
-            await BagItem.update({ bagItemId: bagData.bagItemId }, {
-              bagItemStatusIdLast: bagStatus,
-              branchIdLast: doPod.branchId,
-              branchIdNext: doPod.branchIdTo,
-              updatedTime: timeNow,
-              userIdUpdated: authMeta.userId,
-            });
+            bagItemIds.push(bagData.bagItemId);
+
             // NOTE: Loop data bag_item_awb for update status awb
             // and create do_pod_detail (data awb on bag)
             // TODO: need to refactor send to background job
-            BagScanOutHubQueueService.perform(
-              bagData.bagId,
-              bagData.bagItemId,
-              doPod.doPodId,
-              doPod.branchIdTo,
-              doPod.userIdDriver,
+            paramsBull1.push({
+              bagId: bagData.bagId,
+              bagItemId: bagData.bagItemId,
+              doPodId: doPod.doPodId,
+              branchIdTo: doPod.branchIdTo,
+              userIdDriver: doPod.userIdDriver,
               bagNumber,
-              authMeta.userId,
-              permissonPayload.branchId,
-              doPod.doPodType,
-            );
+              userId: authMeta.userId,
+              branchId: permissonPayload.branchId,
+              doPodType: doPod.doPodType,
+            });
+
+            // BagScanOutHubQueueService.perform;
             // TODO: if isTransit auto IN
             if (doPod.doPodType == 3020) {
               // NOTE: background job for insert bag item history
-              BagItemHistoryQueueService.addData(
-                bagData.bagItemId,
-                BAG_STATUS.IN_HUB,
-                permissonPayload.branchId,
-                authMeta.userId,
-              );
+              paramsBull2.push({
+                bagItemId: bagData.bagItemId,
+                bagStatus: BAG_STATUS.IN_HUB,
+                branchId: permissonPayload.branchId,
+                userId: authMeta.userId,
+              });
+
+              // BagItemHistoryQueueService.addData(
+              //   bagData.bagItemId,
+              //   BAG_STATUS.IN_HUB,
+              //   permissonPayload.branchId,
+              //   authMeta.userId,
+              // );
+
             }
             // NOTE: handle sorting status OUT AND IN HUB
             // force OUT_HUB created after IN_HUB in history bag (queue)
@@ -749,13 +760,20 @@ export class WebDeliveryOutService {
             }
             // TODO: need refactoring
             // NOTE: background job for insert bag item history
-            BagItemHistoryQueueService.addData(
-              bagData.bagItemId,
+            paramsBull3.push({
+              bagItemId: bagData.bagItemId,
               bagStatus,
-              permissonPayload.branchId,
-              authMeta.userId,
+              branchId: permissonPayload.branchId,
+              userId: authMeta.userId,
               additionMinutes,
-            );
+            });
+            // BagItemHistoryQueueService.addData(
+            //   bagData.bagItemId,
+            //   bagStatus,
+            //   permissonPayload.branchId,
+            //   authMeta.userId,
+            //   additionMinutes,
+            // );
             // #endregion after scanout
 
             totalSuccess += 1;
@@ -788,24 +806,73 @@ export class WebDeliveryOutService {
       });
     } // end of loop
 
-    // TODO: need improvement
-    if (doPod) {
-      // counter total scan in
-      if (doPod.totalScanOutBag == 0) {
-        await DoPod.update({ doPodId: doPod.doPodId }, {
-          totalScanOutBag: totalSuccess,
-          firstDateScanOut: timeNow,
-          lastDateScanOut: timeNow,
-        });
-      } else {
-        const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
-        await DoPod.update({ doPodId: doPod.doPodId }, {
-          totalScanOutBag,
-          lastDateScanOut: timeNow,
-        });
+    await getManager().transaction(async transactional => {
+      if (totalSuccess > 0 && doPodDetailBagArr.length > 0) {
+          await transactional.insert(DoPodDetailBag, doPodDetailBagArr);
+          await transactional.update(BagItem,
+            { bagItemId: In(bagItemIds) },
+            {
+              bagItemStatusIdLast: BAG_STATUS.OUT_HUB,
+              branchIdLast: doPod.branchId,
+              branchIdNext: doPod.branchIdTo,
+              updatedTime: timeNow,
+              userIdUpdated: authMeta.userId,
+            },
+          );
+
       }
+      // TODO: need improvement
+      if (doPod) {
+        // counter total scan in
+        if (doPod.totalScanOutBag == 0) {
+          await transactional.update(DoPod, { doPodId: doPod.doPodId }, {
+            totalScanOutBag: totalSuccess,
+            firstDateScanOut: timeNow,
+            lastDateScanOut: timeNow,
+          });
+        } else {
+          const totalScanOutBag = doPod.totalScanOutBag + totalSuccess;
+          await transactional.update(DoPod, { doPodId: doPod.doPodId }, {
+            totalScanOutBag,
+            lastDateScanOut: timeNow,
+          });
+        }
+      }
+    });
+
+    // loop bull
+    for (const item of paramsBull1) {
+      BagScanOutHubQueueService.perform(
+          item.bagId,
+          item.bagItemId,
+          item.doPodId,
+          item.branchIdTo,
+          item.userIdDriver,
+          item.bagNumber,
+          item.userId,
+          item.branchId,
+          item.doPodType,
+        );
     }
 
+    for (const item of paramsBull2) {
+      BagItemHistoryQueueService.addData(
+        item.bagItemId,
+        item.bagStatus,
+        item.branchId,
+        item.userId,
+      );
+    }
+
+    for (const item of paramsBull3) {
+      BagItemHistoryQueueService.addData(
+        item.bagItemId,
+        item.bagStatus,
+        item.branchId,
+        item.userId,
+        item.additionMinutes,
+      );
+    }
     // Populate return value
     result.totalData = payload.bagNumber.length;
     result.totalSuccess = totalSuccess;

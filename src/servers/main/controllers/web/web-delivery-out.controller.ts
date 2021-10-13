@@ -188,7 +188,6 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutBagResponseVm })
-  @Transactional()
   public async findAllBag(@Body() payload: WebScanOutBagVm) {
     // TODO: open bag and loop awb for update awb history
     return await this.webDeliveryOutService.scanOutBag(payload);
