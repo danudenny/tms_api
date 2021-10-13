@@ -43,6 +43,9 @@ export class PackageBagDetailVM {
 
 export class CreateBagNumberResponseVM {
   @ApiModelProperty()
+  bagId: number;
+
+  @ApiModelProperty()
   bagItemId: number;
 
   @ApiModelProperty()

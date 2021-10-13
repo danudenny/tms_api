@@ -44,6 +44,11 @@ export class PackagePayloadVm {
   @ApiModelPropertyOptional({
     example: 1129348,
   })
+  bagId?: number;
+
+  @ApiModelPropertyOptional({
+    example: 1129348,
+  })
   bagItemId?: number;
 
   @ApiModelPropertyOptional({
