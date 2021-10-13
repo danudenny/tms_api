@@ -395,6 +395,7 @@ export class V1PackageService {
   }
 
   private static async onFinish(payload: PackagePayloadVm): Promise<boolean> {
+    let bagWeightFinal;
     const authMeta = AuthService.getAuthData();
     const podScanInHub = await PodScanInHub.findOne({
       where: { podScanInHubId: payload.podScanInHubId },
@@ -403,7 +404,18 @@ export class V1PackageService {
       const getCache = await RedisService.get(
         `package:combine:bagItemId:${payload.bagItemId}`,
       );
-      const bagWeightFinal = getCache ? getCache : '';
+      // handle if cache redis notfound
+      if (getCache) {
+        bagWeightFinal = getCache;
+      } else {
+        const bagItem = await BagItem.findOne({
+          select: ['weight', 'bagItemId'],
+          where: {
+            bagItemId: payload.bagItemId,
+          },
+        });
+        bagWeightFinal = bagItem ? bagItem.weight : 0;
+      }
 
       // transaction
       await getManager().transaction(async trans => {
