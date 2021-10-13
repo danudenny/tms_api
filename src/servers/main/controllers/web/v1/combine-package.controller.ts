@@ -18,7 +18,6 @@ export class V1CombinePackageController {
   @HttpCode(200)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PackageAwbResponseVm })
-  @Transactional()
   public async packageAwb(@Body() payload: PackagePayloadVm) {
     return V1PackageService.awbPackage(payload);
   }
