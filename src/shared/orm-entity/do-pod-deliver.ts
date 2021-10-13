@@ -127,6 +127,13 @@ export class DoPodDeliver extends TmsBaseEntity {
   })
   isDeleted: boolean;
 
+  // new field
+  @Column('date', {
+    nullable: false,
+    name: 'do_pod_deliver_date',
+  })
+  doPodDeliverDate: Date;
+
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;

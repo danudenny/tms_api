@@ -134,6 +134,7 @@ export class V2MobileSyncService {
                 latitudeDeliveryLast: lastDoPodDeliverHistory.latitudeDelivery,
                 longitudeDeliveryLast: lastDoPodDeliverHistory.longitudeDelivery,
                 awbStatusDateTimeLast: lastDoPodDeliverHistory.awbStatusDateTime,
+                awbStatusDateLast : lastDoPodDeliverHistory.awbStatusDateTime,
                 reasonIdLast: lastDoPodDeliverHistory.reasonId,
                 syncDateTimeLast: lastDoPodDeliverHistory.syncDateTime,
                 descLast: lastDoPodDeliverHistory.desc,
