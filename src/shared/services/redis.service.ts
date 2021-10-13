@@ -207,4 +207,17 @@ export class RedisService {
   public static async retrieveData(key: string) {
     return RedisService.get(key, true);
   }
+
+  public static async incrbyfloat(key: string, value: number) {
+    return new Promise((resolve, reject) => {
+      // https://redis.io/commands/incrbyfloat
+      this.client.incrbyfloat(key, value, err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
 }
