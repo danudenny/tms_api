@@ -53,8 +53,8 @@ module.exports = {
   },
   extra: {
     max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 30000,
+    idleTimeoutMillis: 2000,
+    connectionTimeoutMillis: 2000,
   },
   entities: ['dist/shared/orm-entity/*.js'],
   migrations: ['dist/shared/orm-migration/*.js'],
