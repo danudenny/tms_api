@@ -40,7 +40,8 @@ import { Employee } from '../../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { PartnerLogistic } from '../../../../../shared/orm-entity/partner-logistic';
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
-import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
+const uuidv1 = require('uuid/v1');
 // #endregion
 
 // Surat Jalan Keluar Gerai
@@ -505,6 +506,7 @@ export class FirstMileDeliveryOutService {
 
               // NOTE: create data do pod detail per awb number
               const doPodDetail = DoPodDetail.create();
+              doPodDetail.doPodDetailId = uuidv1();
               doPodDetail.doPodId = payload.doPodId;
               doPodDetail.awbId = awb.awbId;
               doPodDetail.awbNumber = awbNumber;
