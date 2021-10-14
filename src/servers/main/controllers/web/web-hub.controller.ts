@@ -40,7 +40,6 @@ export class WebHubController {
   @Post('scanOut/awb')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
-  @Transactional()
   public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
     return HubTransitDeliveryOutService.scanOutAwb(payload);
   }
