@@ -167,7 +167,6 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
-  @Transactional()
   public async scanOutAwbDeliver(@Body() payload: WebScanOutAwbVm) {
     // Antar (Sigesit)
     return LastMileDeliveryOutService.scanOutAwbDeliver(payload);
@@ -178,7 +177,6 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
-  @Transactional()
   public async scanOutAwbDeliverPartner(@Body() payload: WebScanOutAwbVm) {
     return LastMileDeliveryOutService.scanOutAwbDeliverPartner(payload);
   }
