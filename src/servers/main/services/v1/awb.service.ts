@@ -5,6 +5,7 @@ import { createQueryBuilder } from 'typeorm';
 import { AwbDeliverManualVm } from '../../models/web-awb-deliver.vm';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 export class AwbService {
 
@@ -323,18 +324,51 @@ export class AwbService {
     return awbCancel ? true : false;
   }
 
+  // public static async isManifested(
+  //   awbItemId: number,
+  // ): Promise<boolean> {
+  //   const awbManifested = await AwbHistory.findOne({
+  //     select: ['awbHistoryId'],
+  //     where: {
+  //       awbItemId,
+  //       awbStatusId: AWB_STATUS.MANIFESTED,
+  //       isDeleted: false,
+  //     },
+  //   });
+  //   return awbManifested ? true : false;
+  // }
+
   public static async isManifested(
+    awbNumber: string,
     awbItemId: number,
-  ): Promise<boolean> {
-    const awbManifested = await AwbHistory.findOne({
-      select: ['awbHistoryId'],
-      where: {
-        awbItemId,
-        awbStatusId: AWB_STATUS.MANIFESTED,
-        isDeleted: false,
-      },
+  ): Promise<boolean>{
+    const query = `
+      SELECT
+        nostt as "awbNumber"
+      FROM
+        temp_stt
+      WHERE
+        nostt = :awbNumber
+      LIMIT
+        1;
+    `;
+
+    let rawData = await RawQueryService.queryWithParams(query,{
+      awbNumber,
     });
-    return awbManifested ? true : false;
+
+    if(rawData.length < 1){
+       rawData = await AwbHistory.findOne({
+        select: ['awbHistoryId'],
+        where: {
+          awbItemId,
+          awbStatusId: AWB_STATUS.MANIFESTED,
+          isDeleted: false,
+        },
+      });
+    }
+
+    return rawData ? true : false;
   }
 
   public static async isAwbNumberLenght(inputNumber: string): Promise<boolean> {
