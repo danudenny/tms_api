@@ -46,7 +46,6 @@ export class HubTransitDeliveryOutService {
     const method =
       payload.doPodMethod && payload.doPodMethod == '3pl' ? 3000 : 1000;
 
-    doPod.doPodId = uuidv1();
     doPod.doPodCode = await CustomCounterCode.doPod(doPodDateTime);
     doPod.doPodType = payload.doPodType;
     doPod.doPodMethod = method;
@@ -221,6 +220,7 @@ export class HubTransitDeliveryOutService {
 
             if (!existDoPodDetail) {
               const doPodDetail = DoPodDetail.create();
+              doPodDetail.doPodDetailId = uuidv1();
               doPodDetail.doPodId = payload.doPodId;
               doPodDetail.awbId = awb.awbId;
               doPodDetail.awbNumber = awbNumber;
