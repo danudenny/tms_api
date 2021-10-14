@@ -23,6 +23,7 @@ import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 import { getManager } from 'typeorm';
+const uuidv1 = require('uuid/v1');
 
 export class HubTransitDeliveryOutService {
   /**
@@ -153,6 +154,7 @@ export class HubTransitDeliveryOutService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
+    const doPodDeliverId = uuidv1();
     const dataItem = [];
     const timeNow = moment().toDate();
     const result = new WebScanOutAwbResponseVm();
@@ -219,7 +221,7 @@ export class HubTransitDeliveryOutService {
 
             if (!existDoPodDetail) {
               const doPodDetail = DoPodDetail.create();
-              doPodDetail.doPodId = payload.doPodId;
+              doPodDetail.doPodId = doPodDeliverId;
               doPodDetail.awbId = awb.awbId;
               doPodDetail.awbNumber = awbNumber;
               doPodDetail.awbItemId = awb.awbItemId;
