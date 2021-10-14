@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import winston = require('winston');
 
 import {
     ApiBearerAuth, ApiOkResponse, ApiUseTags,
@@ -42,7 +43,7 @@ export class WebLastMileController {
   @Post('scanOut/awb')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
-  @Transactional()
+  // @Transactional()
   public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
     return LastMileTransitOutService.scanOutAwb(payload);
   }
