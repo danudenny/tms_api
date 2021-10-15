@@ -194,16 +194,40 @@ export class PartnerOneidService {
             customerAccountIdBilling: Not(0)
           }
         });
-        filter.customerAccountId = (getSenderPhone) ? getSenderPhone.customerAccountId : 0;
+        filter.customerAccountId = (getSenderPhone) ? getSenderPhone.customerAccountId : 111000;
       }
 
-      const results = await Awb.find({
+      let results;
+
+        results = await Awb.find({
         select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'basePrice', 'createdTime'],
         relations: ['packageType','awbStatus', 'partnerInfo','pickupRequestDetail'],
         where: filter,
         take: limitValue,
         skip: offsetValue
       });
+  
+      if(results.length == 0){
+        filter.consigneeNumber = `0${query.consigneePhone}`;
+        results = await Awb.find({
+          select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'basePrice', 'createdTime'],
+          relations: ['packageType','awbStatus', 'partnerInfo','pickupRequestDetail'],
+          where: filter,
+          take: limitValue,
+          skip: offsetValue
+        });
+      }
+
+      if(results.length == 0){
+        filter.consigneeNumber = `62${query.consigneePhone}`;
+        results = await Awb.find({
+          select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'basePrice', 'createdTime'],
+          relations: ['packageType','awbStatus', 'partnerInfo','pickupRequestDetail'],
+          where: filter,
+          take: limitValue,
+          skip: offsetValue
+        });
+      }
       
       // mapping
 
