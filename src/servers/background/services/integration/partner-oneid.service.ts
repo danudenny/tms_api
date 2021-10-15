@@ -4,6 +4,7 @@ import moment = require('moment');
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { CustomerAccount } from '../../../../shared/orm-entity/customer-account';
+import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
@@ -187,32 +188,29 @@ export class PartnerOneidService {
 
       let getSenderPhone;
       if(query.senderPhone){
-          getSenderPhone = await CustomerAccount.findOne( {
-          select:['customerAccountId', 'mobile1'],
+          getSenderPhone = await PickupRequestDetail.findOne( {
+          select:['refAwbNumber', 'shipperPhone'],
           where: {
-            mobile1: query.senderPhone,
-            customerAccountIdBilling: Not(0)
+            shipperPhone: query.senderPhone,
           }
         });
         if(!getSenderPhone){
-          getSenderPhone = await CustomerAccount.findOne( {
-            select:['customerAccountId', 'mobile1'],
+          getSenderPhone = await PickupRequestDetail.findOne( {
+            select:['refAwbNumber', 'shipperPhone'],
             where: {
-              mobile1: `0${query.senderPhone}`,
-              customerAccountIdBilling: Not(0)
+              shipperPhone: `0${query.senderPhone}`,
             }
           });
         }
         if(!getSenderPhone){
-          getSenderPhone = await CustomerAccount.findOne( {
-            select:['customerAccountId', 'mobile1'],
+          getSenderPhone = await PickupRequestDetail.findOne( {
+            select:['refAwbNumber', 'shipperPhone'],
             where: {
-              mobile1: `62${query.senderPhone}`,
-              customerAccountIdBilling: Not(0)
+              shipperPhone: `62${query.senderPhone}`,
             }
           });
         }
-        filter.customerAccountId = (getSenderPhone) ? getSenderPhone.customerAccountId : 111000;
+        filter.awbNumber = (getSenderPhone) ? getSenderPhone.refAwbNumber : '000';
       }
 
       let results;
