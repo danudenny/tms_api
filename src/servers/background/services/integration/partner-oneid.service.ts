@@ -194,6 +194,24 @@ export class PartnerOneidService {
             customerAccountIdBilling: Not(0)
           }
         });
+        if(!getSenderPhone){
+          getSenderPhone = await CustomerAccount.findOne( {
+            select:['customerAccountId', 'mobile1'],
+            where: {
+              mobile1: `0${query.senderPhone}`,
+              customerAccountIdBilling: Not(0)
+            }
+          });
+        }
+        if(!getSenderPhone){
+          getSenderPhone = await CustomerAccount.findOne( {
+            select:['customerAccountId', 'mobile1'],
+            where: {
+              mobile1: `62${query.senderPhone}`,
+              customerAccountIdBilling: Not(0)
+            }
+          });
+        }
         filter.customerAccountId = (getSenderPhone) ? getSenderPhone.customerAccountId : 111000;
       }
 
