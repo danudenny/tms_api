@@ -19,6 +19,4 @@ export class SmdHelpdeskController {
   public async updateRepresentativeCodeManual(@Req() request: any, @Body() payload: UpdateRepresentativeManualPayload) {
     return SmdHelpdeskService.updateRepresentativeCodeManual(payload);
   }
-
-
 }
