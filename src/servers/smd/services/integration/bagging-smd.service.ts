@@ -166,6 +166,7 @@ export class BaggingSmdService {
 
     const bagNumber = payload.bagNumber.substring(0, 7);
     const bagSeq = Number(payload.bagNumber.substring(7, 10));
+    const bagNumberSeq = payload.bagNumber.substring(0, 10);
     const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
     // const weight = payload.bagNumber.substring(10);
@@ -210,7 +211,7 @@ export class BaggingSmdService {
       result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
       return result;
     }
-    if (!dataPackage.bag_item_status_id) {
+    if (dataPackage &&  !dataPackage.bag_item_status_id) {
       // handle kesalahan data saat scan masuk surat jalan
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
@@ -333,34 +334,42 @@ export class BaggingSmdService {
       const maxBagSeq = await this.getMaxBaggingSeq(dataPackage.representative_id_to, baggingDate, permissionPayload.branchId);
       const paramBaggingCode = await CustomCounterCode.baggingCodeRandomCounter(moment().toDate());
       // Redlock for race condition
-      const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 10);
-      if (redlock) {
-        const createBagging = Bagging.create();
-        createBagging.userId = authMeta.userId.toString();
-        createBagging.representativeIdTo = representative[0].representative_id;
-        createBagging.branchId = permissionPayload.branchId.toString();
-        createBagging.totalItem = 1;
-        createBagging.totalWeight = dataPackage.weight.toString();
-        createBagging.baggingCode = paramBaggingCode;
-        createBagging.baggingDate = baggingDate;
-        createBagging.userIdCreated = authMeta.userId.toString();
-        createBagging.userIdUpdated = authMeta.userId.toString();
-        createBagging.baggingDateReal = moment().toDate();
-        createBagging.baggingSeq = maxBagSeq;
-        createBagging.createdTime = moment().toDate();
-        createBagging.updatedTime = moment().toDate();
-        await Bagging.save(createBagging, {transaction: false});
+      const cek = await RedisService.redlock(`bagNumber:${bagNumberSeq}`, 120);
+      if(cek) {
+        const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 10);
+        if (redlock) {
+          const createBagging = Bagging.create();
+          createBagging.userId = authMeta.userId.toString();
+          createBagging.representativeIdTo = representative[0].representative_id;
+          createBagging.branchId = permissionPayload.branchId.toString();
+          createBagging.totalItem = 1;
+          createBagging.totalWeight = dataPackage.weight.toString();
+          createBagging.baggingCode = paramBaggingCode;
+          createBagging.baggingDate = baggingDate;
+          createBagging.userIdCreated = authMeta.userId.toString();
+          createBagging.userIdUpdated = authMeta.userId.toString();
+          createBagging.baggingDateReal = moment().toDate();
+          createBagging.baggingSeq = maxBagSeq;
+          createBagging.createdTime = moment().toDate();
+          createBagging.updatedTime = moment().toDate();
+          await Bagging.save(createBagging, {transaction: false});
 
-        baggingId = createBagging.baggingId;
-        baggingCode = createBagging.baggingCode;
+          baggingId = createBagging.baggingId;
+          baggingCode = createBagging.baggingCode;
 
-        baggingData.bagging_id = createBagging.baggingId;
-        baggingData.bagging_code = createBagging.baggingCode;
-        baggingData.total_weight = Number(createBagging.totalWeight);
-        baggingData.total_item = Number(createBagging.totalItem);
+          baggingData.bagging_id = createBagging.baggingId;
+          baggingData.bagging_code = createBagging.baggingCode;
+          baggingData.total_weight = Number(createBagging.totalWeight);
+          baggingData.total_item = Number(createBagging.totalItem);
 
+        } else {
+          result.message = 'Data Bagging Sedang di proses, Silahkan Coba Beberapa Saat';
+          return result;
+        }
       } else {
-        result.message = 'Data Bagging Sedang di proses, Silahkan Coba Beberapa Saat';
+        const result = new SmdScanBaggingResponseVm();
+        result.status = 'failed';
+        result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
         return result;
       }
     }
