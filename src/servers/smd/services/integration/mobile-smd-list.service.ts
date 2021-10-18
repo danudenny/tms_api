@@ -135,6 +135,7 @@ export class MobileSmdListService {
                   ORDER BY at.created_time DESC
                   LIMIT 1
               )`, 'signature_img_path');
+    qb.addSelect('dsd.arrival_time', 'arrival_time');
     qb.from('do_smd', 'ds');
     qb.innerJoin(
       'do_smd_detail',
