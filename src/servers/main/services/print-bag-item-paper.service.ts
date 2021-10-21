@@ -101,6 +101,16 @@ export class PrintBagItemPaperService {
     }
 
     const currentDate = moment();
+    let totalWeight = 0;
+    if (data.bagItemAwbs.length) {
+      data.bagItemAwbs.map(function(detail) {
+        if (detail.awbItem && detail.awbItem.awb){
+            if(detail.awbItem.awb.totalWeightFinalRounded){
+              totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
+            }
+          }
+      });
+    }
 
     return this.printBagItemPaper(
       res,
@@ -110,6 +120,8 @@ export class PrintBagItemPaperService {
         currentBranchName: currentBranch.branchName,
         date: currentDate.format('DD/MM/YY'),
         time: currentDate.format('HH:mm'),
+        totalItems: data.bagItemAwbs.length,
+        totalWeight,
       },
       templateConfig,
     );
@@ -123,6 +135,8 @@ export class PrintBagItemPaperService {
       currentBranchName: string;
       date: string;
       time: string;
+      totalItems: number;
+      totalWeight: number;
     },
     templateConfig: {
       printCopy?: number;

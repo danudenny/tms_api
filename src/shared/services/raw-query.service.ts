@@ -34,7 +34,7 @@ export class RawQueryService {
     } finally {
       if (queryRunner) {
         await queryRunner.release();
-        console.log('isReleased Slave : ', queryRunner.isReleased);
+        //console.log('isReleased Slave : ', queryRunner.isReleased);
       }
     }
   }
@@ -58,7 +58,7 @@ export class RawQueryService {
     } finally {
       if (queryRunner) {
         await queryRunner.release();
-        console.log('isReleased Slave : ', queryRunner.isReleased);
+        //console.log('isReleased Slave : ', queryRunner.isReleased);
       }
     }
   }

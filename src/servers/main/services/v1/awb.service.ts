@@ -33,6 +33,8 @@ export class AwbService {
           consigneeZip: true,
           totalCodValue: true,
           isCod: true,
+          totalWeight: true,
+          totalWeightFinalRounded: true,
         },
       },
       awbId: true,

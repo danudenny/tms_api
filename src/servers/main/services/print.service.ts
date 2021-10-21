@@ -442,6 +442,15 @@ export class PrintService {
       });
     }
 
+    let totalWeight = 0;
+    if(bagItem.bagItemAwbs.length){
+      for(const detail of bagItem.bagItemAwbs){
+        if(detail.awbItem && detail.awbItem.awb){
+          totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
+        }
+      }
+    }
+
     const m = moment();
     const jsreportParams = {
       data: bagItem,
@@ -450,6 +459,7 @@ export class PrintService {
         currentBranchName: currentBranch.branchName,
         date: m.format('DD/MM/YY'),
         time: m.format('HH:mm'),
+        totalWeight,
       },
     };
 
