@@ -341,6 +341,7 @@ export class LastMileDeliveryOutService {
 
     // doPod.userIdDriver = payload.
     doPod.userIdDriver = authMeta.userId;
+    doPod.doPodDeliverDateTime = doPodDateTime;
     doPod.doPodDeliverDate = doPodDateTime;
     doPod.description = null;
 
