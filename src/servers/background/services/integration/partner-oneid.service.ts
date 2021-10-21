@@ -167,7 +167,7 @@ export class PartnerOneidService {
   static async getOrder(query){
     try {
 
-      const endDate =  moment().subtract(2, "days").format("YYYY-MM-DD HH:mm:ss");
+      const endDate =  moment().subtract(3, "days").format("YYYY-MM-DD HH:mm:ss");
       const filter: any = {};
 
       // default filter
@@ -203,8 +203,17 @@ export class PartnerOneidService {
         
         awbref.push(...getSenderPhone.map(el => el.refAwbNumber))
         filter.awbNumber = In(awbref);
-      }
 
+        if(awbref.length == 0){
+          return {
+            status: true,
+            statusCode: 200,
+            limit: limitValue,
+            page,
+            data: []
+          }
+        }
+      }
 
       let results;
 
