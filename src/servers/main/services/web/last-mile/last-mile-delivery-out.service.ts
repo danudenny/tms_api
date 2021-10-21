@@ -1272,7 +1272,7 @@ export class LastMileDeliveryOutService {
     meta.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
     meta.awbItem.awb.isCod = awb.awbItem.awb.isCod;
     meta.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
-    meta.awbItem.awb.totalWeight = awb.awbItem.awb.totalWeightFinalRounded;
+    meta.awbItem.awb.totalWeight = awb.awbItem.awb.totalWeight;
     return meta;
   }
 }
