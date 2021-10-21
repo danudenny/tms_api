@@ -1,4 +1,4 @@
-import { MoreThan, Not } from 'typeorm';
+import { MoreThan, Not, In } from 'typeorm';
 import { PartnerOneidPayloadVm, ListOneidOrderActivityResponseVm } from '../../models/partner/oneid-task.vm';
 import moment = require('moment');
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
@@ -167,12 +167,13 @@ export class PartnerOneidService {
   static async getOrder(query){
     try {
 
-     const endDate =  moment().subtract(30, "days").format("YYYY-MM-DD HH:mm:ss");
+      const endDate =  moment().subtract(2, "days").format("YYYY-MM-DD HH:mm:ss");
       const filter: any = {};
 
       // default filter
       filter.isDeleted = false;
-     filter.awbDate =  MoreThan(endDate);
+      filter.awbDate =  MoreThan(endDate);
+      let awbref = []
       // Pagination
       const limitValue = parseFloat(query.limit) || 10;
       const page = parseFloat(query.page);
@@ -183,35 +184,27 @@ export class PartnerOneidService {
         filter.awbNumber = query.awbNumber;
       }
       if(query.consigneePhone){
-        filter.consigneeNumber = query.consigneePhone;
+        const consigneePhoneStringToArray = query.consigneePhone.split(',');
+        filter.consigneeNumber = In(consigneePhoneStringToArray);
       }
 
       let getSenderPhone;
       if(query.senderPhone){
-          getSenderPhone = await PickupRequestDetail.findOne( {
+        const senderPhoneStringToArray = query.senderPhone.split(',');
+          getSenderPhone = await PickupRequestDetail.find( {
           select:['refAwbNumber', 'shipperPhone'],
           where: {
-            shipperPhone: query.senderPhone,
+            createdTime:  MoreThan(endDate),
+            shipperPhone : In(senderPhoneStringToArray),
+            take: 50,
+            isDeleted: false
           }
         });
-        if(!getSenderPhone){
-          getSenderPhone = await PickupRequestDetail.findOne( {
-            select:['refAwbNumber', 'shipperPhone'],
-            where: {
-              shipperPhone: `0${query.senderPhone}`,
-            }
-          });
-        }
-        if(!getSenderPhone){
-          getSenderPhone = await PickupRequestDetail.findOne( {
-            select:['refAwbNumber', 'shipperPhone'],
-            where: {
-              shipperPhone: `62${query.senderPhone}`,
-            }
-          });
-        }
-        filter.awbNumber = (getSenderPhone) ? getSenderPhone.refAwbNumber : '000';
+        
+        awbref.push(...getSenderPhone.map(el => el.refAwbNumber))
+        filter.awbNumber = In(awbref);
       }
+
 
       let results;
 
@@ -222,28 +215,6 @@ export class PartnerOneidService {
         take: limitValue,
         skip: offsetValue
       });
-  
-      if(results.length == 0){
-        filter.consigneeNumber = `0${query.consigneePhone}`;
-        results = await Awb.find({
-          select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'basePrice', 'createdTime'],
-          relations: ['packageType','awbStatus', 'partnerInfo','pickupRequestDetail'],
-          where: filter,
-          take: limitValue,
-          skip: offsetValue
-        });
-      }
-
-      if(results.length == 0){
-        filter.consigneeNumber = `62${query.consigneePhone}`;
-        results = await Awb.find({
-          select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'basePrice', 'createdTime'],
-          relations: ['packageType','awbStatus', 'partnerInfo','pickupRequestDetail'],
-          where: filter,
-          take: limitValue,
-          skip: offsetValue
-        });
-      }
       
       // mapping
 
