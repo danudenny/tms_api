@@ -19,7 +19,8 @@ import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from 
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { WebDeliveryListResponseVm } from '../../../models/web-delivery-list-response.vm';
 import { BagItemHistory } from '../../../../../shared/orm-entity/bag-item-history';
-import { getManager, In } from 'typeorm';
+import { EntityManager, getManager, In } from 'typeorm';
+import { DoPodDetailBag } from '../../../../../shared/orm-entity/do-pod-detail-bag';
 const uuidv1 = require('uuid/v1');
 export class HubTransitDeliveryInService {
 
@@ -164,33 +165,33 @@ export class HubTransitDeliveryInService {
 
           // update first scan in do pod =====================================
           // TODO: need refactoring code
-          const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
-            bagData.bagItemId,
-            BAG_STATUS_DO_SELECTED,
-          );
+          // const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
+          //   bagData.bagItemId,
+          //   BAG_STATUS_DO_SELECTED,
+          // );
 
-          if (doPodDetailBag) {
-            // counter total scan in
-            doPodDetailBag.doPod.totalScanInBag += 1;
-            if (doPodDetailBag.doPod.totalScanInBag == 1) {
-              // await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
-              //   firstDateScanIn: timeNow,
-              //   lastDateScanIn: timeNow,
-              //   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
-              //   updatedTime: timeNow,
-              //   userIdUpdated: authMeta.userId,
-              // });
-              firstDoPodDetailBags.push(doPodDetailBag.doPodId);
-            } else {
-              // await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
-              //   lastDateScanIn: timeNow,
-              //   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
-              //   updatedTime: timeNow,
-              //   userIdUpdated: authMeta.userId,
-              // });
-              doPodDetailBags.push(doPodDetailBag.doPodId);
-            }
-          }
+          // if (doPodDetailBag) {
+          //   // counter total scan in
+          //   doPodDetailBag.doPod.totalScanInBag += 1;
+          //   if (doPodDetailBag.doPod.totalScanInBag == 1) {
+          //     // await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
+          //     //   firstDateScanIn: timeNow,
+          //     //   lastDateScanIn: timeNow,
+          //     //   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
+          //     //   updatedTime: timeNow,
+          //     //   userIdUpdated: authMeta.userId,
+          //     // });
+          //     firstDoPodDetailBags.push(doPodDetailBag.doPodId);
+          //   } else {
+          //     // await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
+          //     //   lastDateScanIn: timeNow,
+          //     //   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
+          //     //   updatedTime: timeNow,
+          //     //   userIdUpdated: authMeta.userId,
+          //     // });
+          //     doPodDetailBags.push(doPodDetailBag.doPodId);
+          //   }
+          // }
           // =================================================================
 
           totalSuccess += 1;
@@ -246,27 +247,27 @@ export class HubTransitDeliveryInService {
         // insert DropoffHub
         await transactional.insert(DropoffHub, dropoffHubArr);
 
-        // update data
-        if (firstDoPodDetailBags.length) {
-          await transactional.update(
-            DoPod,
-            { doPodId: In(firstDoPodDetailBags) },
-            {
-              firstDateScanIn: timeNow,
-              lastDateScanIn: timeNow,
-              updatedTime: timeNow,
-              userIdUpdated: authMeta.userId,
-            },
-          );
-        }
+        // // update data
+        // if (firstDoPodDetailBags.length) {
+        //   await transactional.update(
+        //     DoPod,
+        //     { doPodId: In(firstDoPodDetailBags) },
+        //     {
+        //       firstDateScanIn: timeNow,
+        //       lastDateScanIn: timeNow,
+        //       updatedTime: timeNow,
+        //       userIdUpdated: authMeta.userId,
+        //     },
+        //   );
+        // }
 
-        if (doPodDetailBags.length) {
-          await transactional.update(DoPod, { doPodId: In(doPodDetailBags) }, {
-            lastDateScanIn: timeNow,
-            updatedTime: timeNow,
-            userIdUpdated: authMeta.userId,
-          });
-        }
+        // if (doPodDetailBags.length) {
+        //   await transactional.update(DoPod, { doPodId: In(doPodDetailBags) }, {
+        //     lastDateScanIn: timeNow,
+        //     updatedTime: timeNow,
+        //     userIdUpdated: authMeta.userId,
+        //   });
+        // }
 
       }); // end transaction
 
@@ -279,6 +280,17 @@ export class HubTransitDeliveryInService {
             permissonPayload.branchId,
             authMeta.userId,
           );
+
+          const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
+            item.bagItemId,
+            BAG_STATUS.DO_HUB,
+          );
+
+          if(doPodDetailBag){
+            await getManager().transaction(async transactional => {
+              await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
+            });
+          }
         }
       }
 
@@ -290,6 +302,17 @@ export class HubTransitDeliveryInService {
             permissonPayload.branchId,
             authMeta.userId,
           );
+
+          const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
+            item.bagItemId,
+            BAG_STATUS.DO_HUB,
+          );
+
+          if(doPodDetailBag){
+            await getManager().transaction(async transactional => {
+              await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
+            });
+          }
         }
       }
 
@@ -508,5 +531,35 @@ export class HubTransitDeliveryInService {
     result.data = data;
 
     return result;
+  }
+
+  private static async updateDoPodTransaction(
+    doPodDetailBag: DoPodDetailBag,
+    userId: number,
+    timeNow: Date,
+    transactional: EntityManager){
+      doPodDetailBag.doPod.totalScanInBag += 1;
+      if (doPodDetailBag.doPod.totalScanInBag == 1) {
+        await transactional.update(
+          DoPod,
+          { doPodId: doPodDetailBag.doPodId },
+          {
+            firstDateScanIn: timeNow,
+            lastDateScanIn: timeNow,
+            updatedTime: timeNow,
+            userIdUpdated: userId,
+          },
+        );
+      }else{
+        await transactional.update(
+          DoPod,
+          { doPodId: doPodDetailBag.doPodId },
+          {
+            lastDateScanIn: timeNow,
+            updatedTime: timeNow,
+            userIdUpdated: userId,
+          },
+        );
+      }
   }
 }
