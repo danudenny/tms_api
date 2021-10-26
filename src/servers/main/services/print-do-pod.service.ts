@@ -20,7 +20,8 @@ export class PrintDoPodService {
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
     q.leftJoin(e => e.userDriver.employee);
-
+    q.leftJoin(e => e.partnerLogistic);
+      
     const doPod = await q
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
@@ -50,6 +51,9 @@ export class PrintDoPodService {
             },
           },
         },
+        partnerLogistic:{
+          partnerLogisticName:true
+        }
       })
       .where(e => e.doPodId, w => w.equals(queryParams.id))
       .andWhere(e => e.doPodDetails.isDeleted, w => w.isFalse());
@@ -58,6 +62,13 @@ export class PrintDoPodService {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
+    }
+      
+    if(!doPod.userDriver && doPod.partnerLogistic){
+      delete doPod.userDriver
+      let dataTransit = {userDriver : {employee : {nickname : doPod.partnerLogistic.partnerLogisticName}}}
+      delete doPod.partnerLogistic
+      Object.assign(doPod, dataTransit);
     }
 
     // handle Surat Jalan Transit
