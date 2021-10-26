@@ -46,6 +46,7 @@ export class PrintDoPodService {
               awbNumber: true,
               consigneeName: true,
               totalWeight: true,
+              totalWeightFinalRounded : true,
               totalCodValue: true,
               isCod: true,
             },
@@ -208,7 +209,7 @@ export class PrintDoPodService {
               totalCod += Number(detail.awbItem.awb.totalCodValue);
              }
             if(detail.awbItem.awb.totalWeight){
-              totalWeight += Number(detail.awbItem.awb.totalWeight);
+              totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
             }
           }
 
