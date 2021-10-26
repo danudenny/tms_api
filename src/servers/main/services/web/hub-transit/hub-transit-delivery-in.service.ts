@@ -19,7 +19,7 @@ import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from 
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { WebDeliveryListResponseVm } from '../../../models/web-delivery-list-response.vm';
 import { BagItemHistory } from '../../../../../shared/orm-entity/bag-item-history';
-import { EntityManager, getManager, In } from 'typeorm';
+import { createQueryBuilder, EntityManager, getManager, In } from 'typeorm';
 import { DoPodDetailBag } from '../../../../../shared/orm-entity/do-pod-detail-bag';
 const uuidv1 = require('uuid/v1');
 export class HubTransitDeliveryInService {
@@ -49,8 +49,6 @@ export class HubTransitDeliveryInService {
     const paramsBullHub = [];
     const paramsBullHaul = [];
     const paramsBull2 = [];
-    const firstDoPodDetailBags = [];
-    const doPodDetailBags = [];
     for (const bagNumber of payload.bagNumber) {
       const response = {
         status: 'ok',
@@ -63,7 +61,6 @@ export class HubTransitDeliveryInService {
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
         const BAG_STATUS_DO_SELECTED = (payload.hubId === 0) ? BAG_STATUS.DO_HUB : BAG_STATUS.DO_LINE_HAUL;
-        // const notScan = bagData.bagItemStatusIdLast != BAG_STATUS_DO_SELECTED ? true : false;
         const bagHistory = await BagItemHistory.findOne({
           where: {
             bagItemId: bagData.bagItemId,
@@ -94,7 +91,6 @@ export class HubTransitDeliveryInService {
               desc,
             );
           }
-          // ==================================================================
 
           // update status bagItem
           if (payload.hubId === 0) {
@@ -105,15 +101,7 @@ export class HubTransitDeliveryInService {
             paramsBullHaul.push({ bagItemId: bagData.bagItemId });
           }
 
-          // await BagItem.update({ bagItemId: bagData.bagItemId }, {
-          //   bagItemStatusIdLast: BAG_STATUS_DO_SELECTED,
-          //   branchIdLast: permissonPayload.branchId,
-          //   updatedTime: timeNow,
-          //   userIdUpdated: authMeta.userId,
-          // });
-
           // create data dropoff hub
-
           const uuidString = uuidv1();
           const dropoffHub = DropoffHub.create();
           dropoffHub.dropoffHubId = uuidString;
@@ -124,75 +112,12 @@ export class HubTransitDeliveryInService {
           dropoffHub.isSmd = payload.hubId;
           dropoffHubArr.push(dropoffHub);
 
-         // await DropoffHub.save(dropoffHub);
-
-          // NOTE: background job for insert bag item history
-
-          // BagItemHistoryQueueService.addData(
-          //   bagData.bagItemId,
-          //   BAG_STATUS_DO_SELECTED,
-          //   permissonPayload.branchId,
-          //   authMeta.userId,
-          // );
-
-          // NOTE:
-          // refactor send to background job for loop awb
-          // update status DO_HUB (12600: drop off hub)
-          // console.log('### HUB TRANSIT DELIVERY SERVICE DROP OFF HUB QUEUE');
-          // console.log('### HUB TRANSIT DELIVERY SERVICE dropoffHub =========', dropoffHub);
-          // console.log('### HUB TRANSIT DELIVERY SERVICE bagData =========', bagData);
-          // console.log('### HUB TRANSIT DELIVERY SERVICE bagItem =========', bagData);
-          // console.log('### HUB TRANSIT DELIVERY SERVICE isSmd =========', payload.hubId);
-          // console.log('### HUB TRANSIT DELIVERY SERVICE userId =========', authMeta.userId);
-
           paramsBull2.push({
             dropoffHubId: dropoffHub.dropoffHubId,
             bagItemId: bagData.bagItemId,
             bagId: bagData.bag.bagId,
             isSortir: bagData.isSortir,
           });
-
-          // BagDropoffHubQueueService.perform(
-          //   dropoffHub.dropoffHubId,
-          //   bagData.bagItemId,
-          //   authMeta.userId,
-          //   permissonPayload.branchId,
-          //   payload.hubId,
-          //   bagData.bag.bagId,
-          //   bagData.isSortir,
-          // );
-          // console.log('### HUB TRANSIT DELIVERY SERVICE END DROP OFF HUB QUEUE');
-
-          // update first scan in do pod =====================================
-          // TODO: need refactoring code
-          // const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
-          //   bagData.bagItemId,
-          //   BAG_STATUS_DO_SELECTED,
-          // );
-
-          // if (doPodDetailBag) {
-          //   // counter total scan in
-          //   doPodDetailBag.doPod.totalScanInBag += 1;
-          //   if (doPodDetailBag.doPod.totalScanInBag == 1) {
-          //     // await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
-          //     //   firstDateScanIn: timeNow,
-          //     //   lastDateScanIn: timeNow,
-          //     //   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
-          //     //   updatedTime: timeNow,
-          //     //   userIdUpdated: authMeta.userId,
-          //     // });
-          //     firstDoPodDetailBags.push(doPodDetailBag.doPodId);
-          //   } else {
-          //     // await DoPod.update({ doPodId: doPodDetailBag.doPodId }, {
-          //     //   lastDateScanIn: timeNow,
-          //     //   totalScanInBag: doPodDetailBag.doPod.totalScanInBag,
-          //     //   updatedTime: timeNow,
-          //     //   userIdUpdated: authMeta.userId,
-          //     // });
-          //     doPodDetailBags.push(doPodDetailBag.doPodId);
-          //   }
-          // }
-          // =================================================================
 
           totalSuccess += 1;
 
@@ -246,29 +171,6 @@ export class HubTransitDeliveryInService {
         }
         // insert DropoffHub
         await transactional.insert(DropoffHub, dropoffHubArr);
-
-        // // update data
-        // if (firstDoPodDetailBags.length) {
-        //   await transactional.update(
-        //     DoPod,
-        //     { doPodId: In(firstDoPodDetailBags) },
-        //     {
-        //       firstDateScanIn: timeNow,
-        //       lastDateScanIn: timeNow,
-        //       updatedTime: timeNow,
-        //       userIdUpdated: authMeta.userId,
-        //     },
-        //   );
-        // }
-
-        // if (doPodDetailBags.length) {
-        //   await transactional.update(DoPod, { doPodId: In(doPodDetailBags) }, {
-        //     lastDateScanIn: timeNow,
-        //     updatedTime: timeNow,
-        //     userIdUpdated: authMeta.userId,
-        //   });
-        // }
-
       }); // end transaction
 
       // send bull 1
@@ -281,11 +183,7 @@ export class HubTransitDeliveryInService {
             authMeta.userId,
           );
 
-          const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
-            item.bagItemId,
-            BAG_STATUS.DO_HUB,
-          );
-
+          const doPodDetailBag = await this.getDoPodByBagItem(item.bagItemId);
           if(doPodDetailBag){
             await getManager().transaction(async transactional => {
               await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
@@ -303,11 +201,7 @@ export class HubTransitDeliveryInService {
             authMeta.userId,
           );
 
-          const doPodDetailBag = await DoPodDetailBagRepository.getDataByBagItemIdAndBagStatus(
-            item.bagItemId,
-            BAG_STATUS.DO_HUB,
-          );
-
+          const doPodDetailBag = await this.getDoPodByBagItem(item.bagItemId);
           if(doPodDetailBag){
             await getManager().transaction(async transactional => {
               await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
@@ -534,18 +428,19 @@ export class HubTransitDeliveryInService {
   }
 
   private static async updateDoPodTransaction(
-    doPodDetailBag: DoPodDetailBag,
+    doPodDetailBag: any,
     userId: number,
     timeNow: Date,
     transactional: EntityManager){
-      doPodDetailBag.doPod.totalScanInBag += 1;
-      if (doPodDetailBag.doPod.totalScanInBag == 1) {
+      doPodDetailBag.totalScanInBag += 1;
+      if (doPodDetailBag.totalScanInBag == 1) {
         await transactional.update(
           DoPod,
           { doPodId: doPodDetailBag.doPodId },
           {
             firstDateScanIn: timeNow,
             lastDateScanIn: timeNow,
+            totalScanInBag: doPodDetailBag.totalScanInBag,
             updatedTime: timeNow,
             userIdUpdated: userId,
           },
@@ -556,10 +451,24 @@ export class HubTransitDeliveryInService {
           { doPodId: doPodDetailBag.doPodId },
           {
             lastDateScanIn: timeNow,
+            totalScanInBag: doPodDetailBag.totalScanInBag,
             updatedTime: timeNow,
             userIdUpdated: userId,
           },
         );
       }
+  }
+
+  private static async getDoPodByBagItem(bagItemId: number){
+    const q = createQueryBuilder();
+    q.addSelect('t2.do_pod_id', 'doPodId');
+    q.addSelect('t2.total_scan_in_bag', 'totalScanInbag');
+    q.from('do_pod_detail_bag', 't1');
+    q.innerJoin('do_pod', 't2', 't2.do_pod_id = t1.do_pod_id');
+    q.where('t1.bag_item_id = :bagitemId', {bagItemId});
+    q.andWhere('t1.transaction_status_id_last = 800');
+    q.andWhere('t1.is_deleted = false');
+    q.orderBy('t1.created_time', 'DESC' );
+    return await q.getRawOne();
   }
 }
