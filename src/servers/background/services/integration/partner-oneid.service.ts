@@ -5,6 +5,8 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { CustomerAccount } from '../../../../shared/orm-entity/customer-account';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
+import { TempStt } from '../../../../shared/orm-entity/temp-stt';
+
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
@@ -215,9 +217,10 @@ export class PartnerOneidService {
         }
       }
 
-      let results;
-
-        results = await Awb.find({
+      let results = await Awb.find({
+          order: {
+            'createdTime': "DESC",
+        },  
         select: ['awbId','awbNumber','consigneeName', 'consigneeNumber', 'consigneeAddress', 'awbDate', 'customerAccountId', 'basePrice', 'createdTime'],
         relations: ['packageType','awbStatus', 'partnerInfo','pickupRequestDetail'],
         where: filter,
@@ -229,6 +232,7 @@ export class PartnerOneidService {
 
       const mapping = [];
       for(let i = 0; i < results.length; i += 1){
+        const getPricing = await this.getPricing(results[i].awbNumber);
         mapping.push({
           awbId: results[i].awbId,
           awbNumber: results[i].awbNumber,
@@ -239,7 +243,7 @@ export class PartnerOneidService {
           partnerName: (results[i].partnerInfo) ? results[i].partnerInfo.partnerName : null,
           date: results[i].awbDate,
           service: (results[i].packageType) ? results[i].packageType.packageTypeCode : null,
-          price: results[i].basePrice,
+          price: getPricing,
           description: (results[i].pickupRequestDetail) ? results[i].pickupRequestDetail.parcelContent : null,
           status: (results[i].awbStatus) ? results[i].awbStatus.awbStatusName : null,
         })
@@ -260,4 +264,14 @@ export class PartnerOneidService {
       };
     }
   }
+
+   static async getPricing(awb){
+    const result =  await TempStt.findOne({
+      select:['nostt','totalbiaya'], 
+      where: {
+        nostt: awb,
+      }
+    });
+     return (result) ? result.totalbiaya : 0;
+   }
 }
