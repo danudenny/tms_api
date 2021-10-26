@@ -40,6 +40,7 @@ export class PrintDoPodDeliverService {
               consigneeZip: true,
               totalCodValue: true,
               isCod: true,
+              totalWeight: true,
             },
           },
         },
@@ -111,6 +112,7 @@ export class PrintDoPodDeliverService {
 
     const currentDate = moment();
     let totalAllCod = 0;
+    let totalWeight = 0;
 
     // sum totalCodValue from object
     // loop data and sum data totalCodValue
@@ -119,10 +121,13 @@ export class PrintDoPodDeliverService {
         if (
           doPod &&
           doPod.awbItem &&
-          doPod.awbItem.awb &&
-          doPod.awbItem.awb.totalCodValue
-        ) {
-          totalAllCod += Number(doPod.awbItem.awb.totalCodValue);
+          doPod.awbItem.awb){
+            if(doPod.awbItem.awb.totalCodValue){
+              totalAllCod += Number(doPod.awbItem.awb.totalCodValue);
+            }
+            if(doPod.awbItem.awb.totalWeight){
+              totalWeight += Number(doPod.awbItem.awb.totalWeight);
+            }
         }
       });
     }
@@ -137,6 +142,7 @@ export class PrintDoPodDeliverService {
         time: currentDate.format('HH:mm'),
         totalItems: data.doPodDeliverDetails.length,
         totalCod: totalAllCod,
+        totalWeight,
       },
       templateConfig,
     );
@@ -152,6 +158,7 @@ export class PrintDoPodDeliverService {
       time: string;
       totalItems: number;
       totalCod: number;
+      totalWeight: number;
     },
     templateConfig: {
       printCopy?: number;

@@ -15,6 +15,12 @@ import { ScanOutEmptyListResponseVm } from '../../models/scanout-smd.response.vm
 export class ScanOutListController {
   constructor() {}
 
+  @Delete('scanOut/empty/deleted/:id')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async scanoutEmptyDelete(@Req() request: any, @Param('id') doSmdId: number) {
+    return ScanoutSmdListService.scanoutEmptyDelete(doSmdId);
+  }
+
   @Post('scanOut/list')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async FindscanOutList(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {

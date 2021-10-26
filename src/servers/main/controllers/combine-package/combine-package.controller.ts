@@ -19,7 +19,6 @@ export class CombinePackageController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PackageAwbResponseVm })
-  @Transactional()
   // NOTE: refactoring handle data
   public async packageAwb(@Body() payload: PackagePayloadVm) {
     // return this.packageService.awbPackage(payload);

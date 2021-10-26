@@ -564,6 +564,14 @@ export class ScanOutSmdImageResponseVm {
   data: ScanOutImageVm[];
 }
 
+export class ScanOutSmdEmptyDelete {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+}
+
 export class ScanOutImageVm {
 
   @ApiModelProperty()
