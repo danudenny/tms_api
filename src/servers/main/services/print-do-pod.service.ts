@@ -66,7 +66,8 @@ export class PrintDoPodService {
       
     if(!doPod.userDriver && doPod.partnerLogistic){
       delete doPod.userDriver
-      let dataTransit = {userDriver : {employee : {nickname : doPod.partnerLogistic.partnerLogisticName}}}
+      let dataTransit = {userDriver : {employee : {nickname: "3PL"}}}
+      doPod.vehicleNumber = doPod.partnerLogistic.partnerLogisticName
       delete doPod.partnerLogistic
       Object.assign(doPod, dataTransit);
     }
