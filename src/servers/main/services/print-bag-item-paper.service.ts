@@ -106,12 +106,13 @@ export class PrintBagItemPaperService {
       data.bagItemAwbs.map(function(detail) {
         if (detail.awbItem && detail.awbItem.awb){
             if(detail.awbItem.awb.totalWeightFinalRounded){
-              // totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
-              totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeightFinalRounded)) / 100;
+              totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
+              // totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeightFinalRounded)) / 100;
             }
           }
       });
     }
+    totalWeight = Math.round(totalWeight * 100)/100;
 
     return this.printBagItemPaper(
       res,

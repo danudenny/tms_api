@@ -446,10 +446,12 @@ export class PrintService {
     if(bagItem.bagItemAwbs.length){
       for(const detail of bagItem.bagItemAwbs){
         if(detail.awbItem && detail.awbItem.awb){
-          totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeightFinalRounded)) / 100;
+          totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
+          // totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeightFinalRounded)) / 100;
         }
       }
     }
+    totalWeight = Math.round(totalWeight * 100)/100;
 
     const m = moment();
     const jsreportParams = {
