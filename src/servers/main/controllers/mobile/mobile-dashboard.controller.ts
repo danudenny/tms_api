@@ -126,7 +126,7 @@ export class MobileDashboardController {
       : process.env.ANDROID_APP_VERSION;
 
     let valid =
-      VersionCompareUtil.versionCompare(version, versionApp) > 0
+      VersionCompareUtil.versionCompare(version, versionApp) < 0
         ? false
         : true;
 
