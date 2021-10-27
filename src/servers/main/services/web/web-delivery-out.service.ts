@@ -68,6 +68,7 @@ import { BagScanOutHubQueueService } from '../../../queue/services/bag-scan-out-
 import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { ImgProxyHelper } from 'src/shared/helpers/imgproxy-helper';
 // #endregion
 
 @Injectable()
@@ -2060,6 +2061,11 @@ export class WebDeliveryOutService {
     if (data) {
       result.data = data;
     }
+
+    for(let i = 0; i < result.data.length; i++){
+      result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+    }
+
     return result;
   }
 

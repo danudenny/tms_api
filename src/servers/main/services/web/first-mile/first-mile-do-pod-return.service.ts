@@ -49,6 +49,7 @@ import {
 } from '../../../models/first-mile/do-pod-return-response.vm';
 import { PhotoResponseVm } from '../../../../../servers/main/models/bag-order-detail-response.vm';
 import { AwbStatusService } from '../../master/awb-status.service';
+import { ImgProxyHelper } from 'src/shared/helpers/imgproxy-helper';
 
 
 export class FirstMileDoPodReturnService {
@@ -679,6 +680,11 @@ export class FirstMileDoPodReturnService {
   ): Promise<PhotoResponseVm> {
     const result = new PhotoResponseVm();
     result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodReturnDetailId, payload.attachmentType);
+
+    for(let i = 0; i < result.data.length; i++){
+      result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+    }
+
     return result;
   }
 

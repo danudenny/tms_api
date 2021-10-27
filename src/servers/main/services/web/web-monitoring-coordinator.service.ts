@@ -21,6 +21,7 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import moment = require('moment');
 import { assign } from 'lodash';
 import { MobileKorwilService } from '../mobile/mobile-korwil.service';
+import { ImgProxyHelper } from 'src/shared/helpers/imgproxy-helper';
 
 @Injectable()
 export class WebMonitoringCoordinatorService {
@@ -152,7 +153,7 @@ export class WebMonitoringCoordinatorService {
     });
     const data = await qb.getRawMany();
     for (const dataDetail of data) {
-      url.push(dataDetail.url);
+      url.push(ImgProxyHelper.sicepatProxyUrl(dataDetail.url));
     }
     result.url = url;
     return result;
