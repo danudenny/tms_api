@@ -21,7 +21,7 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import moment = require('moment');
 import { assign } from 'lodash';
 import { MobileKorwilService } from '../mobile/mobile-korwil.service';
-import { ImgProxyHelper } from 'src/shared/helpers/imgproxy-helper';
+import { ImgProxyHelper } from '../../../../shared/helpers/imgproxy-helper';
 
 @Injectable()
 export class WebMonitoringCoordinatorService {

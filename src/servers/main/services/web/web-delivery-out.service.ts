@@ -68,7 +68,7 @@ import { BagScanOutHubQueueService } from '../../../queue/services/bag-scan-out-
 import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
-import { ImgProxyHelper } from 'src/shared/helpers/imgproxy-helper';
+import { ImgProxyHelper } from '../../../../shared/helpers/imgproxy-helper';
 // #endregion
 
 @Injectable()

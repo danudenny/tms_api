@@ -49,7 +49,7 @@ import {
 } from '../../../models/first-mile/do-pod-return-response.vm';
 import { PhotoResponseVm } from '../../../../../servers/main/models/bag-order-detail-response.vm';
 import { AwbStatusService } from '../../master/awb-status.service';
-import { ImgProxyHelper } from 'src/shared/helpers/imgproxy-helper';
+import { ImgProxyHelper } from '../../../../../shared/helpers/imgproxy-helper';
 
 
 export class FirstMileDoPodReturnService {
