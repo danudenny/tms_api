@@ -1,10 +1,28 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards, Get, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+  Get,
+  Param,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
-import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiUseTags,
+} from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { MobileDashboardFindAllResponseVm, MobileDetailTransitResponseVm } from '../../models/mobile-dashboard.response.vm';
+import {
+  MobileDashboardFindAllResponseVm,
+  MobileDetailTransitResponseVm,
+} from '../../models/mobile-dashboard.response.vm';
 import { MobileInitDataPayloadVm } from '../../models/mobile-init-data-payload.vm';
 import { MobileInitDataResponseVm } from '../../models/mobile-init-data-response.vm';
 import { MobileDashboardService } from '../../services/mobile/mobile-dashboard.service';
@@ -21,7 +39,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { MobileInitCheckInResponseVm } from '../../models/mobile-check-in-response.vm';
 import { MobileInitCheckInService } from '../../services/mobile/mobile-init-check-in.service';
 import { DetailTransitPayloadVm } from '../../models/mobile-dashboard.vm';
-
+import { VersionCompareUtil } from '../../../../shared/util/version-compare';
 @ApiUseTags('Dashboard')
 @Controller('mobile')
 export class MobileDashboardController {
@@ -103,8 +121,15 @@ export class MobileDashboardController {
   @HttpCode(HttpStatus.OK)
   public async mobileVersion(@Param('versionApp') version: string) {
     const versionRedis = await RedisService.get(`pod:mobile:versionApp`);
-    const versionApp = versionRedis ? versionRedis : process.env.ANDROID_APP_VERSION;
-    const valid = version == versionApp ? true : false;
+    const versionApp = versionRedis
+      ? versionRedis
+      : process.env.ANDROID_APP_VERSION;
+
+    let valid =
+      VersionCompareUtil.versionCompare(version, versionApp) > 0
+        ? false
+        : true;
+
     return {
       currentVersion: versionApp,
       valid,
@@ -118,7 +143,7 @@ export class MobileDashboardController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: MobileDetailTransitResponseVm })
-  public async detailTransit( @Body() payload: DetailTransitPayloadVm ) {
+  public async detailTransit(@Body() payload: DetailTransitPayloadVm) {
     return MobileDashboardService.getTransitDetail(payload);
   }
 
@@ -127,7 +152,9 @@ export class MobileDashboardController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: MobileDetailTransitResponseVm })
-  public async detailTransitNotScanOut( @Body() payload: DetailTransitPayloadVm ) {
+  public async detailTransitNotScanOut(
+    @Body() payload: DetailTransitPayloadVm,
+  ) {
     return MobileDashboardService.getTransitDetailNotScanOut(payload);
   }
 
@@ -136,7 +163,7 @@ export class MobileDashboardController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: MobileDetailTransitResponseVm })
-  public async detailTransitScanIn( @Body() payload: DetailTransitPayloadVm ) {
+  public async detailTransitScanIn(@Body() payload: DetailTransitPayloadVm) {
     return MobileDashboardService.getTransitDetailScanIn(payload);
   }
 }
