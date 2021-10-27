@@ -462,7 +462,7 @@ export class HubTransitDeliveryInService {
   private static async getDoPodByBagItem(bagItemId: number){
     const q = createQueryBuilder();
     q.addSelect('t2.do_pod_id', 'doPodId');
-    q.addSelect('t2.total_scan_in_bag', 'totalScanInbag');
+    q.addSelect('t2.total_scan_in_bag', 'totalScanInBag');
     q.from('do_pod_detail_bag', 't1');
     q.innerJoin('do_pod', 't2', 't2.do_pod_id = t1.do_pod_id');
     q.where('t1.bag_item_id = :bagItemId', {bagItemId: bagItemId});
