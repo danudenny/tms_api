@@ -465,7 +465,7 @@ export class HubTransitDeliveryInService {
     q.addSelect('t2.total_scan_in_bag', 'totalScanInbag');
     q.from('do_pod_detail_bag', 't1');
     q.innerJoin('do_pod', 't2', 't2.do_pod_id = t1.do_pod_id');
-    q.where('t1.bag_item_id = :bagitemId', {bagItemId});
+    q.where('t1.bag_item_id = :bagItemId', {bagItemId: bagItemId});
     q.andWhere('t1.transaction_status_id_last = 800');
     q.andWhere('t1.is_deleted = false');
     q.orderBy('t1.created_time', 'DESC' );
