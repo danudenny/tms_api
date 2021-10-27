@@ -126,7 +126,7 @@ export class PrintDoPodDeliverService {
               totalAllCod += Number(doPod.awbItem.awb.totalCodValue);
             }
             if(doPod.awbItem.awb.totalWeight){
-              totalWeight += Number(doPod.awbItem.awb.totalWeight);
+              totalWeight = Math.round(100 * Number(doPod.awbItem.awb.totalWeight)) / 100;
             }
         }
       });

@@ -121,7 +121,7 @@ export class PrintDoPodService {
       data.doPodDetails.map(function(detail) {
         if (detail.awbItem && detail.awbItem.awb){
             if(detail.awbItem.awb.totalWeight){
-              totalWeight += Number(detail.awbItem.awb.totalWeight);
+              totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeight)) / 100;
             }
           }
       });
@@ -196,14 +196,11 @@ export class PrintDoPodService {
               totalCod += Number(detail.awbItem.awb.totalCodValue);
              }
             if(detail.awbItem.awb.totalWeight){
-              totalWeight += Number(detail.awbItem.awb.totalWeight);
+              totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeight)) / 100;
             }
           }
 
       });
-
-
-
     }
 
     return this.printDoPodTransit(
