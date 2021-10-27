@@ -134,7 +134,7 @@ export class PrintDoPodBagService {
     if (data.doPodDetailBag.length) {
       data.doPodDetailBag.map(function(detail) {
         if (detail.bagItem && detail.bagItem.weight){
-            totalWeight += Number(detail.bagItem.weight);
+            totalWeight = Math.round(100 * Number(totalWeight + detail.bagItem.weight)) / 100;
           }
       });
     }
