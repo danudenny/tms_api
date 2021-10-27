@@ -119,7 +119,7 @@ export class V1PackageService {
           }
 
           // create new bag number sortir
-          const genBagNumber = await this.createBagNumber(
+          const genBagNumber = await this.createBagNumberV2(
             payload,
             branch.branchCode,
           );
