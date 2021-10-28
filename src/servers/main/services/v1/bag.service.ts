@@ -1,7 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { AwbService } from './awb.service';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { DropoffHubDetail } from '../../../../shared/orm-entity/dropoff_hub_detail';
@@ -15,37 +14,18 @@ export class BagService {
 
   static async validBagNumber(bagNumberSeq: string): Promise<BagItem> {
     const regexNumber = /^[0-9]+$/;
+
     if (regexNumber.test(bagNumberSeq.substring(7, 10))) {
+      // format bagNumber with seqNumber
       const bagNumber: string = bagNumberSeq.substring(0, 7);
       const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
-      const bagRepository = new OrionRepositoryService(BagItem);
-      const q = bagRepository.findOne();
-      // Manage relation (default inner join)
-      q.innerJoin(e => e.bag, null, join => join.andWhere(e => e.isDeleted, w => w.isFalse()));
-
-      q.select({
-        bagItemId: true,
-        bagItemStatusIdLast: true,
-        branchIdLast: true,
-        branchIdNext: true,
-        bagSeq: true,
-        bagId: true,
-        bag: {
-          representativeIdTo: true,
-          refRepresentativeCode: true,
-          bagId: true,
-          bagNumber: true,
-        },
-        weight: true,
-        isSortir: true,
-      });
-      q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
-      q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
-      q.andWhere(e => e.isDeleted, w => w.isFalse());
-      q.take(1);
-      return await q.exec();
+      let result = await this.checkFormatWithSeq(bagNumber, seqNumber);
+      if (!result) {
+        result = await this.checkFormatAlphanumeric(bagNumberSeq);
+      }
+      return result;
     } else {
-      return null;
+      return await this.checkFormatAlphanumeric(bagNumberSeq);
     }
   }
 
@@ -342,7 +322,67 @@ export class BagService {
   }
 
   static async isBagNumberLenght(inputNumber: string): Promise<boolean> {
-    const regexNumber = /^[0-9]+$/;
-    return (inputNumber.length == 10 && regexNumber.test(inputNumber.substring(7, 10))) ? true : false;
+    return (inputNumber.length == 10) ? true : false;
+  }
+
+  // private
+  private static async checkFormatWithSeq(bagNumber: string, seqNumber: number): Promise<BagItem> {
+    const bagRepository = new OrionRepositoryService(BagItem);
+    const q = bagRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.bag, null, join =>
+      join.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.select({
+      bagItemId: true,
+      bagItemStatusIdLast: true,
+      branchIdLast: true,
+      branchIdNext: true,
+      bagSeq: true,
+      bagId: true,
+      bag: {
+        representativeIdTo: true,
+        refRepresentativeCode: true,
+        bagId: true,
+        bagNumber: true,
+      },
+      weight: true,
+    });
+    q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
+    q.andWhere(e => e.bagSeq, w => w.equals(seqNumber));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.take(1);
+    return await q.exec();
+  }
+
+  private static async checkFormatAlphanumeric(bagNumber: string): Promise<BagItem> {
+    const bagRepository = new OrionRepositoryService(BagItem);
+    const q = bagRepository.findOne();
+    // Manage relation (default inner join)
+    q.innerJoin(e => e.bag, null, join =>
+      join.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.select({
+      bagItemId: true,
+      bagItemStatusIdLast: true,
+      branchIdLast: true,
+      branchIdNext: true,
+      bagSeq: true,
+      bagId: true,
+      bag: {
+        representativeIdTo: true,
+        refRepresentativeCode: true,
+        bagId: true,
+        bagNumber: true,
+      },
+      weight: true,
+    });
+    q.where(e => e.bag.bagNumber, w => w.equals(bagNumber));
+    q.andWhere(e => e.bagSeq, w => w.equals(1));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.take(1);
+    return await q.exec();
   }
 }
