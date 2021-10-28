@@ -79,9 +79,9 @@
 
       let dataBag = [];
       if (data) {
-        dataBag = await RawQueryService.query(
-          await this.getQueryMonitoringSortirTotalByFilterOrion(payload),
-        );
+        // dataBag = await RawQueryService.query(
+        //   await this.getQueryMonitoringSortirTotalByFilterOrion(payload),
+        // );
       }
       const totalDetail = {};
       const keys = Object.keys(dataBag[0]);
@@ -297,70 +297,71 @@
       // const whereSubQueryScanOut2 = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp1.do_pod_date_time', optrScanOut, 'createdTime');
       const whereSubQueryScanOut = await this.orionFilterToQueryRawBySelectedFilter(payload.filters, 'dp1.branch_id', optrScanOut, 'branchIdFrom');
 
-      const query = `
-        WITH detail as (
-          SELECT
-            scan_out.branch_name AS "branchTo",
-            scan_out.do_pod_id AS "doPodId",
-            COUNT(DISTINCT dohd.awb_item_id) AS "awbItemId",
-            COUNT(DISTINCT bag_sortir.awb_id) AS "awbSortir",
-            COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
-          FROM
-            dropoff_hub doh
-          INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
-          INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
-          INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
-          INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-          LEFT JOIN LATERAL
-          (
-            SELECT
-              ai0.awb_id,
-              bi0.bag_item_id,
-              bi0.branch_id_last
-            FROM
-              bag_item_awb bia0
-              INNER JOIN awb_item ai0 ON ai0.awb_item_id = bia0.awb_item_id AND ai0.is_deleted = FALSE AND dohd.awb_id = ai0.awb_id
-              INNER JOIN bag_item bi0 ON bi0.bag_item_id = bia0.bag_item_id AND bi0.is_deleted = FALSE
-              INNER JOIN bag b0 ON b0.bag_id = bi0.bag_id AND b0.is_deleted = FALSE AND b0.branch_id_to IS NOT NULL
-            WHERE bia0.is_deleted = FALSE
-          ) bag_sortir ON true
-          LEFT JOIN LATERAL (
-            SELECT ai1.awb_id, dp1.do_pod_id, br1.branch_name, br1.branch_id
-            FROM do_pod dp1
-            INNER JOIN do_pod_detail_bag dpdb1 ON dpdb1.do_pod_id = dp1.do_pod_id AND dpdb1.is_deleted = FALSE
-            INNER JOIN bag_item_awb bia1 ON bia1.bag_item_id = dpdb1.bag_item_id AND bia1.is_deleted = FALSE
-            INNER JOIN branch br1 ON br1.branch_id = dp1.branch_id_to AND br1.is_deleted = FALSE
-            INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
-            WHERE
-              dp1.is_deleted = FALSE
-              AND do_pod_type = ${POD_TYPE.OUT_HUB}
-              AND dp1.user_id_driver IS NOT NULL AND dp1.branch_id_to IS NOT NULL
-              ${whereSubQueryScanOut ? `AND ${whereSubQueryScanOut}` : ''}
-          ) scan_out ON true
-          WHERE
-            doh.branch_id IS NOT NULL
-            ${whereQuery ? `AND ${whereQuery}` : ''}
-            ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
-          GROUP BY
-            scan_out.branch_name, scan_out.do_pod_id
-        )
-        SELECT *, "totalBag" - (COALESCE("totalScanOutBagSortir", 0) + COALESCE("totalBagSortir", 0)) AS "totalSort" FROM (
-          SELECT
-            SUM("totalBag") AS "totalBag",
-            SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
-            SUM("totalBagSortir") AS "totalBagSortir",
-            SUM("totalData") AS "totalData"
-          FROM (
-            SELECT
-              SUM("awbItemId") AS "totalBag",
-              SUM("awbScanOutBagSortir") AS "totalScanOutBagSortir",
-              SUM(CASE WHEN "doPodId" IS NULL THEN "awbSortir" END) AS "totalBagSortir",
-              COUNT(DISTINCT CASE WHEN "branchTo" IS NULL THEN '1' ELSE "branchTo" END) AS "totalData"
-            FROM detail
-            GROUP BY "branchTo", "doPodId"
-          ) t1
-        ) t2
-      `;
+      // const query = `
+      //   WITH detail as (
+      //     SELECT
+      //       scan_out.branch_name AS "branchTo",
+      //       scan_out.do_pod_id AS "doPodId",
+      //       COUNT(DISTINCT dohd.awb_item_id) AS "awbItemId",
+      //       COUNT(DISTINCT bag_sortir.awb_id) AS "awbSortir",
+      //       COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
+      //     FROM
+      //       dropoff_hub doh
+      //     INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
+      //     INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
+      //     INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
+      //     INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+      //     LEFT JOIN LATERAL
+      //     (
+      //       SELECT
+      //         ai0.awb_id,
+      //         bi0.bag_item_id,
+      //         bi0.branch_id_last
+      //       FROM
+      //         bag_item_awb bia0
+      //         INNER JOIN awb_item ai0 ON ai0.awb_item_id = bia0.awb_item_id AND ai0.is_deleted = FALSE AND dohd.awb_id = ai0.awb_id
+      //         INNER JOIN bag_item bi0 ON bi0.bag_item_id = bia0.bag_item_id AND bi0.is_deleted = FALSE
+      //         INNER JOIN bag b0 ON b0.bag_id = bi0.bag_id AND b0.is_deleted = FALSE AND b0.branch_id_to IS NOT NULL
+      //       WHERE bia0.is_deleted = FALSE
+      //     ) bag_sortir ON true
+      //     LEFT JOIN LATERAL (
+      //       SELECT ai1.awb_id, dp1.do_pod_id, br1.branch_name, br1.branch_id
+      //       FROM do_pod dp1
+      //       INNER JOIN do_pod_detail_bag dpdb1 ON dpdb1.do_pod_id = dp1.do_pod_id AND dpdb1.is_deleted = FALSE
+      //       INNER JOIN bag_item_awb bia1 ON bia1.bag_item_id = dpdb1.bag_item_id AND bia1.is_deleted = FALSE
+      //       INNER JOIN branch br1 ON br1.branch_id = dp1.branch_id_to AND br1.is_deleted = FALSE
+      //       INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
+      //       WHERE
+      //         dp1.is_deleted = FALSE
+      //         AND do_pod_type = ${POD_TYPE.OUT_HUB}
+      //         AND dp1.user_id_driver IS NOT NULL AND dp1.branch_id_to IS NOT NULL
+      //         ${whereSubQueryScanOut ? `AND ${whereSubQueryScanOut}` : ''}
+      //     ) scan_out ON true
+      //     WHERE
+      //       doh.branch_id IS NOT NULL
+      //       ${whereQuery ? `AND ${whereQuery}` : ''}
+      //       ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
+      //     GROUP BY
+      //       scan_out.branch_name, scan_out.do_pod_id
+      //   )
+      //   SELECT *, "totalBag" - (COALESCE("totalScanOutBagSortir", 0) + COALESCE("totalBagSortir", 0)) AS "totalSort" FROM (
+      //     SELECT
+      //       SUM("totalBag") AS "totalBag",
+      //       SUM("totalScanOutBagSortir") AS "totalScanOutBagSortir",
+      //       SUM("totalBagSortir") AS "totalBagSortir",
+      //       SUM("totalData") AS "totalData"
+      //     FROM (
+      //       SELECT
+      //         SUM("awbItemId") AS "totalBag",
+      //         SUM("awbScanOutBagSortir") AS "totalScanOutBagSortir",
+      //         SUM(CASE WHEN "doPodId" IS NULL THEN "awbSortir" END) AS "totalBagSortir",
+      //         COUNT(DISTINCT CASE WHEN "branchTo" IS NULL THEN '1' ELSE "branchTo" END) AS "totalData"
+      //       FROM detail
+      //       GROUP BY "branchTo", "doPodId"
+      //     ) t1
+      //   ) t2
+      // `;
+      const query = '';
       return query;
     }
 
@@ -390,80 +391,81 @@
       filterQuery += filterQuery && whereQuery ? 'AND' : '';
       filterQuery += whereQuery;
 
-      const query = `
-        WITH detail as (
-          SELECT
-            scan_out.branch_name AS "branchTo",
-            scan_out.do_pod_code AS "doPodCode",
-            MIN(doh.created_time) AS "createdTime",
-            COUNT(DISTINCT dohd.awb_item_id) AS "awbHub",
-            COUNT(DISTINCT CASE WHEN scan_out.awb_id IS NULL THEN bag_sortir.awb_id END) AS "awbScanIn",
-            COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
-          FROM
-            dropoff_hub doh
-          INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
-          INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
-          INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
-          INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
-          LEFT JOIN LATERAL
-          (
-            SELECT
-              bi0.created_time,
-              ai0.awb_id,
-              bi0.bag_item_id,
-              bi0.branch_id_last
-            FROM bag_item_awb bia0
-            INNER JOIN awb_item ai0 ON ai0.awb_item_id = bia0.awb_item_id AND ai0.is_deleted = FALSE AND dohd.awb_id = ai0.awb_id
-            INNER JOIN bag_item bi0 ON bi0.bag_item_id = bia0.bag_item_id AND bi0.is_deleted = FALSE
-            INNER JOIN bag b0 ON b0.bag_id = bi0.bag_id AND b0.is_deleted = FALSE AND b0.branch_id_to IS NOT NULL
-            WHERE bia0.is_deleted = FALSE
-          ) bag_sortir ON true
-          LEFT JOIN LATERAL (
-            SELECT ai1.awb_id, dp1.do_pod_code, br1.branch_name, br1.branch_id
-            FROM do_pod dp1
-            INNER JOIN do_pod_detail_bag dpdb1 ON dpdb1.do_pod_id = dp1.do_pod_id AND dpdb1.is_deleted = FALSE
-            INNER JOIN branch br1 ON br1.branch_id = dp1.branch_id_to AND br1.is_deleted = FALSE
-            INNER JOIN bag_item_awb bia1 ON bia1.bag_item_id = dpdb1.bag_item_id AND bia1.is_deleted = FALSE
-            INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
-            WHERE
-              dp1.is_deleted = FALSE
-              AND dp1.do_pod_type = ${POD_TYPE.OUT_HUB}
-              AND dp1.user_id_driver IS NOT NULL AND dp1.branch_id_to IS NOT NULL
-          ) scan_out ON true
-          WHERE
-            doh.branch_id IS NOT NULL
-            ${whereQuery ? `AND ${whereQuery}` : ''}
-            ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
-          GROUP BY scan_out.branch_name, scan_out.do_pod_code
-        )
-        SELECT *, "totalScanInAwb" AS "totalBagSortir"
-        FROM (
-          SELECT
-            "branchTo",
-            "doPodCode",
-            CASE
-              WHEN "awbHub" = "awbScanOutBagSortir" THEN 'Loading'
-              ELSE 'Sortir'
-            END AS "status",
-            "createdTime" AS "createdTime",
-            "awbHub" AS "totalAwb",
-            "awbScanIn" AS "totalScanInAwb",
-            "awbScanOutBagSortir" AS "totalScanOutBagSortir",
-            "awbHub" - ("awbScanIn" + "awbScanOutBagSortir") AS "remainingAwbSortir"
-          FROM detail
-          GROUP BY "branchTo", "status", "createdTime", "awbHub", "awbScanIn", "awbScanOutBagSortir", "doPodCode"
-        ) t1
-        ${payload.sortBy && sortingMap[payload.sortBy] ?
-        `ORDER BY ${sortingMap[payload.sortBy]} ${payload.sortDir}, "remainingAwbSortir" DESC` :
-        `ORDER BY
-          CASE
-            WHEN "status" = 'Sortir' then 1
-            WHEN "status" = 'Loading' then 2
-          END, "remainingAwbSortir" DESC`
-        }
-        LIMIT ${payload.limit}
-        ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''};
-      `;
+      // const query = `
+      //   WITH detail as (
+      //     SELECT
+      //       scan_out.branch_name AS "branchTo",
+      //       scan_out.do_pod_code AS "doPodCode",
+      //       MIN(doh.created_time) AS "createdTime",
+      //       COUNT(DISTINCT dohd.awb_item_id) AS "awbHub",
+      //       COUNT(DISTINCT CASE WHEN scan_out.awb_id IS NULL THEN bag_sortir.awb_id END) AS "awbScanIn",
+      //       COUNT(DISTINCT scan_out.awb_id) AS "awbScanOutBagSortir"
+      //     FROM
+      //       dropoff_hub doh
+      //     INNER JOIN bag bag ON bag.bag_id = doh.bag_id AND bag.is_deleted = FALSE AND bag.branch_id IS NOT NULL
+      //     INNER JOIN bag_item bi ON bi.bag_item_id = doh.bag_item_id AND bi.is_deleted = FALSE
+      //     INNER JOIN bag_item_awb bia ON bia.bag_item_id = bi.bag_item_id AND bia.is_deleted = FALSE
+      //     INNER JOIN dropoff_hub_detail dohd ON dohd.dropoff_hub_id = doh.dropoff_hub_id AND dohd.is_deleted = FALSE
+      //     LEFT JOIN LATERAL
+      //     (
+      //       SELECT
+      //         bi0.created_time,
+      //         ai0.awb_id,
+      //         bi0.bag_item_id,
+      //         bi0.branch_id_last
+      //       FROM bag_item_awb bia0
+      //       INNER JOIN awb_item ai0 ON ai0.awb_item_id = bia0.awb_item_id AND ai0.is_deleted = FALSE AND dohd.awb_id = ai0.awb_id
+      //       INNER JOIN bag_item bi0 ON bi0.bag_item_id = bia0.bag_item_id AND bi0.is_deleted = FALSE
+      //       INNER JOIN bag b0 ON b0.bag_id = bi0.bag_id AND b0.is_deleted = FALSE AND b0.branch_id_to IS NOT NULL
+      //       WHERE bia0.is_deleted = FALSE
+      //     ) bag_sortir ON true
+      //     LEFT JOIN LATERAL (
+      //       SELECT ai1.awb_id, dp1.do_pod_code, br1.branch_name, br1.branch_id
+      //       FROM do_pod dp1
+      //       INNER JOIN do_pod_detail_bag dpdb1 ON dpdb1.do_pod_id = dp1.do_pod_id AND dpdb1.is_deleted = FALSE
+      //       INNER JOIN branch br1 ON br1.branch_id = dp1.branch_id_to AND br1.is_deleted = FALSE
+      //       INNER JOIN bag_item_awb bia1 ON bia1.bag_item_id = dpdb1.bag_item_id AND bia1.is_deleted = FALSE
+      //       INNER JOIN awb_item ai1 ON ai1.awb_item_id = bia1.awb_item_id AND ai1.is_deleted = FALSE AND dohd.awb_id = ai1.awb_id
+      //       WHERE
+      //         dp1.is_deleted = FALSE
+      //         AND dp1.do_pod_type = ${POD_TYPE.OUT_HUB}
+      //         AND dp1.user_id_driver IS NOT NULL AND dp1.branch_id_to IS NOT NULL
+      //     ) scan_out ON true
+      //     WHERE
+      //       doh.branch_id IS NOT NULL
+      //       ${whereQuery ? `AND ${whereQuery}` : ''}
+      //       ${payload.search ? `AND scan_out.branch_name ~* '${payload.search}'` : ''}
+      //     GROUP BY scan_out.branch_name, scan_out.do_pod_code
+      //   )
+      //   SELECT *, "totalScanInAwb" AS "totalBagSortir"
+      //   FROM (
+      //     SELECT
+      //       "branchTo",
+      //       "doPodCode",
+      //       CASE
+      //         WHEN "awbHub" = "awbScanOutBagSortir" THEN 'Loading'
+      //         ELSE 'Sortir'
+      //       END AS "status",
+      //       "createdTime" AS "createdTime",
+      //       "awbHub" AS "totalAwb",
+      //       "awbScanIn" AS "totalScanInAwb",
+      //       "awbScanOutBagSortir" AS "totalScanOutBagSortir",
+      //       "awbHub" - ("awbScanIn" + "awbScanOutBagSortir") AS "remainingAwbSortir"
+      //     FROM detail
+      //     GROUP BY "branchTo", "status", "createdTime", "awbHub", "awbScanIn", "awbScanOutBagSortir", "doPodCode"
+      //   ) t1
+      //   ${payload.sortBy && sortingMap[payload.sortBy] ?
+      //   `ORDER BY ${sortingMap[payload.sortBy]} ${payload.sortDir}, "remainingAwbSortir" DESC` :
+      //   `ORDER BY
+      //     CASE
+      //       WHEN "status" = 'Sortir' then 1
+      //       WHEN "status" = 'Loading' then 2
+      //     END, "remainingAwbSortir" DESC`
+      //   }
+      //   LIMIT ${payload.limit}
+      //   ${payload.page ? `OFFSET ${payload.limit * (Number(payload.page) - 1)}` : ''};
+      // `;
+      const query = '';
       return query;
     }
 
