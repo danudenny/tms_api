@@ -306,6 +306,7 @@ export class CpsService {
       const branch = await Branch.findOne({
         where: {
           branchCode: payload.branchCode,
+          isDeleted : false
         },
       });
 

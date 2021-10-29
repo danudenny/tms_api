@@ -96,6 +96,7 @@ export class LastMileTransitOutService {
     const branchData = await Branch.findOne({
       where: {
         branchId: payload.branchIdTo,
+        isDeleted :false
       },
     });
 

@@ -21,6 +21,7 @@ export class AwbTroubleService {
       // cache: true,
       where: {
         branchId: permissonPayload.branchId,
+        isDeleted : false
       },
     });
 
