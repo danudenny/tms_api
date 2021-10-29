@@ -112,7 +112,7 @@ export class V2MobileSyncService {
       try {
         const awbdDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
         const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
-        if (awbdDelivery && !finalStatus.includes(awbdDelivery.awbStatusIdLast)) {
+        if (awbdDelivery && !finalStatus.includes(Number(awbdDelivery.awbStatusIdLast))) {
           const awbStatus = await AwbStatus.findOne(
             { awbStatusId: lastDoPodDeliverHistory.awbStatusId },
             { cache: true },
