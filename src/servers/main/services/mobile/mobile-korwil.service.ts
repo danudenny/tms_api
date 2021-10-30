@@ -945,7 +945,8 @@ export class MobileKorwilService {
       if (attachment) {
         attachmentId = attachment.attachmentTmsId;
       }
-
+      console.log('tms-korwil' + attachment);
+      console.log('tms-korwil-attachment-ID' + attachmentId);
       const korwilTransactionDetailPhoto = KorwilTransactionDetailPhoto.create();
       korwilTransactionDetailPhoto.photoId = attachmentId;
       korwilTransactionDetailPhoto.korwilTransactionDetailId = korwilTransactionDetailId;
