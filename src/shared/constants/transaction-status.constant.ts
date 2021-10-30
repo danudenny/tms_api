@@ -9,4 +9,5 @@ export const TRANSACTION_STATUS = {
   DRAFT_INV: 41000,
   VOID: 41500,
   PAIDHO: 45000,
+  DEFAULT: 10,
 };
