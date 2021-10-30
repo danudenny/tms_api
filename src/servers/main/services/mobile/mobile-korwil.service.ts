@@ -994,11 +994,7 @@ export class MobileKorwilService {
     // }
     
     // Modify Hard Delete attachmentTms to SoftDelete 30 Oct 2021 
-    const attachment = await AttachmentTms.findOne({
-      attachmentTmsId: attachmentTms.attachmentTmsId,
-    });
-
-    if (!attachment) {
+    if (!attachmentTms) {
       throw new BadRequestException('Cannot delete attachment, file not found');
     }
     
