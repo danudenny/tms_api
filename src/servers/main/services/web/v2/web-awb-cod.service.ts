@@ -618,7 +618,7 @@ export class V2WebAwbCodService {
         .getOne();
 
       if (
-        (type === 'cash' && awbValid && !awbValid.transactionStatusId) ||
+        (type === 'cash' && awbValid) ||
         (type === 'cashless' && awbValid)
       ) {
         return true;
