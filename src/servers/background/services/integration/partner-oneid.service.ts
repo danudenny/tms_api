@@ -212,6 +212,7 @@ export class PartnerOneidService {
         });
 
         awbref.push(...getSenderPhone.map(el => el.refAwbNumber))
+
         filter.awb_number = awbref;
         pushquery = 'AND a.awb_number IN (:...awb_number)'
 
@@ -271,7 +272,7 @@ export class PartnerOneidService {
           senderName: results[i].shipper_name,
           shipperAddress: results[i].shipper_address,
           partnerName: results[i].partner_name,
-          date: results[i].awbDate,
+          date: results[i].awb_date,
           service: results[i].package_type_code,
           price: results[i].totalbiaya,
           description: results[i].parcel_content,
