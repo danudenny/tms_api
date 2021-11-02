@@ -20,6 +20,7 @@ import {
 } from '../../../models/tracking.vm';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
+import { ActivityLogHelper } from '../../../../../shared/helpers/activity-log-helpers';
 
 @ApiUseTags('Web Tracking')
 @Controller('web/v1/tracking')
@@ -91,5 +92,13 @@ export class V1WebTrackingController {
     @Body() payload: TrackingBagRepresentativeDetailPayloadVm,
   ) {
     return V1WebTrackingService.bagRepresentativeDetail(payload);
+  }
+
+  @Post('logActivity')
+  @HttpCode(HttpStatus.OK)
+  public async bagRepresentativeDetail1(
+    @Body() payload: any,
+  ) {
+    return ActivityLogHelper.logActivity(payload);
   }
 }
