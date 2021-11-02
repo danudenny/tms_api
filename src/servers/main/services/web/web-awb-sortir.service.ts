@@ -533,7 +533,8 @@ export class WebAwbFilterService {
         const branch = await Branch.findOne({
           where: {
             branchId: podFilter.branchIdScan,
-            isDeleted : false
+            isDeleted : false,
+            isActive : true
           },
           select: ['branchName'],
         });

@@ -211,7 +211,8 @@ export class ScanoutSmdService {
     const resultbranchTo = await Branch.findOne({
       where: {
         branchId: payload.branch_id,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     });
     if (resultbranchTo) {
@@ -404,7 +405,8 @@ export class ScanoutSmdService {
       const resultbranchTo = await Branch.findOne({
         where: {
           branchCode: payload.branch_code,
-          isDeleted: false,
+          isDeleted : false,
+          isActive : true
         },
       });
 
@@ -559,7 +561,8 @@ export class ScanoutSmdService {
       const resultbranchTo = await Branch.findOne({
         where: {
           branchCode: payload.branch_code,
-          isDeleted: false,
+          isDeleted : false,
+          isActive : true
         },
       });
 

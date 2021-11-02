@@ -38,7 +38,8 @@ export class ScanoutSmdCityService {
     const resultbranchTo = await Branch.findOne({
       where: {
         branchId: payload.branch_id,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     });
     if (resultbranchTo) {

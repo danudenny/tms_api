@@ -1798,7 +1798,8 @@ export class V1WebAwbCodService {
       select: ['branchId', 'branchName'],
       where: {
         branchId,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     });
 

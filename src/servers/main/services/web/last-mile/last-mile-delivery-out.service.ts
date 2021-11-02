@@ -164,7 +164,8 @@ export class LastMileDeliveryOutService {
       doPod.partnerId = payload.partnerId;
       const branch = await Branch.findOne({
         branchId: permissonPayload.branchId,
-        isDeleted : false
+        isDeleted : false,
+        isActive : true
       });
       // NOTES: Validation branch
       if (

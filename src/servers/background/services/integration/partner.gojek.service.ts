@@ -88,7 +88,8 @@ export class PartnerGojekService {
           longitude: Not(IsNull()),
           latitude: Not(IsNull()),
           mobile1: Not(IsNull()),
-          isDeleted: false,
+          isDeleted : false,
+          isActive : true
         },
       });
 
@@ -202,7 +203,8 @@ export class PartnerGojekService {
     const branch = await Branch.findOne({
       where: {
         branchId : permissonPayload.branchId,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       }
     });
 

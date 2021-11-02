@@ -244,7 +244,8 @@ export class PrintDoPodService {
       select: ['branchName'],
       where: {
         branchId: data.userDetail.branch,
-        isDeleted : false
+        isDeleted : false,
+        isActive : true
       },
     });
 

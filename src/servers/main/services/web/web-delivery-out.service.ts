@@ -173,7 +173,8 @@ export class WebDeliveryOutService {
     const branchData = await Branch.findOne({
       where: {
         branchId: payload.branchIdTo,
-        isDeleted :false
+        isDeleted : false,
+        isActive : true
       },
     });
 

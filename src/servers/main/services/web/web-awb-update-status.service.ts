@@ -69,7 +69,8 @@ export class WebAwbUpdateStatusService {
         where: {
           representativeId: payload.representativeId,
           districtId: district.districtId,
-          isDeleted: false,
+          isDeleted : false,
+          isActive : true
         },
       });
 
