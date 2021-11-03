@@ -349,7 +349,7 @@ export class HubTransitDeliveryInService {
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
       [
-        `CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, '0'))`,
+        `DISTINCT CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, '0'))`,
         'bagNumberCode',
       ],
       ['t2.bag_number', 'bagNumber'],
@@ -359,7 +359,7 @@ export class HubTransitDeliveryInService {
       ['t1.dropoff_hub_id', 'dropoffHubId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
-      ['COUNT (t4.*)', 'totalAwb'],
+      // ['COUNT (t4.dropoff_hub_detail_id)', 'totalAwb'],
       [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
@@ -378,6 +378,7 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+<<<<<<< HEAD
     // d pke created time
     q.groupByRaw(`
       t1.created_time,
@@ -389,12 +390,47 @@ export class HubTransitDeliveryInService {
       t5.branch_name,
       t6.branch_name
     `);
+=======
+    // q.groupByRaw(`
+    //   t1.created_time,
+    //   t1.dropoff_hub_id,
+    //   t3.bagSeq,
+    //   t2.bag_number,
+    //   t2.ref_representative_code,
+    //   t3.weight,
+    //   t5.branch_name,
+    //   t6.branch_name
+    // `);
+>>>>>>> 5be6092ef... optimasi query dropoff
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanInHubSortListResponseVm();
+
+    // let seen = Object.create(null),
+    // result_data = data.filter(o => {
+    //     var key = ['bagNumberCode', 'bagNumber'].map(k => o[k]).join('|');
+    //     if (!seen[key]) {
+    //         seen[key] = true;
+    //         return true;
+    //     }
+    // });
+
+    for(let i = 0; i < data.length; i++){
+      let dropOffHubDetail = await DropoffHubDetail.find({
+        where: {
+          dropoffHubId: data[i].dropoffHubId,
+          isDeleted: false,
+        },
+      });
+      
+      data[i].totalAwb = dropOffHubDetail.length
+    }
+
+    console.log(data.length)
     result.data = data;
+    // result.data = result_data
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
