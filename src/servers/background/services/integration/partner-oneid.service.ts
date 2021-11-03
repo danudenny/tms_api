@@ -195,32 +195,39 @@ export class PartnerOneidService {
         const consigneePhoneStringToArray = query.consigneePhone.split(',');
         filter.consignee_phone = consigneePhoneStringToArray;
         pushquery = 'AND a.consignee_phone IN (:...consignee_phone)'
+        if(query.awbNumber){
+          filter.awb_number = query.awbNumber;
+          pushquery = 'AND a.awb_number = :awb_number'
+        }
       }
 
       // query base on consigneePhone
 
       if (query.senderPhone) {
         const senderPhoneStringToArray = query.senderPhone.split(',');
+        if(!query.awbNumber){
         const getSenderPhone = await PickupRequestDetail.find({
           select: ['refAwbNumber', 'shipperPhone'],
           where: {
             createdTime: MoreThan(endDate),
             shipperPhone: In(senderPhoneStringToArray),
-            take: 50,
             isDeleted: false
-          }
+          },
+          take: limitValue,
+          skip: offsetValue,
         });
 
         awbref.push(...getSenderPhone.map(el => el.refAwbNumber))
 
         filter.awb_number = awbref;
         pushquery = `AND a.awb_number IN (:...awb_number)`
+        }
         if(query.awbNumber){
           filter.awb_number = query.awbNumber;
           pushquery = 'AND a.awb_number = :awb_number'
         }
 
-        if (awbref.length == 0) {
+        if (awbref.length == 0 && !query.awbNumber) {
           return {
             status: true,
             statusCode: 200,
