@@ -214,7 +214,11 @@ export class PartnerOneidService {
         awbref.push(...getSenderPhone.map(el => el.refAwbNumber))
 
         filter.awb_number = awbref;
-        pushquery = 'AND a.awb_number IN (:...awb_number)'
+        pushquery = `AND a.awb_number IN (:...awb_number)`
+        if(query.awbNumber){
+          filter.awb_number = query.awbNumber;
+          pushquery = 'AND a.awb_number = :awb_number'
+        }
 
         if (awbref.length == 0) {
           return {
