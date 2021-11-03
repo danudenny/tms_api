@@ -40,7 +40,6 @@ export class WebLastMileController {
   @Post('scanOut/awb')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
-  // @Transactional()
   public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
     return LastMileTransitOutService.scanOutAwb(payload);
   }
