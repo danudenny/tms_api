@@ -138,10 +138,9 @@ export class PrintDoPodBagService {
           }
       });
     }
-
+    totalWeight = Math.round(totalWeight * 100)/100;
 
     const currentDate = moment();
-
     return this.printDoPodBag(
       res,
       data,
