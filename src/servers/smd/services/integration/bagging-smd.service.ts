@@ -180,6 +180,11 @@ export class BaggingSmdService {
       return result;
     }
 
+    if(bagDetail && !bagDetail.bag.representativeIdTo){
+      result.message = 'Gabung paket tidak ada representative id';
+      return result;
+    }
+
     // get data bagging
     const qb = createQueryBuilder();
     qb.addSelect( 'bai.bagging_item_id', 'bagging_item_id');
