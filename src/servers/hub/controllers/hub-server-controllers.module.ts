@@ -7,6 +7,7 @@ import { HubMachineSortirController } from './integration/hub-machine-sortir.con
 import { InternalSortirListController } from './integration/internal-sortir-list.controller';
 import { MonitoringProblemListController } from './integration/monitoring-problem-list.controller';
 import { MonitoringProblemLebihSortirListController } from './integration/monitoring-problem-lebih-sortir-list.controller';
+import { CentralSortirController } from './integration/central-sortir.controller';
 
 @Module({
   imports: [SharedModule, HubServerServicesModule],
@@ -16,6 +17,7 @@ import { MonitoringProblemLebihSortirListController } from './integration/monito
     InternalSortirListController,
     MonitoringProblemListController,
     MonitoringProblemLebihSortirListController,
+    CentralSortirController,
   ],
 })
 export class HubServerControllersModule {}
