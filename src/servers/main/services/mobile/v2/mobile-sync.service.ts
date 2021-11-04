@@ -268,10 +268,10 @@ export class V2MobileSyncService {
               awbStatus.awbStatusId,
             );
           }
-          process = true;
         } else {
           PinoLoggerService.log('##### Data Not Valid', delivery);
         }
+        process = true;
       } catch (error) {
         console.error(error);
         throw new ServiceUnavailableException(error);
