@@ -507,22 +507,12 @@ export class PenaltyCategoryService {
       const q = RepositoryService.penaltyCategory.findAllRaw();
       payload.applyToOrionRepositoryQuery(q);
 
-      // q.selectRaw(
-      //   ['penalty_category.penalty_category_title', 'penaltyCategoryTitle'],
-      //   ['usercreated.first_name', 'createdFirstName'],
-      //   ['usercreated.username', 'createdUserName'],
-      //   ['penalty_category.created_time', 'createdTime'],
-      //   ['userupdated.first_name', 'updatedFirstName'],
-      //   ['userupdated.username', 'updatedUserName'],
-      //   ['penalty_category.updated_time', 'updatedTime'],
-      // );
-
       q.selectRaw(
-        ['penalty_category.penalty_category_title as "Kategori"', 'penaltyCategoryTitle'],
-        ['CONCAT(usercreated.username, \' - \', usercreated.first_name) as User Created', 'createdFirstName'],
-        ['TO_CHAR(penalty_category.created_time,\'YYYY-MM-DD\') as Date Created', 'createdTime'],
-        ['CONCAT(userupdated.username, \' - \', userupdated.first_name) as User Created', 'updatedUserName'],
-        ['TO_CHAR(penalty_category.updated_time,\'YYYY-MM-DD\') as Date Modified', 'updatedTime'],
+        ['penalty_category.penalty_category_title', 'Kategori'],
+        ['CONCAT(usercreated.username, \' - \', usercreated.first_name)', 'User Created'],
+        ['TO_CHAR(penalty_category.created_time,\'YYYY-MM-DD\')', 'Date Created'],
+        ['CONCAT(userupdated.username, \' - \', userupdated.first_name)', 'User Updated'],
+        ['TO_CHAR(penalty_category.updated_time,\'YYYY-MM-DD\')', 'Date Modified'],
       );
 
       q.innerJoin(e => e.userCreated, 'usercreated', j =>
@@ -552,7 +542,6 @@ export class PenaltyCategoryService {
       );
       response.writeHead(200, { 'Content-Type': 'text/csv' });
       response.flushHeaders();
-      response.write(`${this.ExportHeaderCategoryFee.join(',')}\n`);
 
       payload.globalSearchFields = [
         {
@@ -569,23 +558,13 @@ export class PenaltyCategoryService {
       const q = RepositoryService.penaltyCategoryFee.findAllRaw();
       payload.applyToOrionRepositoryQuery(q);
 
-      // q.selectRaw(
-      //   ['penalty_category.penalty_category_title', 'penaltyCategoryTitle'],
-      //   ['penalty_category_fee.penalty_fee', 'penaltyFee'],
-      //   ['usercreated.first_name', 'createdFirstName'],
-      //   ['usercreated.username', 'createdUserName'],
-      //   ['penalty_category_fee.created_time', 'createdTime'],
-      //   ['userupdated.first_name', 'updatedFirstName'],
-      //   ['userupdated.username', 'updatedUserName'],
-      //   ['penalty_category_fee.updated_time', 'updatedTime'],
-      // );
       q.selectRaw(
-        ['penalty_category.penalty_category_title as "Kategori"', 'penaltyCategoryTitle'],
-        ['penalty_category_fee.penalty_fee as "Denda"', 'penaltyFee'],
-        ['CONCAT(usercreated.username, \' - \', usercreated.first_name) as User Created', 'createdFirstName'],
-        ['TO_CHAR(penalty_category.created_time,\'YYYY-MM-DD\') as Date Created', 'createdTime'],
-        ['CONCAT(userupdated.username, \' - \', userupdated.first_name) as User Created', 'updatedUserName'],
-        ['TO_CHAR(penalty_category.updated_time,\'YYYY-MM-DD\') as Date Modified', 'updatedTime'],
+        ['penalty_category.penalty_category_title', 'Kategori'],
+        ['penalty_category_fee.penalty_fee', 'Denda'],
+        ['CONCAT(usercreated.username, \' - \', usercreated.first_name)', 'User Created'],
+        ['TO_CHAR(penalty_category.created_time,\'YYYY-MM-DD\')', 'Date Created'],
+        ['CONCAT(userupdated.username, \' - \', userupdated.first_name)', 'User Updated'],
+        ['TO_CHAR(penalty_category.updated_time,\'YYYY-MM-DD\')', 'Date Modified'],
       );
 
       q.innerJoin(e => e.createdUser, 'usercreated', j =>

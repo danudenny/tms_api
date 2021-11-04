@@ -480,18 +480,18 @@ export class V1WebAwbHighValueService {
       // );
 
       q.selectRaw(
-        ['TO_CHAR(t1.uploaded_time, \'YYYY-MM-DD\') as "Tanggal Upload"', 'uploadedDate'],
-        ['TO_CHAR(t5.awb_history_date_last, \'YYYY-MM-DD\') as "Tanggal Status"', 'awbHistoryDateLast'],
-        ['t1.awb_number as "Nomor Resi"', 'awbNumber'],
-        ['t4.partner_name as "Nama Partner"', 'partnerName'],
-        ['t2.recipient_name as "Nama Penerima"', 'recipientName'],
-        ['t2.recipient_phone as "Telp Penerima"', 'recipientPhone'],
-        ['t2.parcel_content as "Isi Parsel"', 'parcelContent'],
-        ['t7.awb_status_name as "Status Awb"', 'awbStatusName'],
-        ['t9.district_code as "Kode Kecamatan"', 'districtCode'],
-        ['t6.branch_name as "Gerai Tujuan"', 'branchName'],
-        ['t8.branch_name as "Gerai Asal"', 'branchFromName'],
-        [`CASE WHEN t10.package_type_code = 'KEPO' THEN 'Gold' ELSE 'Berharga' END as "Tipe Layanan"`, 'packageType'],
+        ['TO_CHAR(t1.uploaded_time, \'YYYY-MM-DD\')', 'Tanggal Upload'],
+        ['TO_CHAR(t5.awb_history_date_last, \'YYYY-MM-DD\')', 'Tanggal Status'],
+        ['t1.awb_number', 'Nomor Resi'],
+        ['t4.partner_name', 'Nama Partner'],
+        ['t2.recipient_name', 'Nama Penerima'],
+        ['t2.recipient_phone', 'Telp Penerima'],
+        ['t2.parcel_content', 'Isi Parsel'],
+        ['t7.awb_status_name', 'Status Awb'],
+        ['t9.district_code', 'Kode Kecamatan'],
+        ['t6.branch_name', 'Gerai Tujuan'],
+        ['t8.branch_name', 'Gerai Asal'],
+        [`CASE WHEN t10.package_type_code = 'KEPO' THEN 'Gold' ELSE 'Berharga' END`, 'Tipe Layanan'],
       );
       q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
