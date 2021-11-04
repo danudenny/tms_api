@@ -3,6 +3,7 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { RepositoryService } from '../../../../../shared/services/repository.service';
 import { EmployeePenalty } from '../../../../../shared/orm-entity/employee-penalty';
+import {CsvHelper} from '../../../../../shared/helpers/csv-helpers';
 import { 
   EmployeePenaltyListResponseVM, 
   EmployeePenaltyPayloadVm, 
@@ -471,9 +472,6 @@ export class EmployeePenaltyService {
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      response.writeHead(200, { 'Content-Type': 'text/csv' });
-      response.flushHeaders();
-      response.write(`${this.ExportHeader.join(',')}\n`);
 
       payload.fieldResolverMap['userId'] = 'employee_penalty.penalty_user_id';
       payload.fieldResolverMap['penaltyDateTime'] = 'employee_penalty.penalty_date_time';
@@ -484,28 +482,21 @@ export class EmployeePenaltyService {
       payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
-        ['employee_penalty.employee_penalty_id', 'employeePenaltyId'],
-        ['employee_penalty.penalty_date_time', 'penaltyDateTime'],
-        ['penalty_category.penalty_category_title', 'penaltyCategoryTitle'],
-        ['representative.representative_code', 'representativeCode'],
-        ['branch.branch_name', 'branchName'],
-        ['branch.branch_code', 'branchCode'],
-        ['users.first_name', 'firstName'],
-        ['users.username', 'userName'],
-        ['employee_penalty.ref_awb_number', 'refAwbNumber'],
-        ['employee_penalty.ref_spk_code', 'refSpkCode'],
-        ['employee_penalty.penalty_qty', 'qty'],
-        ['employee_penalty.penalty_fee', 'penaltyFee'],
-        ['employee_penalty.total_penalty', 'totalPenalty'],
-        ['employee_penalty.penalty_desc', 'penaltyDesc'],
-        ['usercreated.first_name', 'createdFirstName'],
-        ['usercreated.username', 'createdUserName'],
-        ['usersupdated.first_name', 'updatedFirstName'],
-        ['usersupdated.username', 'updatedUserName'],
-        ['employee_penalty.penalty_note', 'penaltyNote'],
-        ['employee_role.employee_role_id', 'employeeRoleId'],
-        ['employee_role.employee_role_code', 'employeeRoleCode'],
-        ['employee_role.employee_role_name', 'employeeRoleName'],
+        ['TO_CHAR(employee_penalty.penalty_date_time, \'YYYY-MM-DD\')', 'Tanggal'],
+        ['penalty_category.penalty_category_title', 'Kategori'],
+        ['representative.representative_code', 'Perwakilan'],
+        ['CONCAT(branch.branch_code,\' - \',branch.branch_name)', 'Cabang'],
+        ['CONCAT(users.username,\' - \', users.first_name)', 'Dibebankan'],
+        ['employee_role.employee_role_name', 'Jabatan'], 
+        ['employee_penalty.ref_awb_number', 'No Resi'],
+        ['employee_penalty.ref_spk_code', 'No SPK/ SJ'],
+        ['employee_penalty.penalty_qty', 'Qty'],
+        ['employee_penalty.penalty_fee', 'Denda'],
+        ['employee_penalty.total_penalty', 'Total Denda'],
+        ['employee_penalty.penalty_desc', 'Keterangan'],
+        ['CONCAT(usercreated.username,\' - \',usercreated.first_name)', 'User Created'],
+        ['CONCAT(usersupdated.username,\' - \',usersupdated.first_name)', 'User Updated'],
+        ['employee_penalty.penalty_note', 'Sanksi'],
       );
 
       q.innerJoin(e => e.penaltyUser, 'users', j =>
@@ -538,7 +529,8 @@ export class EmployeePenaltyService {
 
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-      await q.stream(response, this.streamTransformEmployeePenalty);
+      let data =  await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
 
     } catch (err) {
       throw err;

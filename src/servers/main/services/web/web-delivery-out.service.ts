@@ -22,6 +22,7 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { RedisService } from '../../../../shared/services/redis.service';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
+import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
 import {
   WebScanOutAwbListResponseVm,
   WebScanOutAwbResponseVm,
@@ -1551,9 +1552,6 @@ export class WebDeliveryOutService {
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      response.writeHead(200, { 'Content-Type': 'text/csv' });
-      response.flushHeaders();
-      response.write(`${this.ExportHeaderBagOrderDetailList.join(',')}\n`);
 
       let payloadBagNumber = '0';
       for (const filter of payload.filters) {
@@ -1571,25 +1569,17 @@ export class WebDeliveryOutService {
         bagSeq = bag.bagSeq;
       }
 
-      // payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
-      // payload.fieldResolverMap['bagSeq'] = 't1.bag_seq';
-
       const repo = new OrionRepositoryService(Bag, 't1');
       const q = repo.findAllRaw();
       payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
-        ['t1.bag_id', 'bagId'],
-        ['t1.bag_number', 'bagNumber'],
-        ['t2.bag_item_id', 'bagItemId'],
-        ['t2.bag_seq', 'bagSeq'],
-        ['t3.awb_number', 'awbNumber'],
-        ['t5.awb_id', 'awbId'],
-        [`CONCAT(t5.total_weight::numeric(10,2), 'kg')`, 'totalWeight'], // Berat
-        [`CONCAT(t5.total_weight_real_rounded::numeric(10,2), ' kg')`, 'totalWeightRealRounded'], // Berat Asli
-        [`COALESCE(t6.package_type_code, '-')`, 'packageTypeCode'],
-        [`COALESCE(t6.package_type_name, '-')`, 'packageTypeName'],
+        ['t3.awb_number', 'No.Resi'],
+        [`COALESCE(t6.package_type_code, '-')`, 'Layanan'],
+        [`CONCAT(t5.total_weight::numeric(10,2), 'kg')`, 'Berat Partner'],
+        [`CONCAT(t5.total_weight_real_rounded::numeric(10,2), ' kg')`, 'Berat Asli']
       );
+
       q.innerJoin(e => e.bagItems, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
@@ -1609,7 +1599,10 @@ export class WebDeliveryOutService {
       q.andWhere(e => e.bagItems.bagSeq, w => w.equals(bagSeq));
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-      await q.stream(response, this.streamTransformBagOrderDetailList);
+      // await q.stream(response, this.streamTransformBagOrderDetailList);
+
+      let data =  await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       console.error(err);
       throw err.message;

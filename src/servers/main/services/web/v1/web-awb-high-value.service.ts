@@ -11,6 +11,7 @@ import { AwbHighValueUpload } from '../../../../../shared/orm-entity/awb-high-va
 import { AuthService } from '../../../../../shared/services/auth.service';
 import moment = require('moment');
 import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-request-detail';
+import {CsvHelper} from '../../../../../shared/helpers/csv-helpers';
 
 export class V1WebAwbHighValueService {
   static ExportHeaderUploadResi = [
@@ -433,9 +434,6 @@ export class V1WebAwbHighValueService {
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      response.writeHead(200, { 'Content-Type': 'text/csv' });
-      response.flushHeaders();
-      response.write(`${this.ExportHeaderUploadResi.join(',')}\n`);
 
       payload.fieldResolverMap['partnerId'] = 't3.partner_id';
       payload.fieldResolverMap['uploadedDate'] = 't1.uploaded_time';
@@ -462,23 +460,38 @@ export class V1WebAwbHighValueService {
 
       payload.applyToOrionRepositoryQuery(q);
 
+      // q.selectRaw(
+      //   ['t1.awb_number', 'awbNumber'],
+      //   ['t4.partner_name', 'partnerName'],
+      //   ['t2.recipient_name', 'recipientName'],
+      //   ['t2.recipient_phone', 'recipientPhone'],
+      //   ['t2.parcel_content', 'parcelContent'],
+      //   ['false', 'isUpload'],
+      //   ['t1.display_name', 'displayName'],
+      //   ['t1.uploaded_time', 'uploadedDate'],
+      //   ['t6.branch_name', 'branchName'],
+      //   ['t7.awb_status_name', 'awbStatusName'],
+      //   ['TO_CHAR(t5.awb_history_date_last, \'DD Mon YYYY HH24:MI\')', 'awbHistoryDateLast'],
+      //   ['t9.district_code', 'districtCode'],
+      //   ['t8.branch_name', 'branchFromName'],
+      //   ['t10.package_type_code', 'packageTypeCode'],
+      //   ['t10.package_type_name', 'packageTypeName'],
+      //   [`CASE WHEN t10.package_type_code = 'KEPO' THEN 'Gold' ELSE 'Berharga' END`, 'packageType'],
+      // );
+
       q.selectRaw(
-        ['t1.awb_number', 'awbNumber'],
-        ['t4.partner_name', 'partnerName'],
-        ['t2.recipient_name', 'recipientName'],
-        ['t2.recipient_phone', 'recipientPhone'],
-        ['t2.parcel_content', 'parcelContent'],
-        ['false', 'isUpload'],
-        ['t1.display_name', 'displayName'],
-        ['t1.uploaded_time', 'uploadedDate'],
-        ['t6.branch_name', 'branchName'],
-        ['t7.awb_status_name', 'awbStatusName'],
-        ['t5.awb_history_date_last', 'awbHistoryDateLast'],
-        ['t9.district_code', 'districtCode'],
-        ['t8.branch_name', 'branchFromName'],
-        ['t10.package_type_code', 'packageTypeCode'],
-        ['t10.package_type_name', 'packageTypeName'],
-        [`CASE WHEN t10.package_type_code = 'KEPO' THEN 'Gold' ELSE 'Berharga' END`, 'packageType'],
+        ['TO_CHAR(t1.uploaded_time, \'YYYY-MM-DD\')', 'Tanggal Upload'],
+        ['TO_CHAR(t5.awb_history_date_last, \'YYYY-MM-DD\')', 'Tanggal Status'],
+        ['t1.awb_number', 'Nomor Resi'],
+        ['t4.partner_name', 'Nama Partner'],
+        ['t2.recipient_name', 'Nama Penerima'],
+        ['t2.recipient_phone', 'Telp Penerima'],
+        ['t2.parcel_content', 'Isi Parsel'],
+        ['t7.awb_status_name', 'Status Awb'],
+        ['t9.district_code', 'Kode Kecamatan'],
+        ['t6.branch_name', 'Gerai Tujuan'],
+        ['t8.branch_name', 'Gerai Asal'],
+        [`CASE WHEN t10.package_type_code = 'KEPO' THEN 'Gold' ELSE 'Berharga' END`, 'Tipe Layanan'],
       );
       q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -519,7 +532,8 @@ export class V1WebAwbHighValueService {
       q.andWhere(e => e.isDeleted, w => w.isFalse());
       q.andWhere(e => e.userIdUploaded, w => w.equals(1));
 
-      await q.stream(response, this.streamTransform);
+      let data =  await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
 
     } catch (err) {
       throw err;
