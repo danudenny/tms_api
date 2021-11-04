@@ -17,8 +17,7 @@ import { Representative } from '../../../../shared/orm-entity/representative';
 @Injectable()
 export class SmdCentralReportingService {
   private static get baseUrlInternal() {
-    // return 'https://swagger.s.sicepat.tech/operation/reporting-service';
-    return 'http://api-internal.s.sicepat.io/reporting-service';
+    return 'http://api-internal.sicepat.io/operation/reporting-service';
   }
 
   static async getListQueueSmd(payload: ListCentralExportPayloadVm, type: string): Promise<any> {

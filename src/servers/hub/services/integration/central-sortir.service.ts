@@ -12,8 +12,7 @@ import { Branch } from '../../../../shared/orm-entity/branch';
 export class CentralSortirService {
 
   private static get baseUrlInternal() {
-    // return 'https://swagger.s.sicepat.tech/operation/reporting-service';
-    return 'http://api-internal.s.sicepat.io/reporting-service';
+    return 'http://api-internal.sicepat.io/operation/reporting-service';
   }
 
   static async getListMesinSortirReporting(query: CentralSortirListPayloadVm): Promise<any> {
