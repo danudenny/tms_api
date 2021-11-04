@@ -333,6 +333,7 @@ export class PartnerGojekService {
             {
               awbStatusIdLast      : 14900,
               awbStatusDateTimeLast: moment().toDate(),
+              awbStatusDateLast    : moment().toDate(),
               userIdUpdated        : authMeta.userId,
               updatedTime          : moment().toDate(),
             });
