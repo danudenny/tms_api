@@ -62,8 +62,7 @@ export class ScanOutController {
 
   @Post('scanOut/seal-manual')
   @Transactional()
-  @ApiImplicitHeader({ name: 'x-api-key' })
-  @UseGuards(AuthXAPIKeyGuard)
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async changeSealManual(@Req() request: any, @Body() payload: SealChangeManualPayloadVm) {
     return ScanoutSmdService.changeSealManual(payload);
   }
