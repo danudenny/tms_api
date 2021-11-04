@@ -945,7 +945,8 @@ export class MobileKorwilService {
       if (attachment) {
         attachmentId = attachment.attachmentTmsId;
       }
-
+      console.log('tms-korwil' + attachment);
+      console.log('tms-korwil-attachment-ID' + attachmentId);
       const korwilTransactionDetailPhoto = KorwilTransactionDetailPhoto.create();
       korwilTransactionDetailPhoto.photoId = attachmentId;
       korwilTransactionDetailPhoto.korwilTransactionDetailId = korwilTransactionDetailId;
@@ -988,9 +989,23 @@ export class MobileKorwilService {
         isDeleted: false,
       },
     });
-    if (attachmentTms) {
-      AttachmentService.deleteAttachment(attachmentTms.attachmentTmsId);
+
+    // if (attachmentTms) {
+    //   AttachmentService.deleteAttachment(attachmentTms.attachmentTmsId);
+    // }
+    
+    // Modify Hard Delete attachmentTms to SoftDelete 30 Oct 2021 
+    if (!attachmentTms) {
+      throw new BadRequestException('Cannot delete attachment, file not found');
     }
+    
+    await AttachmentTms.update(
+      { attachmentTmsId: attachmentTms.attachmentTmsId},
+      {
+        isDeleted: true,
+        updatedTime: moment().toDate(),
+      },
+    );
 
     const deleteKorwilPhoto = await KorwilTransactionDetailPhoto.findOne({
       where: {

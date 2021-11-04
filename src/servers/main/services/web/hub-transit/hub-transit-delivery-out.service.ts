@@ -22,6 +22,8 @@ import { WebScanOutAwbVm, WebScanOutCreateVm } from '../../../models/web-scan-ou
 import { AwbService } from '../../v1/awb.service';
 import moment = require('moment');
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
+import { getManager } from 'typeorm';
+const uuidv1 = require('uuid/v1');
 
 export class HubTransitDeliveryOutService {
   /**
@@ -170,6 +172,10 @@ export class HubTransitDeliveryOutService {
       // lock: { mode: 'pessimistic_write' },
     });
 
+    const doPodDetailArr = new Array();
+    const jobByAwbFilterArr = new Array();
+    const jobByScanOutAwbBranch =  new Array();
+
     for (const awbNumber of payload.awbNumber) {
       const response = new ScanAwbVm();
       response.status = 'ok';
@@ -216,6 +222,7 @@ export class HubTransitDeliveryOutService {
 
             if (!existDoPodDetail) {
               const doPodDetail = DoPodDetail.create();
+              doPodDetail.doPodDetailId = uuidv1();
               doPodDetail.doPodId = payload.doPodId;
               doPodDetail.awbId = awb.awbId;
               doPodDetail.awbNumber = awbNumber;
@@ -223,7 +230,8 @@ export class HubTransitDeliveryOutService {
               doPodDetail.transactionStatusIdLast = 300; // OUT_HUB
               doPodDetail.isScanOut = true;
               doPodDetail.scanOutType = 'awb';
-              await DoPodDetail.save(doPodDetail);
+              // await DoPodDetail.save(doPodDetail);
+              doPodDetailArr.push(doPodDetail);
 
               // Assign print metadata - Scan Out & Deliver
               response.printDoPodDetailMetadata.awbItem.awb.awbId         = awb.awbId;
@@ -249,23 +257,38 @@ export class HubTransitDeliveryOutService {
                 const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: doPod.partnerLogisticId });
                 partnerLogisticName = partnerLogistic.partnerLogisticName;
               }
-              // NOTE: auto in hub
-              DoPodDetailPostMetaQueueService.createJobByAwbFilter(
-                awb.awbItemId,
-                permissonPayload.branchId,
-                authMeta.userId,
-              );
 
-              // out hub
-              DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
-                awb.awbItemId,
-                AWB_STATUS.OUT_HUB,
-                permissonPayload.branchId,
-                authMeta.userId,
-                doPod.userIdDriver,
-                doPod.branchIdTo,
+              jobByAwbFilterArr.push({
+                awbItemId: awb.awbItemId,
+                branchId: permissonPayload.branchId,
+                userId: authMeta.userId,
+              })
+              // // NOTE: auto in hub
+              // DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+              //   awb.awbItemId,
+              //   permissonPayload.branchId,
+              //   authMeta.userId,
+              // );
+
+              jobByScanOutAwbBranch.push({
+                awbItemId: awb.awbItemId,
+                awbStatus: AWB_STATUS.OUT_HUB,
+                branchId: permissonPayload.branchId,
+                userId: authMeta.userId,
+                userIdDriver: doPod.userIdDriver,
+                branchIdTo: doPod.branchIdTo,
                 partnerLogisticName,
-              );
+              })
+              // // out hub
+              // DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
+              //   awb.awbItemId,
+              //   AWB_STATUS.OUT_HUB,
+              //   permissonPayload.branchId,
+              //   authMeta.userId,
+              //   doPod.userIdDriver,
+              //   doPod.branchIdTo,
+              //   partnerLogisticName,
+              // );
 
               totalSuccess += 1;
               // #endregion after scanout
@@ -300,22 +323,47 @@ export class HubTransitDeliveryOutService {
       });
     } // end of loop
 
-    // TODO: need improvement
-    if (doPod) {
-      // counter total scan in
-      if (doPod.totalScanOutAwb == 0) {
-        await DoPod.update({ doPodId: doPod.doPodId }, {
-          totalScanOutAwb: totalSuccess,
-          firstDateScanOut: timeNow,
-          lastDateScanOut: timeNow,
-        });
-      } else {
-        const totalScanOutAwb = doPod.totalScanOutAwb + totalSuccess;
-        await DoPod.update({ doPodId: doPod.doPodId }, {
-          totalScanOutAwb,
-          lastDateScanOut: timeNow,
-        });
+    await getManager().transaction(async transactional => {
+      if(totalSuccess > 0 && doPodDetailArr.length > 0){
+        await transactional.insert(DoPodDetail, doPodDetailArr);
+        // TODO: need improvement
+        if (doPod) {
+          // counter total scan in
+          if (doPod.totalScanOutAwb == 0) {
+            await transactional.update(DoPod, { doPodId: doPod.doPodId }, {
+              totalScanOutAwb: totalSuccess,
+              firstDateScanOut: timeNow,
+              lastDateScanOut: timeNow,
+            });
+          } else {
+            const totalScanOutAwb = doPod.totalScanOutAwb + totalSuccess;
+            await transactional.update(DoPod, { doPodId: doPod.doPodId }, {
+              totalScanOutAwb,
+              lastDateScanOut: timeNow,
+            });
+          }
+        }
       }
+    });
+
+    for(const item of jobByAwbFilterArr){
+      DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+        item.awbItemId,
+        item.branchId,
+        item.userId,
+      );
+    }
+
+    for(const item of jobByScanOutAwbBranch){
+      DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
+        item.awbItemId,
+        item.awbStatus,
+        item.branchId,
+        item.userId,
+        item.userIdDriver,
+        item.branchIdTo,
+        item.partnerLogisticName,
+      );
     }
 
     // Populate return value

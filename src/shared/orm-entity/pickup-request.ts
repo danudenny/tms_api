@@ -179,6 +179,12 @@ export class PickupRequest extends TmsBaseEntity {
   })
   encryptMerchantName: string | null;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'work_order_id_last',
+  })
+  workOrderIdLast: number | null;
+
   @OneToOne(() => Partner)
   @JoinColumn({ name: 'partner_id', referencedColumnName: 'partnerId' })
   partner: Partner;
