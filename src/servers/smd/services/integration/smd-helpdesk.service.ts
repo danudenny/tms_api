@@ -4,12 +4,14 @@ import { BagRepresentative } from '../../../../shared/orm-entity/bag-representat
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { Representative } from '../../../../shared/orm-entity/representative';
 import { UpdateRepresentativeManualResponse } from '../../models/smd-helpdesk-response.vm';
+import { AuthService } from '../../../../shared/services/auth.service';
+import moment from 'moment';
 
 @Injectable()
 export class SmdHelpdeskService {
   static async updateRepresentativeCodeManual(payload: UpdateRepresentativeManualPayload): Promise <any> {
     try {
-
+      const authMeta = AuthService.getAuthData();
       const result = new UpdateRepresentativeManualResponse();
       result.statusCode = HttpStatus.BAD_REQUEST;
       // check bag_representative
@@ -35,12 +37,18 @@ export class SmdHelpdeskService {
         return result;
       }
 
+      const query_representative = `SELECT
+        * from representative r
+      WHERE r.representative_code = '${payload.representative_code_new}' AND r.is_deleted = FALSE LIMIT 1`;
+
+      const getRepresentative = await RawQueryService.query(query_representative);
       // get representative
-      const getRepresentative = await Representative.findOne({
-        where: {
-          representativeCode: payload.representative_code_new,
-        },
-      });
+      // const getRepresentative = await Representative.findOne({
+      //   where: {
+      //     representativeCode: payload.representative_code_new,
+      //     "is_deleted": "FALSE"
+      //   },
+      // });
 
       if (!getRepresentative) {
         // representative not found
@@ -49,7 +57,13 @@ export class SmdHelpdeskService {
       }
 
       // update new representative
-      await BagRepresentative.update({ bagRepresentativeId: bagRepresentative[0].bag_representative_id }, { representativeIdTo: getRepresentative.representativeId.toString() });
+      await BagRepresentative.update(
+        { bagRepresentativeId: bagRepresentative[0].bag_representative_id },
+        {
+          representativeIdTo: getRepresentative[0].representative_id.toString(),
+          userIdUpdated: authMeta.userId,
+        },
+      );
       // response success
       result.statusCode = HttpStatus.OK;
       result.message = 'update representative_code success';

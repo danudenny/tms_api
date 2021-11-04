@@ -447,9 +447,11 @@ export class PrintService {
       for(const detail of bagItem.bagItemAwbs){
         if(detail.awbItem && detail.awbItem.awb){
           totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
+          // totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeightFinalRounded)) / 100;
         }
       }
     }
+    totalWeight = Math.round(totalWeight * 100)/100;
 
     const m = moment();
     const jsreportParams = {

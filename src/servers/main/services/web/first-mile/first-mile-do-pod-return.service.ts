@@ -789,10 +789,12 @@ export class FirstMileDoPodReturnService {
             }
             if(doPod.awbItem.awb.totalWeight){
               totalWeight += Number(doPod.awbItem.awb.totalWeight);
+              // totalWeight = Math.round(100 * Number(doPod.awbItem.awb.totalWeight)) / 100;
             }
           }
       });
     }
+    totalWeight = Math.round(totalWeight * 100)/100;
 
     return this.printDoPodReturn(
       res,

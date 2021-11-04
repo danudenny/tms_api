@@ -15,7 +15,7 @@ export class LastMileDeliveryService {
   ): Promise<WebScanOutDeliverGroupListResponseVm> {
     // mapping field
     payload.fieldResolverMap['doPodDeliverDateTime'] =
-      't1.do_pod_deliver_date_time';
+      't1.do_pod_deliver_date';
     payload.fieldResolverMap['datePOD'] = 'datePOD';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
@@ -40,7 +40,7 @@ export class LastMileDeliveryService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.do_pod_deliver_date_time::date', 'datePOD'],
+      ['t1.do_pod_deliver_date', 'datePOD'],
       ['COUNT(DISTINCT(t1.do_pod_deliver_id))', 'totalSuratJalan'],
       ['t1.user_id_driver', 'userIdDriver'],
       ['t5.branch_name', 'branchName'],

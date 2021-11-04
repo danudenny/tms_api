@@ -36,6 +36,8 @@ export class CpsService {
       const branch = await Branch.findOne({
         where: {
           branchCode: item['Hub'],
+          isDeleted : false,
+          isActive : true
         },
       });
       if (branch) {
@@ -306,6 +308,8 @@ export class CpsService {
       const branch = await Branch.findOne({
         where: {
           branchCode: payload.branchCode,
+          isDeleted : false,
+          isActive : true
         },
       });
 

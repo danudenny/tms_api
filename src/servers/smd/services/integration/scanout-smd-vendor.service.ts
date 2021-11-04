@@ -320,7 +320,8 @@ export class ScanoutSmdVendorService {
       const resultbranchTo = await Branch.findOne({
         where: {
           branchCode: payload.branch_code,
-          isDeleted: false,
+          isDeleted : false,
+          isActive : true
         },
       });
 

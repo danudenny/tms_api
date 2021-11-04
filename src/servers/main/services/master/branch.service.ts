@@ -30,6 +30,7 @@ export class BranchService {
       ['branch.branch_code', 'branchCode'],
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isActive, w=> w.isTrue());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -76,6 +77,7 @@ export class BranchService {
     //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isActive, w => w.isTrue());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
