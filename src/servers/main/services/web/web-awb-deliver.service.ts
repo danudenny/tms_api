@@ -211,6 +211,7 @@ export class WebAwbDeliverService {
           {
             awbStatusIdLast: doPodDeliverHistory.awbStatusId,
             awbStatusDateTimeLast: doPodDeliverHistory.awbStatusDateTime,
+            awbStatusDateLast : doPodDeliverHistory.awbStatusDateTime,
             reasonIdLast: doPodDeliverHistory.reasonId,
             syncDateTimeLast: doPodDeliverHistory.syncDateTime,
             descLast: doPodDeliverHistory.desc,
