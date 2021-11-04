@@ -44,7 +44,8 @@ export class HubMachineService {
     data = (await Branch.findOne({
       where: {
         branchId,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     })) as any;
 

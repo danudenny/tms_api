@@ -85,6 +85,8 @@ export class HubTransitDeliveryOutService {
       // cache: true,
       where: {
         branchId: payload.branchIdTo,
+        isDeleted : false,
+        isActive : true
       },
     });
 
