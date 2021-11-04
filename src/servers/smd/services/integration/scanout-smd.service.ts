@@ -2794,6 +2794,7 @@ export class ScanoutSmdService {
   }
 
   static async changeSealManual(payload: SealChangeManualPayloadVm): Promise<any> {
+    const authMeta = AuthService.getAuthData();
     const doSmd = await DoSmd.findOne({
       where: {
         doSmdCode: payload.doSmdCode,
@@ -2818,11 +2819,16 @@ export class ScanoutSmdService {
         },
       });
 
+      if (!doSmdVehicle) {
+        RequestErrorService.throwObj({
+          message: 'can\'t proccess dmd vendor',
+        });
+      }
+
       const doSmdHistory = await DoSmdHistory.findOne({
         where: {
           doSmdId: doSmd.doSmdId,
           doSmdStatusId: 1200, // status change seal
-          userIdCreated: 1,
           sealNumber: payload.sealNumber,
         },
       });
@@ -2836,7 +2842,7 @@ export class ScanoutSmdService {
           { doSmdId : doSmd.doSmdId },
           {
             sealNumberLast: payload.sealNumber,
-            userIdUpdated: 1,
+            userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
           },
         );
@@ -2845,7 +2851,7 @@ export class ScanoutSmdService {
             { doSmdDetailId : doSmdDetail.doSmdDetailId },
             {
               sealNumber: payload.sealNumber,
-              userIdUpdated: 1,
+              userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
             },
           );
@@ -2862,7 +2868,7 @@ export class ScanoutSmdService {
           1200, // status seal change
           payload.sealNumber,
           null,
-          1, // user superadmin
+          authMeta.userId, // user superadmin
         );
       }
 

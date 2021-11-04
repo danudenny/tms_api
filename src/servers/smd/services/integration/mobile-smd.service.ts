@@ -1136,6 +1136,7 @@ export class MobileSmdService {
   static async scanInEndManualMobile(payload: any): Promise<any> {
     const result = new ScanOutSmdEndManualResponseVm();
     const timeNow = moment().toDate();
+    const authMeta = AuthService.getAuthData();
 
     const resultDoSmd = await DoSmd.findOne({
       where: {
@@ -1150,7 +1151,7 @@ export class MobileSmdService {
         { doSmdId : resultDoSmd.doSmdId },
         {
           doSmdStatusIdLast: 6000,
-          userIdUpdated: 1,
+          userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
       );
@@ -1159,10 +1160,10 @@ export class MobileSmdService {
         { doSmdId : resultDoSmd.doSmdId },
         {
           doSmdStatusIdLast: 6000,
-          departureTime: moment().toDate(),
+          arrivalTime: moment().toDate(),
           // latitudeArrival: payload.latitude,
           // longitudeArrival: payload.longitude,
-          userIdUpdated: 1,
+          userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
       );
@@ -1179,13 +1180,13 @@ export class MobileSmdService {
         null,
         null,
         null,
-        1,
+        authMeta.userId,
       );
       const data = [];
       data.push({
         do_smd_id: resultDoSmd.doSmdId,
         do_smd_code: resultDoSmd.doSmdCode,
-        departure_date_time: moment().toDate(),
+        arrival_date_time: moment().toDate(),
       });
       result.statusCode = HttpStatus.OK;
       result.message = 'SMD Success End Manual';
@@ -1287,6 +1288,7 @@ export class MobileSmdService {
             INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last
             AND ds.is_deleted = FALSE
             AND ds.do_smd_status_id_last <> 6000
+            AND ds.is_empty = FALSE
           WHERE
             dsv.employee_id_driver IN ('${employee.employee_id}')
             AND dsv.is_deleted = FALSE;
@@ -1303,7 +1305,7 @@ export class MobileSmdService {
               SELECT * FROM do_smd WHERE do_smd_id IN ('${doSmd.do_smd_id}') AND is_deleted = false;
             `;
             const doSmdResult = await RawQueryService.query(doSmdRawQuery);
-    
+
             resultDataDoSmd = resultDataDoSmd.concat(doSmdResult);
           }),
         );
