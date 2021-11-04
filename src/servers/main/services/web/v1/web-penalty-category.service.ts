@@ -12,6 +12,7 @@ import { RequestErrorService } from '../../../../../shared/services/request-erro
 import moment = require('moment');
 import { PenaltyCategory } from '../../../../../shared/orm-entity/penalty_category';
 import { PenaltyCategoryFee } from '../../../../../shared/orm-entity/penalty-category-fee';
+import {CsvHelper} from '../../../../../shared/helpers/csv-helpers';
 
 export class PenaltyCategoryService{
   constructor(){}
@@ -492,9 +493,6 @@ export class PenaltyCategoryService{
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      response.writeHead(200, { 'Content-Type': 'text/csv' });
-      response.flushHeaders();
-      response.write(`${this.ExportHeaderCategory.join(',')}\n`);
 
       payload.globalSearchFields = [
       {
@@ -528,8 +526,8 @@ export class PenaltyCategoryService{
 
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-      await q.stream(response, this.streamTransformPenaltyCategory);
-
+      let data =  await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       throw err;
     }

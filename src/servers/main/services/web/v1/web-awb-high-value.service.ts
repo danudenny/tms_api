@@ -11,6 +11,7 @@ import { AwbHighValueUpload } from '../../../../../shared/orm-entity/awb-high-va
 import { AuthService } from '../../../../../shared/services/auth.service';
 import moment = require('moment');
 import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-request-detail';
+import {CsvHelper} from '../../../../../shared/helpers/csv-helpers';
 
 export class V1WebAwbHighValueService {
   static ExportHeaderUploadResi = [
@@ -433,9 +434,6 @@ export class V1WebAwbHighValueService {
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      response.writeHead(200, { 'Content-Type': 'text/csv' });
-      response.flushHeaders();
-      response.write(`${this.ExportHeaderUploadResi.join(',')}\n`);
 
       payload.fieldResolverMap['partnerId'] = 't3.partner_id';
       payload.fieldResolverMap['uploadedDate'] = 't1.uploaded_time';
@@ -519,7 +517,8 @@ export class V1WebAwbHighValueService {
       q.andWhere(e => e.isDeleted, w => w.isFalse());
       q.andWhere(e => e.userIdUploaded, w => w.equals(1));
 
-      await q.stream(response, this.streamTransform);
+      let data =  await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
 
     } catch (err) {
       throw err;

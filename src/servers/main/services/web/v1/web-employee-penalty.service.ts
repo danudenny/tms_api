@@ -3,6 +3,7 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { RepositoryService } from '../../../../../shared/services/repository.service';
 import { EmployeePenalty } from '../../../../../shared/orm-entity/employee-penalty';
+import {CsvHelper} from '../../../../../shared/helpers/csv-helpers';
 import { 
   EmployeePenaltyListResponseVM, 
   EmployeePenaltyPayloadVm, 
@@ -471,9 +472,6 @@ export class EmployeePenaltyService {
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      response.writeHead(200, { 'Content-Type': 'text/csv' });
-      response.flushHeaders();
-      response.write(`${this.ExportHeader.join(',')}\n`);
 
       payload.fieldResolverMap['userId'] = 'employee_penalty.penalty_user_id';
       payload.fieldResolverMap['penaltyDateTime'] = 'employee_penalty.penalty_date_time';
@@ -538,7 +536,8 @@ export class EmployeePenaltyService {
 
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-      await q.stream(response, this.streamTransformEmployeePenalty);
+      let data =  await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
 
     } catch (err) {
       throw err;
