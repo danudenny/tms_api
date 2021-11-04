@@ -378,19 +378,6 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-<<<<<<< HEAD
-    // d pke created time
-    q.groupByRaw(`
-      t1.created_time,
-      t1.dropoff_hub_id,
-      t3.bag_seq,
-      t2.bag_number,
-      t2.ref_representative_code,
-      t3.weight,
-      t5.branch_name,
-      t6.branch_name
-    `);
-=======
     // q.groupByRaw(`
     //   t1.created_time,
     //   t1.dropoff_hub_id,
@@ -401,7 +388,6 @@ export class HubTransitDeliveryInService {
     //   t5.branch_name,
     //   t6.branch_name
     // `);
->>>>>>> 5be6092ef... optimasi query dropoff
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
