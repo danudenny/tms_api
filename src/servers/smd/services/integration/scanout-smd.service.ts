@@ -2177,7 +2177,7 @@ export class ScanoutSmdService {
         SELECT
           DISTINCT dsdi.bag_item_id,
           dsdi.bag_id,
-          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number_seq,
+          SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10) as bag_number_seq,
           bi.weight,
           bi.bag_seq,
           r.representative_code

@@ -827,7 +827,7 @@ export class SmdHubService {
     .selectRaw(
       ['b.bagging_id', 'baggingId'],
       ['b.bagging_item_id', 'baggingItemId'],
-      [`CONCAT(bib.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bagNumber'],
+      [`SUBSTR(CONCAT(bib.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10)`, 'bagNumber'],
     );
 
     const data = await repo.exec();
