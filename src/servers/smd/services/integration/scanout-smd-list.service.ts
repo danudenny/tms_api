@@ -231,6 +231,8 @@ export class ScanoutSmdListService {
       ['ds.total_bagging', 'total_bagging'],
       ['ds.total_bag_representative', 'total_bag_representative'],
       ['dss.do_smd_status_title', 'do_smd_status_title'],
+      ['to_char(ds.arrival_date_time,\'YYYY-MM-DD HH24:MI:SS\')', 'arrival_date_time'],
+      ['to_char(ds.departure_date_time,\'YYYY-MM-DD HH24:MI:SS\')', 'departure_date_time'],
     );
 
     q.innerJoinRaw(
