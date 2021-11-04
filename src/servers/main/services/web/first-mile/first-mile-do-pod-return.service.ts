@@ -647,6 +647,7 @@ export class FirstMileDoPodReturnService {
               consigneeZip: true,
               totalCodValue: true,
               isCod: true,
+              totalWeight: true,
             },
           },
         },
@@ -695,7 +696,7 @@ export class FirstMileDoPodReturnService {
     meta.awbItem.awb.consigneeZip = awb.awbItem.awb.consigneeZip;
     meta.awbItem.awb.isCod = awb.awbItem.awb.isCod;
     meta.awbItem.awb.totalCodValue = awb.awbItem.awb.totalCodValue;
-    meta.awbItem.awb.totalWeight = awb.awbItem.awb.totalWeightFinalRounded;
+    meta.awbItem.awb.totalWeight = awb.awbItem.awb.totalWeight;
     return meta;
   }
 
@@ -773,6 +774,7 @@ export class FirstMileDoPodReturnService {
 
     const currentDate = moment();
     let totalAllCod = 0;
+    let totalWeight = 0;
 
     // sum totalCodValue from object
     // loop data and sum data totalCodValue
@@ -781,13 +783,18 @@ export class FirstMileDoPodReturnService {
         if (
           doPod &&
           doPod.awbItem &&
-          doPod.awbItem.awb &&
-          doPod.awbItem.awb.totalCodValue
-        ) {
-          totalAllCod += Number(doPod.awbItem.awb.totalCodValue);
-        }
+          doPod.awbItem.awb){
+            if(doPod.awbItem.awb.totalCodValue){
+              totalAllCod += Number(doPod.awbItem.awb.totalCodValue);
+            }
+            if(doPod.awbItem.awb.totalWeight){
+              totalWeight += Number(doPod.awbItem.awb.totalWeight);
+              // totalWeight = Math.round(100 * Number(doPod.awbItem.awb.totalWeight)) / 100;
+            }
+          }
       });
     }
+    totalWeight = Math.round(totalWeight * 100)/100;
 
     return this.printDoPodReturn(
       res,
@@ -799,6 +806,7 @@ export class FirstMileDoPodReturnService {
         time: currentDate.format('HH:mm'),
         totalItems: data.doPodReturnDetails.length,
         totalCod: totalAllCod,
+        totalWeight
       },
       templateConfig,
     );
@@ -814,6 +822,7 @@ export class FirstMileDoPodReturnService {
       time: string;
       totalItems: number;
       totalCod: number;
+      totalWeight: number;
     },
     templateConfig: {
       printCopy?: number;

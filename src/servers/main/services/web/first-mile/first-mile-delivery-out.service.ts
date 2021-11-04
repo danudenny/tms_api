@@ -1,5 +1,5 @@
 // #region import
-import { createQueryBuilder, IsNull, getConnection } from 'typeorm';
+import { IsNull, getConnection, getManager } from 'typeorm';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { BAG_STATUS } from '../../../../../shared/constants/bag-status.constant';
 import { AuditHistory } from '../../../../../shared/orm-entity/audit-history';
@@ -35,12 +35,13 @@ import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
 import moment = require('moment');
 import { BagScanOutBranchQueueService } from '../../../../queue/services/bag-scan-out-branch-queue.service';
-import { User } from '../../../../../shared/orm-entity/user';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { Employee } from '../../../../../shared/orm-entity/employee';
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { PartnerLogistic } from '../../../../../shared/orm-entity/partner-logistic';
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
+import { BadRequestException } from '@nestjs/common';
+const uuidv1 = require('uuid/v1');
 // #endregion
 
 // Surat Jalan Keluar Gerai
@@ -460,6 +461,12 @@ export class FirstMileDeliveryOutService {
       // lock: { mode: 'pessimistic_write' },
     });
 
+    if(!doPod){
+      throw new BadRequestException('Surat Jalan tidak valid!');
+    }
+
+    const doPodDetailArr = new Array();
+    const paramsBull = new Array();
     for (const awbNumber of payload.awbNumber) {
       const response = new ScanAwbVm();
       response.status = 'ok';
@@ -481,14 +488,9 @@ export class FirstMileDeliveryOutService {
         );
 
         if (notDeliver && holdRedis) {
-          if (doPod) {
             // NOTE: check resi cancel delivery
             const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
-            if (isCancel == true) {
-              totalError += 1;
-              response.status = 'error';
-              response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner !`;
-            } else {
+            if (!isCancel) {
               const statusCode = await AwbService.awbStatusGroup(
                 awb.awbStatusIdLast,
               );
@@ -504,6 +506,7 @@ export class FirstMileDeliveryOutService {
 
               // NOTE: create data do pod detail per awb number
               const doPodDetail = DoPodDetail.create();
+              doPodDetail.doPodDetailId = uuidv1();
               doPodDetail.doPodId = payload.doPodId;
               doPodDetail.awbId = awb.awbId;
               doPodDetail.awbNumber = awbNumber;
@@ -511,7 +514,8 @@ export class FirstMileDeliveryOutService {
               doPodDetail.transactionStatusIdLast = 800; // OUT_BRANCH
               doPodDetail.isScanOut = true;
               doPodDetail.scanOutType = 'awb';
-              await DoPodDetail.save(doPodDetail);
+              // await DoPodDetail.save(doPodDetail);
+              doPodDetailArr.push(doPodDetail);
 
               // Assign print metadata - Scan Out & Deliver
               response.printDoPodDetailMetadata.awbItem.awb.awbId         = awb.awbId;
@@ -524,7 +528,7 @@ export class FirstMileDeliveryOutService {
               response.printDoPodDetailMetadata.awbItem.awb.consigneeZip     = awb.awbItem.awb.consigneeZip;
               response.printDoPodDetailMetadata.awbItem.awb.isCod            = awb.awbItem.awb.isCod;
               response.printDoPodDetailMetadata.awbItem.awb.totalCodValue    = awb.awbItem.awb.totalCodValue;
-              response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.weightReal;
+              response.printDoPodDetailMetadata.awbItem.awb.totalWeight      = awb.awbItem.awb.totalWeightFinalRounded;
 
               // AFTER Scan OUT ===============================================
               // #region after scanout
@@ -538,26 +542,24 @@ export class FirstMileDeliveryOutService {
                 partnerLogisticName = partnerLogistic.partnerLogisticName;
               }
 
-              DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
-                awb.awbItemId,
-                AWB_STATUS.OUT_BRANCH,
-                permissonPayload.branchId,
-                authMeta.userId,
-                doPod.userIdDriver,
-                doPod.branchIdTo,
+              paramsBull.push({
+                awbItemId: awb.awbItemId,
+                awbStatus: AWB_STATUS.OUT_BRANCH,
+                branchId: permissonPayload.branchId,
+                userId: authMeta.userId,
+                userIdDriver: doPod.userIdDriver,
+                branchIdTo: doPod.branchIdTo,
                 partnerLogisticName,
-              );
+              });
               totalSuccess += 1;
               // #endregion after scanout
+            } else {
+              totalError += 1;
+              response.status = 'error';
+              response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner !`;
             }
-          } else {
-            totalError += 1;
-            response.status = 'error';
-            response.message = `Surat Jalan Resi ${awbNumber} tidak valid.`;
-          }
-
-          // remove key holdRedis
-          RedisService.del(`hold:scanout:${awb.awbItemId}`);
+            // remove key holdRedis
+            RedisService.del(`hold:scanout:${awb.awbItemId}`);
         } else {
           totalError += 1;
           response.status = 'error';
@@ -568,7 +570,6 @@ export class FirstMileDeliveryOutService {
         response.status = 'error';
         response.message = `Resi ${awbNumber} Tidak di Temukan`;
       }
-
       // push item
       dataItem.push({
         awbNumber,
@@ -576,22 +577,39 @@ export class FirstMileDeliveryOutService {
       });
     } // end of loop
 
-    // TODO: need improvement
-    if (doPod) {
-      // counter total scan in
-      if (doPod.totalScanOutAwb == 0) {
-        await DoPod.update({ doPodId: doPod.doPodId }, {
-          totalScanOutAwb: totalSuccess,
-          firstDateScanOut: timeNow,
-          lastDateScanOut: timeNow,
-        });
-      } else {
-        const totalScanOutAwb = doPod.totalScanOutAwb + totalSuccess;
-        await DoPod.update({ doPodId: doPod.doPodId }, {
-          totalScanOutAwb,
-          lastDateScanOut: timeNow,
-        });
+    await getManager().transaction(async transactional => {
+      if(totalSuccess > 0 && doPodDetailArr.length > 0){
+        await transactional.insert(DoPodDetail, doPodDetailArr);
+        // TODO: need improvement
+        if (doPod) {
+          // counter total scan in
+          if (doPod.totalScanOutAwb == 0) {
+            await transactional.update(DoPod, { doPodId: doPod.doPodId }, {
+              totalScanOutAwb: totalSuccess,
+              firstDateScanOut: timeNow,
+              lastDateScanOut: timeNow,
+            });
+          } else {
+            const totalScanOutAwb = doPod.totalScanOutAwb + totalSuccess;
+            await transactional.update(DoPod, { doPodId: doPod.doPodId }, {
+              totalScanOutAwb,
+              lastDateScanOut: timeNow,
+            });
+          }
+        }
       }
+    });
+
+    for(const item of paramsBull){
+      DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
+        item.awbItemId,
+        item.awbStatus,
+        item.branchId,
+        item.userId,
+        item.userIdDriver,
+        item.branchIdTo,
+        item.partnerLogisticName,
+      );
     }
 
     // Populate return value

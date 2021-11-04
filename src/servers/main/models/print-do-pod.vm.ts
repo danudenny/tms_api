@@ -9,6 +9,9 @@ export class PrintDoPodDataDoPodDetailAwbItemAwbVm {
 
   @ApiModelProperty()
   totalWeight: string;
+  
+  @ApiModelProperty()
+  totalWeightFinalRounded: string;
 
   @ApiModelPropertyOptional()
   totalCodValue: number;
