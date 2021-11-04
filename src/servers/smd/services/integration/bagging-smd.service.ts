@@ -187,24 +187,41 @@ export class BaggingSmdService {
 
     // get data bagging
     const qb = createQueryBuilder();
+    qb.addSelect( 'bi.bag_item_id', 'bag_item_id');
+    qb.addSelect( 'bi.weight', 'weight');
+    qb.addSelect( 'bi.bag_item_status_id_last', 'bag_item_status_id_last_in_bag_item');
+    qb.addSelect( 'b.representative_id_to', 'representative_id_to');
+    qb.addSelect( 'r.representative_code', 'representative_code');
     qb.addSelect( 'bai.bagging_item_id', 'bagging_item_id');
+    qb.addSelect( 'ba.bagging_id', 'bagging_id');
+    qb.addSelect( 'ba.bagging_code', 'bagging_code');
+    qb.addSelect( 'ba.total_weight', 'total_weight');
+    qb.addSelect( 'ba.total_item', 'total_item');
     qb.addSelect( 'ba.branch_id', 'branch_id');
     qb.addSelect( 'bih.bag_item_status_id', 'bag_item_status_id');
-    qb.from('bagging_item', 'bai');
-    qb.innerJoin('bagging', 'ba', 'ba.bagging_id = bai.bagging_id AND ba.is_deleted = FALSE');
-    qb.leftJoin('bag_item_history', 'bih', 'bih.bag_item_id = bai.bag_item_id AND bih.is_deleted = FALSE');
-    qb.andWhere(`bai.is_deleted = FALSE`);
-    qb.andWhere(`bai.bag_item_id = ${bagDetail.bagItemId}`);
-    qb.orderBy(`case when ba.branch_id = '${permissionPayload.branchId}' then 1 else 2 end, ba.created_time`, 'DESC');
+    qb.from('bag', 'b');
+    qb.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND bi.is_deleted = FALSE');
+    qb.innerJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND r.is_deleted = FALSE');
+    qb.leftJoin('bagging_item', 'bai', 'bai.bag_item_id = bi.bag_item_id AND bai.is_deleted = FALSE');
+    qb.leftJoin('bagging', 'ba', 'ba.bagging_id = bai.bagging_id AND ba.is_deleted = FALSE');
+    qb.leftJoin('bag_item_history', 'bih', 'bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE');
+    qb.andWhere(`b.bag_number = upper('${bagDetail.bag.bagNumber}')`);
+    qb.andWhere(`bi.bag_seq = '${bagDetail.bagSeq}'`);
+    qb.andWhere(`b.is_deleted = FALSE`);
+    qb.orderBy(`case when ba.branch_id = '${permissionPayload.branchId}' then 1 else 2 end, b.created_time`, 'DESC');
     const dataPackage = await qb.getRawOne();
 
-    if ((dataPackage) && (dataPackage.branch_id == permissionPayload.branchId)) {
+    if (!dataPackage) {
+      result.message = 'Gabung paket tidak ditemukan';
+      return result;
+    }
+    if ((dataPackage.bagging_item_id) && (dataPackage.branch_id == permissionPayload.branchId)) {
       // Ceking Double Scan Bagging / Branch
       result.status = 'failed';
       result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
       return result;
     }
-    if (!dataPackage.bag_item_status_id) {
+    if (dataPackage &&  !dataPackage.bag_item_status_id) {
       // handle kesalahan data saat scan masuk surat jalan
       result.message = 'Resi Gabung Paket belum di scan masuk';
       return result;
@@ -212,11 +229,11 @@ export class BaggingSmdService {
 
     result.baggingId = baggingId;
     result.baggingCode = baggingCode;
-    result.weight = bagDetail.weight.toString();
+    result.weight = dataPackage.weight;
 
     // NOTE: representativeCode digunakan untul validasi kode tujuan gabung paket
     let representative = null;
-    result.validRepresentativeCode = bagDetail.bag.refRepresentativeCode;
+    result.validRepresentativeCode = dataPackage.representative_code;
     if (payload.representativeCode) {
       payload.representativeCode = payload.representativeCode.toUpperCase();
       rawQuery = `
@@ -225,7 +242,7 @@ export class BaggingSmdService {
         FROM representative AS r
         WHERE
           r.representative_code = '${payload.representativeCode}' AND
-          r.representative_id = '${bagDetail.bag.representativeIdTo}'
+          r.representative_id = '${dataPackage.representative_id_to}'
         LIMIT 1;
       `;
       representative = await RawQueryService.query(rawQuery);
@@ -237,7 +254,7 @@ export class BaggingSmdService {
     } else {
       representative = [
         {
-          representative_id: bagDetail.bag.representativeIdTo,
+          representative_id: dataPackage.representative_id_to,
         },
       ];
     }
@@ -254,7 +271,7 @@ export class BaggingSmdService {
         INNER JOIN bag AS b ON bi.bag_id = b.bag_id
         LEFT JOIN representative AS r ON r.representative_id = b.representative_id_to AND r.is_deleted = FALSE
         WHERE
-          r.representative_code <> '${bagDetail.bag.refRepresentativeCode}' AND
+          r.representative_code <> '${dataPackage.representative_code}' AND
           bai.bagging_id = '${payload.baggingId}'
         LIMIT 1;
       `;
@@ -264,7 +281,7 @@ export class BaggingSmdService {
         otherCombinePackegeIsExists[0].valid_code
         : result.validRepresentativeCode;
 
-      if (otherCombinePackegeIsExists.length > 0 && bagDetail.bag.representativeIdTo) {
+      if (otherCombinePackegeIsExists.length > 0 && dataPackage.representative_id_to) {
         result.validRepresentativeCode = '';
         result.message = 'Tujuan resi ' + payload.bagNumber + ' tidak sama dengan tujuan gabung paket sebelumnya';
         return result;
@@ -303,12 +320,12 @@ export class BaggingSmdService {
       }
       baggingId = result.baggingId = baggingData.bagging_id;
       baggingCode = result.baggingCode = baggingData.bagging_code;
-      baggingData.total_weight = Number(bagDetail.weight) + Number(baggingData.total_weight);
+      baggingData.total_weight = Number(dataPackage.weight) + Number(baggingData.total_weight);
       baggingData.total_item = Number(baggingData.total_item) + 1;
 
       // handle jika representative id bagging berbeda dengan representative di bag
       // update representative id bagging jika berbeda
-      if (bagDetail.bag.representativeIdTo.toString() == representative_id_to || !bagDetail.bag.representativeIdTo) {
+      if (dataPackage.representative_id_to == representative_id_to || !dataPackage.representative_id_to) {
         await Bagging.update(baggingId, {
           totalWeight: baggingData.total_weight.toString(),
           totalItem: baggingData.total_item,
@@ -317,14 +334,14 @@ export class BaggingSmdService {
         await Bagging.update(baggingId, {
           totalWeight: baggingData.total_weight.toString(),
           totalItem: baggingData.total_item,
-          representativeIdTo: bagDetail.bag.representativeIdTo.toString(),
+          representativeIdTo: dataPackage.representative_id_to,
         }, {transaction: false});
       }
     }
 
     if (!payload.baggingId) {
       const baggingDate = await this.dateMinus1day(moment().toDate());
-      const maxBagSeq = await this.getMaxBaggingSeq(bagDetail.bag.representativeIdTo, baggingDate, permissionPayload.branchId);
+      const maxBagSeq = await this.getMaxBaggingSeq(dataPackage.representative_id_to, baggingDate, permissionPayload.branchId);
       const paramBaggingCode = await CustomCounterCode.baggingCodeRandomCounter(moment().toDate());
       // Redlock for race condition
       const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 10);
@@ -334,7 +351,7 @@ export class BaggingSmdService {
         createBagging.representativeIdTo = representative[0].representative_id;
         createBagging.branchId = permissionPayload.branchId.toString();
         createBagging.totalItem = 1;
-        createBagging.totalWeight = bagDetail.weight.toString();
+        createBagging.totalWeight = dataPackage.weight.toString();
         createBagging.baggingCode = paramBaggingCode;
         createBagging.baggingDate = baggingDate;
         createBagging.userIdCreated = authMeta.userId.toString();
@@ -367,7 +384,7 @@ export class BaggingSmdService {
     baggingItem.updatedTime = moment().toDate();
     BaggingItem.save(baggingItem, {transaction: false});
 
-    await BagItem.update(bagDetail.bagItemId, {
+    await BagItem.update(dataPackage.bag_item_id, {
       baggingIdLast: Number(baggingId),
     }, {transaction: false});
 
