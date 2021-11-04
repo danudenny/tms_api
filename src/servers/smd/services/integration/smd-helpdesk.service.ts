@@ -55,15 +55,15 @@ export class SmdHelpdeskService {
         result.message = 'representative_code not found';
         return result;
       }
-       
+
       // update new representative
       await BagRepresentative.update(
         { bagRepresentativeId: bagRepresentative[0].bag_representative_id },
         {
-            representativeIdTo: getRepresentative[0].representative_id.toString(),
-            userIdUpdated: authMeta.userId,
-          },
-        );
+          representativeIdTo: getRepresentative[0].representative_id.toString(),
+          userIdUpdated: authMeta.userId,
+        },
+      );
       // response success
       result.statusCode = HttpStatus.OK;
       result.message = 'update representative_code success';
