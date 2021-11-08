@@ -592,8 +592,7 @@ export class WebDeliveryInService {
     q.selectRaw(
       ['t1.bag_number', 'bagNumber'],
       [
-        `CASE LENGTH(t1.bag_number) WHEN 10 THEN t1.bag_number
-         ELSE CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0')) END`,
+        `SUBSTR(CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`,
         'bagNumberCode',
       ],
       ['t1.ref_representative_code', 'representativeCode'],

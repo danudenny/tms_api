@@ -1816,8 +1816,7 @@ export class WebDeliveryOutService {
 
     payload.fieldResolverMap[
       'bagNumber'
-    ] = `CASE LENGTH(t3.bag_number) WHEN 10 THEN t3.bag_number
-         ELSE CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0')) END`;
+    ] = `SUBSTR(CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`;
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -1832,11 +1831,8 @@ export class WebDeliveryOutService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      [
-        `CASE LENGTH(t3.bag_number) WHEN 10 THEN t3.bag_number
-         ELSE CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0')) END`,
-        'bagNumber',
-      ],
+      [`SUBSTR(CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`,
+        'bagNumber',],
       ['t1.created_time', 'createdTime'],
       ['COUNT (t4.*)', 'totalAwb'],
       ['t5.representative_code', 'representativeIdTo'],
