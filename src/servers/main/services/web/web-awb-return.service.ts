@@ -19,6 +19,7 @@ import { WebReturUpdateResponseVm } from '../../models/web-retur-update-list-res
 import { WebReturHistoryFindAllResponseVm } from '../../models/web-retur-history.response.vm';
 import { WebReturHistoryPayloadVm } from '../../models/web-retur-history-payload.vm';
 import { QueryBuilder, createQueryBuilder } from 'typeorm';
+import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
 
 export class WebAwbReturnService {
   static ExportHeaderReturnList = [
@@ -548,9 +549,9 @@ export class WebAwbReturnService {
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      response.writeHead(200, { 'Content-Type': 'text/csv' });
-      response.flushHeaders();
-      response.write(`${this.ExportHeaderReturnList.join(',')}\n`);
+      // response.writeHead(200, { 'Content-Type': 'text/csv' });
+      // response.flushHeaders();
+      // response.write(`${this.ExportHeaderReturnList.join(',')}\n`);
 
       payload.fieldResolverMap['awbReturnId'] = 't1.awb_return_id';
       payload.fieldResolverMap['originAwbId'] = 't1.origin_awb_id';
@@ -633,9 +634,9 @@ export class WebAwbReturnService {
       );
 
       // q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
-
-      await q.stream(response, this.streamTransformReturList);
-
+      // await q.stream(response, this.streamTransformReturList);
+      let data =  await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       throw err;
     }

@@ -1,20 +1,22 @@
-import { HttpStatus} from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { RepositoryService } from '../../../../../shared/services/repository.service';
 import { EmployeePenalty } from '../../../../../shared/orm-entity/employee-penalty';
-import { 
+import {
   PenaltyCategoryPayloadVm,
-  PenaltyCategoryFeePayloadVm, 
-  PenaltyCategoryListResponseVm, 
-  PenaltyCategoryFeeListResponseVm } from '../../../models/penalty-category.vm';
+  PenaltyCategoryFeePayloadVm,
+  PenaltyCategoryListResponseVm,
+  PenaltyCategoryFeeListResponseVm
+} from '../../../models/penalty-category.vm';
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 import moment = require('moment');
 import { PenaltyCategory } from '../../../../../shared/orm-entity/penalty_category';
 import { PenaltyCategoryFee } from '../../../../../shared/orm-entity/penalty-category-fee';
+import { CsvHelper } from '../../../../../shared/helpers/csv-helpers';
 
-export class PenaltyCategoryService{
-  constructor(){}
+export class PenaltyCategoryService {
+  constructor() { }
 
   static ExportHeaderCategory = [
     'Kategori',
@@ -112,24 +114,24 @@ export class PenaltyCategoryService{
 
   static async createPenaltyCategory(
     payload: PenaltyCategoryPayloadVm,
-  ): Promise<any>{
+  ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const result = {
-          status : 'ok',
-          message: 'Sukses membuat data',
-        };
+      status: 'ok',
+      message: 'Sukses membuat data',
+    };
     payload.penaltyCategoryTitle = payload.penaltyCategoryTitle.trim();
     const penaltyCategoryData = await PenaltyCategory.createQueryBuilder("penalty_category")
-    .where("LOWER(penalty_category.penalty_category_title) = LOWER(:penaltyCategoryTitle)", {penaltyCategoryTitle: payload.penaltyCategoryTitle})
-    .andWhere("penalty_category.is_deleted = FALSE")
-    .getMany();
+      .where("LOWER(penalty_category.penalty_category_title) = LOWER(:penaltyCategoryTitle)", { penaltyCategoryTitle: payload.penaltyCategoryTitle })
+      .andWhere("penalty_category.is_deleted = FALSE")
+      .getMany();
 
-    if(penaltyCategoryData.length>0){
+    if (penaltyCategoryData.length > 0) {
       RequestErrorService.throwObj(
         {
           message: `Data dengan kategori tersebut sudah ada sebelumnya`,
         },
-      HttpStatus.BAD_REQUEST,
+        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -149,31 +151,31 @@ export class PenaltyCategoryService{
     // }
 
     const setPenaltyCategory = await this.setPenaltyCategory(
-        payload,
-        authMeta.userId,
-        null
-      );
+      payload,
+      authMeta.userId,
+      null
+    );
     const savePenaltyCategoryData = await PenaltyCategory.save(setPenaltyCategory);
-    if(!savePenaltyCategoryData){
-        RequestErrorService.throwObj(
-          {
-            message: `Gagal membuat data kategori pinalty`,
-          },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+    if (!savePenaltyCategoryData) {
+      RequestErrorService.throwObj(
+        {
+          message: `Gagal membuat data kategori pinalty`,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     return result;
   }
 
   static async createPenaltyCategoryFee(
     payload: PenaltyCategoryFeePayloadVm,
-  ): Promise<any>{
+  ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const result = {
-          status : 'ok',
-          message: 'Sukses membuat data',
-        };
+      status: 'ok',
+      message: 'Sukses membuat data',
+    };
 
     const setPenaltyCategoryFee = await this.setPenaltyCategoryFee(
       payload,
@@ -182,13 +184,13 @@ export class PenaltyCategoryService{
     );
 
     const penaltyCategoryFeeDataExist = await PenaltyCategoryFee.find({
-      where:{
+      where: {
         penaltyCategoryId: setPenaltyCategoryFee.penaltyCategoryId,
         penaltyFee: setPenaltyCategoryFee.penaltyFee,
         isDeleted: false
       }
     });
-    if(penaltyCategoryFeeDataExist.length > 0){
+    if (penaltyCategoryFeeDataExist.length > 0) {
       RequestErrorService.throwObj(
         {
           message: `Data dengan kategori tersebut sudah ada sebelumnya`,
@@ -198,7 +200,7 @@ export class PenaltyCategoryService{
     }
 
     const penaltyCategoryFeeData = await PenaltyCategoryFee.save(setPenaltyCategoryFee);
-    if(!penaltyCategoryFeeData){
+    if (!penaltyCategoryFeeData) {
       RequestErrorService.throwObj(
         {
           message: `Gagal membuat data fee kategori pinalty`,
@@ -212,21 +214,21 @@ export class PenaltyCategoryService{
 
   static async editPenaltyCategory(
     payload: PenaltyCategoryPayloadVm,
-  ): Promise<any>{
+  ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const result = {
-          status : 'ok',
-          message: 'Sukses merubah data',
-        };
+      status: 'ok',
+      message: 'Sukses merubah data',
+    };
 
     const penaltyCategoryData = await PenaltyCategory.findOne({
-      where:{
+      where: {
         penaltyCategoryId: payload.penaltyCategoryId,
         isDeleted: false,
       }
     });
 
-    if(!penaltyCategoryData){
+    if (!penaltyCategoryData) {
       RequestErrorService.throwObj(
         {
           message: `tidak dapat menemukan data`,
@@ -250,7 +252,7 @@ export class PenaltyCategoryService{
       }
     );
 
-    if(!updatePenaltyCategoryData){
+    if (!updatePenaltyCategoryData) {
       RequestErrorService.throwObj(
         {
           message: `tidak dapat merubah data kategory pinalty`,
@@ -263,19 +265,19 @@ export class PenaltyCategoryService{
 
   static async editPenaltyCategoryFee(
     payload: PenaltyCategoryFeePayloadVm,
-  ): Promise<any>{
+  ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const result = {
-          status : 'ok',
-          message: 'Sukses merubah data',
-        };
+      status: 'ok',
+      message: 'Sukses merubah data',
+    };
     const penaltyCategoryFee = await PenaltyCategoryFee.findOne({
-      where:{
+      where: {
         penaltyCategoryFeeId: payload.penaltyCategoryFeeId,
         isDeleted: false
       }
     });
-    if(!penaltyCategoryFee){
+    if (!penaltyCategoryFee) {
       RequestErrorService.throwObj(
         {
           message: `tidak dapat menemukan data`,
@@ -298,7 +300,7 @@ export class PenaltyCategoryService{
         ...setPenaltyCategoryFee,
       }
     );
-    if(!penaltyCategoryFeeData){
+    if (!penaltyCategoryFeeData) {
       RequestErrorService.throwObj(
         {
           message: `tidak dapat merubah data fee kategory pinalty`,
@@ -310,21 +312,21 @@ export class PenaltyCategoryService{
 
   static async deletePenaltyCategory(
     penaltyCategoryId: string,
-    ): Promise<any>{
+  ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const result = {
-          status : 'ok',
-          message: 'Sukses menghapus data',
-        };
+      status: 'ok',
+      message: 'Sukses menghapus data',
+    };
 
     const penaltyCategoryData = await PenaltyCategory.findOne({
-      where:{
+      where: {
         penaltyCategoryId: penaltyCategoryId,
         isDeleted: false,
       }
     });
-    if(!penaltyCategoryData){
+    if (!penaltyCategoryData) {
       RequestErrorService.throwObj(
         {
           message: `tidak dapat menemukan data`,
@@ -338,12 +340,12 @@ export class PenaltyCategoryService{
         penaltyCategoryId: penaltyCategoryId,
       },
       {
-        isDeleted:true,
+        isDeleted: true,
         updatedTime: moment().toDate(),
         userIdUpdated: authMeta.userId,
       }
     );
-    if(!deleteCategoryData){
+    if (!deleteCategoryData) {
       RequestErrorService.throwObj(
         {
           message: `tidak dapat menghapus data`,
@@ -356,21 +358,21 @@ export class PenaltyCategoryService{
 
   static async deletePenaltyCategoryFee(
     penaltyCategoryFeeId: string,
-    ): Promise<any>{
+  ): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const result = {
-          status : 'ok',
-          message: 'Sukses menghapus data',
-        };
+      status: 'ok',
+      message: 'Sukses menghapus data',
+    };
 
     const penaltyCategoryFeeData = await PenaltyCategoryFee.findOne({
-      where:{
+      where: {
         penaltyCategoryFeeId: penaltyCategoryFeeId,
         isDeleted: false,
       }
     });
-    if(!penaltyCategoryFeeData){
+    if (!penaltyCategoryFeeData) {
       RequestErrorService.throwObj(
         {
           message: `tidak dapat menemukan data`,
@@ -384,12 +386,12 @@ export class PenaltyCategoryService{
         penaltyCategoryFeeId: penaltyCategoryFeeId,
       },
       {
-        isDeleted:true,
+        isDeleted: true,
         updatedTime: moment().toDate(),
         userIdUpdated: authMeta.userId,
       }
     );
-    if(!deleteCategoryFeeData){
+    if (!deleteCategoryFeeData) {
       RequestErrorService.throwObj(
         {
           message: `tidak dapat menghapus data`,
@@ -402,63 +404,63 @@ export class PenaltyCategoryService{
 
   private static async setPenaltyCategory(
     payload: PenaltyCategoryPayloadVm,
-    userId : number,
-    penaltyCategoryData : PenaltyCategory
-    ){
-      const penaltyCategory = new PenaltyCategory();
-      penaltyCategory.penaltyCategoryTitle = payload.penaltyCategoryTitle;
-      if(penaltyCategoryData){
-        penaltyCategory.userIdCreated = penaltyCategoryData.userIdCreated;
-        penaltyCategory.createdTime = penaltyCategoryData.createdTime;
-        penaltyCategory.userIdUpdated = userId;
-      }else{
-        penaltyCategory.userIdCreated = userId;
-        penaltyCategory.createdTime = moment().toDate();
-      }
-      penaltyCategory.updatedTime = moment().toDate();
-      penaltyCategory.penaltyCategoryProcess = '-';
-      penaltyCategory.isDeleted = false;
+    userId: number,
+    penaltyCategoryData: PenaltyCategory
+  ) {
+    const penaltyCategory = new PenaltyCategory();
+    penaltyCategory.penaltyCategoryTitle = payload.penaltyCategoryTitle;
+    if (penaltyCategoryData) {
+      penaltyCategory.userIdCreated = penaltyCategoryData.userIdCreated;
+      penaltyCategory.createdTime = penaltyCategoryData.createdTime;
+      penaltyCategory.userIdUpdated = userId;
+    } else {
+      penaltyCategory.userIdCreated = userId;
+      penaltyCategory.createdTime = moment().toDate();
+    }
+    penaltyCategory.updatedTime = moment().toDate();
+    penaltyCategory.penaltyCategoryProcess = '-';
+    penaltyCategory.isDeleted = false;
 
-      return penaltyCategory;
+    return penaltyCategory;
   }
 
   private static async setPenaltyCategoryFee(
     payload: PenaltyCategoryFeePayloadVm,
     userId: number,
     penaltyCategoryFeeData: PenaltyCategoryFee
-    ){
-      const penaltyCategoryFee = new PenaltyCategoryFee();
-      penaltyCategoryFee.penaltyFee = payload.penaltyFee;
-      if(penaltyCategoryFeeData){
-        penaltyCategoryFee.userIdCreated = penaltyCategoryFeeData.userIdCreated;
-        penaltyCategoryFee.createdTime = penaltyCategoryFeeData.createdTime;
-        penaltyCategoryFee.userIdUpdated = userId;
-      }else{
-        penaltyCategoryFee.userIdCreated = userId;
-        penaltyCategoryFee.createdTime = moment().toDate();
-      }
-      penaltyCategoryFee.penaltyCategoryId = payload.penaltyCategoryId;
-      penaltyCategoryFee.updatedTime = moment().toDate();
-      penaltyCategoryFee.isDeleted = false;
+  ) {
+    const penaltyCategoryFee = new PenaltyCategoryFee();
+    penaltyCategoryFee.penaltyFee = payload.penaltyFee;
+    if (penaltyCategoryFeeData) {
+      penaltyCategoryFee.userIdCreated = penaltyCategoryFeeData.userIdCreated;
+      penaltyCategoryFee.createdTime = penaltyCategoryFeeData.createdTime;
+      penaltyCategoryFee.userIdUpdated = userId;
+    } else {
+      penaltyCategoryFee.userIdCreated = userId;
+      penaltyCategoryFee.createdTime = moment().toDate();
+    }
+    penaltyCategoryFee.penaltyCategoryId = payload.penaltyCategoryId;
+    penaltyCategoryFee.updatedTime = moment().toDate();
+    penaltyCategoryFee.isDeleted = false;
 
-      return penaltyCategoryFee;
+    return penaltyCategoryFee;
   }
 
   private static strReplaceFunc = str => {
     return str
       ? str
-          .replace(/\n/g, ' ')
-          .replace(/\r/g, ' ')
-          .replace(/;/g, '|')
-          .replace(/,/g, '.')
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, ' ')
+        .replace(/;/g, '|')
+        .replace(/,/g, '.')
       : null;
   }
 
-  private static currencyConverter =  price => {
+  private static currencyConverter = price => {
     const totalPenalty = price.slice(0, -3);
     const format = totalPenalty.toString().split('').reverse().join('');
     const convert = format.match(/\d{1,3}/g);
-    return 'Rp. '+ convert.join('.').split('').reverse().join('')
+    return 'Rp. ' + convert.join('.').split('').reverse().join('')
   }
 
   private static streamTransformPenaltyCategory(d) {
@@ -467,7 +469,7 @@ export class PenaltyCategoryService{
       `${d.createdUserName} - ${d.createdFirstName}`,
       d.createdTime ? moment(d.createdTime).format('YYYY-MM-DD') : null,
       d.updatedUserName ? `${d.updatedUserName} - ${d.updatedFirstName}` : '-',
-      d.updatedUserName ?  moment(d.updatedTime).format('YYYY-MM-DD') : '-',
+      d.updatedUserName ? moment(d.updatedTime).format('YYYY-MM-DD') : '-',
     ];
     return `${values.join(',')} \n`;
   }
@@ -479,12 +481,12 @@ export class PenaltyCategoryService{
       `${d.createdUserName} - ${d.createdFirstName}`,
       d.createdTime ? moment(d.createdTime).format('YYYY-MM-DD') : null,
       d.updatedUserName ? `${d.updatedUserName} - ${d.updatedFirstName}` : '-',
-      d.updatedUserName ?  moment(d.updatedTime).format('YYYY-MM-DD') : '-',
+      d.updatedUserName ? moment(d.updatedTime).format('YYYY-MM-DD') : '-',
     ];
     return `${values.join(',')} \n`;
   }
 
-  static async exportPenaltyCategory (payload: BaseMetaPayloadVm, response){
+  static async exportPenaltyCategory(payload: BaseMetaPayloadVm, response) {
     try {
       const fileName = `POD_penalty_category${new Date().getTime()}.csv`;
 
@@ -492,30 +494,25 @@ export class PenaltyCategoryService{
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      response.writeHead(200, { 'Content-Type': 'text/csv' });
-      response.flushHeaders();
-      response.write(`${this.ExportHeaderCategory.join(',')}\n`);
 
       payload.globalSearchFields = [
-      {
-        field: 'penaltyCategoryTitle',
-      },
-      {
-        field: 'penaltyCategoryProcess',
-      },
-    ];
+        {
+          field: 'penaltyCategoryTitle',
+        },
+        {
+          field: 'penaltyCategoryProcess',
+        },
+      ];
 
       const q = RepositoryService.penaltyCategory.findAllRaw();
       payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
-        ['penalty_category.penalty_category_title', 'penaltyCategoryTitle'],
-        ['usercreated.first_name', 'createdFirstName'],
-        ['usercreated.username', 'createdUserName'],
-        ['penalty_category.created_time', 'createdTime'],
-        ['userupdated.first_name', 'updatedFirstName'],
-        ['userupdated.username', 'updatedUserName'],
-        ['penalty_category.updated_time', 'updatedTime'],
+        ['penalty_category.penalty_category_title', 'Kategori'],
+        ['CONCAT(usercreated.username, \' - \', usercreated.first_name)', 'User Created'],
+        ['TO_CHAR(penalty_category.created_time,\'YYYY-MM-DD\')', 'Date Created'],
+        ['CONCAT(userupdated.username, \' - \', userupdated.first_name)', 'User Updated'],
+        ['TO_CHAR(penalty_category.updated_time,\'YYYY-MM-DD\')', 'Date Modified'],
       );
 
       q.innerJoin(e => e.userCreated, 'usercreated', j =>
@@ -528,14 +525,14 @@ export class PenaltyCategoryService{
 
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-      await q.stream(response, this.streamTransformPenaltyCategory);
-
+      let data = await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       throw err;
     }
   }
 
-  static async exportPenaltyCategoryFee (payload: BaseMetaPayloadVm, response){
+  static async exportPenaltyCategoryFee(payload: BaseMetaPayloadVm, response) {
     try {
       const fileName = `POD_penalty_category_fee${new Date().getTime()}.csv`;
 
@@ -545,32 +542,29 @@ export class PenaltyCategoryService{
       );
       response.writeHead(200, { 'Content-Type': 'text/csv' });
       response.flushHeaders();
-      response.write(`${this.ExportHeaderCategoryFee.join(',')}\n`);
 
       payload.globalSearchFields = [
-      {
-        field: 'penaltyCategoryTitle',
-      },
-      {
-        field: 'penaltyCategoryProcess',
-      },
-      {
-        field: 'penaltyFee',
-      },
-    ];
+        {
+          field: 'penaltyCategoryTitle',
+        },
+        {
+          field: 'penaltyCategoryProcess',
+        },
+        {
+          field: 'penaltyFee',
+        },
+      ];
 
       const q = RepositoryService.penaltyCategoryFee.findAllRaw();
       payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
-        ['penalty_category.penalty_category_title', 'penaltyCategoryTitle'],
-        ['penalty_category_fee.penalty_fee', 'penaltyFee'],
-        ['usercreated.first_name', 'createdFirstName'],
-        ['usercreated.username', 'createdUserName'],
-        ['penalty_category_fee.created_time', 'createdTime'],
-        ['userupdated.first_name', 'updatedFirstName'],
-        ['userupdated.username', 'updatedUserName'],
-        ['penalty_category_fee.updated_time', 'updatedTime'],
+        ['penalty_category.penalty_category_title', 'Kategori'],
+        ['penalty_category_fee.penalty_fee', 'Denda'],
+        ['CONCAT(usercreated.username, \' - \', usercreated.first_name)', 'User Created'],
+        ['TO_CHAR(penalty_category.created_time,\'YYYY-MM-DD\')', 'Date Created'],
+        ['CONCAT(userupdated.username, \' - \', userupdated.first_name)', 'User Updated'],
+        ['TO_CHAR(penalty_category.updated_time,\'YYYY-MM-DD\')', 'Date Modified'],
       );
 
       q.innerJoin(e => e.createdUser, 'usercreated', j =>
@@ -587,7 +581,9 @@ export class PenaltyCategoryService{
 
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-      await q.stream(response, this.streamTransformPenaltyCategoryFee);
+      // await q.stream(response, this.streamTransformPenaltyCategoryFee);
+      let data = await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
 
     } catch (err) {
       throw err;

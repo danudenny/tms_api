@@ -1302,7 +1302,8 @@ export class WebDeliveryInService {
     const podScanInBranch = await PodScanInBranch.findOne({
       where: {
         podScanInBranchId: payload.podScanInBranchId,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     });
 
@@ -1324,7 +1325,8 @@ export class WebDeliveryInService {
       where: {
         branchId: permissonPayload.branchId,
         transactionStatusId: 600,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     });
 

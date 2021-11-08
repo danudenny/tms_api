@@ -127,6 +127,8 @@ export class FirstMileDeliveryOutService {
     const branchData = await Branch.findOne({
       where: {
         branchId: payload.branchIdTo,
+        isDeleted : false,
+        isActive : true
       },
     });
 
