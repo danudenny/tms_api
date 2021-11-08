@@ -83,11 +83,11 @@ export abstract class DatabaseConfig {
   public static getMasterDataDbPool() {
     if (!this.masterDataDbPool) {
       this.masterDataDbPool = new Pool({
-        host: 'pgpool-masterdata-production-d88d683651d8fb83.elb.ap-southeast-1.amazonaws.com',
+        host: 'pgpool-masterdata-staging-f2fb677d6129b4e5.elb.ap-southeast-1.amazonaws.com',
         port: 5432,
         database: 'sicepatmasterdata',
         user: 'pgpoolmasterdata',
-        password: 'WBNwvjLxZUTzBifp6XVK',
+        password: 'ODaOfxF3phfosjZcK340',
         max: 20,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 30000,
