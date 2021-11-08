@@ -682,6 +682,7 @@ export class V1PackageService {
             500,
             permissonPayload.branchId,
             authMeta.userId,
+            -1,
           );
 
           BagItemHistoryQueueService.addData(
