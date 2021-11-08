@@ -227,7 +227,7 @@ export class ScaninSmdService {
               bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
               branchIdLast: permissonPayload.branchId,
               bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
-              updatedTime: timeNow,
+              updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
             },
           );
@@ -456,7 +456,7 @@ export class ScaninSmdService {
               bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
               branchIdLast: permissonPayload.branchId,
               bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
-              updatedTime: timeNow,
+              updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
             },
           );

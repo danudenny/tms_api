@@ -101,7 +101,7 @@ export class BagScanVendorQueueService {
               branchIdLast: data.branchId,
               bagItemHistoryId: Number(resultbagItemOutHistory.bagItemHistoryId),
               userIdUpdated: data.userId,
-              updatedTime: moment().toDate(),
+              updatedTime: moment().add(1, 'minutes').toDate(),
             },
           );
         }
