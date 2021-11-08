@@ -1288,6 +1288,8 @@ export class ScanoutSmdService {
                   bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
                   branchIdLast: permissonPayload.branchId,
                   bagItemHistoryId: Number(bagItemHistoryId),
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
                 },
               );
               // Generate history bag and its awb IN_HUB
