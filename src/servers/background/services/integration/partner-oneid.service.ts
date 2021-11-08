@@ -217,7 +217,7 @@ export class PartnerOneidService {
           skip: offsetValue,
         });
 
-        awbref.push(...getSenderPhone.map(el => el.refAwbNumber))
+        awbref.push(...getSenderPhone.map(el => el.refAwbNumber));
 
         filter.awb_number = awbref;
         pushquery = `AND a.awb_number IN (:...awb_number)`
