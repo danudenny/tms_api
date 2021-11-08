@@ -258,7 +258,7 @@ export class PartnerOneidService {
        no.totalbiaya
         FROM awb a 
         INNER JOIN package_type p  ON p.package_type_id = a.package_type_id
-        INNER JOIN awb_status aws  ON aws.awb_status_id = a.awb_status_id_last
+        LEFT JOIN awb_status aws  ON aws.awb_status_id = a.awb_status_id_last
         INNER JOIN pickup_request_detail prd  ON prd.ref_awb_number = a.awb_number
         LEFT JOIN partner pa ON pa.customer_account_id = a.customer_account_id AND pa.is_deleted=false
         LEFT JOIN temp_stt no ON no.nostt = a.awb_number AND pa.is_deleted=false
