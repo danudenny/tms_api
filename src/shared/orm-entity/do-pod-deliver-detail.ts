@@ -96,6 +96,12 @@ export class DoPodDeliverDetail extends TmsBaseEntity {
   })
   awbId: number | null;
 
+  @Column('date', {
+    nullable: false,
+    name: 'awb_status_date_last',
+  })
+  awbStatusDateLast: Date;
+
   @ManyToOne(() => DoPodDeliver)
   @JoinColumn({ name: 'do_pod_deliver_id' })
   doPodDeliver: DoPodDeliver;

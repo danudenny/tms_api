@@ -57,10 +57,6 @@ module.exports = {
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
-  sentry: {
-    dsn:
-      'https://cd146c2621d24fc5b937d3ec598328da@o392502.ingest.sentry.io/5245618',
-  },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',
@@ -108,6 +104,9 @@ module.exports = {
     smdRoleId: 117,
     palkurRoleId: [40, 41],
     korwilHrdRoleId: 154,
+  },
+  retur: {
+    returnRoleId: [15],
   },
   masterData: {
     apiKey:

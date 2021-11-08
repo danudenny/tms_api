@@ -695,24 +695,24 @@ export class DoPodDetailPostMetaQueueService {
       } else {
         // Problem with data note
         if (awbStatus.note) {
-          noteBody = awbStatus.note;
-        } else {
-          // Problem without data note
-          const branch = await SharedService.getDataBranchCity(
-            branchId,
-          );
-          const branchName = branch ? branch.branchName : 'Kantor Pusat';
-          const cityName = branch && branch.district
-            ? branch.district.city.cityName
-            : 'Jakarta';
-
-          noteBody = SharedService.stringInject(stringNote, [
-            cityName,
-            branchName,
-            awbStatus.awbStatusName,
-            awbStatus.awbStatusTitle,
-          ]);
+          stringNote = awbStatus.note;
         }
+        // Problem without data note
+        const branch = await SharedService.getDataBranchCity(
+          branchId,
+        );
+        const branchName = branch ? branch.branchName : 'Kantor Pusat';
+        const cityName = branch && branch.district
+          ? branch.district.city.cityName
+          : 'Jakarta';
+
+        noteBody = SharedService.stringInject(stringNote, [
+          cityName,
+          branchName,
+          awbStatus.awbStatusName,
+          awbStatus.awbStatusTitle,
+        ]);
+        
       }
 
       // provide data
@@ -959,6 +959,34 @@ export class DoPodDetailPostMetaQueueService {
       userIdUpdated: userId,
       createdTime: dateNow,
       updatedTime: dateNow,
+      notePublic,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
+    // NOTE: ONLY awb status ANT(retur awb)
+  public static async createJobByAwbReturn(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    employeeIdDriver: number,
+    employeeName: string,
+  ) {
+    const noteInternal = `Paket Retur dibawa [SIGESIT - ${employeeName}]`;
+    const notePublic = `Paket Retur dibawa [SIGESIT - ${employeeName}]`;
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      employeeIdDriver,
+      timestamp: moment().toDate(),
+      noteInternal,
       notePublic,
     };
     return DoPodDetailPostMetaQueueService.queue.add(obj);

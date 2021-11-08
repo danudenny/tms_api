@@ -19,6 +19,7 @@ import { WebReturUpdateResponseVm } from '../../models/web-retur-update-list-res
 import { WebReturHistoryFindAllResponseVm } from '../../models/web-retur-history.response.vm';
 import { WebReturHistoryPayloadVm } from '../../models/web-retur-history-payload.vm';
 import { QueryBuilder, createQueryBuilder } from 'typeorm';
+import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
 
 export class WebAwbReturnService {
   static ExportHeaderReturnList = [
@@ -389,6 +390,7 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['branchIdTo'] = 't1.branch_id';
     payload.fieldResolverMap['branchTo'] = 't3.branch_name';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
     payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
     payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
@@ -400,7 +402,7 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
     payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
     if (payload.sortBy === '') {
-      payload.sortBy = 'createdTime';
+      payload.sortBy = 'updatedTime';
     }
 
     // mapping search field and operator default ilike
@@ -427,6 +429,7 @@ export class WebAwbReturnService {
       ['t1.return_awb_number', 'returnAwbNumber'],
       ['t1.branch_id', 'branchIdTo'],
       ['t1.created_time', 'createdTime'],
+      ['t1.updated_time', 'updatedTime'],
       ['t3.branch_name', 'branchTo'],
       ['t2.awb_status_name', 'awbStatus'],
       ['t2.awb_status_id', 'awbStatusId'],
@@ -546,9 +549,9 @@ export class WebAwbReturnService {
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      response.writeHead(200, { 'Content-Type': 'text/csv' });
-      response.flushHeaders();
-      response.write(`${this.ExportHeaderReturnList.join(',')}\n`);
+      // response.writeHead(200, { 'Content-Type': 'text/csv' });
+      // response.flushHeaders();
+      // response.write(`${this.ExportHeaderReturnList.join(',')}\n`);
 
       payload.fieldResolverMap['awbReturnId'] = 't1.awb_return_id';
       payload.fieldResolverMap['originAwbId'] = 't1.origin_awb_id';
@@ -631,9 +634,9 @@ export class WebAwbReturnService {
       );
 
       // q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
-
-      await q.stream(response, this.streamTransformReturList);
-
+      // await q.stream(response, this.streamTransformReturList);
+      let data =  await q.exec();
+      await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       throw err;
     }

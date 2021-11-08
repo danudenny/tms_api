@@ -167,7 +167,6 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
-  @Transactional()
   public async scanOutAwbDeliver(@Body() payload: WebScanOutAwbVm) {
     // Antar (Sigesit)
     return LastMileDeliveryOutService.scanOutAwbDeliver(payload);
@@ -178,7 +177,6 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
-  @Transactional()
   public async scanOutAwbDeliverPartner(@Body() payload: WebScanOutAwbVm) {
     return LastMileDeliveryOutService.scanOutAwbDeliverPartner(payload);
   }
@@ -188,7 +186,6 @@ export class WebDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebScanOutBagResponseVm })
-  @Transactional()
   public async findAllBag(@Body() payload: WebScanOutBagVm) {
     // TODO: open bag and loop awb for update awb history
     return await this.webDeliveryOutService.scanOutBag(payload);

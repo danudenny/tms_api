@@ -69,6 +69,8 @@ import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
 import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller';
 import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
+import { WebDoPodReturnController } from './web/web-do-pod-return.controller';
+import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -143,6 +145,8 @@ import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
     EmployeePenalty,
     MobileDeviceInfoController,
     V1WebAwbHandoverController,
+    WebDoPodReturnController,
+    MobileDoPodReturnController,
   ],
 })
 export class MainServerControllersModule {}

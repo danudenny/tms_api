@@ -9,7 +9,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import { MobileSmdListVm, MobileSmdListDetailBagVm, MobileSmdListDetailBaggingVm } from '../../models/mobile-smd-list.response.vm';
-import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm, MobileUploadImagePayloadVm, MobileSmdProblemPayloadVm, MobileSmdContinuePayloadVm, MobileSmdHandOverPayloadVm, HandoverImagePayloadVm, MobileSmdEndManuallPayloadVm } from '../../models/mobile-smd.payload.vm';
+import { MobileSmdListDetailPayloadVm, MobileSmdDeparturePayloadVm, MobileSmdArrivalPayloadVm, MobileUploadImagePayloadVm, MobileSmdProblemPayloadVm, MobileSmdContinuePayloadVm, MobileSmdHandOverPayloadVm, HandoverImagePayloadVm, MobileSmdEndManuallPayloadVm, UnfinishedSmdPayloadVm } from '../../models/mobile-smd.payload.vm';
 import { MobileSmdService } from '../../services/integration/mobile-smd.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileUploadImageResponseVm } from '../../models/mobile-smd.response.vm';
@@ -101,11 +101,18 @@ export class MobileSmdController {
 
   @Post('smd/end-manual')
   @Transactional()
-  // @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  @ApiImplicitHeader({ name: 'x-api-key' })
-  @UseGuards(AuthXAPIKeyGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanInEndManualMobile(@Req() request: any, @Body() payload: MobileSmdEndManuallPayloadVm) {
     return MobileSmdService.scanInEndManualMobile(payload);
+  }
+
+  @Post('smd/unfinished-smd')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  @ApiBearerAuth()
+  public async unfinishedSmd(@Req() request: any, @Body() payload: UnfinishedSmdPayloadVm) {
+    return MobileSmdService.unfinishedSmd(payload);
   }
 
 }

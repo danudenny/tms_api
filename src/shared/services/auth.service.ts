@@ -178,6 +178,7 @@ export class AuthService {
   ): Promise<PermissionAccessResponseVM> {
     const authMeta = AuthService.getAuthMetadata();
     const configKorwil = ConfigService.get('korwil');
+    const configRetur = ConfigService.get('retur');
 
     if (authMeta) {
       const user = await RepositoryService.user
@@ -200,7 +201,8 @@ export class AuthService {
         // cache: true,
         where: {
           branchId,
-          isDeleted: false,
+          isDeleted : false,
+          isActive : true
         },
       });
 
@@ -222,6 +224,7 @@ export class AuthService {
       result.isKorwil = false;
       result.isPalkur = false;
       result.isSmd = false;
+      result.isSigesitReturn = false;
 
       // Role Id Korwil (38, 155), role Id palkur (40, 41), korwil HRD 154
       if (configKorwil.korwilRoleId.includes(Number(roleId)) || roleId == configKorwil.korwilHrdRoleId) {
@@ -231,6 +234,10 @@ export class AuthService {
       }
       if (roleId == configKorwil.smdRoleId) {
         result.isSmd = true;
+      }
+
+      if (configRetur.returnRoleId.includes(Number(roleId))) {
+        result.isSigesitReturn = true;
       }
       // Populate return value
       result.userId = authMeta.userId;

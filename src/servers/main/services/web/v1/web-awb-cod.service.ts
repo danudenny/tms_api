@@ -482,7 +482,10 @@ export class V1WebAwbCodService {
 
     q.innerJoin(e => e.awbItemAttr, 't2', j => {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
-      j.andWhere(e => e.transactionStatusId, w => w.isNull());
+      j.andWhere(
+        e => e.transactionStatusId,
+        w => w.equals(TRANSACTION_STATUS.DEFAULT),
+      );
       j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     });
 
@@ -628,7 +631,10 @@ export class V1WebAwbCodService {
       //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.transactionStatusId, w => w.isNull());
+    q.andWhere(
+      e => e.transactionStatusId,
+      w => w.equals(TRANSACTION_STATUS.DEFAULT),
+    );
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
     q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
@@ -753,7 +759,10 @@ export class V1WebAwbCodService {
     }
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.transactionStatusId, w => w.isNull());
+    q.andWhere(
+      e => e.transactionStatusId,
+      w => w.equals(TRANSACTION_STATUS.DEFAULT),
+    );
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
     q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
@@ -1075,7 +1084,7 @@ export class V1WebAwbCodService {
               awbItemId: transactionDetail.awbItemId,
             },
             {
-              transactionStatusId: null,
+              transactionStatusId: TRANSACTION_STATUS.DEFAULT,
             },
           );
 
@@ -1414,7 +1423,7 @@ export class V1WebAwbCodService {
                 awbItemId: transactionDetail.awbItemId,
               },
               {
-                transactionStatusId: null,
+                transactionStatusId: TRANSACTION_STATUS.DEFAULT,
               },
             );
 
@@ -1763,7 +1772,7 @@ export class V1WebAwbCodService {
         .getOne();
 
       if (
-        (type === 'cash' && awbValid && !awbValid.transactionStatusId) ||
+        (type === 'cash' && awbValid) ||
         (type === 'cashless' && awbValid)
       ) {
         return true;
@@ -1798,7 +1807,8 @@ export class V1WebAwbCodService {
       select: ['branchId', 'branchName'],
       where: {
         branchId,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     });
 

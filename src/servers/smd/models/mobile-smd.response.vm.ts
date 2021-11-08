@@ -138,3 +138,19 @@ export class ScanOutEndManualVm {
   departure_date_time: Date;
 
 }
+
+export class UnfinishedSmdResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [DoSmdCode]})
+  data: DoSmdCode[];
+}
+
+export class DoSmdCode {
+  @ApiModelProperty()
+  do_smd_code: string;
+}

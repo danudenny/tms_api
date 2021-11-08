@@ -153,45 +153,61 @@ export class V2MobileInitDataService {
       ['awb_status_id', 'awbStatusId'],
       ['awb_status_name', 'awbStatusCode'],
       ['awb_status_title', 'awbStatusName'],
+      ['is_problem', 'isProblem'],
+      ['is_return', 'isReturn'],
       ['is_deleted', 'isDeleted'],
     );
-    q.andWhere(e => e.isProblem, w => w.isTrue());
+
     q.andWhere(e => e.isMobile, w => w.isTrue());
-    if (fromDate) {
-      q.andWhereIsolated(qw => {
-        qw.where(
-          e => e.updatedTime,
-          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-        );
-        qw.orWhere(
-          e => e.createdTime,
-          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-        );
-      });
+    // if (fromDate) {
+    //   q.andWhereIsolated(qw => {
+    //     qw.where(
+    //       e => e.updatedTime,
+    //       w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+    //     );
+    //     qw.orWhere(
+    //       e => e.createdTime,
+    //       w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+    //     );
+    //   });
+    // }
+
+    if (Number(permissonPayload.roleId) == 15){
+      q.andWhere(e => e.isReturn, w => w.isTrue());
+      q.andWhere(e => e.awbStatusId, w => w.in([AWB_STATUS.RTS, AWB_STATUS.UNRTS]));
+      return await q.exec();
     }
 
-    const result = await q.exec();
+    q.andWhere(e => e.isReturn, w => w.isFalse());
+    q.andWhere(e => e.isProblem, w => w.isTrue());
 
-    // NOTE: add status RTC if role Ops - Sigesit Transit
-    if (Number(permissonPayload.roleId) == 50) {
-      const statusRTC = await repository
-        .findAllRaw()
-        .selectRaw(
-          ['awb_status_id', 'awbStatusId'],
-          ['awb_status_name', 'awbStatusCode'],
-          ['awb_status_title', 'awbStatusName'],
-          ['is_deleted', 'isDeleted'],
-        )
-        .andWhere(e => e.awbStatusId, w => w.equals(AWB_STATUS.RTC))
-        .take(1)
-        .exec();
-
-      if (statusRTC.length) {
-        result.push(statusRTC[0]);
-      }
+    if (Number(permissonPayload.roleId) == 50){
+      return await q.exec();
     }
 
-    return result;
+    q.andWhere(e => e.awbStatusId, w => w.notIn([AWB_STATUS.RTC, AWB_STATUS.HOLD_WAITING_CUSTOMER]));
+    return await q.exec();
+
+    // // NOTE: add status RTC if role Ops - Sigesit Transit
+    // if (Number(permissonPayload.roleId) == 50) {
+    //   const statusRTC = await repository
+    //     .findAllRaw()
+    //     .selectRaw(
+    //       ['awb_status_id', 'awbStatusId'],
+    //       ['awb_status_name', 'awbStatusCode'],
+    //       ['awb_status_title', 'awbStatusName'],
+    //       ['is_deleted', 'isDeleted'],
+    //     )
+    //     .andWhere(e => e.awbStatusId, w => w.equals(AWB_STATUS.RTC))
+    //     .take(1)
+    //     .exec();
+
+    //   if (statusRTC.length) {
+    //     result.push(statusRTC[0]);
+    //   }
+    // }
+
+    // return result;
   }
 
   private static async getDelivery(fromDate?: string) {
@@ -278,16 +294,15 @@ export class V2MobileInitDataService {
       'employee',
       'employee.employee_id = users.employee_id',
     );
-
-    qb.leftJoin(
-      'package_type',
-      'package_type',
-      'package_type.package_type_id = awb.package_type_id',
-    );
     qb.leftJoin(
       'pickup_request_detail',
       'pickup_request_detail',
       'pickup_request_detail.awb_item_id = do_pod_deliver_detail.awb_item_id',
+    );
+    qb.leftJoin(
+      'package_type',
+      'package_type',
+      'package_type.package_type_id = awb.package_type_id',
     );
     qb.leftJoin(
       'reason',

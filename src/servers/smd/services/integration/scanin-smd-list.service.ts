@@ -104,6 +104,7 @@ export class ScaninSmdListService {
       'dsd.do_smd_status_id_last = dss.do_smd_status_id and dss.is_deleted = false',
     );
     q.andWhereRaw('ds.is_vendor = false');
+    q.andWhereRaw('ds.is_empty = false');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();

@@ -14,6 +14,7 @@ import { AwbPartnerLog } from '../../../../shared/orm-entity/awb-partner-log';
 import { Partner } from '../../../../shared/orm-entity/partner';
 import { PartnerSummary } from '../../../../shared/orm-entity/partner-summary';
 import { GlobalVar } from '../../../../shared/orm-entity/global-var';
+import { PickupRequest } from '../../../../shared/orm-entity/pickup-request';
 
 @Injectable()
 export class PartnerService {
@@ -583,6 +584,12 @@ export class PartnerService {
             );
 
             await PickupRequestDetail.update(pickupRequestDetailId, {
+              workOrderIdLast: workOrder.raw[0].work_order_id,
+              userIdUpdated: 1,
+              updatedTime: timeNow,
+            });
+
+            await PickupRequest.update(pickupRequestId, {
               workOrderIdLast: workOrder.raw[0].work_order_id,
               userIdUpdated: 1,
               updatedTime: timeNow,

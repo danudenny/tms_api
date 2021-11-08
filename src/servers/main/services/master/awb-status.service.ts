@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
 
-import { AwbStatusFindAllResponseVm, AwbStatusNonDeliveFindAllResponseVm } from '../../models/awb-status.vm';
+import {
+  AwbStatusFindAllResponseVm,
+  AwbStatusNonDeliveFindAllResponseVm,
+} from '../../models/awb-status.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { RepositoryService } from '../../../../shared/services/repository.service';
-import { RolePodManualStatus } from '../../../../shared/orm-entity/role-pod-manual-status';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { AwbService } from '../v1/awb.service';
 
 @Injectable()
 export class AwbStatusService {
@@ -69,8 +74,10 @@ export class AwbStatusService {
       ['t1.awb_status_title', 'awbStatusTitle'],
       ['t1.is_problem', 'isProblem'],
       ['t1.is_final_status', 'isFinalStatus'],
-      );
-    q.innerJoin(e => e.awbStatus, 't1', j => j.andWhere(e => e.isDeleted, w => w.isFalse()));
+    );
+    q.innerJoin(e => e.awbStatus, 't1', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
@@ -79,5 +86,40 @@ export class AwbStatusService {
     result.buildPaging(payload.page, payload.limit, total);
     result.data = data;
     return result;
+  }
+
+  static async checkValidAwbStatusIdLast(
+    awbItemAttr: AwbItemAttr,
+    optionalInBranch?: Boolean,
+    optionalManifested?: Boolean,
+  ) {
+    let message = null;
+    const isValid = false;
+    if (awbItemAttr.awbStatusIdLast) {
+      if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
+        return { isValid, message };
+      }
+      if (AWB_STATUS.DLV == awbItemAttr.awbStatusIdLast) {
+        message = `Resi ${awbItemAttr.awbNumber} sudah deliv`;
+        return { isValid, message };
+      }
+      if (
+        !optionalInBranch &&
+        AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast
+      ) {
+        message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
+        return { isValid, message };
+      }
+      if (await AwbService.isCancelDelivery(awbItemAttr.awbItemId)) {
+        message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
+        return { isValid, message };
+      }
+      if (!optionalManifested && !await AwbService.isManifested(awbItemAttr.awbNumber, awbItemAttr.awbItemId)) {
+        message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
+        return { isValid, message };
+      }
+    }
+    return { isValid: true, message };
   }
 }

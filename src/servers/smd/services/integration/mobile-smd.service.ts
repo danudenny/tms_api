@@ -31,7 +31,7 @@ import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import { createQueryBuilder, In, Not } from 'typeorm';
-import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm, ScanOutSmdEndManualResponseVm } from '../../models/mobile-smd.response.vm';
+import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm, ScanOutSmdEndManualResponseVm, UnfinishedSmdResponseVm } from '../../models/mobile-smd.response.vm';
 import { MobileUploadImagePayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
@@ -1136,6 +1136,7 @@ export class MobileSmdService {
   static async scanInEndManualMobile(payload: any): Promise<any> {
     const result = new ScanOutSmdEndManualResponseVm();
     const timeNow = moment().toDate();
+    const authMeta = AuthService.getAuthData();
 
     const resultDoSmd = await DoSmd.findOne({
       where: {
@@ -1150,7 +1151,7 @@ export class MobileSmdService {
         { doSmdId : resultDoSmd.doSmdId },
         {
           doSmdStatusIdLast: 6000,
-          userIdUpdated: 1,
+          userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
       );
@@ -1159,10 +1160,10 @@ export class MobileSmdService {
         { doSmdId : resultDoSmd.doSmdId },
         {
           doSmdStatusIdLast: 6000,
-          departureTime: moment().toDate(),
+          arrivalTime: moment().toDate(),
           // latitudeArrival: payload.latitude,
           // longitudeArrival: payload.longitude,
-          userIdUpdated: 1,
+          userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
       );
@@ -1179,13 +1180,13 @@ export class MobileSmdService {
         null,
         null,
         null,
-        1,
+        authMeta.userId,
       );
       const data = [];
       data.push({
         do_smd_id: resultDoSmd.doSmdId,
         do_smd_code: resultDoSmd.doSmdCode,
-        departure_date_time: moment().toDate(),
+        arrival_date_time: moment().toDate(),
       });
       result.statusCode = HttpStatus.OK;
       result.message = 'SMD Success End Manual';
@@ -1257,6 +1258,67 @@ export class MobileSmdService {
     return doSmdVehicleAttachment.identifiers.length
       ? doSmdVehicleAttachment.identifiers[0].doSmdVehicleAttachmentId
       : null;
+  }
+
+  static async unfinishedSmd(payload: any): Promise<any> {
+    const employeeRawQuery = `
+      SELECT * 
+      FROM employee 
+      WHERE 
+        nik IN ('${payload.nik}');
+    `;
+    const resultDataEmployee = await RawQueryService.query(employeeRawQuery);
+
+    if (!resultDataEmployee.length) {
+      throw new BadRequestException(`Can't Find Employee NIK : ` + payload.nik);
+    }
+
+    let resultDataDoSmd = [];
+
+    await Promise.all(
+      resultDataEmployee.map(async (employee: any) => {
+        const doSmdVehicleRawQuery = `
+          SELECT
+            dsv.employee_id_driver,
+            ds.do_smd_status_id_last,
+            ds.do_smd_id,
+            ds.branch_id
+          FROM
+            do_smd_vehicle dsv
+            INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last
+            AND ds.is_deleted = FALSE
+            AND ds.do_smd_status_id_last <> 6000
+            AND ds.is_empty = FALSE
+          WHERE
+            dsv.employee_id_driver IN ('${employee.employee_id}')
+            AND dsv.is_deleted = FALSE;
+        `;
+        const resultDataDoSmdVehicle = await RawQueryService.query(doSmdVehicleRawQuery);
+
+        if (!resultDataDoSmdVehicle.length) {
+          return false;
+        }
+
+        await Promise.all(
+          resultDataDoSmdVehicle.map(async(doSmd: any) => {
+            const doSmdRawQuery = `
+              SELECT * FROM do_smd WHERE do_smd_id IN ('${doSmd.do_smd_id}') AND is_deleted = false;
+            `;
+            const doSmdResult = await RawQueryService.query(doSmdRawQuery);
+
+            resultDataDoSmd = resultDataDoSmd.concat(doSmdResult);
+          }),
+        );
+      }),
+    );
+
+    const result = new UnfinishedSmdResponseVm();
+
+    result.statusCode = HttpStatus.OK;
+    result.message = 'SMD Available';
+    result.data = resultDataDoSmd;
+
+    return result;
   }
 
 }

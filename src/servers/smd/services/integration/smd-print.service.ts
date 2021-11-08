@@ -569,6 +569,119 @@ export class SmdPrintService {
     );
   }
 
+  public static async printDoSmdEmptyByRequest(
+    res: express.Response,
+    queryParams: PrintDoSmdPayloadQueryVm,
+  ) {
+    const q = RepositoryService.doSmd.findOne();
+    q.innerJoin(e => e.doSmdDetails, 'doSmdDetails', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.doSmdDetails.branchTo);
+    q.leftJoin(e => e.doSmdDetails.branchTo.representative);
+    q.leftJoin(e => e.doSmdDetails.branchTo.district);
+    q.leftJoin(e => e.doSmdDetails.branchTo.district.city);
+    q.leftJoin(e => e.doSmdDetails.doSmdDetailItems);
+    q.innerJoin(e => e.doSmdVehicle);
+
+    const doSmd = await q
+      .select({
+        doSmdId: true, // needs to be selected due to do_smd relations are being included
+        doSmdCode: true,
+        doSmdNote: true,
+        branchToNameList: true,
+        doSmdVehicle: {
+          doSmdVehicleId: true,
+          vehicleNumber: true,
+          employee: {
+            nik: true,
+            nickname: true,
+          },
+        },
+        totalBagging: true,
+        totalBag: true,
+        totalBagRepresentative: true,
+        doSmdDetails: {
+          doSmdDetailId: true,
+          arrivalTime: true,
+          sealNumber: true,
+          totalBag: true,
+          totalBagging: true,
+          totalBagRepresentative: true,
+          branchTo: {
+            branchId: true,
+            branchName: true,
+            representative: {
+              representativeCode: true,
+            },
+            district: {
+              districtId: true,
+              city: {
+                cityId: true,
+                cityName: true,
+              },
+            },
+          },
+        },
+      })
+      .where(e => e.doSmdId, w => w.equals(queryParams.id));
+
+    if (!doSmd) {
+      RequestErrorService.throwObj({
+        message: 'Surat jalan tidak ditemukan',
+      });
+    } else if (!doSmd.doSmdDetails[0] || !doSmd.doSmdDetails[0].branchTo) {
+      RequestErrorService.throwObj({
+        message: 'Gerai tujuan surat jalan tidak valid',
+      });
+    } else if (!doSmd.doSmdDetails[0].branchTo.representative || !doSmd.doSmdDetails[0].branchTo.district) {
+      RequestErrorService.throwObj({
+        message: 'Tujuan perwakilan atau kecamatan surat jalan tidak valid',
+      });
+    }
+    const response = new PrintDoSmdVm();
+    const dataVm = new PrintDoSmdDataVm();
+    dataVm.doSmdId = doSmd.doSmdId;
+    dataVm.doSmdCode = doSmd.doSmdCode;
+    dataVm.doSmdNote = doSmd.doSmdNote;
+    dataVm.doSmdVehicle = doSmd.doSmdVehicle;
+    dataVm.totalBagging = doSmd.totalBagging;
+    dataVm.totalBag = doSmd.totalBag;
+    dataVm.totalBagRepresentative = doSmd.totalBagRepresentative;
+    const dataSmdDetailsVm: PrintDoSmdDataDoSmdDetailVm[] = [];
+
+    // const idDetail = doSmd.doSmdDetails.filter(e => e.doSmdDetailId);
+
+    // tslint:disable-next-line: prefer-for-of
+    for (let l = 0; l < doSmd.doSmdDetails.length; l++) {
+      const dataSmdDetailVm = new PrintDoSmdDataDoSmdDetailVm();
+
+      dataSmdDetailVm.doSmdDetailId = doSmd.doSmdDetails[l].doSmdDetailId; // set ID
+      dataSmdDetailVm.branchTo = doSmd.doSmdDetails[l].branchTo;
+      dataSmdDetailVm.doSmdDetailItems = [];
+      dataSmdDetailVm.doSmdBaggingItems = [];
+      dataSmdDetailVm.doSmdBagRepresentativeItems = [];
+
+      dataSmdDetailsVm.push(dataSmdDetailVm);
+    }
+
+    dataVm.doSmdDetails = dataSmdDetailsVm;
+    response.data = dataVm;
+    const isEmpty = true;
+    this.printDoSmdAndQueryMeta(
+      res,
+      dataVm as any,
+      {
+        userId: queryParams.userId,
+        branchId: queryParams.branchId,
+      },
+      {
+        printCopy: queryParams.printCopy,
+      },
+      isEmpty,
+    );
+  }
+
   public static async printDoSmdAndQueryMeta(
     res: express.Response,
     data: Partial<PrintDoSmdDataVm>,
@@ -581,6 +694,7 @@ export class SmdPrintService {
     } = {
         printCopy: 1,
       },
+    isEmpty = false,
   ) {
     const currentUser = await RepositoryService.user
       .loadById(metaQuery.userId)
@@ -622,6 +736,7 @@ export class SmdPrintService {
         time: currentDate.format('HH:mm'),
       },
       templateConfig,
+      isEmpty,
     );
   }
 
@@ -639,18 +754,19 @@ export class SmdPrintService {
     } = {
         printCopy: 1,
       },
+    isEmpty = false,
   ) {
     const jsreportParams = {
       data,
       meta,
     };
-
+    const templateName = isEmpty ? 'surat-jalan-kosong' : 'surat-muatan-darat';
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
       templates: [
         {
-          templateName: 'surat-muatan-darat',
+          templateName,
           templateData: jsreportParams,
           printCopy: templateConfig.printCopy,
         },

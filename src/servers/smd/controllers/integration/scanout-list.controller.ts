@@ -3,21 +3,35 @@ import { Body, Controller, Post, Req, UseGuards, Delete, Param } from '@nestjs/c
 // import { Partner } from '../../../../shared/orm-entity/partner';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 import { ScanOutSmdVehiclePayloadVm, ScanOutSmdRoutePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdSealPayloadVm, ScanOutSmdHandoverPayloadVm, ScanOutSmdDetailPayloadVm, ScanOutSmdDetailMorePayloadVm, ScanOutSmdDetailRepresentativePayloadVm, ScanOutSmdImagePayloadVm } from '../../models/scanout-smd.payload.vm';
-import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import { ApiUseTags, ApiOkResponse } from '../../../../shared/external/nestjs-swagger';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ScanoutSmdListService } from '../../services/integration/scanout-smd-list.service';
+import { ScanOutEmptyListResponseVm } from '../../models/scanout-smd.response.vm';
 
 @ApiUseTags('SCAN OUT List SMD')
 @Controller('smd')
 export class ScanOutListController {
   constructor() {}
 
+  @Delete('scanOut/empty/deleted/:id')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async scanoutEmptyDelete(@Req() request: any, @Param('id') doSmdId: number) {
+    return ScanoutSmdListService.scanoutEmptyDelete(doSmdId);
+  }
+
   @Post('scanOut/list')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async FindscanOutList(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
     return ScanoutSmdListService.findScanOutList(payload);
+  }
+
+  @Post('scanOut/empty/list')
+  @ApiOkResponse({type: ScanOutEmptyListResponseVm})
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async FindscanOutEmptyList(@Body() payload: BaseMetaPayloadVm) {
+    return ScanoutSmdListService.findscanOutEmptyList(payload);
   }
 
   @Post('scanOut/history')

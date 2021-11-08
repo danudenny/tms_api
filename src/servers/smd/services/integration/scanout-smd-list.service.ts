@@ -10,7 +10,24 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutSmdDetailRepresentativeResponseVm, ScanOutSmdImageResponseVm, ScanOutSmdDetailBagRepresentativeResponseVm, ScanOutDetailBagRepresentativeMoreResponseVm } from '../../models/scanout-smd.response.vm';
+import {
+  ScanOutSmdVehicleResponseVm,
+  ScanOutSmdRouteResponseVm,
+  ScanOutSmdItemResponseVm,
+  ScanOutSmdSealResponseVm,
+  ScanOutListResponseVm,
+  ScanOutHistoryResponseVm,
+  ScanOutSmdHandoverResponseVm,
+  ScanOutSmdDetailResponseVm,
+  ScanOutSmdDetailBaggingResponseVm,
+  ScanOutDetailMoreResponseVm,
+  ScanOutDetailBaggingMoreResponseVm,
+  ScanOutSmdDetailRepresentativeResponseVm,
+  ScanOutSmdImageResponseVm,
+  ScanOutSmdDetailBagRepresentativeResponseVm,
+  ScanOutDetailBagRepresentativeMoreResponseVm,
+  ScanOutSmdEmptyDelete,
+} from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -33,6 +50,38 @@ import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 
 @Injectable()
 export class ScanoutSmdListService {
+  static async scanoutEmptyDelete(doSmdId: number): Promise<any> {
+    try {
+      //const doSmdCode = payload.do_smd_code;
+      const result = new ScanOutSmdEmptyDelete();
+      // check data exist
+      const checkDataIsExist = await DoSmd.findOne({
+        where: {
+          doSmdId,
+          isEmpty: true,
+          isDeleted: false,
+        },
+      });
+      if (checkDataIsExist) {
+        await DoSmd.update({
+          doSmdId,
+        }, {
+          isDeleted: true,
+        });
+        result.statusCode = HttpStatus.OK;
+        result.message = 'Delete Data Success';
+      } else {
+        // data not found
+        result.statusCode = HttpStatus.BAD_REQUEST;
+        result.message = 'Data not found';
+      }
+
+      return result;
+    } catch (e) {
+      throw new BadRequestException(`Internal Server Error`);
+    }
+  }
+
   static async findScanOutList(
     payload: BaseMetaPayloadVm,
   ): Promise<ScanOutListResponseVm> {
@@ -46,6 +95,90 @@ export class ScanoutSmdListService {
     result.data = data.data;
     result.paging = MetaService.set(payload.page, payload.limit, data.total);
 
+    return result;
+  }
+
+  static async findscanOutEmptyList(payload: BaseMetaPayloadVm, isGetTotal = true): Promise<any> {
+
+    let employeeDriverId = 0;
+    payload.filters.forEach((filter, index, obj) => {
+      if (filter.field == 'employee_id_driver') {
+        employeeDriverId = filter.value;
+        obj.splice(index, 1);
+      }
+    });
+
+    payload.fieldResolverMap['do_smd_time'] = 'ds.do_smd_time';
+    payload.fieldResolverMap['branch_id_from'] = 'ds.branch_id';
+    payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
+    payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
+    payload.fieldResolverMap['is_empty'] = 'ds.is_empty';
+    payload.fieldResolverMap['nik'] = 'e.nik';
+
+    payload.globalSearchFields = [
+      {
+        field: 'do_smd_time',
+      },
+      {
+        field: 'branch_name_from',
+      },
+      {
+        field: 'branch_name_to',
+      },
+      {
+        field: 'do_smd_code',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoSmd, 'ds');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['ds.do_smd_id', 'do_smd_id'],
+      ['ds.do_smd_code', 'do_smd_code'],
+      [`'SURAT JALAN KOSONG'`, 'do_smd_empty'],
+      ['ds.do_smd_time', 'do_smd_time'],
+      ['e.fullname', 'fullname'],
+      ['e.employee_id', 'employee_id'],
+      ['dsv.vehicle_number', 'vehicle_number'],
+      ['b.branch_name', 'branch_from_name'],
+      ['ds.branch_to_name_list', 'branch_to_name'],
+      ['e.nik', 'nik'],
+    );
+
+    q.innerJoinRaw(
+      'do_smd_detail',
+      'dsd',
+      'dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = FALSE',
+    );
+    // q.innerJoin(e => e.doSmdDetail, 'dsd', j =>
+    //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    // );
+    q.innerJoin(e => e.doSmdVehicle, 'dsv', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branch, 'b', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    if (employeeDriverId === 0) {
+      q.innerJoin(e => e.doSmdVehicle.employee, 'e', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+    } else {
+      q.innerJoinRaw('employee', 'e', `"e"."employee_id"="dsv"."employee_id_driver" and e.is_deleted = FALSE and e.employee_id = ${employeeDriverId}`);
+    }
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isEmpty, w => w.isTrue());
+
+    const result = new ScanOutHistoryResponseVm();
+
+    result.data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    result.paging = MetaService.set(payload.page, payload.limit, total);
     return result;
   }
 
@@ -82,7 +215,10 @@ export class ScanoutSmdListService {
     q.selectRaw(
       ['ds.do_smd_id', 'do_smd_id'],
       ['ds.do_smd_code', 'do_smd_code'],
-      [`CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END`, 'do_smd_intercity'],
+      [`CASE
+        WHEN ds.is_intercity = 1 THEN 'DALAM KOTA'
+        WHEN ds.is_empty = TRUE THEN 'SURAT JALAN KOSONG'
+        ELSE 'LUAR KOTA' END`, 'do_smd_intercity'],
       ['ds.do_smd_time', 'do_smd_time'],
       ['e.fullname', 'fullname'],
       ['e.employee_id', 'employee_id'],
@@ -95,6 +231,8 @@ export class ScanoutSmdListService {
       ['ds.total_bagging', 'total_bagging'],
       ['ds.total_bag_representative', 'total_bag_representative'],
       ['dss.do_smd_status_title', 'do_smd_status_title'],
+      ['to_char(ds.arrival_date_time,\'YYYY-MM-DD HH24:MI:SS\')', 'arrival_date_time'],
+      ['to_char(ds.departure_date_time,\'YYYY-MM-DD HH24:MI:SS\')', 'departure_date_time'],
     );
 
     q.innerJoinRaw(
@@ -120,7 +258,7 @@ export class ScanoutSmdListService {
       'ds.do_smd_status_id_last = dss.do_smd_status_id AND dss.is_deleted = FALSE',
     );
     q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title');
-    q.andWhereRaw('ds.is_deleted = FALSE');
+    // q.andWhereRaw('ds.is_deleted = FALSE');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     const result = {
       data: null,
