@@ -647,6 +647,8 @@ export class ScanoutSmdCityService {
               bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
               branchIdLast: permissonPayload.branchId,
               bagItemHistoryId: Number(bagItemHistoryId),
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
             },
           );
 

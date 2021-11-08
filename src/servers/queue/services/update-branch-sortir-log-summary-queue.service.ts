@@ -34,7 +34,7 @@ export class UpdateBranchSortirLogSummaryQueueService {
           await transactionManager.update(BranchSortirLogSummary, {
             awbNumber: data.awbNumber,
             branchId: data.branchId,
-          }, { sealNumber: data.sealNumber});
+          }, { sealNumber: data.sealNumber, updatedTime: data.timestamp});
         });
         console.log('End Update Seal Number Branch Sortir Log Process');
       } catch (error) {
@@ -57,11 +57,13 @@ export class UpdateBranchSortirLogSummaryQueueService {
     branchId: number,
     awbNumber: string,
     sealNumber: string,
+    addTime?: number,
   ) {
     const obj = {
       branchId,
       awbNumber,
       sealNumber,
+      timestamp: addTime ? moment().add(addTime, 'minutes').toDate() : moment().toDate(),
     };
 
     return UpdateBranchSortirLogSummaryQueueService.queue.add(obj);
