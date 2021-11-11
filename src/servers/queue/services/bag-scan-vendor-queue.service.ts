@@ -8,7 +8,7 @@ import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { BAG_STATUS } from '../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
-import {In} from 'typeorm';
+import {getManager, In} from 'typeorm';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 import { BagItem } from '../../../shared/orm-entity/bag-item';
 
@@ -80,7 +80,6 @@ export class BagScanVendorQueueService {
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = data.userId;
           resultbagItemHistory.updatedTime = moment().toDate();
-          await BagItemHistory.insert(resultbagItemHistory);
 
           const resultbagItemOutHistory = BagItemHistory.create();
           resultbagItemOutHistory.bagItemId = bagItemIdEach.toString();
@@ -92,18 +91,18 @@ export class BagScanVendorQueueService {
           resultbagItemOutHistory.createdTime = moment().add(1, 'minutes').toDate();
           resultbagItemOutHistory.userIdUpdated = data.userId;
           resultbagItemOutHistory.updatedTime = moment().add(1, 'minutes').toDate();
-          await BagItemHistory.insert(resultbagItemOutHistory);
 
-          await BagItem.update(
-            { bagItemId : bagItemIdEach },
-            {
-              bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
-              branchIdLast: data.branchId,
-              bagItemHistoryId: Number(resultbagItemOutHistory.bagItemHistoryId),
-              userIdUpdated: data.userId,
-              updatedTime: moment().add(1, 'minutes').toDate(),
-            },
-          );
+          await getManager().transaction(async transactionalEntityManager => {
+            await transactionalEntityManager.insert(BagItemHistory, resultbagItemHistory);
+            await transactionalEntityManager.insert(BagItemHistory, resultbagItemOutHistory);
+            await transactionalEntityManager.update(BagItem,
+              { bagItemId : bagItemIdEach },
+              {
+                bagItemHistoryId: Number(resultbagItemOutHistory.bagItemHistoryId),
+                updatedTime: moment().add(1, 'minutes').toDate(),
+              },
+            );
+          });
         }
       }
 

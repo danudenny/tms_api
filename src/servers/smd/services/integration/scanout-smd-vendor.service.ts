@@ -22,6 +22,9 @@ import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/serv
 import { RedisService } from '../../../../shared/services/redis.service';
 import { ScanOutSmdVendorItemMorePayloadVm, ScanOutSmdVendorItemPayloadVm } from '../../models/scanout-smd-vendor.payload.vm';
 import { BagService } from '../../../main/services/v1/bag.service';
+import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
+import { getManager } from 'typeorm';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
 
 @Injectable()
 export class ScanoutSmdVendorService {
@@ -1025,6 +1028,19 @@ export class ScanoutSmdVendorService {
               // await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
 
               // Generate history bag and its awb IN_HUB
+
+              await getManager().transaction(async transactionalEntityManager => {
+                await transactionalEntityManager.update(BagItem,
+                  { bagItemId : bagDetail.bagItemId },
+                  {
+                    bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
+                    branchIdLast: permissonPayload.branchId,
+                    userIdUpdated: authMeta.userId,
+                    updatedTime: moment().add(1, 'minutes').toDate(),
+                  },
+                );
+              });
+
               BagScanVendorQueueService.perform(
                 Number(bagDetail.bagItemId),
                 authMeta.userId,
