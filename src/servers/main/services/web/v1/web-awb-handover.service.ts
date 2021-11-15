@@ -4,6 +4,7 @@ import { MetaService } from '../../../../../shared/services/meta.service';
 import { AwbHandoverListResponseVm } from '../../../models/last-mile/awb-handover.vm';
 import { DoPodDeliverDetail } from '../../../../../shared/orm-entity/do-pod-deliver-detail';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
+import { QueryServiceApi } from '../../../../../shared/services/query.service.api';
 
 export class V1WebAwbHandoverService {
   static async AwbHandoverList(payload: BaseMetaPayloadVm): Promise<AwbHandoverListResponseVm> {
@@ -58,7 +59,13 @@ export class V1WebAwbHandoverService {
     q.andWhere(e => e.awbStatusIdLast, w => w.equals(AWB_STATUS.DLV));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-    const data = await q.exec();
+    // const data = await q.exec();
+    const query = await q.getQuery();
+    let data = await QueryServiceApi.executeQuery(query);
+    if(!data){
+      data = []
+    }
+    
     const total = 0; // await q.countWithoutTakeAndSkip();
 
     const result = new AwbHandoverListResponseVm();
