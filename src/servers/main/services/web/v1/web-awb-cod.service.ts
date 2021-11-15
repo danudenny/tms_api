@@ -461,7 +461,7 @@ export class V1WebAwbCodService {
   ): Promise<WebAwbCodDlvV2ListResponseVm> {
     payload.fieldResolverMap['driverName'] = 't3.first_name';
     payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
-    payload.fieldResolverMap['branchIdFinal'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'driverName';
@@ -474,10 +474,10 @@ export class V1WebAwbCodService {
 
     q.selectRaw(
       ['t3.first_name', 'driverName'],
-      ['count(t1.user_id_driver)', 'totalResi'],
-      ['t1.user_id_driver', 'userIdDriver'],
+      ['count(t3.user_id)', 'totalResi'],
+      ['t3.user_id', 'userIdDriver'],
       ['t4.branch_name', 'branchNameFinal'],
-      ['t1.branch_id', 'branchIdFinal'],
+      ['t4.branch_id', 'branchIdFinal'],
     );
 
     q.innerJoin(e => e.awbItemAttr, 't2', j => {
@@ -489,12 +489,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     });
 
-    q.innerJoin(e => e.awbItemAttr.pickupRequestDetail, 'prd', j => {
-      j.andWhere(e => e.isDeleted, w => w.isFalse());
-    });
-
     q.innerJoin(e => e.userDriver, 't3');
-
     q.innerJoin(e => e.branchFinal, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -502,7 +497,7 @@ export class V1WebAwbCodService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     q.groupByRaw(
-      't1.user_id_driver, t3.first_name, t1.branch_id, t4.branch_name',
+      't3.user_id, t4.branch_id',
     );
 
     const data = await q.exec();
@@ -1808,7 +1803,7 @@ export class V1WebAwbCodService {
       where: {
         branchId,
         isDeleted : false,
-        isActive : true
+        isActive : true,
       },
     });
 
