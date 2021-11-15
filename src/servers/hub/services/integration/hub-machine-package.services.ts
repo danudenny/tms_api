@@ -44,7 +44,8 @@ export class HubMachineService {
     data = (await Branch.findOne({
       where: {
         branchId,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     })) as any;
 
@@ -294,7 +295,7 @@ export class HubMachineService {
       // create background process
       try {
         // background job to insert bag item history
-        BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 500, branch.branchId, 1);
+        BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 500, branch.branchId, 1, -1);
         BagItemHistoryQueueService.addData(trxResults.bagItem.bagItemId, 3000, branch.branchId, 1);
 
         for (const awbNumber of awbNumbers) {
@@ -441,6 +442,7 @@ export class HubMachineService {
         batchData.branchId,
         x.awbNumber,
         batchData.tagSeal,
+        0
       );
 
       return PodScanInHubDetail.create({

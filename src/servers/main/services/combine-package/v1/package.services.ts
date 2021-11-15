@@ -99,6 +99,8 @@ export class V1PackageService {
         const branch = await Branch.findOne({
           where: {
             branchCode: value,
+            isActive : true,
+            isDeleted : false
           },
         });
         if (branch) {
@@ -186,6 +188,7 @@ export class V1PackageService {
       qb.innerJoin('branch', 'f', 'f.branch_id = b.branch_id_to');
       qb.where('a.pod_scan_in_hub_id = :podScanInHubId', { podScanInHubId });
       qb.andWhere('a.is_deleted = false');
+      qb.andWhere('f.is_deleted = false and f.is_active = true')
 
       const data = await qb.getRawMany();
       let bagNumber;
@@ -679,6 +682,7 @@ export class V1PackageService {
             500,
             permissonPayload.branchId,
             authMeta.userId,
+            -1,
           );
 
           BagItemHistoryQueueService.addData(

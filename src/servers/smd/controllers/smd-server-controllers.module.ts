@@ -23,6 +23,7 @@ import { ScanOutVendorListController } from './integration/scanout-vendor-list.c
 import { ReceiptScaninListController } from './integration/receipt-scanin-list.controller';
 import { ScanOutCityController } from './integration/scanout-city.controller';
 import { SmdHelpdeskController } from './integration/smd-helpdesk.controller';
+import { SmdCentralReportingController } from './integration/smd-central-reporting.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -48,6 +49,7 @@ import { SmdHelpdeskController } from './integration/smd-helpdesk.controller';
     ReceiptScaninListController,
     ScanOutCityController,
     SmdHelpdeskController,
+    SmdCentralReportingController,
   ],
 })
 export class SmdServerControllersModule {}

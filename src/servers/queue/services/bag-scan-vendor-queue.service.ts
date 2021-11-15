@@ -100,6 +100,8 @@ export class BagScanVendorQueueService {
               bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
               branchIdLast: data.branchId,
               bagItemHistoryId: Number(resultbagItemOutHistory.bagItemHistoryId),
+              userIdUpdated: data.userId,
+              updatedTime: moment().add(1, 'minutes').toDate(),
             },
           );
         }

@@ -10,7 +10,7 @@ export class V1WebAwbHandoverService {
     // mapping field
     // payload.fieldResolverMap['isUpload'] = 't1.is_high_value';
     payload.fieldResolverMap['partnerId'] = 't4.partner_id';
-    payload.fieldResolverMap['awbDeliverDate'] = 't1.awb_status_date_time_last';
+    payload.fieldResolverMap['awbDeliverDate'] = 't1.awb_status_date_last';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['nik'] = 't5.username';
 
@@ -27,7 +27,7 @@ export class V1WebAwbHandoverService {
 
     q.selectRaw(
       ['t1.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
-      ['t1.awb_status_date_time_last', 'awbDeliverDate'],
+      ['t1.awb_status_date_last', 'awbDeliverDate'],
       ['t1.awb_number', 'awbNumber'],
       ['t2.shipper_name', 'shipperName'],
       ['t2.recipient_name', 'recipientName'],
@@ -86,7 +86,7 @@ export class V1WebAwbHandoverService {
 
     q.selectRaw(
       ['t1.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
-      ['t1.awb_status_date_time_last', 'awbDeliverDate'],
+      ['t1.awb_status_date_last', 'awbDeliverDate'],
       ['t1.awb_number', 'awbNumber'],
       ['t2.shipper_name', 'shipperName'],
       ['t2.recipient_name', 'recipientName'],

@@ -20,7 +20,8 @@ export class PrintDoPodService {
     const q = RepositoryService.doPod.findOne();
     q.leftJoin(e => e.doPodDetails);
     q.leftJoin(e => e.userDriver.employee);
-
+    q.leftJoin(e => e.partnerLogistic);
+      
     const doPod = await q
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
@@ -45,11 +46,15 @@ export class PrintDoPodService {
               awbNumber: true,
               consigneeName: true,
               totalWeight: true,
+              totalWeightFinalRounded : true,
               totalCodValue: true,
               isCod: true,
             },
           },
         },
+        partnerLogistic:{
+          partnerLogisticName:true
+        }
       })
       .where(e => e.doPodId, w => w.equals(queryParams.id))
       .andWhere(e => e.doPodDetails.isDeleted, w => w.isFalse());
@@ -58,6 +63,14 @@ export class PrintDoPodService {
       RequestErrorService.throwObj({
         message: 'Surat jalan tidak ditemukan',
       });
+    }
+      
+    if(!doPod.userDriver && doPod.partnerLogistic){
+      delete doPod.userDriver
+      let dataTransit = {userDriver : {employee : {nickname: "3PL"}}}
+      doPod.vehicleNumber = doPod.partnerLogistic.partnerLogisticName
+      delete doPod.partnerLogistic
+      Object.assign(doPod, dataTransit);
     }
 
     // handle Surat Jalan Transit
@@ -122,10 +135,12 @@ export class PrintDoPodService {
         if (detail.awbItem && detail.awbItem.awb){
             if(detail.awbItem.awb.totalWeight){
               totalWeight += Number(detail.awbItem.awb.totalWeight);
+              // totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeight)) / 100;
             }
           }
       });
     }
+    totalWeight = Math.round(totalWeight * 100)/100;
 
     return this.printDoPod(
       res,
@@ -196,15 +211,13 @@ export class PrintDoPodService {
               totalCod += Number(detail.awbItem.awb.totalCodValue);
              }
             if(detail.awbItem.awb.totalWeight){
-              totalWeight += Number(detail.awbItem.awb.totalWeight);
+              totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
             }
           }
 
       });
-
-
-
     }
+    totalWeight = Math.round(totalWeight * 100)/100;
 
     return this.printDoPodTransit(
       res,
@@ -244,6 +257,8 @@ export class PrintDoPodService {
       select: ['branchName'],
       where: {
         branchId: data.userDetail.branch,
+        isDeleted : false,
+        isActive : true
       },
     });
 

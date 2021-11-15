@@ -39,7 +39,6 @@ export class MobileDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileScanOutAwbResponseVm })
-  @Transactional()
   public async transferAwbDelivery(@Body() payload: TransferAwbDeliverVm) {
     return LastMileDeliveryOutService.scanOutDeliveryAwb(payload);
   }
@@ -49,7 +48,6 @@ export class MobileDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileScanOutAwbResponseVm })
-  @Transactional()
   public async scanAwbDeliverMobile(@Body() payload: ScanAwbDeliverPayloadVm) {
     return LastMileDeliveryOutService.scanAwbDeliverMobile(payload);
   }
@@ -59,7 +57,6 @@ export class MobileDeliveryOutController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: CreateDoPodResponseVm })
-  @Transactional()
   public async scanOutCreateDelivery() {
     return LastMileDeliveryOutService.createDeliveryDoPod();
   }

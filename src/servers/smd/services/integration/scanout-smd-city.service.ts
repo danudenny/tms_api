@@ -38,7 +38,8 @@ export class ScanoutSmdCityService {
     const resultbranchTo = await Branch.findOne({
       where: {
         branchId: payload.branch_id,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     });
     if (resultbranchTo) {
@@ -646,6 +647,8 @@ export class ScanoutSmdCityService {
               bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
               branchIdLast: permissonPayload.branchId,
               bagItemHistoryId: Number(bagItemHistoryId),
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
             },
           );
 
@@ -797,6 +800,8 @@ export class ScanoutSmdCityService {
               bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
               branchIdLast: permissonPayload.branchId,
               bagItemHistoryId: Number(bagItemHistoryId),
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
             },
           );
           // Generate history bag and its awb IN_HUB

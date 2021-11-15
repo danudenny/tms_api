@@ -14,9 +14,10 @@ export class SmdHelpdeskController {
 
   @Post('representative/manual')
   @Transactional()
-  @ApiImplicitHeader({name: 'x-api-key'})
-  @UseGuards(AuthXAPIKeyGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async updateRepresentativeCodeManual(@Req() request: any, @Body() payload: UpdateRepresentativeManualPayload) {
     return SmdHelpdeskService.updateRepresentativeCodeManual(payload);
   }
+
+
 }

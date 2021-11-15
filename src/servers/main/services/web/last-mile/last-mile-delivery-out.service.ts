@@ -79,6 +79,7 @@ export class LastMileDeliveryOutService {
 
     doPod.userIdDriver = payload.userIdDriver || null;
     doPod.doPodDeliverDateTime = doPodDateTime;
+    doPod.doPodDeliverDate = doPodDateTime;
     doPod.description = payload.desc || null;
 
     doPod.branchId = permissonPayload.branchId;
@@ -153,6 +154,7 @@ export class LastMileDeliveryOutService {
 
     doPod.userIdDriver = payload.userIdDriver || null;
     doPod.doPodDeliverDateTime = doPodDateTime;
+    doPod.doPodDeliverDate = doPodDateTime;
     doPod.description = payload.desc || null;
 
     doPod.branchId = permissonPayload.branchId;
@@ -164,6 +166,8 @@ export class LastMileDeliveryOutService {
       doPod.partnerId = payload.partnerId;
       const branch = await Branch.findOne({
         branchId: permissonPayload.branchId,
+        isDeleted : false,
+        isActive : true
       });
       // NOTES: Validation branch
       if (
