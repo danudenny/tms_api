@@ -442,7 +442,7 @@ export class WebAwbReturnService {
       ],
       [`CONCAT(CAST(t7.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
       [`CONCAT(t8.nik, ' - ', t8.fullname)`, 'userUpdatedName'],
-      ['t9.awb_status_id_last', 'replacementAwbStatusLast'],
+      ['t9.awb_status_id', 'replacementAwbStatusLast'],
       ['t9.awb_status_name', 'replacementAwbStatusName'],
     );
 
@@ -467,7 +467,7 @@ export class WebAwbReturnService {
     q.leftJoin(e => e.userUpdated.employee, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.leftJoin(e => e.returnAwb, 't9', j =>
+    q.leftJoin(e => e.returnAwb.awbStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -622,7 +622,8 @@ export class WebAwbReturnService {
         ],
         [`CONCAT(CAST(t7.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
         [`CONCAT(t8.nik, ' - ', t8.fullname)`, 'userUpdatedName'],
-        ['t9.awb_status_id_last', 'replacementAwbStatusLast'],
+        ['t9.awb_status_id', 'replacementAwbStatusLast'],
+        ['t9.awb_status_name', 'replacementAwbStatusName'],
       );
 
       q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
