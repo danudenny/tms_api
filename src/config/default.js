@@ -58,7 +58,7 @@ module.exports = {
     tags: ['API-POD'],
   },
   activityLog: {
-    baseUrl: 'https://swagger.s.sicepat.tech/core/logger',
+    baseUrl: 'http://api-internal.sicepat.io/core/logger',
   },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
