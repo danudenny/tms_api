@@ -310,6 +310,11 @@ export class WebAwbReturnService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const awb = await AwbService.validAwbNumber(payload.awbReturnNumber);
 
+    if(payload.partnerLogisticId === '' && !payload.userIdDriver && !awb){
+      result.status = 'error';
+      result.message = `No resi ${payload.awbReturnNumber} tidak ditemukan`;
+    }
+
     const awbReturn = await AwbReturn.findOne({
       where: {
         awbReturnId: payload.awbReturnId,
@@ -317,31 +322,23 @@ export class WebAwbReturnService {
       },
     });
 
-    let returnAwbId = null;
-    if (awb) {
-      returnAwbId = awb.awbId;
-    }
-    // NOTE: If via internal
     if (payload.partnerLogisticId === '') {
-      // if (!awb) {
-      //   result.status = 'error';
-      //   result.message = `No resi ${payload.awbReturnNumber} tidak ditemukan`;
-      // } else {
-
       if (payload.userIdDriver) {
         AwbReturn.update(awbReturn.awbReturnId, {
-          returnAwbId,
+          returnAwbId : awb.awbId,
           returnAwbNumber: payload.awbReturnNumber,
           userIdUpdated: authMeta.userId,
           updatedTime: moment().toDate(),
           userIdDriver: payload.userIdDriver,
+          branchId: permissonPayload.branchId,
         });
       } else {
         AwbReturn.update(awbReturn.awbReturnId, {
-          returnAwbId,
+          returnAwbId : awb.awbId,
           returnAwbNumber: payload.awbReturnNumber,
           userIdUpdated: authMeta.userId,
           updatedTime: moment().toDate(),
+          branchId: permissonPayload.branchId,
         });
       }
 
@@ -359,6 +356,7 @@ export class WebAwbReturnService {
           partnerLogisticAwb: payload.awbReturnNumber,
           userIdUpdated: authMeta.userId,
           updatedTime: moment().toDate(),
+          branchId: permissonPayload.branchId,
         });
         result.status = 'ok';
         result.message = 'success';
@@ -367,11 +365,6 @@ export class WebAwbReturnService {
         result.message = '3PL tidak ditemukan';
       }
     }
-    // } else {
-    //   result.status = 'error';
-    //   result.message = 'ID retur tidak ditemukan';
-    // }
-
     return result;
   }
 
@@ -401,6 +394,9 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
     payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
     payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
+    payload.fieldResolverMap['userUpdatedName'] = '"userUpdatedName"';
+    payload.fieldResolverMap['replacementAwbStatusLast'] = '"replacementAwbStatusLast"';
+
     if (payload.sortBy === '') {
       payload.sortBy = 'updatedTime';
     }
@@ -444,6 +440,9 @@ export class WebAwbReturnService {
         `COALESCE(t7.ref_prev_customer_account_id, t7.ref_customer_account_id,'')`,
         'consignerName',
       ],
+      [`CONCAT(CAST(t7.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
+      [`CONCAT(t8.nik, ' - ', t8.fullname)`, 'userUpdatedName'],
+      ['t9.awb_status_id_last', 'replacementAwbStatusLast'],
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
@@ -462,6 +461,12 @@ export class WebAwbReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.branchFrom, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.userUpdated.employee, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.returnAwb, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -574,6 +579,8 @@ export class WebAwbReturnService {
       payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
       payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
       payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
+      payload.fieldResolverMap['userUpdatedName'] = '"userUpdatedName"';
+      payload.fieldResolverMap['replacementAwbStatusLast'] = '"replacementAwbStatusLast"';
 
       payload.globalSearchFields = [
         {
@@ -612,6 +619,9 @@ export class WebAwbReturnService {
           `COALESCE(t7.ref_prev_customer_account_id, t7.ref_customer_account_id,'')`,
           'consignerName',
         ],
+        [`CONCAT(CAST(t7.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
+        [`CONCAT(t8.nik, ' - ', t8.fullname)`, 'userUpdatedName'],
+        ['t9.awb_status_id_last', 'replacementAwbStatusLast'],
       );
 
       q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
@@ -630,6 +640,12 @@ export class WebAwbReturnService {
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.leftJoin(e => e.branchFrom, 't6', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.leftJoin(e => e.userUpdated.employee, 't8', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+      q.leftJoin(e => e.returnAwb, 't9', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 

@@ -68,6 +68,14 @@ export class ItemReturResponseVm {
   @ApiModelProperty()
   consignerName: number;
 
+  @ApiModelProperty()
+  totalCodValue: number;
+
+  @ApiModelProperty()
+  userUpdatedName: string;
+
+  @ApiModelProperty()
+  replacementAwbStatusLast: number;
 }
 
 export class WebReturListResponseVm extends BaseMetaResponseVm {

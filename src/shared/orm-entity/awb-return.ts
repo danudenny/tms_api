@@ -116,4 +116,12 @@ export class AwbReturn extends TmsBaseEntity {
   @OneToOne(() => Awb)
   @JoinColumn({ name: 'origin_awb_id', referencedColumnName: 'awbId'})
   awb: Awb;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id_updated', referencedColumnName: 'userId' })
+  userUpdated: User;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'return_awb_id', referencedColumnName: 'awbId' })
+  returnAwb: AwbItemAttr;
 }
