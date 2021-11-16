@@ -76,6 +76,9 @@ export class ItemReturResponseVm {
 
   @ApiModelProperty()
   replacementAwbStatusLast: number;
+
+  @ApiModelProperty()
+  replacementAwbStatusName: string;
 }
 
 export class WebReturListResponseVm extends BaseMetaResponseVm {

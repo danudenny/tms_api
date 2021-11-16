@@ -443,6 +443,7 @@ export class WebAwbReturnService {
       [`CONCAT(CAST(t7.total_cod_value AS NUMERIC(20,2)))`, 'totalCodValue'],
       [`CONCAT(t8.nik, ' - ', t8.fullname)`, 'userUpdatedName'],
       ['t9.awb_status_id_last', 'replacementAwbStatusLast'],
+      ['t9.awb_status_name', 'replacementAwbStatusName'],
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
