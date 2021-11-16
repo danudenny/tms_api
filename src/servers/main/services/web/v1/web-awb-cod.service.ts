@@ -90,10 +90,6 @@ export class V1WebAwbCodService {
       ['COUNT(t1.awb_item_id)', 'countAwb'],
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 'pickupdetail', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.codPayment, 'cp', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -229,10 +225,6 @@ export class V1WebAwbCodService {
       j
         .andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.isCod, w => w.isTrue()),
-    );
-
-    q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.awb.packageType, 't5');
@@ -533,7 +525,6 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
-    payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -571,7 +562,6 @@ export class V1WebAwbCodService {
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
       ['t1.transaction_status_id', 'transactionStatusId'],
-      ['t9.created_time', 'pickupRequestTime'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
@@ -591,10 +581,6 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awbStatusFinal, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -719,10 +705,6 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awbStatusFinal, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
