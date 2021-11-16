@@ -647,7 +647,7 @@ export class WebAwbReturnService {
       q.leftJoin(e => e.userUpdated.employee, 't8', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-      q.leftJoin(e => e.returnAwb, 't9', j =>
+      q.leftJoin(e => e.returnAwb.awbStatus, 't9', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
