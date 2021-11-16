@@ -44,7 +44,7 @@ export class ScanoutSmdService {
         ds.do_smd_id,
         ds.branch_id
       FROM do_smd_vehicle dsv
-      INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000
+      INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000 AND ds.is_deleted = FALSE
       WHERE
         dsv.employee_id_driver = ${payload.employee_id_driver} AND
         dsv.is_deleted = FALSE;
@@ -223,7 +223,7 @@ export class ScanoutSmdService {
           ds.do_smd_id,
           ds.branch_id
         FROM do_smd_vehicle dsv
-        INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000
+        INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000 AND ds.is_deleted = FALSE
         WHERE
           dsv.employee_id_driver = ${payload.employee_id_driver} AND
           dsv.is_deleted = FALSE;
