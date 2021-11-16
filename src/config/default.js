@@ -57,6 +57,9 @@ module.exports = {
     subdomain: 'sicepat',
     tags: ['API-POD'],
   },
+  activityLog: {
+    baseUrl: 'https://swagger.s.sicepat.tech/core/logger',
+  },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
     ttlToken: 1000,

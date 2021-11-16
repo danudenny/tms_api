@@ -183,6 +183,9 @@ export class PrintDoSmdDataVm {
   @ApiModelProperty()
   totalBagRepresentative: number;
 
+  @ApiModelProperty()
+  isIntercity: string;
+
   @ApiModelProperty({ type: () => PrintDoSmdDataUserDriverVm })
   doSmdVehicle: PrintDoSmdDataUserDriverVm = new PrintDoSmdDataUserDriverVm();
 
