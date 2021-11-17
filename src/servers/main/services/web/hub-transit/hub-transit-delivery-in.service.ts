@@ -13,13 +13,13 @@ import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-
 import { DropoffHub } from '../../../../../shared/orm-entity/dropoff_hub';
 import { BagDropoffHubQueueService } from '../../../../queue/services/bag-dropoff-hub-queue.service';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { QueryServiceApi } from '../../../../../shared/services/query.service.api';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DropoffHubDetail } from '../../../../../shared/orm-entity/dropoff_hub_detail';
 import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from '../../../models/web-scanin-list.response.vm';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { WebDeliveryListResponseVm } from '../../../models/web-delivery-list-response.vm';
 import { BagItemHistory } from '../../../../../shared/orm-entity/bag-item-history';
-import { QueryServiceApi } from '../../../../../shared/services/query.service.api';
 import { getManager, In } from 'typeorm';
 const uuidv1 = require('uuid/v1');
 export class HubTransitDeliveryInService {
@@ -378,9 +378,6 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    // const data = await q.exec();
-    // const total = await q.countWithoutTakeAndSkip();
 
     const query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);

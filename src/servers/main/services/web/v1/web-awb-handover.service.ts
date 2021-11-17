@@ -59,10 +59,8 @@ export class V1WebAwbHandoverService {
     q.andWhere(e => e.awbStatusIdLast, w => w.equals(AWB_STATUS.DLV));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-    // const data = await q.exec();
     const query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);
-    let cnt = await QueryServiceApi.executeQuery(query, true, 'awbnumber');
     
     for(let i = 0; i < data.length; i++){
       data[i].awbDeliverDate = data[i].awbdeliverdate;
@@ -74,7 +72,7 @@ export class V1WebAwbHandoverService {
       data[i].shipperName = data[i].shippername;
     }
     
-    const total = cnt; // await q.countWithoutTakeAndSkip();
+    const total = 0; // await q.countWithoutTakeAndSkip();
     const result = new AwbHandoverListResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
@@ -131,7 +129,8 @@ export class V1WebAwbHandoverService {
     q.andWhere(e => e.awbStatusIdLast, w => w.equals(AWB_STATUS.DLV));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-    const total = await q.countWithoutTakeAndSkip();
+    const query = q.getQuery();
+    let total = await QueryServiceApi.executeQuery(query, true, 'awbnumber');
 
     const result = new AwbHandoverListResponseVm();
     result.data = null;

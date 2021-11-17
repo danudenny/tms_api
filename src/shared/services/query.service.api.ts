@@ -1,10 +1,14 @@
 import axios from 'axios';
+import {ConfigService} from '../../shared/services/config.service';
 
 export class QueryServiceApi {
-  public static async executeQuery(query, isCount, primaryField) {
-    console.log(query);
-    let paramQuery
+  public static get queryServiceUrl() {
+    return ConfigService.get('queryService.baseUrl');
+  }
 
+  public static async executeQuery(query, isCount, primaryField) {
+    let paramQuery
+    
     if(isCount == true){
       query = `SELECT COUNT(${primaryField}) as cnt FROM (${query}) t`;
       paramQuery = await Buffer.from(query).toString('base64');
@@ -12,10 +16,7 @@ export class QueryServiceApi {
       paramQuery = await Buffer.from(query).toString('base64');
     }
 
-    console.log(paramQuery);
-
-    // const url = 'https://swagger.s.sicepat.tech/core/query-service/api/v1/collection/direct-exec';
-    const url = 'http://api-internal.s.sicepat.io/core/query-service/api/v1/collection/direct-exec';
+    let url = `${this.queryServiceUrl}collection/direct-exec`;
     const options = {
       headers: {
         'accept': 'application/json',
@@ -27,26 +28,17 @@ export class QueryServiceApi {
       encoded_query: paramQuery
     };
 
-    const request = await axios.post(url, body, options);
-    if(isCount == true){
-      if(request.status == 200){
-        console.log(request.data);
-        if(request.data.data[0].cnt){
-          return request.data.data[0].cnt
-        }else{
-          return 0;
-        }
+    try{
+      const request = await axios.post(url, body, options);
+      if(isCount){
+        return request.data.data[0].cnt
       }else{
-        return 0;
+        return request.data.data;
       }
-    }else{
-      if(request.status == 200){
-        console.log(request.data);
-        if(request.data.data){
-          return request.data.data;
-        }else{
-          return [];
-        }
+    }catch(err){
+      console.log("#### error calling query service query", query, ", error: ", err.message); 
+      if(isCount == true){
+        return 0;
       }else{
         return [];
       }
