@@ -310,9 +310,10 @@ export class WebAwbReturnService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const awb = await AwbService.validAwbNumber(payload.awbReturnNumber);
 
-    if(payload.partnerLogisticId === '' && !payload.userIdDriver && !awb){
+    if(!payload.partnerLogisticId && !payload.userIdDriver && !awb){
       result.status = 'error';
       result.message = `No resi ${payload.awbReturnNumber} tidak ditemukan`;
+      return result;
     }
 
     const awbReturn = await AwbReturn.findOne({
