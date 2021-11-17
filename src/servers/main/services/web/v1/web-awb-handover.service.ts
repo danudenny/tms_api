@@ -63,10 +63,7 @@ export class V1WebAwbHandoverService {
     const query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);
     let cnt = await QueryServiceApi.executeQuery(query, true, 'awbnumber');
-    if(!data){
-      data = []
-    }
-
+    
     for(let i = 0; i < data.length; i++){
       data[i].awbDeliverDate = data[i].awbdeliverdate;
       data[i].awbNumber = data[i].awbnumber;

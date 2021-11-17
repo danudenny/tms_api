@@ -19,6 +19,7 @@ import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from 
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { WebDeliveryListResponseVm } from '../../../models/web-delivery-list-response.vm';
 import { BagItemHistory } from '../../../../../shared/orm-entity/bag-item-history';
+import { QueryServiceApi } from '../../../../../shared/services/query.service.api';
 import { getManager, In } from 'typeorm';
 const uuidv1 = require('uuid/v1');
 export class HubTransitDeliveryInService {
@@ -359,7 +360,6 @@ export class HubTransitDeliveryInService {
       ['t1.dropoff_hub_id', 'dropoffHubId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
-      // ['COUNT (t4.dropoff_hub_detail_id)', 'totalAwb'],
       [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
@@ -378,30 +378,15 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // q.groupByRaw(`
-    //   t1.created_time,
-    //   t1.dropoff_hub_id,
-    //   t3.bagSeq,
-    //   t2.bag_number,
-    //   t2.ref_representative_code,
-    //   t3.weight,
-    //   t5.branch_name,
-    //   t6.branch_name
-    // `);
 
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    // const data = await q.exec();
+    // const total = await q.countWithoutTakeAndSkip();
+
+    const query = await q.getQuery();
+    let data = await QueryServiceApi.executeQuery(query, false, null);
+    let cnt = await QueryServiceApi.executeQuery(query, true, 'bagnumbercode');
 
     const result = new WebScanInHubSortListResponseVm();
-
-    // let seen = Object.create(null),
-    // result_data = data.filter(o => {
-    //     var key = ['bagNumberCode', 'bagNumber'].map(k => o[k]).join('|');
-    //     if (!seen[key]) {
-    //         seen[key] = true;
-    //         return true;
-    //     }
-    // });
 
     for(let i = 0; i < data.length; i++){
       let dropOffHubDetail = await DropoffHubDetail.find({
@@ -412,11 +397,19 @@ export class HubTransitDeliveryInService {
       });
       
       data[i].totalAwb = dropOffHubDetail.length
+      data[i].bagNumberCode = data[i].bagnumbercode;
+      data[i].bagNumber = data[i].bagnumber;
+      data[i].representativeCode = data[i].representativecode;
+      data[i].bagSeq = data[i].bagseq;
+      data[i].createdTime = data[i].createdtime;
+      data[i].dropoffHubId = data[i].dropoffhubId;
+      data[i].branchName = data[i].branchname;
+      data[i].branchScanName = data[i].branchscanname;
+      data[i].weight = data[i].weight;
     }
 
-    console.log(data.length)
+    const total = cnt;
     result.data = data;
-    // result.data = result_data
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;

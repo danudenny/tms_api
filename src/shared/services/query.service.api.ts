@@ -42,7 +42,11 @@ export class QueryServiceApi {
     }else{
       if(request.status == 200){
         console.log(request.data);
-        return request.data.data;
+        if(request.data.data){
+          return request.data.data;
+        }else{
+          return [];
+        }
       }else{
         return [];
       }
