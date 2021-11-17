@@ -1,0 +1,146 @@
+FORMAT: 1A
+HOST: https://swagger.s.sicepat.tech/core/query-service/api/v1/collection
+
+# API POD for Web
+
+# Group Query Service
+
+## Direct Exec [/direct-exec]
+    exec query direct ke redshift
+
+### Direct Exec [POST]
+
++ Request Direct Exec (application/json)
+    + Header
+
+            accept: application/json
+            Content-Type: application/json
+
+    + Body
+          {
+            "encoded_query": "string"
+          }
+
++ Response 200 (application/json; charset=utf-8)
+    + Body
+
+            {
+  error: null,
+  data: [
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400685103',
+      dopoddeliverdetailid: 'b926bd18-4553-11ec-95c6-0656890244a0',
+      nik: 'X2110411',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Semarang',
+      shippername: 'J aquatic',
+      username: 'Aviv Fathur Lutfi Prasetya'
+    },
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400685103',
+      dopoddeliverdetailid: 'b926bd18-4553-11ec-95c6-0656890244a0',
+      nik: 'X2110411',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Semarang',
+      shippername: 'J aquatic',
+      username: 'Aviv Fathur Lutfi Prasetya'
+    },
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400685103',
+      dopoddeliverdetailid: 'b926bd18-4553-11ec-95c6-0656890244a0',
+      nik: 'X2110411',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Semarang',
+      shippername: 'J aquatic',
+      username: 'Aviv Fathur Lutfi Prasetya'
+    },
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400685413',
+      dopoddeliverdetailid: 'c7718ce0-454e-11ec-a5a8-0656890244a0',
+      nik: 'X2110411',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Semarang',
+      shippername: 'Heritage Brass',
+      username: 'Aviv Fathur Lutfi Prasetya'
+    },
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400685413',
+      dopoddeliverdetailid: 'c7718ce0-454e-11ec-a5a8-0656890244a0',
+      nik: 'X2110411',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Semarang',
+      shippername: 'Heritage Brass',
+      username: 'Aviv Fathur Lutfi Prasetya'
+    },
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400685413',
+      dopoddeliverdetailid: 'c7718ce0-454e-11ec-a5a8-0656890244a0',
+      nik: 'X2110411',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Semarang',
+      shippername: 'Heritage Brass',
+      username: 'Aviv Fathur Lutfi Prasetya'
+    },
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400687080',
+      dopoddeliverdetailid: '8b0c3078-4541-11ec-b6c9-0656890244a0',
+      nik: 'X2110411',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Semarang',
+      shippername: 'dera sport',
+      username: 'Aviv Fathur Lutfi Prasetya'
+    },
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400687080',
+      dopoddeliverdetailid: '8b0c3078-4541-11ec-b6c9-0656890244a0',
+      nik: 'X2110411',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Semarang',
+      shippername: 'dera sport',
+      username: 'Aviv Fathur Lutfi Prasetya'
+    },
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400687080',
+      dopoddeliverdetailid: '8b0c3078-4541-11ec-b6c9-0656890244a0',
+      nik: 'X2110411',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Semarang',
+      shippername: 'dera sport',
+      username: 'Aviv Fathur Lutfi Prasetya'
+    },
+    {
+      awbdeliverdate: '2021-11-14T00:00:00Z',
+      awbnumber: '002400686579',
+      dopoddeliverdetailid: 'a9cafaf0-4549-11ec-add3-0656890244a0',
+      nik: '21061506',
+      partnerid: 501,
+      partnername: 'Orchestra',
+      recipientname: 'Orchestra Anteraja Solo',
+      shippername: 'metorcollection',
+      username: 'Fajar Ricki Santoso'
+    }
+  ]
+}
+
++ Response 400 (application/json; charset=utf-8)
+    + Body
+
+            {}
