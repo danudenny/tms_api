@@ -375,10 +375,6 @@ export class V1WebAwbCodService {
         .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.branchLast, 't6', j =>
