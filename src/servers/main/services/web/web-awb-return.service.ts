@@ -693,7 +693,7 @@ export class WebAwbReturnService {
       payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
-        ['t1.origin_awb_number', 'Resi'],
+        [`CONCAT('''', t1.origin_awb_number)`, 'Resi'],
         ['t2.awb_status_name', 'Status'],
         ['t9.awb_status_name', 'Status Resi Pengganti'],
         ['TO_CHAR(t1.updated_time, \'YYYY-MM-DD\')', 'Tanggal Retur'],
