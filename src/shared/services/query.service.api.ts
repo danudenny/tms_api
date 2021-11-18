@@ -33,7 +33,11 @@ export class QueryServiceApi {
       if(isCount){
         return request.data.data[0].cnt
       }else{
-        return request.data.data;
+        if(!request.data.data){
+          return [];
+        }else{
+          return request.data.data;
+        }
       }
     }catch(err){
       console.log("#### error calling query service query", query, ", error: ", err.message); 

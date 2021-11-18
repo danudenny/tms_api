@@ -53,7 +53,7 @@ module.exports = {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
   queryService :{
-    baseUrl : 'http://api-internal.s.sicepat.io/core/query-service/api/'
+    baseUrl : 'http://api-internal.s.sicepat.io/core/query-service/api/v1/'
   },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
