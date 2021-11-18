@@ -309,11 +309,12 @@ export class WebAwbReturnService {
     const result = new WebReturUpdateResponseVm();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const awb = await AwbService.validAwbNumber(payload.awbReturnNumber);
-
-    if(!payload.partnerLogisticId && !payload.userIdDriver && !awb){
-      result.status = 'error';
-      result.message = `No resi ${payload.awbReturnNumber} tidak ditemukan`;
-      return result;
+    if(!awb){
+      if(!payload.partnerLogisticId && !payload.userIdDriver){
+        result.status = 'error';
+        result.message = `No resi ${payload.awbReturnNumber} tidak ditemukan`;
+        return result;
+      }
     }
 
     const awbReturn = await AwbReturn.findOne({
@@ -323,10 +324,11 @@ export class WebAwbReturnService {
       },
     });
 
+    let returnAwbId = awb ? awb.awbId : null;
     if (payload.partnerLogisticId === '') {
       if (payload.userIdDriver) {
         AwbReturn.update(awbReturn.awbReturnId, {
-          returnAwbId : awb.awbId,
+          returnAwbId,
           returnAwbNumber: payload.awbReturnNumber,
           userIdUpdated: authMeta.userId,
           updatedTime: moment().toDate(),
@@ -336,7 +338,7 @@ export class WebAwbReturnService {
         });
       } else {
         AwbReturn.update(awbReturn.awbReturnId, {
-          returnAwbId : awb.awbId,
+          returnAwbId,
           returnAwbNumber: payload.awbReturnNumber,
           userIdUpdated: authMeta.userId,
           updatedTime: moment().toDate(),
@@ -360,6 +362,7 @@ export class WebAwbReturnService {
           userIdUpdated: authMeta.userId,
           updatedTime: moment().toDate(),
           branchId: permissonPayload.branchId,
+          awbReplacementTime: moment().toDate(),
         });
         result.status = 'ok';
         result.message = 'success';
