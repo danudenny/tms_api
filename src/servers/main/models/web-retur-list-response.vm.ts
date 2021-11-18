@@ -79,6 +79,9 @@ export class ItemReturResponseVm {
 
   @ApiModelProperty()
   replacementAwbStatusName: string;
+
+  @ApiModelProperty()
+  awbReplacementTime: string;
 }
 
 export class WebReturListResponseVm extends BaseMetaResponseVm {

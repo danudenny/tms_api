@@ -93,6 +93,12 @@ export class AwbReturn extends TmsBaseEntity {
   })
   isMobileReturn: boolean;
 
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'awb_replacement_time',
+  })
+  awbReplacementTime: Date;
+
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'origin_awb_id', referencedColumnName: 'awbId'})
   originAwb: AwbItemAttr;

@@ -39,6 +39,13 @@ export class WebAwbReturnController {
     return WebAwbReturnService.listReturn(payload);
   }
 
+  @Post('list/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebReturListResponseVm })
+  public async listReturnCount(@Body() payload: BaseMetaPayloadVm) {
+    return WebAwbReturnService.listReturnCount(payload);
+  }
+
   @Post('update')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebReturUpdateResponseVm })

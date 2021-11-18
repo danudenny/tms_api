@@ -332,6 +332,7 @@ export class WebAwbReturnService {
           updatedTime: moment().toDate(),
           userIdDriver: payload.userIdDriver,
           branchId: permissonPayload.branchId,
+          awbReplacementTime: moment().toDate(),
         });
       } else {
         AwbReturn.update(awbReturn.awbReturnId, {
@@ -340,6 +341,7 @@ export class WebAwbReturnService {
           userIdUpdated: authMeta.userId,
           updatedTime: moment().toDate(),
           branchId: permissonPayload.branchId,
+          awbReplacementTime: moment().toDate(),
         });
       }
 
@@ -385,6 +387,7 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['branchTo'] = 't3.branch_name';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
+    payload.fieldResolverMap['awbReplacementTime'] = 't1.awb_replacement_time';
     payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
     payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
     payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
@@ -427,6 +430,7 @@ export class WebAwbReturnService {
       ['t1.branch_id', 'branchIdTo'],
       ['t1.created_time', 'createdTime'],
       ['t1.updated_time', 'updatedTime'],
+      ['t1.awb_replacement_time', 'awbReplacementTime'],
       ['t3.branch_name', 'branchTo'],
       ['t2.awb_status_name', 'awbStatus'],
       ['t2.awb_status_id', 'awbStatusId'],
@@ -475,11 +479,99 @@ export class WebAwbReturnService {
     // q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
 
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const total = 0; // await q.countWithoutTakeAndSkip();
 
     const result = new WebReturListResponseVm();
 
     result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async listReturnCount(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebReturListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['awbReturnId'] = 't1.awb_return_id';
+    payload.fieldResolverMap['originAwbId'] = 't1.origin_awb_id';
+    payload.fieldResolverMap['originAwbNumber'] = 't1.origin_awb_number';
+    payload.fieldResolverMap['returnAwbId'] = 't1.return_awb_id';
+    payload.fieldResolverMap['partnerLogisticAwb'] = 't1.partner_logistic_awb';
+    payload.fieldResolverMap['returnAwbNumber'] = 't1.return_awb_number';
+    payload.fieldResolverMap['isPartnerLogistic'] = 't1.is_partner_logistic';
+    payload.fieldResolverMap['partnerLogisticName'] = 't1.partner_logistic_name';
+    payload.fieldResolverMap['branchIdTo'] = 't1.branch_id';
+    payload.fieldResolverMap['branchTo'] = 't3.branch_name';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
+    payload.fieldResolverMap['awbReplacementTime'] = 't1.awb_replacement_time';
+    payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
+    payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
+    payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
+    payload.fieldResolverMap['branchManifest'] = 't4.branch_name';
+    payload.fieldResolverMap['branchIdManifest'] = 't4.branch_id';
+    payload.fieldResolverMap['partnerName'] = 't5.partner_name';
+    payload.fieldResolverMap['partnerId'] = 't5.partner_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
+    payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
+    payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
+    payload.fieldResolverMap['userUpdatedName'] = '"userUpdatedName"';
+    payload.fieldResolverMap['replacementAwbStatusLast'] = '"replacementAwbStatusLast"';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'updatedTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'originAwbNumber',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(AwbReturn, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.awb_return_id', 'awbReturnId'],
+    );
+
+    q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.awb, 't7', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.awb.branch, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.originAwb.awb.partner, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.branchFrom, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.userUpdated.employee, 't8', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.returnAwb.awbStatus, 't9', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    // q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
+
+    // const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebReturListResponseVm();
+
+    result.data = null;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
@@ -571,6 +663,8 @@ export class WebAwbReturnService {
       payload.fieldResolverMap['branchIdTo'] = 't1.branch_id';
       payload.fieldResolverMap['branchTo'] = 't3.branch_name';
       payload.fieldResolverMap['createdTime'] = 't1.created_time';
+      payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
+      payload.fieldResolverMap['awbReplacementTime'] = 't1.awb_replacement_time';
       payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
       payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
       payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
@@ -607,6 +701,8 @@ export class WebAwbReturnService {
         ['t1.return_awb_number', 'returnAwbNumber'],
         ['t1.branch_id', 'branchIdTo'],
         ['t1.created_time', 'createdTime'],
+        ['t1.updated_time', 'updatedTime'],
+        ['t1.awb_replacement_time', 'awbReplacementTime'],
         ['t3.branch_name', 'branchTo'],
         ['t2.awb_status_name', 'awbStatus'],
         ['t2.awb_status_id', 'awbStatusId'],
