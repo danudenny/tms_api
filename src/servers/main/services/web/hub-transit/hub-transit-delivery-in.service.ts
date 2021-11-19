@@ -349,10 +349,6 @@ export class HubTransitDeliveryInService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
-      [
-        `DISTINCT CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, '0'))`,
-        'bagNumberCode',
-      ],
       ['t2.bag_number', 'bagNumber'],
       ['t2.ref_representative_code', 'representativeCode'],
       ['t3.bag_seq', 'bagSeq'],
@@ -360,7 +356,7 @@ export class HubTransitDeliveryInService {
       ['t1.dropoff_hub_id', 'dropoffHubId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
-      [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      [`CAST(t3.weight AS NUMERIC(20,2))`, 'weight'],
     );
 
     q.innerJoin(e => e.bag, 't2', j =>
@@ -378,10 +374,11 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.groupByRaw('bagNumber, representativeCode, bagSeq, createdTime, dropoffHubId, branchName, branchScanName, weight');
 
     const query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);
-    let cnt = await QueryServiceApi.executeQuery(query, true, 'bagnumbercode');
+    let cnt = await QueryServiceApi.executeQuery(query, true, 'bagnumber');
 
     const result = new WebScanInHubSortListResponseVm();
 
@@ -393,16 +390,17 @@ export class HubTransitDeliveryInService {
         },
       });
       
-      data[i].totalAwb = dropOffHubDetail.length
-      data[i].bagNumberCode = data[i].bagnumbercode;
+      let bagSeq = data[i].bagseq
+      data[i].totalAwb = dropOffHubDetail.length;
+      data[i].bagNumberCode = data[i].bagnumber +''+bagSeq.lpad('0',3);
       data[i].bagNumber = data[i].bagnumber;
       data[i].representativeCode = data[i].representativecode;
-      data[i].bagSeq = data[i].bagseq;
+      data[i].bagSeq = bagSeq;
       data[i].createdTime = data[i].createdtime;
       data[i].dropoffHubId = data[i].dropoffhubId;
       data[i].branchName = data[i].branchname;
       data[i].branchScanName = data[i].branchscanname;
-      data[i].weight = data[i].weight;
+      data[i].weight = data[i].weight+ ' Kg';
     }
 
     const total = cnt;
@@ -492,7 +490,11 @@ export class HubTransitDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    const data = await q.exec();
+    let query = await q.getQuery();
+    let data = await QueryServiceApi.executeQuery(query, false, null);
+    for(let i = 0; i < data.length; i++){
+      data[i].totalResi = data[i].totalresi;
+    }
 
     const result = new WebDropOffSummaryListResponseVm();
     result.data = data;
