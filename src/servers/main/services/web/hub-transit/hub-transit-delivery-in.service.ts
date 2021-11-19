@@ -389,7 +389,7 @@ export class HubTransitDeliveryInService {
         },
       });
       
-      let bagSeq = data[i].bagseq
+      let bagSeq = await String(data[i].bagseq)
       data[i].totalAwb = dropOffHubDetail.length;
       data[i].bagNumberCode = data[i].bagnumber +''+bagSeq.padStart(3,'0');
       data[i].bagNumber = data[i].bagnumber;
