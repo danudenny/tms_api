@@ -381,23 +381,22 @@ export class HubTransitDeliveryInService {
     let cnt = await QueryServiceApi.executeQuery(query, true, 'bagnumber');
 
     const result = new WebScanInHubSortListResponseVm();
-
     for(let i = 0; i < data.length; i++){
       let dropOffHubDetail = await DropoffHubDetail.find({
         where: {
-          dropoffHubId: data[i].dropoffHubId,
+          dropoffHubId: data[i].dropoffhubid,
           isDeleted: false,
         },
       });
       
       let bagSeq = data[i].bagseq
       data[i].totalAwb = dropOffHubDetail.length;
-      data[i].bagNumberCode = data[i].bagnumber +''+bagSeq.lpad('0',3);
+      data[i].bagNumberCode = data[i].bagnumber +''+bagSeq.padStart(3,'0');
       data[i].bagNumber = data[i].bagnumber;
       data[i].representativeCode = data[i].representativecode;
       data[i].bagSeq = bagSeq;
       data[i].createdTime = data[i].createdtime;
-      data[i].dropoffHubId = data[i].dropoffhubId;
+      data[i].dropoffHubId = data[i].dropoffhubid;
       data[i].branchName = data[i].branchname;
       data[i].branchScanName = data[i].branchscanname;
       data[i].weight = data[i].weight+ ' Kg';
