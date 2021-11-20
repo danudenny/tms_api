@@ -35,7 +35,7 @@ export class DoPodDetailPostMetaInQueueService {
     this.queue.process(10, async job => {
       const data = job.data;
       // Logger.log('### JOB ID =========', job.id);
-      await getManager().transaction(async transactionalEntityManager => {
+      // await getManager().transaction(async transactionalEntityManager => {
 
         // NOTE: get awb_ite_attr and update awb_history_id
         const awbItemAttr = await AwbItemAttr.findOne({
@@ -69,10 +69,11 @@ export class DoPodDetailPostMetaInQueueService {
             reasonName: data.reasonName,
             location: data.location,
           });
-          await transactionalEntityManager.insert(AwbHistory, awbHistory);
+          await AwbHistory.insert(awbHistory);
+          // await transactionalEntityManager.insert(AwbHistory, awbHistory);
           // });
         }
-      }); // end transaction
+      // }); // end transaction
 
     });
 

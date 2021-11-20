@@ -10,6 +10,7 @@ import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import moment = require('moment');
 import * as _ from 'lodash';
 import { UpsertHubSummaryBagSortirQueueService } from './upsert-hub-summary-bag-sortir-queue.service';
+import { UpdatePackageCombineHubQueueService } from './update-package-combine-hub-queue.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -48,6 +49,17 @@ export class CreateBagFirstScanHubQueueService {
         where: { awbItemId: data.awbItemId, isDeleted: false },
       });
 
+      if (!awbItemAttr) {
+        console.error('## Gab Sortir :: Not Found Awb Number :: ', data);
+        throw new Error(data);
+      }
+
+      // Jika ada awbItemAttr Update PackageCombine di bull baru 20 Nov 2021
+      UpdatePackageCombineHubQueueService.perform(
+        awbItemAttr.awbItemAttrId,
+        data.bagItemId,
+      );
+
       await getManager().transaction(async transactional => {
         // Handle first awb scan
         // const awbItemAttr = await AwbItemAttr.findOne({
@@ -55,18 +67,18 @@ export class CreateBagFirstScanHubQueueService {
         // });
         // Pindah Ke atas Transaction
 
-        if (awbItemAttr) {
+        // if (awbItemAttr) {
           // update awb_item_attr
-          await transactional.update(AwbItemAttr,
-            { awbItemAttrId: awbItemAttr.awbItemAttrId },
-            {
-              bagItemIdLast: data.bagItemId,
-              updatedTime: data.timestamp,
-              isPackageCombined: true,
-              awbStatusIdLast: 4500,
-              userIdLast: data.userId,
-            },
-          );
+          // await transactional.update(AwbItemAttr,
+          //   { awbItemAttrId: awbItemAttr.awbItemAttrId },
+          //   {
+          //     bagItemIdLast: data.bagItemId,
+          //     updatedTime: data.timestamp,
+          //     isPackageCombined: true,
+          //     awbStatusIdLast: 4500,
+          //     userIdLast: data.userId,
+          //   },
+          // );
 
           // INSERT INTO TABLE BAG ITEM AWB
           const bagItemAwbDetail = BagItemAwb.create({
@@ -178,9 +190,9 @@ export class CreateBagFirstScanHubQueueService {
             data.branchId,
             data.userId,
           );
-        } else {
-          console.error('## Gab Sortir :: Not Found Awb Number :: ', data);
-        }
+        // } else {
+        //   console.error('## Gab Sortir :: Not Found Awb Number :: ', data);
+        // }
 
       }); // end transaction
       return true;

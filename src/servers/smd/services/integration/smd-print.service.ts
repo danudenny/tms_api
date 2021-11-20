@@ -434,6 +434,7 @@ export class SmdPrintService {
         doSmdCode: true,
         doSmdNote: true,
         branchToNameList: true,
+        isIntercity: true,
         doSmdVehicle: {
           doSmdVehicleId: true,
           vehicleNumber: true,
@@ -484,6 +485,13 @@ export class SmdPrintService {
       });
     }
 
+    let incity = "";
+    if(doSmd.isIntercity == 1){
+      incity = "DALAM KOTA";
+    }else {
+      incity = "LUAR KOTA";
+    }
+
     const response = new PrintDoSmdVm();
     const dataVm = new PrintDoSmdDataVm();
     dataVm.doSmdId = doSmd.doSmdId;
@@ -493,6 +501,7 @@ export class SmdPrintService {
     dataVm.totalBagging = doSmd.totalBagging;
     dataVm.totalBag = doSmd.totalBag;
     dataVm.totalBagRepresentative = doSmd.totalBagRepresentative;
+    dataVm.isIntercity = incity;
     const dataSmdDetailsVm: PrintDoSmdDataDoSmdDetailVm[] = [];
 
     const payload = {
