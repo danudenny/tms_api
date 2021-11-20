@@ -44,13 +44,19 @@ export class CreateBagAwbScanHubQueueService {
       const podScanInHubBag = await PodScanInHubBag.findOne({
         where: { bagItemId: data.bagItemId },
       });
+
+      const awbItemAttr = await AwbItemAttr.findOne({
+          where: { awbItemId: data.awbItemId, isDeleted: false },
+        });
+
       await getManager().transaction(async transactional => {
         const dateNow = moment().format('YYYY-MM-DD HH:mm:ss');
 
         // Handle awb scan
-        const awbItemAttr = await AwbItemAttr.findOne({
-          where: { awbItemId: data.awbItemId, isDeleted: false },
-        });
+        // const awbItemAttr = await AwbItemAttr.findOne({
+        //   where: { awbItemId: data.awbItemId, isDeleted: false },
+        // });
+        // Pindah select ke atas 20/11/2021 12:47
 
         if (awbItemAttr) {
           // update awb_item_attr
