@@ -57,6 +57,7 @@ import { UpsertHubSummaryBagSortirQueueService } from './services/upsert-hub-sum
 import { UpsertHubSummaryAwbQueueService } from './services/upsert-hub-summary-awb-queue.service';
 import { UpdateHubSummaryAwbOutQueueService } from './services/update-hub-summary-awb-out-queue.service';
 import { UpdateBranchSortirLogSummaryQueueService } from './services/update-branch-sortir-log-summary-queue.service';
+import { UpdatePackageCombineHubQueueService } from './services/update-package-combine-hub-queue.service';
 
 // #endregion import
 @Module({
@@ -159,6 +160,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       AwbNotificationMailQueueService.boot();
       UpsertHubSummaryAwbQueueService.boot();
       UpdateHubSummaryAwbOutQueueService.boot();
+      UpdatePackageCombineHubQueueService.boot();
     }
 
     if (serverConfig.bullPodMobile) {
