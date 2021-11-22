@@ -176,31 +176,6 @@ export class OrionRepositoryQueryService<
     }
   }
 
-  public getQueryCount(){
-    const queryBuilderParts = this.queryBuilderParts.slice().filter(
-      part =>
-        // tslint:disable-next-line: triple-equals
-        part.partAction != this.queryBuilder.take &&
-        // tslint:disable-next-line: triple-equals
-        part.partAction != this.queryBuilder.skip &&
-        // tslint:disable-next-line: triple-equals
-        part.partAction != this.queryBuilder.offset &&
-        // tslint:disable-next-line: triple-equals
-        part.partAction != this.queryBuilder.limit &&
-        // tslint:disable-next-line: triple-equals
-        part.partAction != this.queryBuilder.orderBy &&
-        // tslint:disable-next-line: triple-equals
-        part.partAction != this.queryBuilder.addOrderBy,
-    );
-
-    const compiledQueryBuilder = this.compileQueryParts(
-      this.queryBuilder.clone(),
-      queryBuilderParts,
-    );
-
-    return compiledQueryBuilder.getQuery();
-  }
-
   public disableAutoJoinEagerRelations() {
     this._autoJoinEagerRelations = false;
 
