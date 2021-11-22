@@ -94,7 +94,7 @@ export class V1WebAwbHandoverService {
     const repo = new OrionRepositoryService(DoPodDeliverDetail, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q, false);
 
     q.selectRaw(
       ['t1.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
