@@ -377,20 +377,19 @@ export class HubTransitDeliveryInService {
     q.groupByRaw('bagNumber, representativeCode, bagSeq, createdTime, dropoffHubId, branchName, branchScanName, weight');
 
     const query = await q.getQuery();
+    const queryCount = await q.getQueryCount();
+    let cnt = await QueryServiceApi.executeQuery(queryCount, true, 'bagnumber');
     let data = await QueryServiceApi.executeQuery(query, false, null);
-    let cnt = await QueryServiceApi.executeQuery(query, true, 'bagnumber');
 
     const result = new WebScanInHubSortListResponseVm();
     for(let i = 0; i < data.length; i++){
-      let dropOffHubDetail = await DropoffHubDetail.find({
-        where: {
-          dropoffHubId: data[i].dropoffhubid,
-          isDeleted: false,
-        },
-      });
+      const repoDetail = new OrionRepositoryService(DropoffHubDetail, 't1');
+      const qDetail = repoDetail.findAllRaw();
+      qDetail.andWhere(e => e.dropoffHubId, w => data[i].dropoffhubid);
+      const dataDetail = await QueryServiceApi.executeQuery(qDetail, false, null);
       
       let bagSeq = await String(data[i].bagseq)
-      data[i].totalAwb = dropOffHubDetail.length;
+      data[i].totalAwb = dataDetail.length;
       data[i].bagNumberCode = data[i].bagnumber +''+bagSeq.padStart(3,'0');
       data[i].bagNumber = data[i].bagnumber;
       data[i].representativeCode = data[i].representativecode;
@@ -399,7 +398,7 @@ export class HubTransitDeliveryInService {
       data[i].dropoffHubId = data[i].dropoffhubid;
       data[i].branchName = data[i].branchname;
       data[i].branchScanName = data[i].branchscanname;
-      data[i].weight = data[i].weight+ ' Kg';
+      data[i].weight = data[i].weight + ' Kg';
     }
 
     const total = cnt;
