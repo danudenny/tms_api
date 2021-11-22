@@ -349,6 +349,7 @@ export class HubTransitDeliveryInService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
+      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`,'bagNumberCode'],
       ['t2.bag_number', 'bagNumber'],
       ['t2.ref_representative_code', 'representativeCode'],
       ['t3.bag_seq', 'bagSeq'],
@@ -356,7 +357,7 @@ export class HubTransitDeliveryInService {
       ['t1.dropoff_hub_id', 'dropoffHubId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
-      [`CAST(t3.weight AS NUMERIC(20,2))`, 'weight'],
+      [`CAST("t3"."weight" AS NUMERIC(20,2))||' Kg'`, 'weight'],
     );
 
     q.innerJoin(e => e.bag, 't2', j =>
@@ -374,10 +375,8 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('bagNumber, representativeCode, bagSeq, createdTime, dropoffHubId, branchName, branchScanName, weight');
 
     const query = await q.getQuery();
-    let cnt = 0;
     let data = await QueryServiceApi.executeQuery(query, false, null);
 
     const result = new WebScanInHubSortListResponseVm();
@@ -388,19 +387,52 @@ export class HubTransitDeliveryInService {
       let queryDetail = qDetail.getQuery();
       const dataDetail = await QueryServiceApi.executeQuery(queryDetail, false, null);
       
-      let bagSeq = await String(data[i].bagseq)
       data[i].totalAwb = dataDetail.length;
-      data[i].bagNumberCode = data[i].bagnumber +''+bagSeq.padStart(3,'0');
+      data[i].bagNumberCode = data[i].bagnumbercode;
       data[i].bagNumber = data[i].bagnumber;
       data[i].representativeCode = data[i].representativecode;
-      data[i].bagSeq = bagSeq;
+      data[i].bagSeq = data[i].bagseq;
       data[i].createdTime = data[i].createdtime;
       data[i].dropoffHubId = data[i].dropoffhubid;
       data[i].branchName = data[i].branchname;
       data[i].branchScanName = data[i].branchscanname;
-      data[i].weight = data[i].weight + ' Kg';
+      data[i].weight = data[i].weight;
     }
 
+    const repoCount = new OrionRepositoryService(DropoffHub, 't1');
+    const qCount = repoCount.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(qCount, false);
+    qCount.selectRaw(
+      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`,'bagNumberCode'],
+      ['t2.bag_number', 'bagNumber'],
+      ['t2.ref_representative_code', 'representativeCode'],
+      ['t3.bag_seq', 'bagSeq'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.dropoff_hub_id', 'dropoffHubId'],
+      ['t5.branch_name', 'branchName'],
+      ['t6.branch_name', 'branchScanName'],
+      [`CAST("t3"."weight" AS NUMERIC(20,2))||' Kg'`, 'weight'],
+    );
+
+    qCount.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.dropoffHubDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.bag.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    let queryCount = await qCount.getQuery();
+    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'bagnumbercode');
     const total = cnt;
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
