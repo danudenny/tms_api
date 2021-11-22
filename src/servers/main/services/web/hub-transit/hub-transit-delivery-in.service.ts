@@ -476,43 +476,10 @@ export class HubTransitDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    const query = await q.getQuery();
-    let data = await QueryServiceApi.executeQuery(query, false, null);
-
-    for(let i = 0; i < data.length; i++){
-      data[i].awbNumber = data[i].awbnumber;
-      data[i].consigneeName = data[i].consigneename;
-      data[i].consigneeAddress = data[i].consigneeaddress;
-      data[i].districtName = data[i].districtname;
-    }
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebDeliveryListResponseVm();
-
-    const repoCount = new OrionRepositoryService(DropoffHubDetail, 't1');
-    const qCount = repoCount.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(qCount, false);
-
-    qCount.selectRaw(
-      ['t2.awb_number', 'awbNumber'],
-      ['t3.consignee_name', 'consigneeName'],
-      ['t3.consignee_address', 'consigneeAddress'],
-      ['t4.district_name', 'districtName'],
-    );
-
-    qCount.innerJoin(e => e.awbItemAttr, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    qCount.innerJoin(e => e.awb, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    qCount.innerJoin(e => e.awb.districtTo, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    let queryCount = await qCount.getQuery();
-    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'awbnumber');
-    const total = cnt;
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
