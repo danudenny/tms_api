@@ -257,7 +257,7 @@ export class V1MobileDivaPaymentService {
           transaction.end();
           result = {...response.data.response, ...redirecLink};
         } catch (error) {
-          console.error(error);
+          // console.error(error);
           nr.noticeError(error);
           transaction.end();
           result = error.response.data;

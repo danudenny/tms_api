@@ -177,8 +177,8 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       CodUpdateSupplierInvoiceQueueService.boot();
       CodExportMongoQueueService.boot();
       CodSqlExportMongoQueueService.boot();
-      // init Cron here
-      CodCronSettlementQueueService.init();
+      // NOTE: disable cron diva
+      // CodCronSettlementQueueService.init();
     }
 
     if (serverConfig.bullSmd) {
@@ -204,7 +204,6 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       UpsertHubSummaryBagSortirQueueService.boot();
       UpdateBranchSortirLogSummaryQueueService.boot();
     }
-
 
   }
 }

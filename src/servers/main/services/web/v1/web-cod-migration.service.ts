@@ -16,6 +16,7 @@ import { WebCodFirstTransactionPayloadVm } from '../../../models/cod/web-awb-cod
 
 import moment = require('moment');
 
+// TODO: to be remove
 export class V1WebCodMigrationService {
 
   static async transferBranch(
