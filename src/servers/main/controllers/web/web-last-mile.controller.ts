@@ -1,12 +1,11 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
-
 import {
     ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import {
-    ProofDeliveryPayloadVm, ProofDeliveryResponseVm, ProofTransitResponseVm, ProofValidateTransitResponseVm,
+    ProofDeliveryResponseVm, ProofTransitResponseVm, ProofValidateTransitResponseVm,
 } from '../../models/last-mile/proof-delivery.vm';
 import {
     LastMileDeliveryOutService,
@@ -16,7 +15,6 @@ import { WebScanOutAwbResponseVm, WebAwbThirdPartyListResponseVm, WebScanOutCrea
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbThirdPartyVm, AwbThirdPartyUpdateResponseVm } from '../../models/last-mile/awb-third-party.vm';
 import { LastMileTransitOutService } from '../../services/web/last-mile/last-mile-transit-out.service';
-import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
 
 @ApiUseTags('Last Mile Delivery')
 @Controller('pod/lastMile')
@@ -42,7 +40,6 @@ export class WebLastMileController {
   @Post('scanOut/awb')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebScanOutAwbResponseVm })
-  @Transactional()
   public async scanOutAwb(@Body() payload: WebScanOutAwbVm) {
     return LastMileTransitOutService.scanOutAwb(payload);
   }

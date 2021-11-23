@@ -130,6 +130,11 @@ export class BagCityService {
     const authMeta = AuthService.getAuthData();
 
     result.status = 'error';
+    const redlockBagCity = await RedisService.redlock(`bag-city-representative:${awbNumber}`, 120);
+    if (!redlockBagCity) {
+      result.message = 'Nomor Resi sudah pernah di scan';
+      return result;
+    }
 
     if (awbNumber.length != 12) {
       result.message = 'Nomor Resi tidak valid';

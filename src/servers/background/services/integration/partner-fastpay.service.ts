@@ -13,6 +13,7 @@ import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { BranchPartner } from '../../../../shared/orm-entity/branch-partner';
 import { BranchChildPartner } from '../../../../shared/orm-entity/branch-child-partner';
+import { PickupRequest } from '../../../../shared/orm-entity/pickup-request';
 
 
 export class PartnerFastpayService {
@@ -119,6 +120,7 @@ export class PartnerFastpayService {
           const timeNow = moment().toDate();
           const branchPartnerId = branchPartner.branchPartnerId;
           const pickupRequestDetailId = pickupRequest.pickupRequestDetailId;
+          const pickupRequestId = pickupRequest.pickupRequestId;
           let workOrderId = pickupRequest.workOrderIdLast;
 
           if (workOrderId) {
@@ -208,6 +210,15 @@ export class PartnerFastpayService {
                 userIdUpdated: 1,
                 updatedTime: timeNow,
               },
+            );
+
+            await PickupRequest.update(
+              { pickupRequestId },
+              {
+                workOrderIdLast: workOrderId,
+                userIdUpdated: 1,
+                updatedTime: timeNow,
+              }
             );
           }
 

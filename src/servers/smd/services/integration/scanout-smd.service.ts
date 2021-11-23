@@ -44,8 +44,10 @@ export class ScanoutSmdService {
         ds.do_smd_id,
         ds.branch_id
       FROM do_smd_vehicle dsv
-      INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.do_smd_status_id_last <> 6000
+      INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000 AND ds.is_deleted = FALSE
       WHERE
+        dsv.created_time >= '${moment().subtract(30,'days').format('YYYY-MM-DD 00:00:00')}' AND 
+        dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND  
         dsv.employee_id_driver = ${payload.employee_id_driver} AND
         dsv.is_deleted = FALSE;
     `;
@@ -211,7 +213,8 @@ export class ScanoutSmdService {
     const resultbranchTo = await Branch.findOne({
       where: {
         branchId: payload.branch_id,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     });
     if (resultbranchTo) {
@@ -222,8 +225,10 @@ export class ScanoutSmdService {
           ds.do_smd_id,
           ds.branch_id
         FROM do_smd_vehicle dsv
-        INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.do_smd_status_id_last <> 6000
+        INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000 AND ds.is_deleted = FALSE
         WHERE
+          dsv.created_time >= '${moment().subtract(30,'days').format('YYYY-MM-DD 00:00:00')}' AND 
+          dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND  
           dsv.employee_id_driver = ${payload.employee_id_driver} AND
           dsv.is_deleted = FALSE;
       `;
@@ -404,7 +409,8 @@ export class ScanoutSmdService {
       const resultbranchTo = await Branch.findOne({
         where: {
           branchCode: payload.branch_code,
-          isDeleted: false,
+          isDeleted : false,
+          isActive : true
         },
       });
 
@@ -559,7 +565,8 @@ export class ScanoutSmdService {
       const resultbranchTo = await Branch.findOne({
         where: {
           branchCode: payload.branch_code,
-          isDeleted: false,
+          isDeleted : false,
+          isActive : true
         },
       });
 
@@ -1285,6 +1292,8 @@ export class ScanoutSmdService {
                   bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
                   branchIdLast: permissonPayload.branchId,
                   bagItemHistoryId: Number(bagItemHistoryId),
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
                 },
               );
               // Generate history bag and its awb IN_HUB
@@ -1456,6 +1465,8 @@ export class ScanoutSmdService {
                   bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
                   branchIdLast: permissonPayload.branchId,
                   bagItemHistoryId: Number(bagItemHistoryId),
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
                 },
               );
               // Generate history bag and its awb IN_HUB
@@ -2794,6 +2805,7 @@ export class ScanoutSmdService {
   }
 
   static async changeSealManual(payload: SealChangeManualPayloadVm): Promise<any> {
+    const authMeta = AuthService.getAuthData();
     const doSmd = await DoSmd.findOne({
       where: {
         doSmdCode: payload.doSmdCode,
@@ -2818,11 +2830,16 @@ export class ScanoutSmdService {
         },
       });
 
+      if (!doSmdVehicle) {
+        RequestErrorService.throwObj({
+          message: 'can\'t proccess dmd vendor',
+        });
+      }
+
       const doSmdHistory = await DoSmdHistory.findOne({
         where: {
           doSmdId: doSmd.doSmdId,
           doSmdStatusId: 1200, // status change seal
-          userIdCreated: 1,
           sealNumber: payload.sealNumber,
         },
       });
@@ -2836,7 +2853,7 @@ export class ScanoutSmdService {
           { doSmdId : doSmd.doSmdId },
           {
             sealNumberLast: payload.sealNumber,
-            userIdUpdated: 1,
+            userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
           },
         );
@@ -2845,7 +2862,7 @@ export class ScanoutSmdService {
             { doSmdDetailId : doSmdDetail.doSmdDetailId },
             {
               sealNumber: payload.sealNumber,
-              userIdUpdated: 1,
+              userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
             },
           );
@@ -2862,7 +2879,7 @@ export class ScanoutSmdService {
           1200, // status seal change
           payload.sealNumber,
           null,
-          1, // user superadmin
+          authMeta.userId, // user superadmin
         );
       }
 

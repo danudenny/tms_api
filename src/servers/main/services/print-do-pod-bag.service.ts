@@ -129,8 +129,18 @@ export class PrintDoPodBagService {
       printColumn = 'Gabung Paket';
     }
 
-    const currentDate = moment();
+    let totalWeight = 0;
+    // loop data and sum data totalCodValue
+    if (data.doPodDetailBag.length) {
+      data.doPodDetailBag.map(function(detail) {
+        if (detail.bagItem && detail.bagItem.weight){
+            totalWeight += Number(detail.bagItem.weight);
+          }
+      });
+    }
+    totalWeight = Math.round(totalWeight * 100)/100;
 
+    const currentDate = moment();
     return this.printDoPodBag(
       res,
       data,
@@ -142,6 +152,7 @@ export class PrintDoPodBagService {
         totalItems: totalBagItem,
         printType: printName,
         printCol: printColumn,
+        totalWeight
       },
       templateConfig,
     );
@@ -158,6 +169,7 @@ export class PrintDoPodBagService {
       totalItems: number;
       printType: string;
       printCol: string;
+      totalWeight: number;
     },
     templateConfig: {
       printCopy?: number;

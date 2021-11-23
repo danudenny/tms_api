@@ -289,6 +289,12 @@ export class ScanOutListVm {
 
   @ApiModelProperty()
   nik: String;
+
+  @ApiModelProperty()
+  arrival_date_time: String;
+
+  @ApiModelProperty()
+  departure_date_time: String;
 }
 
 export class ScanOutHistoryResponseVm extends BaseMetaResponseVm {
@@ -562,6 +568,14 @@ export class ScanOutSmdImageResponseVm {
 
   @ApiModelProperty({type: () => [ScanOutImageVm]})
   data: ScanOutImageVm[];
+}
+
+export class ScanOutSmdEmptyDelete {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
 }
 
 export class ScanOutImageVm {

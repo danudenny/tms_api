@@ -618,7 +618,7 @@ export class V2WebAwbCodService {
         .getOne();
 
       if (
-        (type === 'cash' && awbValid && !awbValid.transactionStatusId) ||
+        (type === 'cash' && awbValid) ||
         (type === 'cashless' && awbValid)
       ) {
         return true;
@@ -653,7 +653,8 @@ export class V2WebAwbCodService {
       select: ['branchId', 'branchName'],
       where: {
         branchId,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true
       },
     });
 

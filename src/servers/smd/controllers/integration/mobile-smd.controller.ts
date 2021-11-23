@@ -101,18 +101,16 @@ export class MobileSmdController {
 
   @Post('smd/end-manual')
   @Transactional()
-  // @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  @ApiImplicitHeader({ name: 'x-api-key' })
-  @UseGuards(AuthXAPIKeyGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanInEndManualMobile(@Req() request: any, @Body() payload: MobileSmdEndManuallPayloadVm) {
     return MobileSmdService.scanInEndManualMobile(payload);
   }
 
   @Post('smd/unfinished-smd')
   @Transactional()
-  // @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
-  @ApiImplicitHeader({ name: 'x-api-key' })
-  @UseGuards(AuthXAPIKeyGuard)
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  @ApiBearerAuth()
   public async unfinishedSmd(@Req() request: any, @Body() payload: UnfinishedSmdPayloadVm) {
     return MobileSmdService.unfinishedSmd(payload);
   }

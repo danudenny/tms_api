@@ -185,7 +185,7 @@ export class V2MobileInitDataService {
       return await q.exec();
     }
 
-    q.andWhere(e => e.awbStatusId, w => w.notEquals(AWB_STATUS.RTC));
+    q.andWhere(e => e.awbStatusId, w => w.notIn([AWB_STATUS.RTC, AWB_STATUS.HOLD_WAITING_CUSTOMER]));
     return await q.exec();
 
     // // NOTE: add status RTC if role Ops - Sigesit Transit

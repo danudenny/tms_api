@@ -39,7 +39,7 @@ export class MobileSmdListService {
 
     const authMeta = AuthService.getAuthData();
     const paramUserId =  authMeta.userId;
-    const startDate = moment().add(-3, 'days').format('YYYY-MM-DD 00:00:00');
+    const startDate = moment().add(-4, 'days').format('YYYY-MM-DD 00:00:00');
     const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
 
     const qb = createQueryBuilder();
@@ -135,6 +135,7 @@ export class MobileSmdListService {
                   ORDER BY at.created_time DESC
                   LIMIT 1
               )`, 'signature_img_path');
+    qb.addSelect('dsd.arrival_time', 'arrival_time');
     qb.from('do_smd', 'ds');
     qb.innerJoin(
       'do_smd_detail',

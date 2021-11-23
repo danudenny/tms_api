@@ -90,10 +90,6 @@ export class V1WebAwbCodService {
       ['COUNT(t1.awb_item_id)', 'countAwb'],
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 'pickupdetail', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.codPayment, 'cp', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -229,10 +225,6 @@ export class V1WebAwbCodService {
       j
         .andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.isCod, w => w.isTrue()),
-    );
-
-    q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.awb.packageType, 't5');
@@ -383,10 +375,6 @@ export class V1WebAwbCodService {
         .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.branchLast, 't6', j =>
@@ -461,7 +449,7 @@ export class V1WebAwbCodService {
   ): Promise<WebAwbCodDlvV2ListResponseVm> {
     payload.fieldResolverMap['driverName'] = 't3.first_name';
     payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
-    payload.fieldResolverMap['branchIdFinal'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'driverName';
@@ -474,24 +462,22 @@ export class V1WebAwbCodService {
 
     q.selectRaw(
       ['t3.first_name', 'driverName'],
-      ['count(t1.user_id_driver)', 'totalResi'],
-      ['t1.user_id_driver', 'userIdDriver'],
+      ['count(t3.user_id)', 'totalResi'],
+      ['t3.user_id', 'userIdDriver'],
       ['t4.branch_name', 'branchNameFinal'],
-      ['t1.branch_id', 'branchIdFinal'],
+      ['t4.branch_id', 'branchIdFinal'],
     );
 
     q.innerJoin(e => e.awbItemAttr, 't2', j => {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
-      j.andWhere(e => e.transactionStatusId, w => w.isNull());
+      j.andWhere(
+        e => e.transactionStatusId,
+        w => w.equals(TRANSACTION_STATUS.DEFAULT),
+      );
       j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     });
 
-    q.innerJoin(e => e.awbItemAttr.pickupRequestDetail, 'prd', j => {
-      j.andWhere(e => e.isDeleted, w => w.isFalse());
-    });
-
     q.innerJoin(e => e.userDriver, 't3');
-
     q.innerJoin(e => e.branchFinal, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -499,7 +485,7 @@ export class V1WebAwbCodService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     q.groupByRaw(
-      't1.user_id_driver, t3.first_name, t1.branch_id, t4.branch_name',
+      't3.user_id, t4.branch_id',
     );
 
     const data = await q.exec();
@@ -535,7 +521,6 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
-    payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -573,7 +558,6 @@ export class V1WebAwbCodService {
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
       ['t1.transaction_status_id', 'transactionStatusId'],
-      ['t9.created_time', 'pickupRequestTime'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
@@ -593,10 +577,6 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awbStatusFinal, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -628,7 +608,10 @@ export class V1WebAwbCodService {
       //#endregion
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.transactionStatusId, w => w.isNull());
+    q.andWhere(
+      e => e.transactionStatusId,
+      w => w.equals(TRANSACTION_STATUS.DEFAULT),
+    );
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
     q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
@@ -721,10 +704,6 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     //#region Cod Merger
     if (
       RoleGroupService.isRoleCodMerge(
@@ -753,7 +732,10 @@ export class V1WebAwbCodService {
     }
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhere(e => e.transactionStatusId, w => w.isNull());
+    q.andWhere(
+      e => e.transactionStatusId,
+      w => w.equals(TRANSACTION_STATUS.DEFAULT),
+    );
     q.andWhere(e => e.awb.isCod, w => w.isTrue());
     // filter DLV
     q.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
@@ -1075,7 +1057,7 @@ export class V1WebAwbCodService {
               awbItemId: transactionDetail.awbItemId,
             },
             {
-              transactionStatusId: null,
+              transactionStatusId: TRANSACTION_STATUS.DEFAULT,
             },
           );
 
@@ -1414,7 +1396,7 @@ export class V1WebAwbCodService {
                 awbItemId: transactionDetail.awbItemId,
               },
               {
-                transactionStatusId: null,
+                transactionStatusId: TRANSACTION_STATUS.DEFAULT,
               },
             );
 
@@ -1763,7 +1745,7 @@ export class V1WebAwbCodService {
         .getOne();
 
       if (
-        (type === 'cash' && awbValid && !awbValid.transactionStatusId) ||
+        (type === 'cash' && awbValid) ||
         (type === 'cashless' && awbValid)
       ) {
         return true;
@@ -1798,7 +1780,8 @@ export class V1WebAwbCodService {
       select: ['branchId', 'branchName'],
       where: {
         branchId,
-        isDeleted: false,
+        isDeleted : false,
+        isActive : true,
       },
     });
 

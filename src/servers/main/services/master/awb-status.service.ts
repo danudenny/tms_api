@@ -115,10 +115,7 @@ export class AwbStatusService {
         message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
         return { isValid, message };
       }
-      if (
-        !optionalManifested &&
-        !(await AwbService.isManifested(awbItemAttr.awbItemId))
-      ) {
+      if (!optionalManifested && !await AwbService.isManifested(awbItemAttr.awbNumber, awbItemAttr.awbItemId)) {
         message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
         return { isValid, message };
       }

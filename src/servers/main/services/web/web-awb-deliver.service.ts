@@ -45,7 +45,7 @@ export class WebAwbDeliverService {
         if (awb) {
           // add handel status Cod problem
           const statusCodProblem = [AWB_STATUS.CODB, AWB_STATUS.CODOC];
-          if (AWB_STATUS.RTN == delivery.awbStatusId && !await AwbService.isManifested(awb.awbItemId)){
+          if (AWB_STATUS.RTN == delivery.awbStatusId && !await AwbService.isManifested(awb.awbNumber, awb.awbItemId)){
             response.status = 'error';
             response.message = `Resi ${delivery.awbNumber} belum pernah di MANIFESTED`;
           } else if (
@@ -211,6 +211,7 @@ export class WebAwbDeliverService {
           {
             awbStatusIdLast: doPodDeliverHistory.awbStatusId,
             awbStatusDateTimeLast: doPodDeliverHistory.awbStatusDateTime,
+            awbStatusDateLast : doPodDeliverHistory.awbStatusDateTime,
             reasonIdLast: doPodDeliverHistory.reasonId,
             syncDateTimeLast: doPodDeliverHistory.syncDateTime,
             descLast: doPodDeliverHistory.desc,

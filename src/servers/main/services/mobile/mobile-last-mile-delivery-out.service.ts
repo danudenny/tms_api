@@ -106,6 +106,7 @@ export class LastMileDeliveryOutService {
               doPod.doPodDeliverId = doPodDeliverId;
               doPod.userIdDriver = authMeta.userId;
               doPod.doPodDeliverDateTime = doPodDateTime;
+              doPod.doPodDeliverDate = doPodDateTime;
               doPod.branchId = permissonPayload.branchId;
               doPod.userId = authMeta.userId;
               doPod.totalAwb = 1; // init
@@ -342,6 +343,7 @@ export class LastMileDeliveryOutService {
     // doPod.userIdDriver = payload.
     doPod.userIdDriver = authMeta.userId;
     doPod.doPodDeliverDateTime = doPodDateTime;
+    doPod.doPodDeliverDate = doPodDateTime;
     doPod.description = null;
 
     doPod.branchId = permissonPayload.branchId;

@@ -10,7 +10,24 @@ import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutDetailMoreResponseVm, ScanOutDetailBaggingMoreResponseVm, ScanOutSmdDetailRepresentativeResponseVm, ScanOutSmdImageResponseVm, ScanOutSmdDetailBagRepresentativeResponseVm, ScanOutDetailBagRepresentativeMoreResponseVm } from '../../models/scanout-smd.response.vm';
+import {
+  ScanOutSmdVehicleResponseVm,
+  ScanOutSmdRouteResponseVm,
+  ScanOutSmdItemResponseVm,
+  ScanOutSmdSealResponseVm,
+  ScanOutListResponseVm,
+  ScanOutHistoryResponseVm,
+  ScanOutSmdHandoverResponseVm,
+  ScanOutSmdDetailResponseVm,
+  ScanOutSmdDetailBaggingResponseVm,
+  ScanOutDetailMoreResponseVm,
+  ScanOutDetailBaggingMoreResponseVm,
+  ScanOutSmdDetailRepresentativeResponseVm,
+  ScanOutSmdImageResponseVm,
+  ScanOutSmdDetailBagRepresentativeResponseVm,
+  ScanOutDetailBagRepresentativeMoreResponseVm,
+  ScanOutSmdEmptyDelete,
+} from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
@@ -33,6 +50,38 @@ import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 
 @Injectable()
 export class ScanoutSmdListService {
+  static async scanoutEmptyDelete(doSmdId: number): Promise<any> {
+    try {
+      //const doSmdCode = payload.do_smd_code;
+      const result = new ScanOutSmdEmptyDelete();
+      // check data exist
+      const checkDataIsExist = await DoSmd.findOne({
+        where: {
+          doSmdId,
+          isEmpty: true,
+          isDeleted: false,
+        },
+      });
+      if (checkDataIsExist) {
+        await DoSmd.update({
+          doSmdId,
+        }, {
+          isDeleted: true,
+        });
+        result.statusCode = HttpStatus.OK;
+        result.message = 'Delete Data Success';
+      } else {
+        // data not found
+        result.statusCode = HttpStatus.BAD_REQUEST;
+        result.message = 'Data not found';
+      }
+
+      return result;
+    } catch (e) {
+      throw new BadRequestException(`Internal Server Error`);
+    }
+  }
+
   static async findScanOutList(
     payload: BaseMetaPayloadVm,
   ): Promise<ScanOutListResponseVm> {
@@ -182,6 +231,8 @@ export class ScanoutSmdListService {
       ['ds.total_bagging', 'total_bagging'],
       ['ds.total_bag_representative', 'total_bag_representative'],
       ['dss.do_smd_status_title', 'do_smd_status_title'],
+      ['to_char(ds.arrival_date_time,\'YYYY-MM-DD HH24:MI:SS\')', 'arrival_date_time'],
+      ['to_char(ds.departure_date_time,\'YYYY-MM-DD HH24:MI:SS\')', 'departure_date_time'],
     );
 
     q.innerJoinRaw(
