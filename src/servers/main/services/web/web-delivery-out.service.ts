@@ -14,7 +14,6 @@ import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver
 import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
 import { DoPodRepository } from '../../../../shared/orm-repository/do-pod.repository';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { DeliveryService } from '../../../../shared/services/delivery.service';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -22,7 +21,7 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { RedisService } from '../../../../shared/services/redis.service';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
-import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
+import { CsvHelper } from '../../../../shared/helpers/csv-helpers';
 import {
   WebScanOutAwbListResponseVm,
   WebScanOutAwbResponseVm,
@@ -175,7 +174,7 @@ export class WebDeliveryOutService {
       where: {
         branchId: payload.branchIdTo,
         isDeleted : false,
-        isActive : true
+        isActive : true,
       },
     });
 
@@ -495,12 +494,6 @@ export class WebDeliveryOutService {
             } else {
               // save data to awb_trouble
               const branchName = awb.branchLast ? awb.branchLast.branchName : '';
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                branchName,
-                awb.awbStatusIdLast,
-              );
-
               totalError += 1;
               response.status = 'error';
               response.message =
@@ -575,12 +568,6 @@ export class WebDeliveryOutService {
               // trigger current user
               // from do_pod before in ??
               const branchName = awb.branchLast ? awb.branchLast.branchName : '';
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                branchName,
-                awb.awbStatusIdLast,
-              );
-
               totalError += 1;
               response.status = 'error';
               response.message =
@@ -1577,7 +1564,7 @@ export class WebDeliveryOutService {
         ['t3.awb_number', 'No.Resi'],
         [`COALESCE(t6.package_type_code, '-')`, 'Layanan'],
         [`CONCAT(t5.total_weight::numeric(10,2), 'kg')`, 'Berat Partner'],
-        [`CONCAT(t5.total_weight_real_rounded::numeric(10,2), ' kg')`, 'Berat Asli']
+        [`CONCAT(t5.total_weight_real_rounded::numeric(10,2), ' kg')`, 'Berat Asli'],
       );
 
       q.innerJoin(e => e.bagItems, 't2', j =>
@@ -1601,7 +1588,7 @@ export class WebDeliveryOutService {
 
       // await q.stream(response, this.streamTransformBagOrderDetailList);
 
-      let data =  await q.exec();
+      const data =  await q.exec();
       await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       console.error(err);

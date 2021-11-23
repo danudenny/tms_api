@@ -1,10 +1,9 @@
 // #region import
-import _, { assign, join, sampleSize } from 'lodash';
+import _, { assign, sampleSize } from 'lodash';
 import { createQueryBuilder, getManager } from 'typeorm';
 
 import { BadRequestException } from '@nestjs/common';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
-import { AwbTrouble } from '../../../../../shared/orm-entity/awb-trouble';
 import { Bag } from '../../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../../shared/orm-entity/bag-item-awb';
@@ -14,7 +13,6 @@ import { PodScanInHubBag } from '../../../../../shared/orm-entity/pod-scan-in-hu
 import { PodScanInHubDetail } from '../../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { Representative } from '../../../../../shared/orm-entity/representative';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
 import { CreateBagAwbScanHubQueueService } from '../../../../queue/services/create-bag-awb-scan-hub-queue.service';
 import { CreateBagFirstScanHubQueueService } from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
@@ -100,7 +98,7 @@ export class V1PackageService {
           where: {
             branchCode: value,
             isActive : true,
-            isDeleted : false
+            isDeleted : false,
           },
         });
         if (branch) {
@@ -188,7 +186,7 @@ export class V1PackageService {
       qb.innerJoin('branch', 'f', 'f.branch_id = b.branch_id_to');
       qb.where('a.pod_scan_in_hub_id = :podScanInHubId', { podScanInHubId });
       qb.andWhere('a.is_deleted = false');
-      qb.andWhere('f.is_deleted = false and f.is_active = true')
+      qb.andWhere('f.is_deleted = false and f.is_active = true');
 
       const data = await qb.getRawMany();
       let bagNumber;
@@ -907,30 +905,6 @@ export class V1PackageService {
         `Bag Number ${payload.bagNumber}, tidak ditemukan`,
       );
     }
-  }
-
-  private static async insertAwbTrouble(data): Promise<any> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const awbTroubleCode = await CustomCounterCode.awbTrouble(
-      moment().toDate(),
-    );
-    const awbTroubleData = AwbTrouble.create({
-      awbTroubleCode,
-      awbStatusId: 2600,
-      transactionStatusId: 500,
-      awbNumber: data.awbNumber,
-      troubleDesc: data.troubleDesc,
-      troubleCategory: 'sortir_bag',
-      employeeIdTrigger: authMeta.userId,
-      userIdTrigger: authMeta.userId,
-      branchIdTrigger: permissonPayload.branchId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-      userIdCreated: authMeta.userId,
-      userIdUpdated: authMeta.userId,
-    });
-    await AwbTrouble.save(awbTroubleData);
   }
 
   private static async getAwbItem(

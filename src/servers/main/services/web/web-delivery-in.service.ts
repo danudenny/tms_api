@@ -35,8 +35,6 @@ import {
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebDeliveryListResponseVm } from '../../models/web-delivery-list-response.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
-import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { WebAwbFListPodResponseVm } from '../../models/web-awb-filter-list.response.vm';
@@ -55,7 +53,6 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
 import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
-import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
 import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 
 // #endregion
@@ -786,11 +783,6 @@ export class WebDeliveryInService {
               // Mau IN tapi udah IN di BRANCH LAIN = TROUBLE
               // Mau IN tapi belum OUT SAMA SEKALI = TROUBLE
               // save data to awb_trouble
-              await AwbTroubleService.fromScanIn(
-                awbNumber,
-                awb.awbStatusIdLast,
-              );
-
               totalError += 1;
               response.status = 'error';
               response.trouble = true;
@@ -885,11 +877,6 @@ export class WebDeliveryInService {
                 response.message = 'Server Busy';
               }
             } else {
-              // save data to awb_trouble
-              await AwbTroubleService.fromScanIn(
-                awbNumber,
-                awb.awbStatusIdLast,
-              );
               totalError += 1;
               response.status = 'error';
               response.trouble = true;
