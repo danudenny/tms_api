@@ -1,20 +1,16 @@
 // #region import
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
 import {
-    ApiImplicitHeader, ApiOkResponse, ApiUseTags,
+    ApiOkResponse, ApiUseTags,
 } from '../../../../../shared/external/nestjs-swagger';
-import { AuthKeyCodGuard } from '../../../../../shared/guards/auth-key-cod.guard';
 import {
-    WebCodTransferHeadOfficePayloadVm, WebCodTransferPayloadVm, WebCodVoucherPayloadVm,
+    WebCodVoucherPayloadVm,
 } from '../../../models/cod/web-awb-cod-payload.vm';
 import {
-    WebCodTransferBranchResponseVm, WebCodTransferHeadOfficeResponseVm,
     WebCodVoucherSuccessResponseVm,
     WebMonitoringSettlementResponseVm,
 } from '../../../models/cod/web-awb-cod-response.vm';
 import { V1WebAwbCodVoucherService } from '../../../services/web/v1/web-awb-cod-voucher.service';
-import { WebCodMigrationTransferPayloadVm, WebCodMigrationTransferBranchResponseVm } from '../../../models/cod/web-awb-cod-migration.vm';
-import { V1WebCodMigrationService } from '../../../services/web/v1/web-cod-migration.service';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 
@@ -48,42 +44,6 @@ export class V1WebAwbCodVoucherController {
   public async vouchers() {
     return V1WebAwbCodVoucherService.getAllVouchers();
   }
-
-  // NOTE: only use for migratin data
-  // #region migration data
-  // @Post('migration/transaction')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiImplicitHeader({ name: 'auth-key' })
-  // @UseGuards(AuthKeyCodGuard)
-  // @ApiOkResponse({ type: WebCodMigrationTransferBranchResponseVm })
-  // public async migrationTransaction(
-  //   @Body() payload: WebCodMigrationTransferPayloadVm,
-  // ) {
-  //   return V1WebCodMigrationService.transferBranch(payload);
-  // }
-
-  // @Post('migration/bankStatement')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiImplicitHeader({ name: 'auth-key' })
-  // @UseGuards(AuthKeyCodGuard)
-  // // @ApiOkResponse({ type: WebCodTransferHeadOfficeResponseVm })
-  // public async migrationBankStatement(
-  //   @Body() payload: WebCodTransferHeadOfficePayloadVm,
-  // ) {
-  //   return {}; // V1WebAwbCodService.transferHeadOffice(payload, file);
-  // }
-
-  // @Post('migration/supplierInvoice')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiImplicitHeader({ name: 'auth-key' })
-  // @UseGuards(AuthKeyCodGuard)
-  // // @ApiOkResponse({ type: WebCodTransferHeadOfficeResponseVm })
-  // public async migrationSupplierInvoice(
-  //   @Body() payload: WebCodTransferHeadOfficePayloadVm,
-  // ) {
-  //   return {}; // V1WebAwbCodService.transferHeadOffice(payload, file);
-  // }
-  // #endregion migration data
 
   @Post('monitoring/settlement')
   @HttpCode(HttpStatus.OK)
