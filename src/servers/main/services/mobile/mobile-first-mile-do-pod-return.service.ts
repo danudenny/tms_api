@@ -38,6 +38,7 @@ import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { DoPodReturnAttachment } from '../../../../shared/orm-entity/do-pod-return-attachment';
 import { DoPodReturnHistory } from '../../../../shared/orm-entity/do-pod-return-history';
 import { AwbStatusService } from '../master/awb-status.service';
+import { ImgProxyHelper } from '../../../../shared/helpers/imgproxy-helper';
 
 export class MobileFirstMileDoPodReturnService {
 
@@ -355,6 +356,9 @@ export class MobileFirstMileDoPodReturnService {
   ): Promise<PhotoResponseVm> {
     const result = new PhotoResponseVm();
     result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodReturnDetailId, payload.attachmentType);
+    for(let i = 0; i < result.data.length; i++){
+      result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+    }
     return result;
   }
 
