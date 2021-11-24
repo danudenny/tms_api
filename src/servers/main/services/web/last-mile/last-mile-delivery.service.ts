@@ -41,6 +41,49 @@ export class LastMileDeliveryService {
 
     q.selectRaw(
       ['t1.do_pod_deliver_date', 'datePOD'],
+      // ['COUNT(DISTINCT(t1.do_pod_deliver_id))', 'totalSuratJalan'],
+      ['t1.user_id_driver', 'userIdDriver'],
+      ['t5.branch_name', 'branchName'],
+      ['t1.branch_id', 'branchId'],
+      ['t2.fullname', 'nickname']
+      // ['COUNT(t3.awb_number)', 'totalAwb'],
+      // [
+      //   'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 14000)',
+      //   'totalAntar',
+      // ],
+      // [
+      //   'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 30000)',
+      //   'totalDelivery',
+      // ],
+      // [
+      //   'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000 AND t3.awb_status_id_last <> 14000)',
+      //   'totalProblem',
+      // ],
+    );
+
+    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoin(e => e.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.groupByRaw(
+      '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
+    );
+
+    // const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+    const result = new WebScanOutDeliverGroupListResponseVm();
+
+    let repoDetail = new OrionRepositoryService(DoPodDeliver, 't1');
+    const q2 = repoDetail.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q2, true);
+
+    q2.selectRaw(
+      ['t1.do_pod_deliver_date', 'datePOD'],
       ['COUNT(DISTINCT(t1.do_pod_deliver_id))', 'totalSuratJalan'],
       ['t1.user_id_driver', 'userIdDriver'],
       ['t5.branch_name', 'branchName'],
@@ -61,23 +104,21 @@ export class LastMileDeliveryService {
       ],
     );
 
-    q.innerJoin(e => e.userDriver.employee, 't2', j =>
+    q2.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
+    q2.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.branch, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q2.innerJoin(e => e.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
     );
-    q.groupByRaw(
+
+    q2.groupByRaw(
       '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
     );
+    const data = await q2.exec();
 
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
-
-    const result = new WebScanOutDeliverGroupListResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
