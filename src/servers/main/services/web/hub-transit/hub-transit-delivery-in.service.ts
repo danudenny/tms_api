@@ -58,6 +58,7 @@ export class HubTransitDeliveryInService {
 
       const bagData = await BagService.validBagNumber(bagNumber);
       if (bagData) {
+        const asal = await this.getDoPodByBagItem(bagData.bagItemId);
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
         const BAG_STATUS_DO_SELECTED = (payload.hubId === 0) ? BAG_STATUS.DO_HUB : BAG_STATUS.DO_LINE_HAUL;
@@ -327,7 +328,7 @@ export class HubTransitDeliveryInService {
           isDeleted: false,
         },
       });
-      
+
       data[i].totalAwb = dropOffHubDetail.length
     }
 
@@ -469,6 +470,7 @@ export class HubTransitDeliveryInService {
     q.andWhere('t1.transaction_status_id_last = 800');
     q.andWhere('t1.is_deleted = false');
     q.orderBy('t1.created_time', 'DESC' );
+    q.limit(1);
     return await q.getRawOne();
   }
 }
