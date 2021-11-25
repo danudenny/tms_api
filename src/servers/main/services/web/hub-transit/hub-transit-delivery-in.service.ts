@@ -327,7 +327,7 @@ export class HubTransitDeliveryInService {
           isDeleted: false,
         },
       });
-      
+
       data[i].totalAwb = dropOffHubDetail.length
     }
 
@@ -469,6 +469,7 @@ export class HubTransitDeliveryInService {
     q.andWhere('t1.transaction_status_id_last = 800');
     q.andWhere('t1.is_deleted = false');
     q.orderBy('t1.created_time', 'DESC' );
+    q.limit(1);
     return await q.getRawOne();
   }
 }
