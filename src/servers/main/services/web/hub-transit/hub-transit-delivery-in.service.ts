@@ -58,7 +58,6 @@ export class HubTransitDeliveryInService {
 
       const bagData = await BagService.validBagNumber(bagNumber);
       if (bagData) {
-        const asal = await this.getDoPodByBagItem(bagData.bagItemId);
         // NOTE: check condition disable on check branchIdNext
         // status bagItemStatusIdLast ??
         const BAG_STATUS_DO_SELECTED = (payload.hubId === 0) ? BAG_STATUS.DO_HUB : BAG_STATUS.DO_LINE_HAUL;
