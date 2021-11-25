@@ -1,7 +1,7 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
   GenerateQueueSmdBerangkatPayload, GenerateQueueSmdVendorPayload, GenerateQueueDaftarScanMasukGabungPaketPayload,
-  ListCentralExportPayloadVm, GenerateQueueDaftarGsk,
+  ListCentralExportPayloadVm, GenerateQueueDaftarGsk, GenerateQueueMonitoringSmd,
 } from '../../models/smd-central-reporting.payload.vm';
 import { SmdCentralReportingService } from '../../services/integration/smd-central-reporting.service';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
@@ -67,5 +67,17 @@ export class SmdCentralReportingController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   async generateQueueBagCity(@Body() body: GenerateQueueDaftarGsk) {
     return SmdCentralReportingService.generateQueueSmd(body, 'daftar_gsk');
+  }
+
+  @Post('monitoring/smd/queue')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  async getListMonitoringSmdQueue(@Body() body: ListCentralExportPayloadVm) {
+    return SmdCentralReportingService.getListQueueSmd(body, 'monitoring_smd');
+  }
+
+  @Post('monitoring/smd/generate')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  async generateQueueMonitoringSmd(@Body() body: GenerateQueueMonitoringSmd) {
+    return SmdCentralReportingService.generateQueueSmd(body, 'monitoring_smd');
   }
 }

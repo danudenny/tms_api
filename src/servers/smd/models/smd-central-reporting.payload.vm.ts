@@ -84,3 +84,15 @@ export class ListQueueRequestParamPayloadVm {
   @ApiModelProperty()
   reportType: string;
 }
+
+export class GenerateQueueMonitoringSmd {
+  @ApiModelProperty()
+  startDate: string;
+
+  @ApiModelProperty()
+  endDate: string;
+
+  @ApiModelProperty()
+  isIntercity: number;
+}
+
