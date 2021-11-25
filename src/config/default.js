@@ -31,7 +31,7 @@ module.exports = {
     password: '@S1cepat!',
   },
   imgProxyHelper: {
-    proxyUrl: 'https://imgproxy-stag.sicepat.com',
+    proxyUrl: 'https://imgproxy.sicepat.com',
     key: 'WbEZyJ8WsD',
     salt: 'GV5ueRu21Z',
     algo: 'SHA-256',
