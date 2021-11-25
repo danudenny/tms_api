@@ -8,7 +8,6 @@ import { Employee } from '../../../../../shared/orm-entity/employee';
 import { PartnerLogistic } from '../../../../../shared/orm-entity/partner-logistic';
 import { DoPodRepository } from '../../../../../shared/orm-repository/do-pod.repository';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
@@ -86,7 +85,7 @@ export class HubTransitDeliveryOutService {
       where: {
         branchId: payload.branchIdTo,
         isDeleted : false,
-        isActive : true
+        isActive : true,
       },
     });
 
@@ -198,9 +197,6 @@ export class HubTransitDeliveryOutService {
 
         if (notDeliver && holdRedis) {
           if (doPod) {
-            const statusCode = await AwbService.awbStatusGroup(
-              awb.awbStatusIdLast,
-            );
             // save data to awb_trouble
             // if (statusCode != 'IN') {
             //   const branchName = awb.branchLast ? awb.branchLast.branchName : '';
@@ -262,7 +258,7 @@ export class HubTransitDeliveryOutService {
                 awbItemId: awb.awbItemId,
                 branchId: permissonPayload.branchId,
                 userId: authMeta.userId,
-              })
+              });
               // // NOTE: auto in hub
               // DoPodDetailPostMetaQueueService.createJobByAwbFilter(
               //   awb.awbItemId,
@@ -278,7 +274,7 @@ export class HubTransitDeliveryOutService {
                 userIdDriver: doPod.userIdDriver,
                 branchIdTo: doPod.branchIdTo,
                 partnerLogisticName,
-              })
+              });
               // // out hub
               // DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
               //   awb.awbItemId,
@@ -324,7 +320,7 @@ export class HubTransitDeliveryOutService {
     } // end of loop
 
     await getManager().transaction(async transactional => {
-      if(totalSuccess > 0 && doPodDetailArr.length > 0){
+      if (totalSuccess > 0 && doPodDetailArr.length > 0) {
         await transactional.insert(DoPodDetail, doPodDetailArr);
         // TODO: need improvement
         if (doPod) {
@@ -346,7 +342,7 @@ export class HubTransitDeliveryOutService {
       }
     });
 
-    for(const item of jobByAwbFilterArr){
+    for (const item of jobByAwbFilterArr) {
       DoPodDetailPostMetaQueueService.createJobByAwbFilter(
         item.awbItemId,
         item.branchId,
@@ -354,7 +350,7 @@ export class HubTransitDeliveryOutService {
       );
     }
 
-    for(const item of jobByScanOutAwbBranch){
+    for (const item of jobByScanOutAwbBranch) {
       DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
         item.awbItemId,
         item.awbStatus,

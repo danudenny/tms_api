@@ -6,7 +6,6 @@ import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
 import { Employee } from '../../../../../shared/orm-entity/employee';
 import { PartnerLogistic } from '../../../../../shared/orm-entity/partner-logistic';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
@@ -100,7 +99,7 @@ export class LastMileTransitOutService {
       where: {
         branchId: payload.branchIdTo,
         isDeleted : false,
-        isActive : true
+        isActive : true,
       },
     });
 
@@ -171,7 +170,7 @@ export class LastMileTransitOutService {
       // lock: { mode: 'pessimistic_write' },
     });
 
-    if(!doPod){
+    if (!doPod) {
       throw new BadRequestException('Surat Jalan tidak valid!');
     }
 
@@ -199,21 +198,6 @@ export class LastMileTransitOutService {
 
         if (notDeliver && holdRedis) {
           if (doPod) {
-            const statusCode = await AwbService.awbStatusGroup(
-              awb.awbStatusIdLast,
-            );
-            // save data to awb_trouble
-            if (statusCode != 'IN') {
-              const branchName = awb.branchLast
-                ? awb.branchLast.branchName
-                : '';
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                branchName,
-                awb.awbStatusIdLast,
-              );
-            }
-
             // NOTE: create data do pod detail per awb number
             const doPodDetail = DoPodDetail.create();
             doPodDetail.doPodDetailId = uuidv1();
@@ -300,7 +284,7 @@ export class LastMileTransitOutService {
 
     // TODO: need improvement
     await getManager().transaction(async transactional => {
-      if(totalSuccess > 0 && doPodDetailArr.length > 0){
+      if ( totalSuccess > 0 && doPodDetailArr.length > 0) {
         await transactional.insert(DoPodDetail, doPodDetailArr);
         // TODO: need improvement
         if (doPod) {
@@ -322,7 +306,7 @@ export class LastMileTransitOutService {
       }
     });
 
-    for(const item of paramsBull){
+    for ( const item of paramsBull) {
       DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
         item.awbItemId,
         item.awbStatus,

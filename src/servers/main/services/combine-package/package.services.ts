@@ -1,13 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { sampleSize, assign, join } from 'lodash';
+import { sampleSize, assign } from 'lodash';
 import moment = require('moment');
 import { PackageAwbResponseVm, AwbPackageDetail } from '../../models/gabungan.response.vm';
 import { PackagePayloadVm } from '../../models/gabungan-payload.vm';
 import _ from 'lodash';
 import { District } from '../../../../shared/orm-entity/district';
-import { createQueryBuilder, In } from 'typeorm';
-import { PodFilterDetailItem } from '../../../../shared/orm-entity/pod-filter-detail-item';
+import { createQueryBuilder } from 'typeorm';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
@@ -16,12 +15,9 @@ import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { AwbService } from '../v1/awb.service';
 import { Awb } from '../../../../shared/orm-entity/awb';
-import { PodScanIn } from '../../../../shared/orm-entity/pod-scan-in';
 import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
 import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { PodScanInHubBag } from '../../../../shared/orm-entity/pod-scan-in-hub-bag';
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { BagService } from '../v1/bag.service';
 import { Representative } from '../../../../shared/orm-entity/representative';
@@ -260,7 +256,6 @@ export class PackageService {
   }
 
   private async createBagNumber(payload): Promise<any> {
-    const value            = payload.value;
     const result           = new Object();
     const authMeta         = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -357,7 +352,6 @@ export class PackageService {
       authMeta.userId,
     );
 
-    const totalWeight = parseFloat(awbDetail.weight);
     // INSERT INTO TABLE BAG ITEM AWB
     const bagItemAwbDetail = BagItemAwb.create({
             bagItemId    : bagItem.bagItemId,
@@ -415,7 +409,6 @@ export class PackageService {
           updatedTime  : moment().toDate(),
           userIdUpdated: authMeta.userId,
         });
-    const podScanInHubDetail = await PodScanInHubDetail.save(podScanInHubDetailData);
 
         // insert into pod scan in hub bag
     const podScanInHubBagData = PodScanInHubBag.create({
@@ -431,7 +424,6 @@ export class PackageService {
           updatedTime  : moment().toDate(),
           userIdUpdated: authMeta.userId,
         });
-    const podScanInHubBag = await PodScanInHubBag.save(podScanInHubBagData);
     const bagSeq = sequence.toString().padStart(3, '0');
     assign(result,  {
       bagItemId     : bagItem.bagItemId,
@@ -537,14 +529,6 @@ export class PackageService {
         bag = genBagNumber;
       }
 
-      if (isTrouble) {
-        const dataTrouble = {
-          awbNumber: awb.awbNumber,
-          troubleDesc: join(troubleDesc, ' dan '),
-        };
-        await this.insertAwbTrouble(dataTrouble);
-      }
-
       assign(result, {
         bagNumber,
         isAllow,
@@ -613,7 +597,6 @@ export class PackageService {
       updatedTime  : moment().toDate(),
       userIdUpdated: authMeta.userId,
     });
-    const podScanInHubDetail = await PodScanInHubDetail.save(podScanInHubDetailData);
 
     // Update Pod scan in hub bag
     const podScanInHubBag = await PodScanInHubBag.findOne({ where: { podScanInHubId: payload.podScanInHubId } });
@@ -663,27 +646,4 @@ export class PackageService {
     return bagDetail;
   }
 
-  private async insertAwbTrouble(data): Promise<any> {
-    const authMeta         = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const awbTroubleCode = await CustomCounterCode.awbTrouble(
-      moment().toDate(),
-    );
-    const awbTroubleData = AwbTrouble.create({
-        awbTroubleCode,
-        awbStatusId       : 2600,
-        transactionStatusId: 500,
-        awbNumber         : data.awbNumber,
-        troubleDesc       : data.troubleDesc,
-        troubleCategory   : 'sortir_bag',
-        employeeIdTrigger : authMeta.userId,
-        userIdTrigger     : authMeta.userId,
-        branchIdTrigger   : permissonPayload.branchId,
-        createdTime       : moment().toDate(),
-        updatedTime       : moment().toDate(),
-        userIdCreated     : authMeta.userId,
-        userIdUpdated     : authMeta.userId,
-    });
-    await AwbTrouble.save(awbTroubleData);
-  }
 }

@@ -7,7 +7,6 @@ import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { PodFilter } from '../../../../shared/orm-entity/pod-filter';
 import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
@@ -277,7 +276,7 @@ export class WebAwbFilterService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const results: ScanAwbVm[] = [];
-    let bagNumberSeq = '';
+    const bagNumberSeq = '';
     // get all awb_number from payload
     for (const awbNumber of payload.awbNumber) {
       const res = new ScanAwbVm();
@@ -534,7 +533,7 @@ export class WebAwbFilterService {
           where: {
             branchId: podFilter.branchIdScan,
             isDeleted : false,
-            isActive : true
+            isActive : true,
           },
           select: ['branchName'],
         });
@@ -549,40 +548,6 @@ export class WebAwbFilterService {
       }
     }
     return podFilterDetail;
-  }
-
-  private async createAwbTrouble(
-    awbNumber: string,
-    troubleDesc: string,
-    bagBranchId: number,
-  ) {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const awbTroubleCode = await CustomCounterCode.awbTrouble(
-      moment().toDate(),
-    );
-    const awbTrouble = AwbTrouble.create({
-      awbNumber,
-      awbTroubleCode,
-      troubleCategory: 'awb_filtered',
-      troubleDesc,
-      transactionStatusId: 100,
-      awbStatusId: 12800,
-      employeeIdTrigger: authMeta.employeeId,
-      branchIdTrigger: permissonPayload.branchId,
-      userIdTrigger: authMeta.userId,
-      userIdCreated: authMeta.userId,
-      branchIdUnclear: bagBranchId, // podFilterDetail.bagItem.bag.branchId
-      userIdUnclear: null, // TODO: current now, because user on rds is different with tms, UPDATE after SO replace RDS
-      employeeIdUnclear: null, // TODO: current now, because employee on rds is different with tms, UPDATE after SO replace RDS
-      createdTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
-      updatedTime: moment().toDate(),
-      userIdPic: authMeta.userId,
-      branchIdPic: permissonPayload.branchId,
-    });
-    await AwbTrouble.save(awbTrouble);
-    return awbTrouble.awbTroubleId;
   }
 
   // NOTE: need refactoring
