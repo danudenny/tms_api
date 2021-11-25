@@ -30,6 +30,12 @@ module.exports = {
     username: 'admin',
     password: '@S1cepat!',
   },
+  imgProxyHelper: {
+    proxyUrl: 'https://imgproxy-stag.sicepat.com',
+    key: 'WbEZyJ8WsD',
+    salt: 'GV5ueRu21Z',
+    algo: 'SHA-256',
+  },
   queue: {
     doPodDetailPostMeta: {
       retryDelayMs: 2 * 60 * 1000, // 2 minutes

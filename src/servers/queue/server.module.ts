@@ -22,7 +22,6 @@ import { MappingRoleQueueService } from './services/mapping-role-queue.service';
 import { BagScanOutBranchQueueService } from './services/bag-scan-out-branch-queue.service';
 import { LogglyMiddleware } from '../../shared/middlewares/loggly.middleware';
 import { BagScanOutHubQueueService } from './services/bag-scan-out-hub-queue.service';
-import { AwbSendPartnerQueueService } from './services/awb-send-partner-queue.service';
 import { BagDropoffHubQueueService } from './services/bag-dropoff-hub-queue.service';
 import { UploadImagePodQueueService } from './services/upload-pod-image-queue.service';
 import { DoSmdPostAwbHistoryMetaQueueService } from './services/do-smd-post-awb-history-meta-queue.service';
