@@ -7,7 +7,6 @@ import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
-import { AwbTrouble } from '../../../../shared/orm-entity/awb-trouble';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { PodFilter } from '../../../../shared/orm-entity/pod-filter';
 import { PodFilterDetail } from '../../../../shared/orm-entity/pod-filter-detail';
@@ -25,7 +24,6 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
-import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { WebAwbFilterListResponseVm } from '../../models/web-awb-filter-list.response.vm';
 import {
   DistrictVm,
@@ -41,9 +39,7 @@ import {
   WebAwbFilterScanAwbVm,
   WebAwbFilterScanBagVm,
 } from '../../models/web-awb-filter.vm';
-import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { District } from '../../../../shared/orm-entity/district';
-import { WebAwbSortResponseVm, WebAwbSortPayloadVm, WebAwbSortVm } from '../../models/web-awb-sort.vm';
+import { WebAwbSortResponseVm, WebAwbSortPayloadVm } from '../../models/web-awb-sort.vm';
 import { Awb } from '../../../../shared/orm-entity/awb';
 import { ConfigService } from '../../../../shared/services/config.service';
 // #endregion
@@ -277,8 +273,6 @@ export class WebAwbFilterService {
   async scanAwb(
     payload: WebAwbFilterScanAwbVm,
   ): Promise<WebAwbFilterScanAwbResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const results: ScanAwbVm[] = [];
     const bagNumberSeq = '';
     // get all awb_number from payload
@@ -433,7 +427,6 @@ export class WebAwbFilterService {
   async sortAwbHub(
     payload: WebAwbSortPayloadVm,
   ): Promise<WebAwbSortResponseVm> {
-    const authMeta = AuthService.getAuthData();
     const result = new WebAwbSortResponseVm();
 
     const awb = await Awb.findOne({
@@ -584,32 +577,6 @@ export class WebAwbFilterService {
     return await PodFilter.save(podFilter);
   }
 
-  private async createPodFilterDetailItem(
-    podFilterDetailId: number,
-    awbItemAttr: AwbItemAttr,
-    awbTroubleId = null,
-  ) {
-    const authMeta = AuthService.getAuthData();
-    const podFilterDetailItem = this.podFilterDetailItemRepository.create();
-
-    podFilterDetailItem.podFilterDetailId = podFilterDetailId;
-    podFilterDetailItem.scanDateTime = moment().toDate();
-    podFilterDetailItem.awbItemId = awbItemAttr.awbItemId;
-    podFilterDetailItem.toType = awbItemAttr.awbItem.awb.toType;
-    podFilterDetailItem.toId = awbItemAttr.awbItem.awb.toId;
-    podFilterDetailItem.createdTime = moment().toDate();
-    podFilterDetailItem.userIdCreated = authMeta.userId;
-    podFilterDetailItem.updatedTime = moment().toDate();
-    podFilterDetailItem.userIdUpdated = authMeta.userId;
-
-    if (awbTroubleId) {
-      podFilterDetailItem.isTroubled = true;
-      podFilterDetailItem.awbTroubleId = awbTroubleId;
-    } else {
-      podFilterDetailItem.isTroubled = false;
-    }
-    return await this.podFilterDetailItemRepository.save(podFilterDetailItem);
-  }
 
   private async findAndCreatePodFilterDetail(podFilter, bagItemId) {
     const authMeta = AuthService.getAuthData();
@@ -671,7 +638,7 @@ export class WebAwbFilterService {
           where: {
             branchId: podFilter.branchIdScan,
             isDeleted : false,
-            isActive : true
+            isActive : true,
           },
           select: ['branchName'],
         });
@@ -686,40 +653,6 @@ export class WebAwbFilterService {
       }
     }
     return podFilterDetail;
-  }
-
-  private async createAwbTrouble(
-    awbNumber: string,
-    troubleDesc: string,
-    bagBranchId: number,
-  ) {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const awbTroubleCode = await CustomCounterCode.awbTrouble(
-      moment().toDate(),
-    );
-    const awbTrouble = AwbTrouble.create({
-      awbNumber,
-      awbTroubleCode,
-      troubleCategory: 'awb_filtered',
-      troubleDesc,
-      transactionStatusId: 100,
-      awbStatusId: 12800,
-      employeeIdTrigger: authMeta.employeeId,
-      branchIdTrigger: permissonPayload.branchId,
-      userIdTrigger: authMeta.userId,
-      userIdCreated: authMeta.userId,
-      branchIdUnclear: bagBranchId, // podFilterDetail.bagItem.bag.branchId
-      userIdUnclear: null, // TODO: current now, because user on rds is different with tms, UPDATE after SO replace RDS
-      employeeIdUnclear: null, // TODO: current now, because employee on rds is different with tms, UPDATE after SO replace RDS
-      createdTime: moment().toDate(),
-      userIdUpdated: authMeta.userId,
-      updatedTime: moment().toDate(),
-      userIdPic: authMeta.userId,
-      branchIdPic: permissonPayload.branchId,
-    });
-    await AwbTrouble.save(awbTrouble);
-    return awbTrouble.awbTroubleId;
   }
 
   private async getDataRawDestination(
@@ -768,71 +701,7 @@ export class WebAwbFilterService {
     return await RawQueryService.query(rawQuery);
   }
 
-  private async getPodFilterDetail(
-    podFilterId: number,
-    bagItemId: number,
-  ): Promise<PodFilterDetail> {
-    // check payload.podFilterDetailId is valid or not
-    const podFilterDetail = await RepositoryService.podFilterDetail
-      .findOne()
-      .where(e => e.podFilterId, w => w.equals(podFilterId))
-      .andWhere(e => e.bagItemId, w => w.equals(bagItemId))
-      .andWhere(e => e.isDeleted, w => w.isFalse())
-      .select({
-        podFilterDetailId: true,
-        bagItemId: true,
-        totalAwbItem: true,
-        totalAwbFiltered: true,
-        totalAwbNotInBag: true,
-        bagItem: {
-          bagId: true,
-          bagSeq: true,
-          bag: {
-            branchId: true,
-            userId: true,
-            bagNumber: true,
-          },
-        },
-      });
 
-    return podFilterDetail;
-  }
-
-  private async getCurrentPodFilterDetail(
-    podFilterDetailId: number,
-  ): Promise<PodFilterDetail> {
-    // check payload.podFilterDetailId is valid or not
-    const podFilterDetail = await RepositoryService.podFilterDetail
-      .findOne()
-      .where(e => e.podFilterDetailId, w => w.equals(podFilterDetailId))
-      .andWhere(e => e.isDeleted, w => w.isFalse())
-      .select({
-        podFilterDetailId: true,
-        bagItemId: true,
-        totalAwbItem: true,
-        totalAwbFiltered: true,
-        totalAwbNotInBag: true,
-        bagItem: {
-          bagId: true,
-          bagSeq: true,
-          bag: {
-            branchId: true,
-            userId: true,
-            bagNumber: true,
-          },
-        },
-      });
-
-    if (!podFilterDetail) {
-      RequestErrorService.throwObj(
-        {
-          message: `Invalid podFilterDetailId`,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return podFilterDetail;
-  }
 
   private async getDataProblem(podFilterId: number): Promise<AwbProblemFilterVm[]> {
     const qb = createQueryBuilder();

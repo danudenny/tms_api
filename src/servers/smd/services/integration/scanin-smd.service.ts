@@ -20,7 +20,9 @@ import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagScanInBranchSmdQueueService } from '../../../queue/services/bag-scan-in-branch-smd-queue.service';
 import { ScanInSmdMorePayloadVm, ScanInSmdPayloadVm, ScaninDetailScanPayloadVm } from '../../models/scanin-smd.payload.vm';
-import { getManager, createQueryBuilder } from 'typeorm';
+import { getManager, createQueryBuilder, EntityManager } from 'typeorm';
+import { Todos } from '../../../../shared/orm-entity/todos';
+import { DoPod } from '../../../../shared/orm-entity/do-pod';
 
 @Injectable()
 export class ScaninSmdService {
@@ -231,6 +233,14 @@ export class ScaninSmdService {
               userIdUpdated: authMeta.userId,
             },
           );
+
+          //:: TODO = update DOPOD lastDateScanIn, totalScanInBag
+          const doPodDetailBag = await this.getDoPodByBagItem(paramBagItemId);
+          if(doPodDetailBag){
+            await getManager().transaction(async transactional => {
+              await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
+            });
+          }
         }
       }
       if (errCode == 0) {
@@ -460,6 +470,14 @@ export class ScaninSmdService {
               userIdUpdated: authMeta.userId,
             },
           );
+
+          //:: TODO = update DOPOD lastDateScanIn, totalScanInBag
+          const doPodDetailBag = await this.getDoPodByBagItem(paramBagItemId);
+          if(doPodDetailBag){
+            await getManager().transaction(async transactional => {
+              await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
+            });
+          }
         }
       }
       if (errCode == 0) {
@@ -981,4 +999,50 @@ export class ScaninSmdService {
 
     return result;
   }
+
+  private static async getDoPodByBagItem(bagItemId: number){
+    const q = createQueryBuilder();
+      q.addSelect('t2.do_pod_id', 'doPodId');
+      q.addSelect('t2.total_scan_in_bag', 'totalScanInBag');
+      q.from('do_pod_detail_bag', 't1');
+      q.innerJoin('do_pod', 't2', 't2.do_pod_id = t1.do_pod_id');
+      q.where('t1.bag_item_id = :bagItemId', {bagItemId: bagItemId});
+      q.andWhere('t1.transaction_status_id_last = 800');
+      q.andWhere('t1.is_deleted = false');
+      q.orderBy('t1.created_time', 'DESC' );
+      q.limit(1);
+    return await q.getRawOne();
+  }
+
+  private static async updateDoPodTransaction(
+    doPodDetailBag: any,
+    userId: number,
+    timeNow: Date,
+    transactional: EntityManager){
+      doPodDetailBag.totalScanInBag += 1;
+      if (doPodDetailBag.totalScanInBag == 1) {
+        await transactional.update(
+          DoPod,
+          { doPodId: doPodDetailBag.doPodId },
+          {
+            firstDateScanIn: timeNow,
+            lastDateScanIn: timeNow,
+            totalScanInBag: doPodDetailBag.totalScanInBag,
+            updatedTime: timeNow,
+            userIdUpdated: userId,
+          },
+        );
+      }else{
+        await transactional.update(
+          DoPod,
+          { doPodId: doPodDetailBag.doPodId },
+          {
+            lastDateScanIn: timeNow,
+            totalScanInBag: doPodDetailBag.totalScanInBag,
+            updatedTime: timeNow,
+            userIdUpdated: userId,
+          },
+        );
+      }
+    }
 }

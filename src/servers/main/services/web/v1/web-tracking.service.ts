@@ -23,6 +23,7 @@ import { PhotoResponseVm } from '../../../models/bag-order-detail-response.vm';
 import { createQueryBuilder } from 'typeorm';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { Branch } from '../../../../../shared/orm-entity/branch';
+import { ImgProxyHelper } from '../../../../../shared/helpers/imgproxy-helper'
 
 export class V1WebTrackingService {
   static async awb(
@@ -184,6 +185,9 @@ export class V1WebTrackingService {
 
     const result = new PhotoResponseVm();
     result.data = await qq.getRawMany();
+    for(let i = 0; i < result.data.length; i++){
+      result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+    }
     return result;
   }
 
