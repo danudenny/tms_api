@@ -396,8 +396,6 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
     payload.fieldResolverMap['branchManifest'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdManifest'] = 't4.branch_id';
-    payload.fieldResolverMap['partnerName'] = 't5.partner_name';
-    payload.fieldResolverMap['partnerId'] = 't5.partner_id';
     payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
     payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
     payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
@@ -439,8 +437,6 @@ export class WebAwbReturnService {
       ['t2.awb_status_id', 'awbStatusId'],
       ['t4.branch_id', 'branchIdManifest'],
       ['t4.branch_name', 'branchManifest'],
-      ['t5.partner_id', 'partnerId'],
-      ['t5.partner_name', 'partnerName'],
       ['t1.user_id_driver', 'userIdDriver'],
       ['t6.branch_id', 'branchIdFrom'],
       ['t6.branch_name', 'branchFrom'],
@@ -464,9 +460,6 @@ export class WebAwbReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.awb.branch, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.originAwb.awb.partner, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.branchFrom, 't6', j =>
@@ -514,8 +507,6 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
     payload.fieldResolverMap['branchManifest'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdManifest'] = 't4.branch_id';
-    payload.fieldResolverMap['partnerName'] = 't5.partner_name';
-    payload.fieldResolverMap['partnerId'] = 't5.partner_id';
     payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
     payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
     payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
@@ -552,9 +543,6 @@ export class WebAwbReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.awb.branch, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.originAwb.awb.partner, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.leftJoin(e => e.branchFrom, 't6', j =>
@@ -673,8 +661,6 @@ export class WebAwbReturnService {
       payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
       payload.fieldResolverMap['branchManifest'] = 't4.branch_name';
       payload.fieldResolverMap['branchIdManifest'] = 't4.branch_id';
-      payload.fieldResolverMap['partnerName'] = 't5.partner_name';
-      payload.fieldResolverMap['partnerId'] = 't5.partner_id';
       payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
       payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
       payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
@@ -726,9 +712,6 @@ export class WebAwbReturnService {
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.leftJoin(e => e.awb.branch, 't4', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-      q.leftJoin(e => e.originAwb.awb.partner, 't5', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.leftJoin(e => e.branchFrom, 't6', j =>
