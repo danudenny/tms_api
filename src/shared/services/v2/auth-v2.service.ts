@@ -53,9 +53,13 @@ export class AuthV2Service {
       });
     }
 
-    const addresses = await this.getAddress(user.username);
-    const generateToken = await this.generateToken(user.userId, clientId);
+    let addresses = [];
     const isOtpRequired = await this.isOtpRequired(clientId, user.username);
+    if(isOtpRequired){
+      addresses = await this.getAddress(user.username);
+    }
+
+    const generateToken = await this.generateToken(user.userId, clientId);
 
     await RedisService.setex(
       `pod:otp:${generateToken}`,
