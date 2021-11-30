@@ -66,7 +66,7 @@ export class AuthV2Service {
     const result = new LoginChannelOtpAddressesResponse();
     result.token = generateToken;
     result.isOtpRequired = isOtpRequired; //deafult
-    // result.addresses = addresses;
+    result.addresses = addresses;
     return result;
   }
 
@@ -285,7 +285,6 @@ export class AuthV2Service {
   }
 
   private async getAddress(userName: string): Promise<Array<LoginChannelOtpAddresses>> {
-
     //START - PISAH 1 PRIVATE FUNCTION
     const url = `${ConfigService.get('svcOtp.baseUrl')}/auth/otp/lookup`
     const jsonData = {
@@ -315,10 +314,6 @@ export class AuthV2Service {
           addresses.push({ ...loginChannelOtpAddresses });
         }
         return addresses;
-      } else {
-        RequestErrorService.throwObj({
-          message: 'User tidak terdaftar, silahkan hubungi admin.',
-        }, HttpStatus.FORBIDDEN);
       }
     } catch (err) {
       let message = 'Terjadi Kesalahan Sistem';
@@ -329,18 +324,16 @@ export class AuthV2Service {
           err.response.data.message : err.response.data;
         statusCode = err.response.data.code;
       }
-      if (!err.response) {
-        message = 'User tidak terdaftar, silahkan hubungi admin.';
-        statusCode = HttpStatus.FORBIDDEN;
-      }
 
       console.log('ERROR:::', err)
       RequestErrorService.throwObj({
         message: message,
       }, statusCode);
     }
+    RequestErrorService.throwObj({
+      message: 'User tidak terdaftar, silahkan hubungi admin.',
+    }, HttpStatus.FORBIDDEN);
     //END - PISAH 1 PRIVATE FUNCTION
-
   }
 
   private async generateToken(userId: number, clientId: string): Promise<string> {
