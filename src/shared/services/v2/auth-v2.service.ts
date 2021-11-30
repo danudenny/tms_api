@@ -66,7 +66,7 @@ export class AuthV2Service {
     const result = new LoginChannelOtpAddressesResponse();
     result.token = generateToken;
     result.isOtpRequired = isOtpRequired; //deafult
-    result.addresses = addresses;
+    // result.addresses = addresses;
     return result;
   }
 
@@ -298,7 +298,8 @@ export class AuthV2Service {
     const addresses = [];
     try {
       const response = await axios.post(url, jsonData, options);
-      if (response.data && response.data.result) {
+      console.log('response:::', response);
+      if (response && response.data && response.data.result) {
         if (response.data.result.addresses.length < 1) {
           RequestErrorService.throwObj({
             message: 'Nomor Handpone belum terdaftar, silahkan hubungi admin.',
@@ -328,12 +329,12 @@ export class AuthV2Service {
           err.response.data.message : err.response.data;
         statusCode = err.response.data.code;
       }
-      // if (undefined != err.response.message) {
-      //   message = err.response.message;
-      //   statusCode = err.response.statusCode;
-      // }
+      if (!err.response) {
+        message = 'User tidak terdaftar, silahkan hubungi admin.';
+        statusCode = HttpStatus.FORBIDDEN;
+      }
 
-      console.log('ERRRROOORRRR:::', err)
+      console.log('ERROR:::', err)
       RequestErrorService.throwObj({
         message: message,
       }, statusCode);
@@ -361,7 +362,6 @@ export class AuthV2Service {
     );
 
     if (!whiteListUserData) {
-      console.log('CALL THIS API AGAIN:::::')
       try {
         const response = await axios.get(ConfigService.get('svcOtp.otpRequiredUrl'));
         whiteListUserData = response.data;
