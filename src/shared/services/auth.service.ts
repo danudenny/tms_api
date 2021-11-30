@@ -436,6 +436,10 @@ export class AuthService {
     }
   }
 
+  public static getRequestIP() {
+    return RequestContextMetadataService.getMetadata('REQUEST_IP');
+  }
+
   public static getPermissionToken() {
     return RequestContextMetadataService.getMetadata('PERMISSION_TOKEN');
   }

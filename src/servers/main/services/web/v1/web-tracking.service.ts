@@ -14,6 +14,8 @@ import {
   TrackingBagRepresentativeDetailPayloadVm,
   TrackingBagRepresentativeDetailResponseVm,
   TrackingBagRepresentativeAwbDetailResponseVm,
+  LogActivityPayloadVm,
+  LogActivityResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -24,6 +26,11 @@ import { createQueryBuilder } from 'typeorm';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { ImgProxyHelper } from '../../../../../shared/helpers/imgproxy-helper'
+import { Awb } from '../../../../../shared/orm-entity/awb';
+import { LOGGER_ACTIVITY } from '../../../../../shared/constants/logger-activity.constant';
+import { RequestErrorService } from '../../../../../shared/services/request-error.service';
+import { HttpStatus } from '@nestjs/common';
+import { ActivityLogHelper } from '../../../../../shared/helpers/activity-log-helpers';
 
 export class V1WebTrackingService {
   static async awb(
@@ -43,7 +50,7 @@ export class V1WebTrackingService {
       result.branchName                = data.branchName;
       result.branchToName              = data.branchToName;
       result.consigneeName             = data.consigneeName;
-      result.consigneeAddress          = data.consigneeAddress;
+      result.consigneeAddress          = "-";
       result.customerName              = data.customerName;
       result.customerNameRds           = data.customerNameRds;
       result.packageTypeCode           = data.packageTypeCode;
@@ -56,7 +63,7 @@ export class V1WebTrackingService {
       result.isCod                     = data.isCod;
       result.totalWeightVolume         = data.totalWeightVolume;
       result.refResellerPhone          = data.refResellerPhone;
-      result.consigneePhone            = data.consigneePhone;
+      result.consigneePhone            = "-";
       result.refRepresentativeCode     = data.refRepresentativeCode;
       result.parcelValue               = data.parcelValue;
       result.partnerLogisticAwb        = data.partnerLogisticAwb;
@@ -582,4 +589,50 @@ export class V1WebTrackingService {
     return await qb.getRawMany();
   }
 
+  public static async awbDetail(
+    payload: LogActivityPayloadVm,
+  ): Promise<LogActivityResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
+    const ipAddress: string = AuthService.getRequestIP();
+
+    const awbDetail = await Awb.findOne({
+      where: {
+        awbNumber: payload.awb_number,
+        isDeleted: false,
+      },
+    });
+
+    const result = new LogActivityResponseVm();
+    result.key = payload.key;
+
+    switch (payload.key) {
+      case LOGGER_ACTIVITY.HANDPHONE:
+        result.value = awbDetail.consigneeNumber ? awbDetail.consigneeNumber : "-";
+        break;
+      case LOGGER_ACTIVITY.ADDRESS:
+        result.value = awbDetail.consigneeAddress ? awbDetail.consigneeAddress : "-";
+        break;
+      default:
+        RequestErrorService.throwObj(
+          {
+            message: 'Invalid Payload',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+    }
+
+    await ActivityLogHelper.logActivityWithPayload(
+      {
+        ip: ipAddress,
+        awb_number: payload.awb_number,
+        source: "pod",
+        type: payload.type,
+        user_id: authMeta.userId.toString(),
+        value: result.value,
+        key: result.key,
+      }
+    );
+
+    return result;
+  }
 }
