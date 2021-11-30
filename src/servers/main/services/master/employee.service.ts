@@ -218,6 +218,14 @@ export class EmployeeService {
 
   async findById(employeeId: number): Promise<EmployeeResponseVm> {
     // TODO: to be improvement
+    const authMeta = AuthService.getAuthData();
+    
+    if(authMeta.employeeId != employeeId) {
+      RequestErrorService.throwObj({
+        message: 'User tidak eligible, silahkan hubungi admin.',
+      }, HttpStatus.FORBIDDEN);
+    }
+
     const employee = await RepositoryService.employee
       .findOne()
       .leftJoin(e => e.attachment, null, join =>
