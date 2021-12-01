@@ -17,6 +17,7 @@ import { AwbPatchStatusController } from './awb-patch-status.controller';
 import { MonitoringProblemLebihSortirListController } from './hub/monitoring-problem-lebih-sortir-list.controller';
 import { SmdBagCityReportController } from './smd/smd-bag-city-report.controller';
 import { TrackingDeliveryOutController } from './pod/tracking-delivery-out.controller';
+import { CodTransactionController } from './cod/transaction-patch.controller';
 
 // #endregion
 @Module({
@@ -33,6 +34,7 @@ import { TrackingDeliveryOutController } from './pod/tracking-delivery-out.contr
     SmdScaninReportController,
     SmdScanoutReportController,
     AwbPatchStatusController,
+    CodTransactionController,
     MonitoringProblemLebihSortirListController,
     SmdBagCityReportController,
     TrackingDeliveryOutController,
