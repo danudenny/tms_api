@@ -170,7 +170,7 @@ export class PartnerOneidService {
     try {
 
       // default filter
-      const endDate = moment().subtract(3, "days").format("YYYY-MM-DD HH:mm:ss");
+      let endDate = moment().subtract(3, "days").format("YYYY-MM-DD HH:mm:ss");
       const filter: any = {};
 
       // Pagination
@@ -181,28 +181,33 @@ export class PartnerOneidService {
       // default query
       let pushquery = '';
       filter.awb_date = endDate;
-      let awbref = []
-
-      // query base on awb number
-      if (query.awbNumber) {
-        filter.awb_number = query.awbNumber;
-        pushquery = 'AND a.awb_number = :awb_number'
-      }
+      const awbref = [];
+      const consigneePhoneStringToArray = query.consigneePhone.split(',');
 
 
-      // query base on consigneePhone
-      if (query.consigneePhone) {
-        const consigneePhoneStringToArray = query.consigneePhone.split(',');
-        filter.consignee_phone = consigneePhoneStringToArray;
-        pushquery = 'AND a.consignee_phone IN (:...consignee_phone)'
-        if(query.awbNumber){
-          filter.awb_number = query.awbNumber;
-          pushquery = 'AND a.awb_number = :awb_number'
-        }
-      }
+      // query base on partnerName 
+      (query.partnerName) ? filter.partner_name =  query.partnerName: '';
+      (query.partnerName) ?  pushquery = 'AND pa.partner_name = :partner_name ': '';
+
+      // query base on partnerId  
+      (query.partnerId) ? filter.partner_id =  query.partnerId: '';
+      (query.partnerId) ?  pushquery += 'AND pa.partner_id = :partner_id ': '';
+      
+      // query base on resi status
+      (query.status) ? filter.awb_status_name = query.status: '';
+      (query.status) ? pushquery += 'AND aws.awb_status_name = :awb_status_name ': '';
+        
 
       // query base on consigneePhone
+      (query.consigneePhone) ? filter.consignee_phone = consigneePhoneStringToArray : '';
+      (query.consigneePhone) ?  pushquery += 'AND a.consignee_phone IN (:...consignee_phone)' : '';
 
+        
+      // query base on awb number  
+      (query.awbNumber) ? filter.awb_number =  query.awbNumber: '';
+      (query.awbNumber) ?  pushquery = 'AND a.awb_number = :awb_number': '';
+      
+      // query base on senderPhone
       if (query.senderPhone) {
         const senderPhoneStringToArray = query.senderPhone.split(',');
         if(!query.awbNumber){
@@ -220,12 +225,11 @@ export class PartnerOneidService {
         awbref.push(...getSenderPhone.map(el => el.refAwbNumber));
 
         filter.awb_number = awbref;
-        pushquery = `AND a.awb_number IN (:...awb_number)`
+        pushquery += `AND a.awb_number IN (:...awb_number)`
         }
-        if(query.awbNumber){
-          filter.awb_number = query.awbNumber;
-          pushquery = 'AND a.awb_number = :awb_number'
-        }
+
+        (query.awbNumber) ? filter.awb_number =  query.awbNumber: '';
+        (query.awbNumber) ?  pushquery = 'AND a.awb_number = :awb_number': '';
 
         if (awbref.length == 0 && !query.awbNumber) {
           return {
@@ -238,7 +242,8 @@ export class PartnerOneidService {
         }
 
       }
-
+   
+    // query  
       let sql = `
       SELECT
        a.awb_id, 
@@ -250,6 +255,7 @@ export class PartnerOneidService {
        a.created_time,
        p.package_type_code,
        a.is_deleted,
+       ai.awb_status_id_last,
        aws.awb_status_name,
        prd.shipper_name,
        prd.shipper_phone,
@@ -258,7 +264,8 @@ export class PartnerOneidService {
        no.totalbiaya
         FROM awb a 
         INNER JOIN package_type p  ON p.package_type_id = a.package_type_id
-        LEFT JOIN awb_status aws  ON aws.awb_status_id = a.awb_status_id_last
+        INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
+        LEFT JOIN awb_status aws ON aws.awb_status_id = ai.awb_status_id_last
         INNER JOIN pickup_request_detail prd  ON prd.ref_awb_number = a.awb_number
         LEFT JOIN partner pa ON pa.customer_account_id = a.customer_account_id AND pa.is_deleted=false
         LEFT JOIN temp_stt no ON no.nostt = a.awb_number AND pa.is_deleted=false
