@@ -298,45 +298,48 @@ export class AuthV2Service {
       headers: this.headerReqOtp,
     };
 
-    const addresses = [];
+    let response;
     try {
-      const response = await axios.post(url, jsonData, options);
+      response = await axios.post(url, jsonData, options);
       console.log('response:::', response);
-      if (response && response.data && response.data.result) {
-        if (response.data.result.addresses.length < 1) {
-          RequestErrorService.throwObj({
-            message: 'Nomor Handpone belum terdaftar, silahkan hubungi admin.',
-          }, HttpStatus.FORBIDDEN);
-        }
-
-        for (const address of response.data.result.addresses) {
-          const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
-          loginChannelOtpAddresses.channel = address.channel;
-          loginChannelOtpAddresses.address = address.address;
-          loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
-
-          addresses.push({ ...loginChannelOtpAddresses });
-        }
-        return addresses;
-      }
     } catch (err) {
       let message = 'Terjadi Kesalahan Sistem';
       let statusCode = HttpStatus.REQUEST_TIMEOUT
       if (err.response && undefined != err.response.data) {
-        console.log('error:::::', err.response.data)
+        console.log('ERROR::', err.response.data)
         message = err.response.data.message ?
           err.response.data.message : err.response.data;
         statusCode = err.response.data.code;
       }
 
-      console.log('ERROR:::', err)
+      console.log('ERROR::::', err)
       RequestErrorService.throwObj({
         message: message,
       }, statusCode);
     }
-    RequestErrorService.throwObj({
-      message: 'User tidak terdaftar, silahkan hubungi admin.',
-    }, HttpStatus.FORBIDDEN);
+
+    if(!response || !response.data || !response.data.result){
+      RequestErrorService.throwObj({
+        message: 'User tidak terdaftar, silahkan hubungi admin.',
+      }, HttpStatus.FORBIDDEN);
+    }
+
+    if (!response.data.result.addresses || response.data.result.addresses.length < 1) {
+      RequestErrorService.throwObj({
+        message: 'Nomor Handpone belum terdaftar, silahkan hubungi admin.',
+      }, HttpStatus.FORBIDDEN);
+    }
+
+    const addresses = [];
+    for (const address of response.data.result.addresses) {
+      const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
+      loginChannelOtpAddresses.channel = address.channel;
+      loginChannelOtpAddresses.address = address.address;
+      loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
+
+      addresses.push({ ...loginChannelOtpAddresses });
+    }
+    return addresses;
     //END - PISAH 1 PRIVATE FUNCTION
   }
 
