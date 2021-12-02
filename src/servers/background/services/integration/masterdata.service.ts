@@ -442,8 +442,8 @@ export class MasterDataService {
     result.clearCacheMobile = 'Failed';
     result.clearCacheWeb = 'Failed';
 
-    const nik = payload.nik;
-    const phone = payload.phone;
+    const nik = payload.nik.trim();
+    const phone = payload.phone.trim();
 
     if (nik.length > 0 && phone.length > 0){
       let isnum = /^\d+$/.test(phone);
@@ -486,11 +486,11 @@ export class MasterDataService {
   
           const query = `
             UPDATE employee
-            SET phone1 = $1, updated_time = $2, user_id_updated = $3
-            WHERE employee_id = $4 and is_deleted = FALSE
+            SET phone1 = $1, is_phone1_patch = $2, updated_time = $3, user_id_updated = $4
+            WHERE employee_id = $5 and is_deleted = FALSE
           `;
         
-          await client.query(query, [phone, timeNow, 1, employeeId], async function(err) {
+          await client.query(query, [phone, true, timeNow, 1, employeeId], async function(err) {
             PinoLoggerService.debug(this.logTitle, this.sql);
             if (err) {
               result.code = HttpStatus.UNPROCESSABLE_ENTITY;
