@@ -2,21 +2,11 @@ import { MoreThan, Not, In } from 'typeorm';
 import { PartnerOneidPayloadVm, ListOneidOrderActivityResponseVm } from '../../models/partner/oneid-task.vm';
 import moment = require('moment');
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { Awb } from '../../../../shared/orm-entity/awb';
-import { CustomerAccount } from '../../../../shared/orm-entity/customer-account';
 import { PickupRequestDetail } from '../../../../shared/orm-entity/pickup-request-detail';
-import { TempStt } from '../../../../shared/orm-entity/temp-stt';
-
-import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
-import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
-import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
-import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { HttpStatus } from '@nestjs/common';
-import { createQueryBuilder } from 'typeorm';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { CustomerMembership } from '../../../../shared/orm-entity/customer-membership';
-import { PickupRequest } from '../../../../shared/orm-entity/pickup-request';
 
 
 export class PartnerOneidService {
@@ -186,50 +176,50 @@ export class PartnerOneidService {
 
 
       // query base on partnerName 
-      (query.partnerName) ? filter.partner_name =  query.partnerName: '';
-      (query.partnerName) ?  pushquery = 'AND pa.partner_name = :partner_name ': '';
+      (query.partnerName) ? filter.partner_name = query.partnerName : '';
+      (query.partnerName) ? pushquery = 'AND pa.partner_name = :partner_name ' : '';
 
       // query base on partnerId  
-      (query.partnerId) ? filter.partner_id =  query.partnerId: '';
-      (query.partnerId) ?  pushquery += 'AND pa.partner_id = :partner_id ': '';
-      
+      (query.partnerId) ? filter.partner_id = query.partnerId : '';
+      (query.partnerId) ? pushquery += 'AND pa.partner_id = :partner_id ' : '';
+
       // query base on resi status
-      (query.status) ? filter.awb_status_name = query.status: '';
-      (query.status) ? pushquery += 'AND aws.awb_status_name = :awb_status_name ': '';
-        
+      (query.status) ? filter.awb_status_id_last = query.status : '';
+      (query.status) ? pushquery += 'AND ai.awb_status_id_last = :awb_status_id_last ' : '';
+
 
       // query base on consigneePhone
       (query.consigneePhone) ? filter.consignee_phone = consigneePhoneStringToArray : '';
-      (query.consigneePhone) ?  pushquery += 'AND a.consignee_phone IN (:...consignee_phone)' : '';
+      (query.consigneePhone) ? pushquery += 'AND a.consignee_phone IN (:...consignee_phone)' : '';
 
-        
+
       // query base on awb number  
-      (query.awbNumber) ? filter.awb_number =  query.awbNumber: '';
-      (query.awbNumber) ?  pushquery = 'AND a.awb_number = :awb_number': '';
-      
+      (query.awbNumber) ? filter.awb_number = query.awbNumber : '';
+      (query.awbNumber) ? pushquery += 'AND a.awb_number = :awb_number' : '';
+
       // query base on senderPhone
       if (query.senderPhone) {
         const senderPhoneStringToArray = query.senderPhone.split(',');
-        if(!query.awbNumber){
-        const getSenderPhone = await PickupRequestDetail.find({
-          select: ['refAwbNumber', 'shipperPhone'],
-          where: {
-            createdTime: MoreThan(endDate),
-            shipperPhone: In(senderPhoneStringToArray),
-            isDeleted: false
-          },
-          take: limitValue,
-          skip: offsetValue,
-        });
+        if (!query.awbNumber) {
+          const getSenderPhone = await PickupRequestDetail.find({
+            select: ['refAwbNumber', 'shipperPhone'],
+            where: {
+              createdTime: MoreThan(endDate),
+              shipperPhone: In(senderPhoneStringToArray),
+              isDeleted: false
+            },
+            take: limitValue,
+            skip: offsetValue,
+          });
 
-        awbref.push(...getSenderPhone.map(el => el.refAwbNumber));
+          awbref.push(...getSenderPhone.map(el => el.refAwbNumber));
 
-        filter.awb_number = awbref;
-        pushquery += `AND a.awb_number IN (:...awb_number)`
+          filter.awb_number = awbref;
+          pushquery += `AND a.awb_number IN (:...awb_number)`
         }
 
-        (query.awbNumber) ? filter.awb_number =  query.awbNumber: '';
-        (query.awbNumber) ?  pushquery = 'AND a.awb_number = :awb_number': '';
+        (query.awbNumber) ? filter.awb_number = query.awbNumber : '';
+        (query.awbNumber) ? pushquery = 'AND a.awb_number = :awb_number' : '';
 
         if (awbref.length == 0 && !query.awbNumber) {
           return {
@@ -242,8 +232,7 @@ export class PartnerOneidService {
         }
 
       }
-   
-    // query  
+      // query  
       let sql = `
       SELECT
        a.awb_id, 
@@ -305,6 +294,31 @@ export class PartnerOneidService {
         page,
         data: mapping
       }
+    } catch (error) {
+      return {
+        status: false,
+        statusCode: 500,
+        message: (error) ? error.message : null
+      };
+    }
+  }
+
+  static async getStatusResi() {
+    try {
+      const data = await AwbStatus.find({ select:['awbStatusId', 'awbStatusName']});
+      const mapping = [];
+      for(let i = 0; i < data.length; i += 1){
+        mapping.push({
+          awbStatusId: data[i].awbStatusId,
+          awbStatusName: data[i].awbStatusName
+        })
+      }
+      return {
+        status: true,
+        statusCode: 200,
+        data: mapping
+      }
+
     } catch (error) {
       return {
         status: false,
