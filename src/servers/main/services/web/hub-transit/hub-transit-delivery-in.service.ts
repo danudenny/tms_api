@@ -13,6 +13,7 @@ import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-
 import { DropoffHub } from '../../../../../shared/orm-entity/dropoff_hub';
 import { BagDropoffHubQueueService } from '../../../../queue/services/bag-dropoff-hub-queue.service';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { QueryServiceApi } from '../../../../../shared/services/query.service.api';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DropoffHubDetail } from '../../../../../shared/orm-entity/dropoff_hub_detail';
 import { WebDropOffSummaryListResponseVm, WebScanInHubSortListResponseVm } from '../../../models/web-scanin-list.response.vm';
@@ -265,10 +266,7 @@ export class HubTransitDeliveryInService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
-      [
-        `DISTINCT CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, '0'))`,
-        'bagNumberCode',
-      ],
+      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`,'bagNumberCode'],
       ['t2.bag_number', 'bagNumber'],
       ['t2.ref_representative_code', 'representativeCode'],
       ['t3.bag_seq', 'bagSeq'],
@@ -276,8 +274,7 @@ export class HubTransitDeliveryInService {
       ['t1.dropoff_hub_id', 'dropoffHubId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
-      // ['COUNT (t4.dropoff_hub_detail_id)', 'totalAwb'],
-      [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
+      [`CAST("t3"."weight" AS NUMERIC(20,2))||' Kg'`, 'weight'],
     );
 
     q.innerJoin(e => e.bag, 't2', j =>
@@ -295,45 +292,66 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    // q.groupByRaw(`
-    //   t1.created_time,
-    //   t1.dropoff_hub_id,
-    //   t3.bagSeq,
-    //   t2.bag_number,
-    //   t2.ref_representative_code,
-    //   t3.weight,
-    //   t5.branch_name,
-    //   t6.branch_name
-    // `);
 
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const query = await q.getQuery();
+    let data = await QueryServiceApi.executeQuery(query, false, null);
 
     const result = new WebScanInHubSortListResponseVm();
-
-    // let seen = Object.create(null),
-    // result_data = data.filter(o => {
-    //     var key = ['bagNumberCode', 'bagNumber'].map(k => o[k]).join('|');
-    //     if (!seen[key]) {
-    //         seen[key] = true;
-    //         return true;
-    //     }
-    // });
-
     for(let i = 0; i < data.length; i++){
-      let dropOffHubDetail = await DropoffHubDetail.find({
-        where: {
-          dropoffHubId: data[i].dropoffHubId,
-          isDeleted: false,
-        },
-      });
-
-      data[i].totalAwb = dropOffHubDetail.length
+      const repoDetail = new OrionRepositoryService(DropoffHubDetail, 't1');
+      const qDetail = repoDetail.findAllRaw();
+      qDetail.andWhere(e => e.dropoffHubId, w => w.equals(data[i].dropoffhubid));
+      let queryDetail = qDetail.getQuery();
+      const dataDetail = await QueryServiceApi.executeQuery(queryDetail, false, null);
+      
+      data[i].totalAwb = dataDetail.length;
+      data[i].bagNumberCode = data[i].bagnumbercode;
+      data[i].bagNumber = data[i].bagnumber;
+      data[i].representativeCode = data[i].representativecode;
+      data[i].bagSeq = data[i].bagseq;
+      data[i].createdTime = data[i].createdtime;
+      data[i].dropoffHubId = data[i].dropoffhubid;
+      data[i].branchName = data[i].branchname;
+      data[i].branchScanName = data[i].branchscanname;
+      data[i].weight = data[i].weight;
     }
 
-    console.log(data.length)
+    const repoCount = new OrionRepositoryService(DropoffHub, 't1');
+    const qCount = repoCount.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(qCount, false);
+    qCount.selectRaw(
+      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`,'bagNumberCode'],
+      ['t2.bag_number', 'bagNumber'],
+      ['t2.ref_representative_code', 'representativeCode'],
+      ['t3.bag_seq', 'bagSeq'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.dropoff_hub_id', 'dropoffHubId'],
+      ['t5.branch_name', 'branchName'],
+      ['t6.branch_name', 'branchScanName'],
+      [`CAST("t3"."weight" AS NUMERIC(20,2))||' Kg'`, 'weight'],
+    );
+
+    qCount.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.dropoffHubDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.bag.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    let queryCount = await qCount.getQuery();
+    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'bagnumbercode');
+    const total = cnt;
     result.data = data;
-    // result.data = result_data
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
@@ -419,7 +437,11 @@ export class HubTransitDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    const data = await q.exec();
+    let query = await q.getQuery();
+    let data = await QueryServiceApi.executeQuery(query, false, null);
+    for(let i = 0; i < data.length; i++){
+      data[i].totalResi = data[i].totalresi;
+    }
 
     const result = new WebDropOffSummaryListResponseVm();
     result.data = data;
