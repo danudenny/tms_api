@@ -30,6 +30,12 @@ module.exports = {
     username: 'admin',
     password: '@S1cepat!',
   },
+  imgProxyHelper: {
+    proxyUrl: 'https://imgproxy-stag.sicepat.com',
+    key: 'WbEZyJ8WsD',
+    salt: 'GV5ueRu21Z',
+    algo: 'SHA-256',
+  },
   queue: {
     doPodDetailPostMeta: {
       retryDelayMs: 2 * 60 * 1000, // 2 minutes
@@ -61,6 +67,9 @@ module.exports = {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',
     tags: ['API-POD-DEV'],
+  },
+  activityLog: {
+    baseUrl: 'https://swagger.s.sicepat.tech/core/logger',
   },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {

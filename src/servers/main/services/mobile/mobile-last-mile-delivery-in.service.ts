@@ -9,7 +9,6 @@ import { PodScanInBranchBag } from '../../../../shared/orm-entity/pod-scan-in-br
 import { PodScanInBranchDetail } from '../../../../shared/orm-entity/pod-scan-in-branch-detail';
 import { DoPodDetailBagRepository } from '../../../../shared/orm-repository/do-pod-detail-bag.repository';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { AwbTroubleService } from '../../../../shared/services/awb-trouble.service';
 import { BagTroubleService } from '../../../../shared/services/bag-trouble.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
@@ -360,19 +359,6 @@ export class LastMileDeliveryInService {
       );
 
       if (notScanIn && holdRedis) {
-        const statusCode = await AwbService.awbStatusGroup(awb.awbStatusIdLast);
-        if (statusCode != 'OUT') {
-          // TODO: AUTO UPDATE STATUS ??
-          result.status = 'warning';
-          // save data to awb_trouble
-          const branchName = awb.branchLast ? awb.branchLast.branchName : '';
-          await AwbTroubleService.fromScanOut(
-            awbNumber,
-            branchName,
-            awb.awbStatusIdLast,
-          );
-        }
-
         // save data to table pod_scan_id
         // TODO: find by check data
         let bagId = 0;
@@ -428,16 +414,6 @@ export class LastMileDeliveryInService {
             // handle awb number only with not have bag number
             result.status = 'warning';
             result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
-          }
-
-          // Create Awb Trouble if status warning
-          if (result.status == 'warning') {
-            await AwbTroubleService.fromScanIn(
-              awbNumber,
-              awb.awbStatusIdLast,
-              result.message,
-            );
-            result.trouble = true;
           }
 
           const podScanInBranchDetailObj = PodScanInBranchDetail.create();

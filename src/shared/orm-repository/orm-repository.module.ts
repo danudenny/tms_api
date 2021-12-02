@@ -9,8 +9,6 @@ import { Employee } from '../orm-entity/employee';
 import { EmployeeRepository } from './employee.respository';
 import { ReasonRepository } from './reason.respository';
 import { PodScanRepository } from './pod-scan.repository';
-import { AwbTrouble } from '../orm-entity/awb-trouble';
-import { AwbSolution } from '../orm-entity/awb-solution';
 import { PartnerLogistic } from '../orm-entity/partner-logistic';
 import { EmployeeJourney } from '../orm-entity/employee-journey';
 import { BagRepository } from './bag.repository';
@@ -40,8 +38,6 @@ import { ComplaintRepository } from './complaint.repository';
       ReasonRepository,
       PodScan,
       PodScanRepository,
-      AwbTrouble,
-      AwbSolution,
       PartnerLogistic,
       EmployeeJourney,
       BagRepository,

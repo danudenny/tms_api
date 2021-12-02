@@ -38,79 +38,81 @@ export class CodTransactionHistoryQueueService {
     this.queue.process(5, async job => {
 
       const data = job.data;
-      const historyInvoice = CodTransactionHistory.create({
-        awbItemId: data.awbItemId,
-        awbNumber: data.awbNumber,
-        transactionDate: data.timestamp,
-        transactionStatusId: data.transactionStatusId,
-        branchId: data.branchId,
-        userIdCreated: data.userId,
-        userIdUpdated: data.userId,
-        createdTime: data.timestamp,
-        updatedTime: data.timestamp,
-      });
-      await CodTransactionHistory.insert(historyInvoice);
-
-      // get config mongodb
-      const transactionStatusId = Number(data.transactionStatusId);
-      if (data.isPartial == true ) {
-        const collection = await MongoDbConfig.getDbSicepatCod(
-          'transaction_detail',
-        );
-        // Get user updated
-        const userUpdated = await User.findOne({
-          select: ['userId', 'firstName', 'username'],
-          where: {
-            userId: Number(data.userId),
-          },
-          cache: true,
+      if (data.awbItemId) {
+        const historyInvoice = CodTransactionHistory.create({
+          awbItemId: data.awbItemId,
+          awbNumber: data.awbNumber,
+          transactionDate: data.timestamp,
+          transactionStatusId: data.transactionStatusId,
+          branchId: data.branchId,
+          userIdCreated: data.userId,
+          userIdUpdated: data.userId,
+          createdTime: data.timestamp,
+          updatedTime: data.timestamp,
         });
-        let objUpdate = {};
-        // supplier invoice status
-        // cancel draft
-        if (transactionStatusId == TRANSACTION_STATUS.CANCEL_DRAFT) {
-          objUpdate = {
-            codSupplierInvoiceId: null,
-            supplierInvoiceStatusId: null,
-            userIdUpdated: Number(data.userId),
-            updatedTime: moment(data.timestamp).toDate(),
-            adminName: userUpdated.firstName,
-            nikAdmin: userUpdated.username,
-          };
-          // awb void
-        } else if (transactionStatusId == TRANSACTION_STATUS.VOID) {
-          objUpdate = {
-            codSupplierInvoiceId: null,
-            supplierInvoiceStatusId: null,
-            isVoid: true,
-            userIdUpdated: Number(data.userId),
-            updatedTime: moment(data.timestamp).toDate(),
-            adminName: userUpdated.firstName,
-            nikAdmin: userUpdated.username,
-          };
-        } else {
-          objUpdate = {
-            transactionStatusId,
-            userIdUpdated: Number(data.userId),
-            updatedTime: moment(data.timestamp).toDate(),
-            adminName: userUpdated.firstName,
-            nikAdmin: userUpdated.username,
-          };
-        }
+        await CodTransactionHistory.insert(historyInvoice);
 
-        try {
-          const res = await collection.findOneAndUpdate(
-            { _id: data.awbNumber },
-            {
-              $set: objUpdate,
-            },
+        // get config mongodb
+        const transactionStatusId = Number(data.transactionStatusId);
+        if (data.isPartial == true ) {
+          const collection = await MongoDbConfig.getDbSicepatCod(
+            'transaction_detail',
           );
-        } catch (error) {
-          console.error(error);
-        }
-      } // end partial update
+          // Get user updated
+          const userUpdated = await User.findOne({
+            select: ['userId', 'firstName', 'username'],
+            where: {
+              userId: Number(data.userId),
+            },
+            cache: true,
+          });
+          let objUpdate = {};
+          // supplier invoice status
+          // cancel draft
+          if (transactionStatusId == TRANSACTION_STATUS.CANCEL_DRAFT) {
+            objUpdate = {
+              codSupplierInvoiceId: null,
+              supplierInvoiceStatusId: null,
+              userIdUpdated: Number(data.userId),
+              updatedTime: moment(data.timestamp).toDate(),
+              adminName: userUpdated.firstName,
+              nikAdmin: userUpdated.username,
+            };
+            // awb void
+          } else if (transactionStatusId == TRANSACTION_STATUS.VOID) {
+            objUpdate = {
+              codSupplierInvoiceId: null,
+              supplierInvoiceStatusId: null,
+              isVoid: true,
+              userIdUpdated: Number(data.userId),
+              updatedTime: moment(data.timestamp).toDate(),
+              adminName: userUpdated.firstName,
+              nikAdmin: userUpdated.username,
+            };
+          } else {
+            objUpdate = {
+              transactionStatusId,
+              userIdUpdated: Number(data.userId),
+              updatedTime: moment(data.timestamp).toDate(),
+              adminName: userUpdated.firstName,
+              nikAdmin: userUpdated.username,
+            };
+          }
 
-      return true;
+          try {
+            const res = await collection.findOneAndUpdate(
+              { _id: data.awbNumber },
+              {
+                $set: objUpdate,
+              },
+            );
+          } catch (error) {
+            console.error(error);
+          }
+        } // end partial update
+
+        return true;
+      }
     });
 
     this.queue.on('completed', job => {
