@@ -9,6 +9,7 @@ import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { DetailTransitPayloadVm } from '../../models/mobile-dashboard.vm';
+import { BadGatewayException } from '@nestjs/common';
 
 export class MobileDashboardService {
   public static async getDashboardDataByRequest(): Promise<
@@ -86,30 +87,32 @@ export class MobileDashboardService {
       return result;
     }
 
-    // Total barang scan masuk
-    const qb = createQueryBuilder();
-    qb.addSelect('pcbd.awb_number)', 'totalScanInAwb');
-    qb.from('pod_scan_in_branch_detail', 'pcbd');
-    qb.innerJoin(
-      'pod_scan_in_branch',
-      'pcb',
-      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcbd.user_id_created = :userId ',
-      { userId: authMeta.userId },
-    );
-    qb.where(
-      'pcb.created_time >= :dateTimeStart AND pcb.created_time <= :dateTimeEnd',
-      {
-        dateTimeStart: date[0],
-        dateTimeEnd: date[1],
-      },
-    );
-    mobileTransitResponseVm.total = await qb.getCount();
+    try {
+      // Total Barang Scan Masuk
+      const qb = createQueryBuilder();
+      qb.select('COUNT(pod_scan_in_branch_detail_id)', 'total');
+      qb.from('pod_scan_in_branch_detail', 'pcbd');
+      qb.where(
+        'pcbd.created_time >= :dateTimeStart AND pcbd.created_time < :dateTimeEnd',
+        {
+          dateTimeStart: date[0],
+          dateTimeEnd: date[1],
+        },
+      );
+      qb.andWhere('pcbd.user_id_created = :userId', {
+        userId: authMeta.userId,
+      });
 
-    mobileTransitResponseVm.dateTime = currentMoment.format('YYYY-MM-DD');
+      const data = await qb.getRawMany();
+      mobileTransitResponseVm.total = Number(data[0]['total']);
+      mobileTransitResponseVm.dateTime = currentMoment.format('YYYY-MM-DD');
+      result.scanInAwb = mobileTransitResponseVm;
 
-    result.scanInAwb = mobileTransitResponseVm;
-
-    return result;
+      return result;
+    } catch (error) {
+      console.error(error.message);
+      throw new BadGatewayException('terjadi kesalahan, coba lagi!');
+    }
   }
 
   public static async getTransitDetailNotScanOut(
@@ -129,38 +132,43 @@ export class MobileDashboardService {
       return result;
     }
 
-    // Total barang belum scan keluar
-    const qb = createQueryBuilder();
-    qb.addSelect('aia.awb_number', 'awbNumber');
-    qb.from('awb_item_attr', 'aia');
-    qb.innerJoin(
-      'pod_scan_in_branch_detail',
-      'pcbd',
-      'pcbd.awb_number = aia.awb_number',
-    );
-    qb.innerJoin(
-      'pod_scan_in_branch',
-      'pcb',
-      'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id AND pcb.user_id_created = :userId ',
-      { userId: authMeta.userId },
-    );
-    qb.where(
-      'pcbd.created_time >= :dateTimeStart AND pcbd.created_time <= :dateTimeEnd',
-      {
-        dateTimeStart: date[0],
-        dateTimeEnd: date[1],
-      },
-    );
-    qb.andWhere('aia.awb_status_id_last = :inBranchCode', {
-      inBranchCode: AWB_STATUS.IN_BRANCH,
-    });
-    mobileTransitResponseVm.total = await qb.getCount();
+    try {
+      // Total barang belum scan keluar
+      const qb = createQueryBuilder();
+      qb.select('COUNT(pcbd.pod_scan_in_branch_detail_id)', 'total');
+      qb.from('pod_scan_in_branch_detail', 'pcbd');
+      qb.innerJoin(
+        'awb_item_attr',
+        'aia',
+        'pcbd.awb_item_id = aia.awb_item_id AND aia.awb_status_id_last = :inBranchCode',
+        { inBranchCode: AWB_STATUS.IN_BRANCH },
+      );
+      qb.innerJoin(
+        'pod_scan_in_branch',
+        'pcb',
+        'pcb.pod_scan_in_branch_id = pcbd.pod_scan_in_branch_id',
+      );
+      qb.where(
+        'pcbd.created_time >= :dateTimeStart AND pcbd.created_time <= :dateTimeEnd',
+        {
+          dateTimeStart: date[0],
+          dateTimeEnd: date[1],
+        },
+      );
+      qb.andWhere('pcbd.user_id_created = :userId', {
+        userId: authMeta.userId,
+      });
+      const data = await qb.getRawMany();
 
-    mobileTransitResponseVm.dateTime = currentMoment.format('YYYY-MM-DD');
+      mobileTransitResponseVm.total = Number(data[0]['total']);
+      mobileTransitResponseVm.dateTime = currentMoment.format('YYYY-MM-DD');
+      result.notScanOutAwb = mobileTransitResponseVm;
 
-    result.notScanOutAwb = mobileTransitResponseVm;
-
-    return result;
+      return result;
+    } catch (error) {
+      console.error(error.message);
+      throw new BadGatewayException('terjadi kesalahan, coba lagi!');
+    }
   }
 
   public static async getTransitDetail(
