@@ -12,6 +12,7 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import moment = require('moment');
 import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-request-detail';
 import {CsvHelper} from '../../../../../shared/helpers/csv-helpers';
+import { QueryServiceApi } from '../../../../../shared/services/query.service.api';
 
 export class V1WebAwbHighValueService {
   static ExportHeaderUploadResi = [
@@ -574,7 +575,8 @@ export class V1WebAwbHighValueService {
       q.andWhere(e => e.isDeleted, w => w.isFalse());
       q.andWhere(e => e.userIdUploaded, w => w.equals(1));
 
-      let data =  await q.exec();
+      const query = await q.getQuery();
+      let data =  await QueryServiceApi.executeQuery(query, false, null);
       await CsvHelper.generateCSV(response, data, fileName);
 
     } catch (err) {
