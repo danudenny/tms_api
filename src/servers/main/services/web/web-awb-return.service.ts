@@ -20,6 +20,7 @@ import { WebReturHistoryFindAllResponseVm } from '../../models/web-retur-history
 import { WebReturHistoryPayloadVm } from '../../models/web-retur-history-payload.vm';
 import { QueryBuilder, createQueryBuilder } from 'typeorm';
 import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
+import { QueryServiceApi } from '../../../../shared/services/query.service.api';
 
 export class WebAwbReturnService {
   static ExportHeaderReturnList = [
@@ -679,16 +680,16 @@ export class WebAwbReturnService {
       payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
-        [`CONCAT('''', t1.origin_awb_number)`, 'Resi'],
+        [`''''||t1.origin_awb_number`, 'Resi'],
         ['t2.awb_status_name', 'Status'],
         ['t9.awb_status_name', 'Status Resi Pengganti'],
         ['TO_CHAR(t1.created_time, \'YYYY-MM-DD\')', 'Tanggal Retur'],
         ['TO_CHAR(t1.updated_time, \'YYYY-MM-DD\')', 'Tanggal Update Retur'],
-        ['TO_CHAR(t1.awb_replacement_time, \'YYYY-MM-DD\')', 'Tanggal Status Resi Pengganti'],
+        // ['TO_CHAR(t1.awb_replacement_time, \'YYYY-MM-DD\')', 'Tanggal Status Resi Pengganti'],
         ['t4.branch_name', 'Gerai Manifest'],
         ['t6.branch_name', 'Gerai Asal Retur'],
         ['t3.branch_name', 'Gerai Terakhir Retur'],
-        [`CONCAT(CAST(t7.total_cod_value AS NUMERIC(20,2)))`, 'Nilai COD'],
+        [`CAST(t7.total_cod_value AS NUMERIC(20,2))`, 'Nilai COD'],
         [`COALESCE(t1.return_awb_number, '-')`, 'Resi Retur'],
         [`CASE
             WHEN t1.user_id_driver IS NOT NULL THEN 'Manual'
@@ -699,7 +700,7 @@ export class WebAwbReturnService {
           `COALESCE(t7.ref_prev_customer_account_id, t7.ref_customer_account_id,'')`,
           'Pengirim',
         ],
-        [`CONCAT(t8.nik, ' - ', t8.fullname)`, 'User Update'],
+        [`t8.nik||' - '||t8.fullname`, 'User Update'],
       );
 
       q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
@@ -726,7 +727,9 @@ export class WebAwbReturnService {
 
       // q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
       // await q.stream(response, this.streamTransformReturList);
-      let data =  await q.exec();
+      const query = await q.getQuery();
+      let data =  await QueryServiceApi.executeQuery(query, false, null);
+
       await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       throw err;
