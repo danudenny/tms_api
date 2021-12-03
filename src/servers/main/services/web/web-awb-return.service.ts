@@ -685,7 +685,7 @@ export class WebAwbReturnService {
         ['t9.awb_status_name', 'Status Resi Pengganti'],
         ['TO_CHAR(t1.created_time, \'YYYY-MM-DD\')', 'Tanggal Retur'],
         ['TO_CHAR(t1.updated_time, \'YYYY-MM-DD\')', 'Tanggal Update Retur'],
-        // ['TO_CHAR(t1.awb_replacement_time, \'YYYY-MM-DD\')', 'Tanggal Status Resi Pengganti'],
+        ['TO_CHAR(t1.awb_replacement_time, \'YYYY-MM-DD\')', 'Tanggal Status Resi Pengganti'],
         ['t4.branch_name', 'Gerai Manifest'],
         ['t6.branch_name', 'Gerai Asal Retur'],
         ['t3.branch_name', 'Gerai Terakhir Retur'],
