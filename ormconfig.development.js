@@ -1,9 +1,9 @@
 module.exports = {
   type: 'postgres',
-  host: 'sicepat-tmspod-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
-  port: 5432,
-  username: 'sicepattmsuser',
-  password: 's1c3p4Ttm$us3R3ncrypT3dbo05$',
+  host: 'pgpool-primary-staging-5361beef21559214.elb.ap-southeast-1.amazonaws.com',
+  port: 54321,
+  username: 'pgpoolpod',
+  password: 'Bp570Aa8zaya29dH',
   database: 'sicepattms',
   schema: 'public',
   entities: ['src/shared/orm-entity/*.ts'],
