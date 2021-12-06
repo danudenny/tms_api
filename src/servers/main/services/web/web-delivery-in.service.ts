@@ -1464,13 +1464,6 @@ export class WebDeliveryInService {
     const query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);
 
-    for(let i = 0; i < data.length; i++){
-      data[i].awbNumber = data[i].awbnumber;
-      data[i].consigneeName = data[i].consigneename;
-      data[i].consigneeAddress = data[i].consigneeaddress;
-      data[i].districtName = data[i].districtname;
-    }
-
     const result = new WebDeliveryListResponseVm();
 
     const repoCount = new OrionRepositoryService(DropoffHubDetail, 't1');
@@ -1496,7 +1489,7 @@ export class WebDeliveryInService {
     );
 
     let queryCount = await qCount.getQuery();
-    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'awbnumber');
+    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'awbNumber');
     const total = cnt;
 
     result.data = data;
