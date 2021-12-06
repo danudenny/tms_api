@@ -300,7 +300,7 @@ export class HubTransitDeliveryInService {
     for(let i = 0; i < data.length; i++){
       const repoDetail = new OrionRepositoryService(DropoffHubDetail, 't1');
       const qDetail = repoDetail.findAllRaw();
-      qDetail.andWhere(e => e.dropoffHubId, w => w.equals(data[i].dropoffhubid));
+      qDetail.andWhere(e => e.dropoffHubId, w => w.equals(data[i].dropoffHubId));
       let queryDetail = qDetail.getQuery();
       const dataDetail = await QueryServiceApi.executeQuery(queryDetail, false, null);
       
@@ -431,7 +431,7 @@ export class HubTransitDeliveryInService {
     let query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);
     for(let i = 0; i < data.length; i++){
-      data[i].totalResi = data[i].totalresi;
+      data[i].totalResi = data[i].totalResi;
     }
 
     const result = new WebDropOffSummaryListResponseVm();
