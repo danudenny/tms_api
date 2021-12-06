@@ -305,15 +305,6 @@ export class HubTransitDeliveryInService {
       const dataDetail = await QueryServiceApi.executeQuery(queryDetail, false, null);
       
       data[i].totalAwb = dataDetail.length;
-      data[i].bagNumberCode = data[i].bagnumbercode;
-      data[i].bagNumber = data[i].bagnumber;
-      data[i].representativeCode = data[i].representativecode;
-      data[i].bagSeq = data[i].bagseq;
-      data[i].createdTime = data[i].createdtime;
-      data[i].dropoffHubId = data[i].dropoffhubid;
-      data[i].branchName = data[i].branchname;
-      data[i].branchScanName = data[i].branchscanname;
-      data[i].weight = data[i].weight;
     }
 
     const repoCount = new OrionRepositoryService(DropoffHub, 't1');
@@ -349,7 +340,7 @@ export class HubTransitDeliveryInService {
     );
 
     let queryCount = await qCount.getQuery();
-    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'bagnumbercode');
+    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'bagNumberCode');
     const total = cnt;
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
