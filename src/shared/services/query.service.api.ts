@@ -10,7 +10,7 @@ export class QueryServiceApi {
     let paramQuery
     
     if(isCount == true){
-      query = `SELECT COUNT(${primaryField}) as cnt FROM (${query}) t`;
+      query = `SELECT COUNT(1) as cnt FROM (${query}) t`;
       paramQuery = await Buffer.from(query).toString('base64');
     }else{
       paramQuery = await Buffer.from(query).toString('base64');

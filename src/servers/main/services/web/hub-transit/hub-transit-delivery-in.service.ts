@@ -340,7 +340,7 @@ export class HubTransitDeliveryInService {
     );
 
     let queryCount = await qCount.getQuery();
-    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, '"bagNumberCode"');
+    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'bagNumberCode');
     const total = cnt;
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
