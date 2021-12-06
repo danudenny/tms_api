@@ -510,10 +510,10 @@ export class V1WebAwbHighValueService {
       q.selectRaw(
         ['TO_CHAR(t1.uploaded_time, \'YYYY-MM-DD\')', 'Tanggal Upload'],
         ['TO_CHAR(t5.awb_history_date_last, \'YYYY-MM-DD\')', 'Tanggal Status'],
-        ['t1.awb_number', 'Nomor Resi'],
+        [`''''||t1.awb_number`, 'Nomor Resi'],
         ['t4.partner_name', 'Nama Partner'],
         ['t2.recipient_name', 'Nama Penerima'],
-        ['t2.recipient_phone', 'Telp Penerima'],
+        [`''''||t2.recipient_phone`, 'Telp Penerima'],
         ['t2.parcel_content', 'Isi Parsel'],
         ['t7.awb_status_name', 'Status Awb'],
         ['t9.district_code', 'Kode Kecamatan'],
