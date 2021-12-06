@@ -398,6 +398,11 @@ export class V1PackageService {
   private static async onFinish(payload: PackagePayloadVm): Promise<boolean> {
     let bagWeightFinal;
     const authMeta = AuthService.getAuthData();
+
+    if (!payload.bagItemId) {
+      throw new BadRequestException("payload invalid");
+    }
+    
     const podScanInHub = await PodScanInHub.findOne({
       where: { podScanInHubId: payload.podScanInHubId },
     });
