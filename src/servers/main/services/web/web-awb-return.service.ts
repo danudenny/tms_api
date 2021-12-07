@@ -690,7 +690,7 @@ export class WebAwbReturnService {
         ['t6.branch_name', 'Gerai Asal Retur'],
         ['t3.branch_name', 'Gerai Terakhir Retur'],
         [`CAST(t7.total_cod_value AS NUMERIC(20,2))`, 'Nilai COD'],
-        [`COALESCE(t1.return_awb_number, '-')`, 'Resi Retur'],
+        [`COALESCE(''''||t1.return_awb_number, '-')`, 'Resi Retur'],
         [`CASE
             WHEN t1.user_id_driver IS NOT NULL THEN 'Manual'
             WHEN t1.partner_logistic_name IS NOT NULL THEN t1.partner_logistic_name
