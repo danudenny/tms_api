@@ -33,7 +33,7 @@ export class UploadImagePodQueueService {
 
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
-    this.queue.process(async job => {
+    this.queue.process(5, async job => {
       const data = job.data;
       // find data and get awb number
       const deliver = await DoPodDeliverDetail.findOne({
