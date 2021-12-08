@@ -17,6 +17,8 @@ import {
     TrackingBagRepresentativeAwbPayloadVm,
     TrackingBagRepresentativeDetailResponseVm,
     TrackingBagRepresentativeDetailPayloadVm,
+    LogActivityPayloadVm,
+    LogActivityResponseVm,
 } from '../../../models/tracking.vm';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
@@ -100,5 +102,15 @@ export class V1WebTrackingController {
     @Body() payload: any,
   ) {
     return ActivityLogHelper.logActivity(payload);
+  }
+
+  @Post('awbDetail')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: LogActivityResponseVm })
+  public async awbDetail(
+    @Body() payload: LogActivityPayloadVm,
+  ) {
+    return V1WebTrackingService.awbDetail(payload);
   }
 }

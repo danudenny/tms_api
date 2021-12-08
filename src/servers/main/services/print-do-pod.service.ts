@@ -21,7 +21,7 @@ export class PrintDoPodService {
     q.leftJoin(e => e.doPodDetails);
     q.leftJoin(e => e.userDriver.employee);
     q.leftJoin(e => e.partnerLogistic);
-      
+
     const doPod = await q
       .select({
         doPodId: true, // needs to be selected due to do_pod relations are being included
@@ -64,7 +64,7 @@ export class PrintDoPodService {
         message: 'Surat jalan tidak ditemukan',
       });
     }
-      
+
     if(!doPod.userDriver && doPod.partnerLogistic){
       delete doPod.userDriver
       let dataTransit = {userDriver : {employee : {nickname: "3PL"}}}
@@ -210,8 +210,10 @@ export class PrintDoPodService {
             if(detail.awbItem.awb.totalCodValue) {
               totalCod += Number(detail.awbItem.awb.totalCodValue);
              }
-            if(detail.awbItem.awb.totalWeight){
-              totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
+            if(detail.awbItem.awb.totalWeightFinalRounded){
+              totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded); // by req print
+            } else {
+              totalWeight += Number(detail.awbItem.awb.totalWeight);// execute print
             }
           }
 

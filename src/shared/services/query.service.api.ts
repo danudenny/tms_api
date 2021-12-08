@@ -8,7 +8,8 @@ export class QueryServiceApi {
 
   public static async executeQuery(query, isCount, primaryField) {
     let paramQuery
-    
+    query = query.replace(/public/g, ConfigService.get('queryService.schema'));// only dev mode n staging
+
     if(isCount == true){
       query = `SELECT COUNT(1) as cnt FROM (${query}) t`;
       paramQuery = await Buffer.from(query).toString('base64');
@@ -40,7 +41,7 @@ export class QueryServiceApi {
         }
       }
     }catch(err){
-      console.log("#### error calling query service query", query, ", error: ", err.message); 
+      console.log("#### error calling query service query", query, ", error: ", err.message);
       if(isCount == true){
         return 0;
       }else{
