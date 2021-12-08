@@ -7,6 +7,7 @@ import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { HttpStatus } from '@nestjs/common';
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { DatabaseConfig } from '../../config/database/db.config';
 
 
 export class PartnerOneidService {
@@ -161,7 +162,7 @@ export class PartnerOneidService {
 
       // default filter
       let endDate = moment().subtract(3, "days").format("YYYY-MM-DD HH:mm:ss");
-      const filter: any = {};
+      const filter = [];
 
       // Pagination
       const limitValue = parseFloat(query.limit) || 10;
@@ -170,130 +171,156 @@ export class PartnerOneidService {
 
       // default query
       let pushquery = '';
-      filter.awb_date = endDate;
       const awbref = [];
-      const consigneePhoneStringToArray = query.consigneePhone.split(',');
-
-
-      // query base on partnerName 
-      // (query.partnerName) ? filter.partner_name = query.partnerName : '';
-      // (query.partnerName) ? pushquery = 'AND pa.partner_name = :partner_name ' : '';
-
-      // query base on partnerId  
-      (query.partnerId) ? filter.partner_id = query.partnerId : '';
-      (query.partnerId) ? pushquery += 'AND pa.partner_id = :partner_id ' : '';
-
-      // query base on resi status
-      (query.status) ? filter.awb_status_id_last = query.status : '';
-      (query.status) ? pushquery += 'AND ai.awb_status_id_last = :awb_status_id_last ' : '';
-
-
-      // query base on consigneePhone
-      (query.consigneePhone) ? filter.consignee_phone = consigneePhoneStringToArray : '';
-      (query.consigneePhone) ? pushquery += 'AND a.consignee_phone IN (:...consignee_phone)' : '';
-
-
-      // query base on awb number  
-      (query.awbNumber) ? filter.awb_number = query.awbNumber : '';
-      (query.awbNumber) ? pushquery += 'AND a.awb_number = :awb_number' : '';
 
       // query base on senderPhone
-      if (query.senderPhone) {
-        const senderPhoneStringToArray = query.senderPhone.split(',');
-        if (!query.awbNumber) {
-          const getSenderPhone = await PickupRequestDetail.find({
-            select: ['refAwbNumber', 'shipperPhone'],
-            where: {
-              createdTime: MoreThan(endDate),
-              shipperPhone: In(senderPhoneStringToArray),
-              isDeleted: false
-            },
-            take: limitValue,
-            skip: offsetValue,
-          });
+      const pool: any = DatabaseConfig.getSuperAppRedShiftDbPool();
+      const client = await pool.connect();
+      try {
 
-          awbref.push(...getSenderPhone.map(el => el.refAwbNumber));
+        if (query.senderPhone) {
+          const senderPhoneStringToArray = query.senderPhone.split(',');
+          const sqlSenderPhone = `
+            SELECT 
+              ref_awb_number,
+              shipper_phone 
+            FROM 
+              superapps.pickup_request_detail
+            WHERE
+              is_deleted = false
+              AND created_time >= $1
+              AND shipper_phone = ANY($2)
+             LIMIT ${limitValue}
+             OFFSET ${offsetValue}`;
 
-          filter.awb_number = awbref;
-          pushquery += `AND a.awb_number IN (:...awb_number)`
-        }
+          const senderPhone = await client.query(sqlSenderPhone, [endDate, senderPhoneStringToArray])
+          awbref.push(...senderPhone.rows.map(el => el.ref_awb_number));
 
-        (query.awbNumber) ? filter.awb_number = query.awbNumber : '';
-        (query.awbNumber) ? pushquery = 'AND a.awb_number = :awb_number' : '';
+          pushquery += `AND a.awb_number IN (${awbref.join(',')})`;
 
-        if (awbref.length == 0 && !query.awbNumber) {
-          return {
-            status: true,
-            statusCode: 200,
-            limit: limitValue,
-            page,
-            data: []
+          if (awbref.length == 0 && !query.awbNumber) {
+            return {
+              status: true,
+              statusCode: 200,
+              limit: limitValue,
+              page,
+              data: []
+            }
           }
+
+        }
+
+        let bindIndex = 1;
+        //query default
+        filter.push(endDate);
+        pushquery += `AND a.awb_date > $${bindIndex} `;
+        bindIndex++;
+
+        filter.push(endDate);
+        pushquery += `AND a.created_time > $${bindIndex} `;
+        bindIndex++;
+
+        // query base on partnerId
+        if(query.partnerId) {
+          filter.push(parseInt(query.partnerId));
+          pushquery += `AND pa.partner_id = $${bindIndex} `;
+          bindIndex++;
+        }
+
+        // query base on excludePartnerId
+        if(query.excludePartnerId) {
+          filter.push(parseInt(query.excludePartnerId));
+          pushquery += `AND pa.partner_id != $${bindIndex} `;
+          bindIndex++;
+        }
+
+        // query base on resi status
+        if(query.status) {
+          filter.push(query.status.split(','));
+          pushquery += `AND ai.awb_status_id_last = ANY($${bindIndex}) `;
+          bindIndex++;
+        }
+
+        // query base on consigneePhone
+        if(query.consigneePhone) {
+          filter.push(query.consigneePhone);
+          pushquery += `AND a.consignee_phone IN ($${bindIndex}) `;
+          bindIndex++;
+        }
+
+        // query base on awb number
+        if(query.consigneePhone) {
+          filter.push(query.awbNumber);
+          pushquery += `AND a.awb_number = ?$${bindIndex} `;
+          bindIndex++;
+        }
+
+        let sql = `
+          SELECT
+           a.awb_id, 
+           a.awb_number, 
+           a.consignee_name, 
+           a.consignee_phone, 
+           a.awb_date, 
+           a.customer_account_id, 
+           a.created_time,
+           p.package_type_code,
+           a.is_deleted,
+           ai.awb_status_id_last,
+           aws.awb_status_name,
+           prd.shipper_name,
+           prd.shipper_phone,
+           prd.parcel_content,
+           pa.partner_name,
+           no.totalbiaya
+          FROM superapps.awb a 
+            INNER JOIN superapps.package_type p  ON p.package_type_id = a.package_type_id
+            INNER JOIN superapps.awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
+            LEFT JOIN superapps.awb_status aws ON aws.awb_status_id = ai.awb_status_id_last
+            INNER JOIN superapps.pickup_request_detail prd  ON prd.ref_awb_number = a.awb_number
+            LEFT JOIN superapps.partner pa ON pa.customer_account_id = a.customer_account_id AND pa.is_deleted=false
+            LEFT JOIN superapps.temp_stt no ON no.nostt = a.awb_number AND pa.is_deleted=false
+          WHERE 
+            1 = 1 
+            ${pushquery}
+            ORDER BY awb_date DESC
+            LIMIT ${limitValue} 
+            OFFSET ${offsetValue}`;
+
+        const rawData= await client.query(sql, filter)
+        const results = rawData.rows.length ? rawData.rows : [];
+
+        // mapping
+        const mapping = [];
+        for (let i = 0; i < results.length; i += 1) {
+          mapping.push({
+            awbId: results[i].awb_id,
+            awbNumber: results[i].awb_number,
+            receiver: results[i].consignee_name,
+            recipientAddress: results[i].consignee_address,
+            senderName: results[i].shipper_name,
+            shipperAddress: results[i].shipper_address,
+            partnerName: results[i].partner_name,
+            date: results[i].awb_date,
+            service: results[i].package_type_code,
+            price: results[i].totalbiaya,
+            description: results[i].parcel_content,
+            status: results[i].awb_status_name,
+          })
+        }
+        return {
+          status: true,
+          statusCode: 200,
+          limit: limitValue,
+          page,
+          data: mapping
         }
 
       }
-      // query  
-      let sql = `
-      SELECT
-       a.awb_id, 
-       a.awb_number, 
-       a.consignee_name, 
-       a.consignee_phone, 
-       a.awb_date, 
-       a.customer_account_id, 
-       a.created_time,
-       p.package_type_code,
-       a.is_deleted,
-       ai.awb_status_id_last,
-       aws.awb_status_name,
-       prd.shipper_name,
-       prd.shipper_phone,
-       prd.parcel_content,
-       pa.partner_name,
-       no.totalbiaya
-        FROM awb a 
-        INNER JOIN package_type p  ON p.package_type_id = a.package_type_id
-        INNER JOIN awb_item_attr ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
-        LEFT JOIN awb_status aws ON aws.awb_status_id = ai.awb_status_id_last
-        INNER JOIN pickup_request_detail prd  ON prd.ref_awb_number = a.awb_number
-        LEFT JOIN partner pa ON pa.customer_account_id = a.customer_account_id AND pa.is_deleted=false
-        LEFT JOIN temp_stt no ON no.nostt = a.awb_number AND pa.is_deleted=false
-        WHERE a.awb_date > :awb_date AND a.created_time > :awb_date
-        ${pushquery}
-        ORDER BY awb_date DESC
-        LIMIT ${limitValue} OFFSET ${offsetValue}`;
-
-      // excute query
-      const rawData = await RawQueryService.queryWithParams(sql, filter);
-      const results = rawData.length ? rawData : [];
-
-      // mapping
-
-      const mapping = [];
-      for (let i = 0; i < results.length; i += 1) {
-        mapping.push({
-          awbId: results[i].awb_id,
-          awbNumber: results[i].awb_number,
-          receiver: results[i].consignee_name,
-          recipientAddress: results[i].consignee_address,
-          senderName: results[i].shipper_name,
-          shipperAddress: results[i].shipper_address,
-          partnerName: results[i].partner_name,
-          date: results[i].awb_date,
-          service: results[i].package_type_code,
-          price: results[i].totalbiaya,
-          description: results[i].parcel_content,
-          status: results[i].awb_status_name,
-        })
+      finally {
+        client.release()
       }
 
-      return {
-        status: true,
-        statusCode: 200,
-        limit: limitValue,
-        page,
-        data: mapping
-      }
     } catch (error) {
       return {
         status: false,
