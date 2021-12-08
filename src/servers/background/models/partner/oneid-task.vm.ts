@@ -77,6 +77,9 @@ export class ListResiVm {
   partnerId: number;
 
   @ApiModelPropertyOptional()
+  excludePartnerId: number;
+
+  @ApiModelPropertyOptional()
   startDate: string;
 
   @ApiModelPropertyOptional()
