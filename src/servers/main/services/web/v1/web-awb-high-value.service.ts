@@ -12,6 +12,7 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import moment = require('moment');
 import { PickupRequestDetail } from '../../../../../shared/orm-entity/pickup-request-detail';
 import {CsvHelper} from '../../../../../shared/helpers/csv-helpers';
+import { QueryServiceApi } from '../../../../../shared/services/query.service.api';
 
 export class V1WebAwbHighValueService {
   static ExportHeaderUploadResi = [
@@ -297,6 +298,9 @@ export class V1WebAwbHighValueService {
       ['t10.package_type_code', 'packageTypeCode'],
       ['t10.package_type_name', 'packageTypeName'],
       [`CASE WHEN t10.package_type_code = 'KEPO' THEN 'Gold' ELSE 'Berharga' END`, 'packageType'],
+      ['t11.representative_code', 'manifestBranchRepresentativeCode'],
+      ['t12.pickup_merchant', 'seller'],
+      ['t13.district_name', 'districtTo'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -322,6 +326,10 @@ export class V1WebAwbHighValueService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.innerJoin(e => e.awbItemAttr.awb, 't12', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.leftJoin(e => e.awbItemAttr.awb.branch, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -331,6 +339,14 @@ export class V1WebAwbHighValueService {
     );
 
     q.leftJoin(e => e.awbItemAttr.awb.packageType, 't10', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbItemAttr.awb.branch.representative, 't11', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awbItemAttr.awb.districtTo, 't13', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -402,6 +418,10 @@ export class V1WebAwbHighValueService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.leftJoin(e => e.awbItemAttr.awb, 't12', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.leftJoin(e => e.awbItemAttr.awb.branch, 't8', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -411,6 +431,14 @@ export class V1WebAwbHighValueService {
     );
 
     q.leftJoin(e => e.awbItemAttr.awb.packageType, 't10', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.awbItemAttr.awb.branch.representative, 't11', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.leftJoin(e => e.awbItemAttr.awb.districtTo, 't13', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -439,7 +467,7 @@ export class V1WebAwbHighValueService {
       payload.fieldResolverMap['uploadedDate'] = 't1.uploaded_time';
       payload.fieldResolverMap['displayName'] = 't1.display_name';
       payload.fieldResolverMap['partnerName'] = 't4.partner_name';
-      payload.fieldResolverMap['branchName'] = 't5.branch_name';
+      payload.fieldResolverMap['branchName'] = 't6.branch_name';
       payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
       payload.fieldResolverMap['branchId'] = 't6.branch_id';
       payload.fieldResolverMap['branchFromId'] = 't8.branch_id';
@@ -482,16 +510,19 @@ export class V1WebAwbHighValueService {
       q.selectRaw(
         ['TO_CHAR(t1.uploaded_time, \'YYYY-MM-DD\')', 'Tanggal Upload'],
         ['TO_CHAR(t5.awb_history_date_last, \'YYYY-MM-DD\')', 'Tanggal Status'],
-        ['t1.awb_number', 'Nomor Resi'],
+        [`''''||t1.awb_number`, 'Nomor Resi'],
         ['t4.partner_name', 'Nama Partner'],
         ['t2.recipient_name', 'Nama Penerima'],
-        ['t2.recipient_phone', 'Telp Penerima'],
+        [`''''||t2.recipient_phone`, 'Telp Penerima'],
         ['t2.parcel_content', 'Isi Parsel'],
         ['t7.awb_status_name', 'Status Awb'],
         ['t9.district_code', 'Kode Kecamatan'],
         ['t6.branch_name', 'Gerai Tujuan'],
         ['t8.branch_name', 'Gerai Asal'],
         [`CASE WHEN t10.package_type_code = 'KEPO' THEN 'Gold' ELSE 'Berharga' END`, 'Tipe Layanan'],
+        ['t11.representative_code', 'Perwakilan Asal'],
+        ['t12.pickup_merchant', 'Seller'],
+        ['t13.district_name', 'Tujuan Kecematan'],
       );
       q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -517,6 +548,10 @@ export class V1WebAwbHighValueService {
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
+      q.leftJoin(e => e.awbItemAttr.awb, 't12', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
       q.leftJoin(e => e.awbItemAttr.awb.branch, 't8', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
@@ -529,10 +564,19 @@ export class V1WebAwbHighValueService {
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
+      q.innerJoin(e => e.awbItemAttr.awb.branch.representative, 't11', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.leftJoin(e => e.awbItemAttr.awb.districtTo, 't13', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
       q.andWhere(e => e.isDeleted, w => w.isFalse());
       q.andWhere(e => e.userIdUploaded, w => w.equals(1));
 
-      let data =  await q.exec();
+      const query = await q.getQuery();
+      let data =  await QueryServiceApi.executeQuery(query, false, null);
       await CsvHelper.generateCSV(response, data, fileName);
 
     } catch (err) {

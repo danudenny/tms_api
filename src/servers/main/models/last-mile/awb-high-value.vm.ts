@@ -60,6 +60,15 @@ export class AwbHighValueUploadListDataResponseVm {
 
   @ApiModelProperty()
   packageType: string;
+
+  @ApiModelProperty()
+  manifestBranchRepresentativeCode: string;
+
+  @ApiModelProperty()
+  seller: string;
+
+  @ApiModelProperty()
+  districtTo: string;
 }
 
 export class AwbHighValueUploadListResponseVm extends BaseMetaResponseVm {

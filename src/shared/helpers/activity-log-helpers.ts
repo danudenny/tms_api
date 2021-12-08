@@ -25,4 +25,17 @@ export abstract class ActivityLogHelper {
       }
     }
   }
+
+  public static async logActivityWithPayload(payload: {
+      ip: string;
+      awb_number: string;
+      key: string;
+      source: string;
+      type: string;
+      user_id: string;
+      value: string;
+  }
+  ) {
+    return this.logActivity(payload);
+  }
 }
