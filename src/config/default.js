@@ -59,7 +59,7 @@ module.exports = {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
   queryService :{
-    baseUrl : 'http://api-internal.s.sicepat.io/core/query-service/api/v1/',
+    baseUrl : 'http://api-internal.sicepat.io/core/query-service/api/v1/',
     schema: 'pod',
   },
   loggly: {
