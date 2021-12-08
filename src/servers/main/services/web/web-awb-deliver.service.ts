@@ -1,7 +1,6 @@
 // //#region import
 import { getManager, LessThan, MoreThan } from 'typeorm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
@@ -19,6 +18,8 @@ import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { AwbNotificationMailQueueService } from '../../../queue/services/notification/awb-notification-mail-queue.service';
 import { AwbReturnService } from '../master/awb-return.service';
+import { RoleGroupService } from '../../../../shared/services/role-group.service';
+import { AwbCodService } from '../cod/awb-cod.service';
 // //#endregion
 export class WebAwbDeliverService {
   constructor() {}
@@ -38,14 +39,14 @@ export class WebAwbDeliverService {
 
     try {
       for (const delivery of payload.deliveries) {
-        // TODO: check awb number
         // payload.role ['palkur', 'ct', 'sigesit']
         let syncManualDelivery = false;
+        // TODO: need improve query get data check awb number
         const awb = await AwbService.validAwbNumber(delivery.awbNumber);
         if (awb) {
           // add handel status Cod problem
           const statusCodProblem = [AWB_STATUS.CODB, AWB_STATUS.CODOC];
-          if (AWB_STATUS.RTN == delivery.awbStatusId && !await AwbService.isManifested(awb.awbNumber, awb.awbItemId)){
+          if (AWB_STATUS.RTN == delivery.awbStatusId && !await AwbService.isManifested(awb.awbNumber, awb.awbItemId)) {
             response.status = 'error';
             response.message = `Resi ${delivery.awbNumber} belum pernah di MANIFESTED`;
           } else if (
@@ -81,19 +82,27 @@ export class WebAwbDeliverService {
                   response.status = 'error';
                   response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
                 } else {
+                  // set data deliver for sync data
+                  delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
+                  delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
+                  delivery.awbItemId = awbDeliver.awbItemId;
+                  delivery.totalCodValue = awb.awbItem.awb.totalCodValue;
+
                   // check awb is cod
-                  if (awb.awbItem.awb.isCod == true && delivery.awbStatusId == AWB_STATUS.DLV) {
-                    response.status = 'error';
-                    response.message = `Resi ${
-                      delivery.awbNumber
-                    }, adalah resi COD, tidak dapat melakukan POD Manual!`;
+                  if (this.isValidCod(awb.awbItem.awb.isCod, delivery.awbStatusId)) {
+                    if (RoleGroupService.isRoleCodManual(permissonPayload.roleName, permissonPayload.isHeadOffice)) {
+                      await this.syncDeliver(delivery, true);
+                      response.status = 'ok';
+                      response.message = 'success';
+                    } else {
+                      // no access cod manual
+                      response.status = 'error';
+                      response.message = `Resi ${
+                        delivery.awbNumber
+                      }, adalah resi COD, role user tidak dapat melakukan POD Manual!`;
+                    }
                   } else {
-                    // set data deliver
-                    delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
-                    delivery.doPodDeliverDetailId = awbDeliver.doPodDeliverDetailId;
-                    delivery.awbItemId = awbDeliver.awbItemId;
-                    // delivery.employeeId = authMeta.employeeId;
-                    await this.syncDeliver(delivery);
+                    await this.syncDeliver(delivery, false);
                     // TODO: if awb status DLV check awbNumber is_return ?? update relation awbNumber (RTS)
                     if (payload.isReturn) {
                       await AwbReturnService.createAwbReturn(
@@ -106,7 +115,7 @@ export class WebAwbDeliverService {
                     }
                     response.status = 'ok';
                     response.message = 'success';
-                  }
+                  } // end valid awb status final
                 }
               } else {
                 response.status = 'error';
@@ -165,7 +174,7 @@ export class WebAwbDeliverService {
     }
   }
 
-  private static async syncDeliver(delivery: WebDeliveryVm) {
+  private static async syncDeliver(delivery: WebDeliveryVm, isCod: boolean) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     // Generate History by Status input pod manual
@@ -219,6 +228,29 @@ export class WebAwbDeliverService {
             updatedTime: moment().toDate(),
           },
         );
+        // only awb COD and DLV
+        if (isCod) {
+          await AwbCodService.transfer(
+            {
+              doPodDeliverDetailId: delivery.doPodDeliverDetailId,
+              awbNumber: delivery.awbNumber,
+              awbItemId: delivery.awbItemId,
+              amount: delivery.totalCodValue,
+              method: 'cashless',
+              service: 'COD Manual',
+              noReference: `COD-MANUAL-${delivery.awbNumber}`,
+              note: `user ${
+                authMeta.displayName
+              } (${authMeta.username}) melakukan cod manual sebesar ${
+                delivery.totalCodValue
+              }`,
+            },
+            permissonPayload.branchId,
+            authMeta.userId,
+            transactionEntityManager,
+          );
+        }
+
         // TODO: validation DoPodDeliver
         const doPodDeliver = await DoPodDeliver.findOne({
           where: {
@@ -353,6 +385,10 @@ export class WebAwbDeliverService {
     q.orderBy({ updatedTime: 'DESC' });
     q.take(1);
     return await q.exec();
+  }
+
+  private static isValidCod(isCod: boolean, awbStatusId: number) {
+    return isCod == true && awbStatusId == AWB_STATUS.DLV;
   }
 
 }

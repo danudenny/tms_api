@@ -41,4 +41,23 @@ export class RoleGroupService {
       return false;
     }
   }
+
+  /**
+   * Handle role Web COD manual
+   * must not isHeadOffice
+   * @static
+   * @param {string} roleName
+   * @param {boolean} isHeadOffice
+   * @returns {boolean}
+   * @memberof RoleGroupService
+   */
+  public static isRoleCodManual(roleName: string, isHeadOffice: boolean): boolean {
+    const arrAdmin = ['Admin FORCE MAJEURE'];
+
+    if (arrAdmin.includes(roleName) && !isHeadOffice) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
