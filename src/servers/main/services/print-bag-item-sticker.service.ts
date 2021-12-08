@@ -26,6 +26,7 @@ export class PrintBagItemStickerService {
         bag: {
           bagId: true,
           bagNumber: true,
+          chuteNumber: true,
           branchTo: {
             branchName: true,
             branchCode: true,
@@ -84,6 +85,7 @@ export class PrintBagItemStickerService {
 
     let arrBranch = [];
     let printBranchName = '';
+    const chuteNumber = (data.bag.chuteNumber) ? data.bag.chuteNumber : '-';
     // handle branch name
     if (branchName.length) {
       // get only 40 char and split with space
@@ -91,7 +93,7 @@ export class PrintBagItemStickerService {
       arrBranch = chunk(arrBranch, 2);
       // wrap text
       for (const [index, item] of arrBranch.entries()) {
-        const position = index * 60 + 550;
+        const position = index * 60 + 600;
         const branch = item.join(' ');
         printBranchName += `TEXT 30,${position},"5",0,1,1,0,"${branch}"\n`;
       }
@@ -111,7 +113,8 @@ export class PrintBagItemStickerService {
         meta.bagItemAwbsTotal
       } resi"\n` +
       `TEXT 30,460,"3",0,1,1,"Tanggal : ${moment().format('YYYY-MM-DD HH:mm')}"\n` +
-      `TEXT 30,500,"4",0,1,1,0,"${branchCode}"\n` +
+      `TEXT 30,500,"4",0,1,1,0,"Nomor Chute : ${chuteNumber}"\n` +
+      `TEXT 30,550,"4",0,1,1,0,"${branchCode}"\n` +
       `${printBranchName}` +
       `PRINT 1\n` +
       `EOP`;
