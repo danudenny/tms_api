@@ -8,7 +8,7 @@ export class QueryServiceApi {
 
   public static async executeQuery(query, isCount, primaryField) {
     let paramQuery
-    query = query.replace(/public/g, ConfigService.get('queryService.schema'));// only dev mode n staging
+    // query = query.replace(/public/g, ConfigService.get('queryService.schema'));// only dev mode n staging
 
     if(isCount == true){
       query = `SELECT COUNT(1) as cnt FROM (${query}) t`;
