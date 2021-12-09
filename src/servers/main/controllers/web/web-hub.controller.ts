@@ -85,12 +85,12 @@ export class WebHubController {
     return HubSortirService.hubAwbNumber(payload);
   }
 
-  @Post('monitoring/bag')
-  @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: MonitoringBagHubResponseVm })
-  public async monitoringBagHub(@Body() payload: BaseMetaPayloadVm) {
-    return HubMonitoringService.monitoringBagHub(payload);
-  }
+  // @Post('old/monitoring/bag')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiOkResponse({ type: MonitoringBagHubResponseVm })
+  // public async monitoringBagHub(@Body() payload: BaseMetaPayloadVm) {
+  //   return HubMonitoringService.monitoringBagHub(payload);
+  // }
 
   @Post('monitoring/sortir')
   @HttpCode(HttpStatus.OK)
