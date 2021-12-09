@@ -171,6 +171,7 @@ export class PartnerOneidService {
       let pushquery = '';
       const awbref = [];
 
+      let bindIndex = 1;
       const startDate = moment(query.startDate).format("YYYY-MM-DD HH:mm:ss");
       const endDate = moment(query.endDate,"YYYY-MM-DD HH:mm:ss").add(1, "days").format("YYYY-MM-DD HH:mm:ss");
 
@@ -193,14 +194,16 @@ export class PartnerOneidService {
               is_deleted = false
               AND created_time >= $1
               AND created_time < $2
-              AND shipper_phone = ANY($2)
+              AND shipper_phone = ANY($3)
              LIMIT ${limitValue}
              OFFSET ${offsetValue}`;
 
           const senderPhone = await client.query(sqlSenderPhone, [startDate, endDate, senderPhoneStringToArray])
           awbref.push(...senderPhone.rows.map(el => el.ref_awb_number));
 
-          pushquery += `AND a.awb_number IN (${awbref.join(',')})`;
+          filter.push(awbref);
+          pushquery += `AND a.awb_number  = ANY($${bindIndex})`;
+          bindIndex++;
 
           if (awbref.length == 0 && !query.awbNumber) {
             return {
@@ -214,7 +217,6 @@ export class PartnerOneidService {
 
         }
 
-        let bindIndex = 1;
         //query default
         filter.push(startDate);
         pushquery += `AND a.awb_date >= $${bindIndex} `;
@@ -259,7 +261,7 @@ export class PartnerOneidService {
         }
 
         // query base on awb number
-        if(query.consigneePhone) {
+        if(query.awbNumber) {
           filter.push(query.awbNumber);
           pushquery += `AND a.awb_number = $${bindIndex} `;
           bindIndex++;
@@ -300,7 +302,6 @@ export class PartnerOneidService {
         const rawData= await client.query(sql, filter)
         const results = rawData.rows.length ? rawData.rows : [];
 
-        console.log(results)
         // mapping
         const mapping = [];
         for (let i = 0; i < results.length; i += 1) {
