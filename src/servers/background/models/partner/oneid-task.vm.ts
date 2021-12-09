@@ -79,10 +79,16 @@ export class ListResiVm {
   @ApiModelPropertyOptional()
   excludePartnerId: number;
 
-  @ApiModelPropertyOptional()
+  @ApiModelProperty({
+    example: '2021-12-07 00:00:00',
+    format: 'date-time',
+  })
   startDate: string;
 
-  @ApiModelPropertyOptional()
+  @ApiModelProperty({
+    example: '2021-12-08 00:00:00',
+    format: 'date-time',
+  })
   endDate: string;
   
 }

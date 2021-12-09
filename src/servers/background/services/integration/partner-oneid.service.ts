@@ -159,9 +159,7 @@ export class PartnerOneidService {
 
   static async getOrder(query) {
     try {
-
       // default filter
-      let endDate = moment().subtract(3, "days").format("YYYY-MM-DD HH:mm:ss");
       const filter = [];
 
       // Pagination
@@ -173,9 +171,14 @@ export class PartnerOneidService {
       let pushquery = '';
       const awbref = [];
 
-      // query base on senderPhone
+      const startDate = moment(query.startDate).format("YYYY-MM-DD HH:mm:ss");
+      const endDate = moment(query.endDate,"YYYY-MM-DD HH:mm:ss").add(1, "days").format("YYYY-MM-DD HH:mm:ss");
+
+      //open connection
       const pool: any = DatabaseConfig.getSuperAppRedShiftDbPool();
       const client = await pool.connect();
+
+      // query base on senderPhone
       try {
 
         if (query.senderPhone) {
@@ -189,11 +192,12 @@ export class PartnerOneidService {
             WHERE
               is_deleted = false
               AND created_time >= $1
+              AND created_time < $2
               AND shipper_phone = ANY($2)
              LIMIT ${limitValue}
              OFFSET ${offsetValue}`;
 
-          const senderPhone = await client.query(sqlSenderPhone, [endDate, senderPhoneStringToArray])
+          const senderPhone = await client.query(sqlSenderPhone, [startDate, endDate, senderPhoneStringToArray])
           awbref.push(...senderPhone.rows.map(el => el.ref_awb_number));
 
           pushquery += `AND a.awb_number IN (${awbref.join(',')})`;
@@ -212,12 +216,18 @@ export class PartnerOneidService {
 
         let bindIndex = 1;
         //query default
+        filter.push(startDate);
+        pushquery += `AND a.awb_date >= $${bindIndex} `;
+        bindIndex++;
         filter.push(endDate);
-        pushquery += `AND a.awb_date > $${bindIndex} `;
+        pushquery += `AND a.awb_date < $${bindIndex} `;
         bindIndex++;
 
+        filter.push(startDate);
+        pushquery += `AND a.created_time >= $${bindIndex} `;
+        bindIndex++;
         filter.push(endDate);
-        pushquery += `AND a.created_time > $${bindIndex} `;
+        pushquery += `AND a.created_time < $${bindIndex} `;
         bindIndex++;
 
         // query base on partnerId
@@ -251,7 +261,7 @@ export class PartnerOneidService {
         // query base on awb number
         if(query.consigneePhone) {
           filter.push(query.awbNumber);
-          pushquery += `AND a.awb_number = ?$${bindIndex} `;
+          pushquery += `AND a.awb_number = $${bindIndex} `;
           bindIndex++;
         }
 
@@ -290,6 +300,7 @@ export class PartnerOneidService {
         const rawData= await client.query(sql, filter)
         const results = rawData.rows.length ? rawData.rows : [];
 
+        console.log(results)
         // mapping
         const mapping = [];
         for (let i = 0; i < results.length; i += 1) {
