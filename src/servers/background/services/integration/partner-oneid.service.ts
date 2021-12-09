@@ -255,8 +255,8 @@ export class PartnerOneidService {
 
         // query base on consigneePhone
         if(query.consigneePhone) {
-          filter.push(query.consigneePhone);
-          pushquery += `AND a.consignee_phone IN ($${bindIndex}) `;
+          filter.push(query.consigneePhone.split(','));
+          pushquery += `AND a.consignee_phone = ANY($${bindIndex}) `;
           bindIndex++;
         }
 
