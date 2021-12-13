@@ -54,7 +54,7 @@ export class RoleGroupService {
   public static isRoleCodManual(roleName: string, isHeadOffice: boolean): boolean {
     const arrAdmin = ['Admin FORCE MAJEURE'];
 
-    if (arrAdmin.includes(roleName) && !isHeadOffice) {
+    if (arrAdmin.includes(roleName)) {
       return true;
     } else {
       return false;

@@ -236,7 +236,7 @@ export class WebAwbDeliverService {
               awbNumber: delivery.awbNumber,
               awbItemId: delivery.awbItemId,
               amount: delivery.totalCodValue,
-              method: 'cashless',
+              method: 'cash',
               service: 'COD Manual',
               noReference: `COD-MANUAL-${delivery.awbNumber}`,
               note: `user ${

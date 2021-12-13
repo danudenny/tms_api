@@ -30,7 +30,6 @@ export class AwbCodService {
     if (manager) {
       await awbCod.doTransfer(payment, branchId, userId, manager);
     } else {
-      PinoLoggerService.log(' COD MANUAL :: ', payment);
       await getManager().transaction(async newManager => {
         await awbCod.doTransfer(payment, branchId, userId, newManager);
       });
