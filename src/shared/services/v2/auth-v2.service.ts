@@ -53,6 +53,8 @@ export class AuthV2Service {
       });
     }
 
+    await this.getEmployeeById(user.employeeId);//check employee is active or not
+
     let addresses = [];
     const isOtpRequired = await this.isOtpRequired(clientId, user.username);
     if(isOtpRequired){
@@ -396,7 +398,7 @@ export class AuthV2Service {
     })
     if (employee && employee.statusEmployee == 20) {
       RequestErrorService.throwObj({
-        message: 'global.error.USER_NOT_FOUND',
+        message: 'User non aktif, OTP tidak dapat di kirim! Silahkan hubungi IT',
       });
     }
     return employee;
