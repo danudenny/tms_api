@@ -3,6 +3,25 @@ import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm
 
 // Payload
 
+export class LogActivityPayloadVm {
+  @ApiModelProperty()
+  awb_number: string;
+
+  @ApiModelProperty()
+  key: string;
+
+  @ApiModelProperty()
+  type: string;
+}
+
+export class LogActivityResponseVm {
+  @ApiModelProperty()
+  key: string;
+
+  @ApiModelProperty()
+  value: string;
+}
+
 export class TrackingAwbPayloadVm {
   @ApiModelProperty()
   awbNumber: string;

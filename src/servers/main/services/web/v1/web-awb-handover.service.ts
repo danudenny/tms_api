@@ -4,6 +4,7 @@ import { MetaService } from '../../../../../shared/services/meta.service';
 import { AwbHandoverListResponseVm } from '../../../models/last-mile/awb-handover.vm';
 import { DoPodDeliverDetail } from '../../../../../shared/orm-entity/do-pod-deliver-detail';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
+import { QueryServiceApi } from '../../../../../shared/services/query.service.api';
 
 export class V1WebAwbHandoverService {
   static async AwbHandoverList(payload: BaseMetaPayloadVm): Promise<AwbHandoverListResponseVm> {
@@ -58,9 +59,10 @@ export class V1WebAwbHandoverService {
     q.andWhere(e => e.awbStatusIdLast, w => w.equals(AWB_STATUS.DLV));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-    const data = await q.exec();
-    const total = 0; // await q.countWithoutTakeAndSkip();
-
+    const query = await q.getQuery();
+    let data = await QueryServiceApi.executeQuery(query, false, null);
+    
+    const total = 0; 
     const result = new AwbHandoverListResponseVm();
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
@@ -82,7 +84,7 @@ export class V1WebAwbHandoverService {
     const repo = new OrionRepositoryService(DoPodDeliverDetail, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q, true);
+    payload.applyToOrionRepositoryQuery(q, false);
 
     q.selectRaw(
       ['t1.do_pod_deliver_detail_id', 'doPodDeliverDetailId'],
@@ -117,7 +119,8 @@ export class V1WebAwbHandoverService {
     q.andWhere(e => e.awbStatusIdLast, w => w.equals(AWB_STATUS.DLV));
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-    const total = await q.countWithoutTakeAndSkip();
+    const query = q.getQuery();
+    let total = await QueryServiceApi.executeQuery(query, true, 'awbNumber');
 
     const result = new AwbHandoverListResponseVm();
     result.data = null;

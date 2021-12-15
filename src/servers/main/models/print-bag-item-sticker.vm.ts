@@ -12,6 +12,9 @@ export class PrintBagItemStickerDataBagVm {
   @ApiModelProperty()
   bagNumber: string;
 
+  @ApiModelProperty()
+  chuteNumber: string;
+
   // @ApiModelProperty({ type: () => PrintBagItemStickerDataBagDistrictVm })
   // district: PrintBagItemStickerDataBagDistrictVm;
 
