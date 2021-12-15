@@ -185,7 +185,7 @@ export class HubTransitDeliveryInService {
           );
 
           const doPodDetailBag = await this.getDoPodByBagItem(item.bagItemId);
-          if(doPodDetailBag){
+          if (doPodDetailBag) {
             await getManager().transaction(async transactional => {
               await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
             });
@@ -203,7 +203,7 @@ export class HubTransitDeliveryInService {
           );
 
           const doPodDetailBag = await this.getDoPodByBagItem(item.bagItemId);
-          if(doPodDetailBag){
+          if (doPodDetailBag) {
             await getManager().transaction(async transactional => {
               await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
             });
@@ -266,7 +266,7 @@ export class HubTransitDeliveryInService {
 
     payload.applyToOrionRepositoryQuery(q, true);
     q.selectRaw(
-      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`,'bagNumberCode'],
+      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`, 'bagNumberCode'],
       ['t2.bag_number', 'bagNumber'],
       ['t2.ref_representative_code', 'representativeCode'],
       ['t3.bag_seq', 'bagSeq'],
@@ -297,14 +297,35 @@ export class HubTransitDeliveryInService {
     let data = await QueryServiceApi.executeQuery(query, false, null);
 
     const result = new WebScanInHubSortListResponseVm();
-    for(let i = 0; i < data.length; i++){
-      const repoDetail = new OrionRepositoryService(DropoffHubDetail, 't1');
-      const qDetail = repoDetail.findAllRaw();
-      qDetail.andWhere(e => e.dropoffHubId, w => w.equals(data[i].dropoffHubId));
-      let queryDetail = qDetail.getQuery();
-      const dataDetail = await QueryServiceApi.executeQuery(queryDetail, false, null);
-      
-      data[i].totalAwb = dataDetail.length;
+    let tampungDropoffHubId = [];
+    for (let i = 0; i < data.length; i++) {
+      tampungDropoffHubId.push(data[i].dropoffHubId);
+      // const repoDetail = new OrionRepositoryService(DropoffHubDetail, 't1');
+      // const qDetail = repoDetail.findAllRaw();
+      // qDetail.andWhere(e => e.dropoffHubId, w => w.equals(data[i].dropoffHubId));
+      // let queryDetail = qDetail.getQuery();
+      // const dataDetail = await QueryServiceApi.executeQuery(queryDetail, false, null);
+
+      // data[i].totalAwb = dataDetail.length;
+    }
+
+    //do count query
+    const repoDetail = new OrionRepositoryService(DropoffHubDetail, 't1');
+    const qDetail = repoDetail.findAllRaw();
+    qDetail.selectRaw(['count(dropoff_hub_detail_id)', 'totalAwb'], 'dropoff_hub_id');
+    qDetail.where(e => e.dropoffHubId, w => w.in(tampungDropoffHubId));
+    qDetail.groupByRaw('dropoff_hub_id');
+    let queryDetail = qDetail.getQuery();
+    const dataDetail = await QueryServiceApi.executeQuery(queryDetail, false, null);
+    for (let i = 0; i < data.length; i++) {
+      data[i].totalAwb = 0;
+      if (dataDetail.length > 0) {
+        for(let j = 0; j < dataDetail.length; j++){
+          if(dataDetail[j].dropoff_hub_id == data[i].dropoffHubId){
+            data[i].totalAwb = dataDetail[j].totalAwb;
+          }
+        }
+      }
     }
 
     const repoCount = new OrionRepositoryService(DropoffHub, 't1');
@@ -312,7 +333,7 @@ export class HubTransitDeliveryInService {
 
     payload.applyToOrionRepositoryQuery(qCount, false);
     qCount.selectRaw(
-      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`,'bagNumberCode'],
+      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`, 'bagNumberCode'],
       ['t2.bag_number', 'bagNumber'],
       ['t2.ref_representative_code', 'representativeCode'],
       ['t3.bag_seq', 'bagSeq'],
@@ -340,7 +361,7 @@ export class HubTransitDeliveryInService {
     );
 
     let queryCount = await qCount.getQuery();
-    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'bagNumberCode');
+    let cnt = await QueryServiceApi.executeQuery(queryCount, true, 'bagNumberCode');
     const total = cnt;
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
@@ -430,7 +451,7 @@ export class HubTransitDeliveryInService {
 
     let query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);
-    for(let i = 0; i < data.length; i++){
+    for (let i = 0; i < data.length; i++) {
       data[i].totalResi = data[i].totalResi;
     }
 
@@ -444,44 +465,44 @@ export class HubTransitDeliveryInService {
     doPodDetailBag: any,
     userId: number,
     timeNow: Date,
-    transactional: EntityManager){
-      doPodDetailBag.totalScanInBag += 1;
-      if (doPodDetailBag.totalScanInBag == 1) {
-        await transactional.update(
-          DoPod,
-          { doPodId: doPodDetailBag.doPodId },
-          {
-            firstDateScanIn: timeNow,
-            lastDateScanIn: timeNow,
-            totalScanInBag: doPodDetailBag.totalScanInBag,
-            updatedTime: timeNow,
-            userIdUpdated: userId,
-          },
-        );
-      }else{
-        await transactional.update(
-          DoPod,
-          { doPodId: doPodDetailBag.doPodId },
-          {
-            lastDateScanIn: timeNow,
-            totalScanInBag: doPodDetailBag.totalScanInBag,
-            updatedTime: timeNow,
-            userIdUpdated: userId,
-          },
-        );
-      }
+    transactional: EntityManager) {
+    doPodDetailBag.totalScanInBag += 1;
+    if (doPodDetailBag.totalScanInBag == 1) {
+      await transactional.update(
+        DoPod,
+        { doPodId: doPodDetailBag.doPodId },
+        {
+          firstDateScanIn: timeNow,
+          lastDateScanIn: timeNow,
+          totalScanInBag: doPodDetailBag.totalScanInBag,
+          updatedTime: timeNow,
+          userIdUpdated: userId,
+        },
+      );
+    } else {
+      await transactional.update(
+        DoPod,
+        { doPodId: doPodDetailBag.doPodId },
+        {
+          lastDateScanIn: timeNow,
+          totalScanInBag: doPodDetailBag.totalScanInBag,
+          updatedTime: timeNow,
+          userIdUpdated: userId,
+        },
+      );
+    }
   }
 
-  private static async getDoPodByBagItem(bagItemId: number){
+  private static async getDoPodByBagItem(bagItemId: number) {
     const q = createQueryBuilder();
     q.addSelect('t2.do_pod_id', 'doPodId');
     q.addSelect('t2.total_scan_in_bag', 'totalScanInBag');
     q.from('do_pod_detail_bag', 't1');
     q.innerJoin('do_pod', 't2', 't2.do_pod_id = t1.do_pod_id');
-    q.where('t1.bag_item_id = :bagItemId', {bagItemId: bagItemId});
+    q.where('t1.bag_item_id = :bagItemId', { bagItemId: bagItemId });
     q.andWhere('t1.transaction_status_id_last = 800');
     q.andWhere('t1.is_deleted = false');
-    q.orderBy('t1.created_time', 'DESC' );
+    q.orderBy('t1.created_time', 'DESC');
     q.limit(1);
     return await q.getRawOne();
   }
