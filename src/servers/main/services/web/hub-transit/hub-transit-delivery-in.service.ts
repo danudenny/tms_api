@@ -278,7 +278,7 @@ export class HubTransitDeliveryInService {
       ['t1.dropoff_hub_id', 'dropoffHubId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
-      ['COUNT (1)', 'totalAwb'],
+      ['COUNT (t4.*)', 'totalAwb'],
       [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
