@@ -300,13 +300,6 @@ export class HubTransitDeliveryInService {
     let tampungDropoffHubId = [];
     for (let i = 0; i < data.length; i++) {
       tampungDropoffHubId.push(data[i].dropoffHubId);
-      // const repoDetail = new OrionRepositoryService(DropoffHubDetail, 't1');
-      // const qDetail = repoDetail.findAllRaw();
-      // qDetail.andWhere(e => e.dropoffHubId, w => w.equals(data[i].dropoffHubId));
-      // let queryDetail = qDetail.getQuery();
-      // const dataDetail = await QueryServiceApi.executeQuery(queryDetail, false, null);
-
-      // data[i].totalAwb = dataDetail.length;
     }
 
     //do count query
