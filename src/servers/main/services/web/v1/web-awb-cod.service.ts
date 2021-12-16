@@ -817,6 +817,15 @@ export class V1WebAwbCodService {
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
 
+    // lock add user
+    const redlock = await RedisService.redlock(
+      `redlock:codUserTransaction:${authMeta.userId}`,
+      10,
+    );
+    if (!redlock) {
+      throw new BadRequestException(`Transaksi sebelum nya masih di proses , coba beberapa saat lagi!`);
+    }
+
     let codTransactionCash: WebCodTransferBranchCashResponseVm;
     if (payload.dataCash.length > 0) {
       codTransactionCash = await this.transferBranchCash(
@@ -844,6 +853,7 @@ export class V1WebAwbCodService {
       ? codTransactionCashless.printIdCashless
       : null;
 
+    // handle error message
     let dataError = [];
     if (codTransactionCash && codTransactionCashless) {
       dataError = codTransactionCash.dataError.concat(
@@ -854,6 +864,9 @@ export class V1WebAwbCodService {
     } else if (codTransactionCashless) {
       dataError = codTransactionCashless.dataError;
     }
+
+    // remove key holdRedis
+    RedisService.del(`redlock:codUserTransaction:${authMeta.userId}`);
 
     const result = new WebCodTransferBranchResponseVm();
     result.printIdCash = printIdCash;
