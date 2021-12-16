@@ -2,6 +2,10 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 // Payload
+export class ImageProxyUrlVm{
+  @ApiModelProperty()
+  url: string;
+}
 
 export class LogActivityPayloadVm {
   @ApiModelProperty()

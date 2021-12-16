@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
 import {
     ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../../shared/external/nestjs-swagger';
@@ -19,6 +19,7 @@ import {
     TrackingBagRepresentativeDetailPayloadVm,
     LogActivityPayloadVm,
     LogActivityResponseVm,
+    ImageProxyUrlVm,
 } from '../../../models/tracking.vm';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
@@ -112,5 +113,13 @@ export class V1WebTrackingController {
     @Body() payload: LogActivityPayloadVm,
   ) {
     return V1WebTrackingService.awbDetail(payload);
+  }
+
+  @Get('manifestPhotoDetail/:awbNumber')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: ImageProxyUrlVm })
+  public async manifestPhotoDetail(@Param('awbNumber') awbNumber:string) {
+    return V1WebTrackingService.getManifestPhotoDetail(awbNumber);
   }
 }

@@ -16,6 +16,7 @@ import {
   TrackingBagRepresentativeAwbDetailResponseVm,
   LogActivityPayloadVm,
   LogActivityResponseVm,
+  ImageProxyUrlVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -31,6 +32,7 @@ import { LOGGER_ACTIVITY } from '../../../../../shared/constants/logger-activity
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 import { HttpStatus } from '@nestjs/common';
 import { ActivityLogHelper } from '../../../../../shared/helpers/activity-log-helpers';
+import { ConfigService } from '../../../../../shared/services/config.service';
 
 export class V1WebTrackingService {
   static async awb(
@@ -272,6 +274,15 @@ export class V1WebTrackingService {
       result.bagRepresentativeDetail = data;
     }
     return result;
+  }
+
+  static async getManifestPhotoDetail(awbNumber: string): Promise<ImageProxyUrlVm>{
+    const awbNumberSubstring = awbNumber ? awbNumber.substring(0, 7) : null;
+    const imageUrl = `${ConfigService.get('cloudStorage.cloudUrl')}/${awbNumberSubstring}/${awbNumber}.jpg`;
+    const result = new ImageProxyUrlVm();
+    result.url = ImgProxyHelper.sicepatProxyUrl(imageUrl);
+    return result;
+
   }
 
   // private method
