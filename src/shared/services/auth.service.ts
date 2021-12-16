@@ -202,7 +202,7 @@ export class AuthService {
         where: {
           branchId,
           isDeleted : false,
-          isActive : true
+          isActive : true,
         },
       });
 
@@ -494,7 +494,7 @@ export class AuthService {
     qb.innerJoin(
       'branch',
       't3',
-      't1.branch_id = t3.branch_id AND t2.is_deleted = false',
+      't1.branch_id = t3.branch_id AND t3.is_deleted = false',
     );
     qb.where('t1.user_id = :userId', { userId });
     qb.andWhere('t1.is_deleted = false');
