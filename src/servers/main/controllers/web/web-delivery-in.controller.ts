@@ -58,7 +58,6 @@ export class WebDeliveryInController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanInBranchListResponseVm })
-  // @ResponseSerializerOptions({ disable: true })
   public async findAllBranchList(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryService.findAllBranchInByRequest(payload);
   }
@@ -68,7 +67,6 @@ export class WebDeliveryInController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanInBranchListResponseVm })
-  // @ResponseSerializerOptions({ disable: true })
   public async findAllBranchListCount(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryService.findAllBranchInByRequestCount(payload);
   }
