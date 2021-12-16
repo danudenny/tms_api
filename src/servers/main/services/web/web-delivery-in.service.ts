@@ -203,7 +203,7 @@ export class WebDeliveryInService {
     ];
 
     let timeFrom = null; 
-    const timeTo = new Date(moment(new Date()).format("YYYY-MM-DD"));
+    let timeTo = new Date(moment(new Date()).format("YYYY-MM-DD"));
 
     for (let data of payload.filters) {
       if (data.field == 'createdTime') {
@@ -276,15 +276,11 @@ export class WebDeliveryInService {
     ];
 
     let timeFrom = null;
-    let timeTo = null;
+    let timeTo = new Date(moment(new Date()).format("YYYY-MM-DD"));
     for (let data of payload.filters) {
       if (data.field == 'createdTime') {
         if (data.operator == 'gte') {
           timeFrom = data.value;
-        }
-
-        if (data.operator == 'lt') {
-          timeTo = data.value;
         }
       }
     }
