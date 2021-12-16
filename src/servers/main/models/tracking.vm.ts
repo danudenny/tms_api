@@ -3,8 +3,33 @@ import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm
 
 // Payload
 export class ImageProxyUrlVm{
+  @ApiModelProperty({ type: () => [ImageProxyUrlResponseVm] })
+  data: ImageProxyUrlResponseVm[];
+}
+
+export class ImageProxyUrlParamVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  doPodId: string;
+
+  @ApiModelPropertyOptional({ example: 'photo, photoCod, signature'})
+  attachmentType: string;
+
+  @ApiModelPropertyOptional({ example: 'deliver=1, return=2, manifested=3'})
+  photoType: number;
+}
+
+export class ImageProxyUrlResponseVm {
   @ApiModelProperty()
   url: string;
+
+  @ApiModelProperty()
+  type: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
 }
 
 export class LogActivityPayloadVm {
