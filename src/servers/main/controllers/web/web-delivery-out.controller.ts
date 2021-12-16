@@ -302,6 +302,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllSortHubTransitList(payload);
   }
 
+  @Post('sortationHub/transitList/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
+  public async transitListSortHubCount(@Body() payload: WebScanOutAwbListPayloadVm) {
+    return this.webDeliveryOutService.findAllSortHubTransitListCount(payload);
+  }
+
   @Post('transitListAwb')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
