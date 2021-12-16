@@ -63,6 +63,16 @@ export class WebDeliveryInController {
     return this.webDeliveryService.findAllBranchInByRequest(payload);
   }
 
+  @Post('branchList/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanInBranchListResponseVm })
+  // @ResponseSerializerOptions({ disable: true })
+  public async findAllBranchListCount(@Body() payload: BaseMetaPayloadVm) {
+    return this.webDeliveryService.findAllBranchInByRequestCount(payload);
+  }
+
   @Post('branchListBag')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
