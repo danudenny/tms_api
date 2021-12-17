@@ -71,7 +71,6 @@ import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller
 import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
 import { WebDoPodReturnController } from './web/web-do-pod-return.controller';
 import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.controller';
-import { FeaturesFlagController } from './web/web-features-flag.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -148,7 +147,6 @@ import { FeaturesFlagController } from './web/web-features-flag.controller';
     V1WebAwbHandoverController,
     WebDoPodReturnController,
     MobileDoPodReturnController,
-    FeaturesFlagController,
   ],
 })
 export class MainServerControllersModule {}
