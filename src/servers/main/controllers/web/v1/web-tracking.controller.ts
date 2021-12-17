@@ -19,8 +19,8 @@ import {
     TrackingBagRepresentativeDetailPayloadVm,
     LogActivityPayloadVm,
     LogActivityResponseVm,
-    ImageProxyUrlVm,
     ImageProxyUrlParamVm,
+    ImageProxyUrlResponseVm,
 } from '../../../models/tracking.vm';
 import { V1WebTrackingService } from '../../../services/web/v1/web-tracking.service';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
@@ -119,7 +119,7 @@ export class V1WebTrackingController {
   @Get('photoDetail')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: ImageProxyUrlVm })
+  @ApiOkResponse({ type: ImageProxyUrlResponseVm })
   public async manifestPhotoDetail(@Query() payload:ImageProxyUrlParamVm) {
     return V1WebTrackingService.getPhotoDetailV2(payload);
   }

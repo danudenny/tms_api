@@ -2,9 +2,9 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 // Payload
-export class ImageProxyUrlVm{
-  @ApiModelProperty({ type: () => [ImageProxyUrlResponseVm] })
-  data: ImageProxyUrlResponseVm[];
+export class ImageProxyUrlResponseVm{
+  @ApiModelProperty({ type: () => [ImageProxyUrlVm] })
+  data: ImageProxyUrlVm[];
 }
 
 export class ImageProxyUrlParamVm {
@@ -21,7 +21,7 @@ export class ImageProxyUrlParamVm {
   photoType: number;
 }
 
-export class ImageProxyUrlResponseVm {
+export class ImageProxyUrlVm {
   @ApiModelProperty()
   url: string;
 

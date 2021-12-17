@@ -281,14 +281,14 @@ export class V1WebTrackingService {
     return result;
   }
 
-  static async getPhotoDetailV2(payload: ImageProxyUrlParamVm): Promise<ImageProxyUrlVm>{
-    const result = new ImageProxyUrlVm();
+  static async getPhotoDetailV2(payload: ImageProxyUrlParamVm): Promise<ImageProxyUrlResponseVm>{
+    const result = new ImageProxyUrlResponseVm();
     result.data = [];
     if(PHOTO_TYPE.MANIFESTED == payload.photoType && payload.awbNumber){
       const awbNumberSubstring = payload.awbNumber.substring(0, 7);
       const imageUrl = `${ConfigService.get('cloudStorage.cloudUrl')}/${awbNumberSubstring}/${payload.awbNumber}.jpg`;
 
-      const resultManifestPhoto = new ImageProxyUrlResponseVm();
+      const resultManifestPhoto = new ImageProxyUrlVm();
       resultManifestPhoto.url = ImgProxyHelper.sicepatProxyUrl(imageUrl);
       resultManifestPhoto.awbNumber = payload.awbNumber;
       resultManifestPhoto.type = 'manifested';
