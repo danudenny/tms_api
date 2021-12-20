@@ -137,10 +137,10 @@ module.exports = {
     apiKey:
       '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',
   },
-  sunfish: {
-    baseUrl: 'https://sfcola1.dataon.com/sfapi/index.cfm?endpoint=/',
-    accountName: 'sicepat',
-    appName: 'sfapi',
-    rsaAKey: 'MIIC1DCCAbwCAQAwgY4xCzAJBgNVBAYTAklEMRQwEgYDVQQIDAtES0kgSmFrYXJ0YTEUMBIGA1UEBwwLREtJIEpha2FydGExEDAOBgNVBAoMB1NJQ0VQQVQxDjAMBgNVBAsMBXNmYXBpMRAwDgYDVQQDDAdzaWNlcGF0MR8wHQYJKoZIhvcNAQkBFhB6YWtreUBkYXRhb24uY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApcrWbXVUOCzvB+bs0kRjKw7LoWtLTN601J/yGizYMSLYhm/FNbWBzfaDhdlqpplYWkGUB3ZQ07fmFGKiOJUhSX3MB0lYWKQL88jHivnWG0mprI+/vhOxbJj5bb3i0aCFoz1kKm+P42cV6m5V+hyrW8qcsf8YBrY74Dhfie3ZthTEgKfUyXYV6YiVJUmLQdwg3ltFzwKDLWba/DQa3MtKfi3zbzGXN7cdmC9ajsktTOG3REOy5+ln0VzorqPYnAlUMKCb4mZjrKqmLZzmIgIpNQn6Yb3FsD5WOSzgDT7GQlFx+6W1gqstZquE5RR3qYfAMhywQ3OsdjBFZ7TV16K27QIDAQABoAAwDQYJKoZIhvcNAQELBQADggEBAJJSN5MYRK0rWlNrnfY3K+MMuvy9C08AzGRwc5CkEatk6/18Q8r4jx4FMVgKmdPpUNcffh0UkNs2vrtQBajJE/UND7ex444QiEF7j3efJsleQdvF6FzfM+yUZdOdIQUgRfg5O8QFRa068amkoPiMzXnLUbwi7sHTHZpkBVVoLO9hUk/xek1yX6DApZ6V8gNy3lyIX8PpD7DjBQ5pfDQCC6r4PdDKLjy7hCXFJjkwCetDz0YlzXuaH3oqb7i1ZWCHUkYyDgqCIJUekG+OaXQvECn/1tt9eo9+EtAZoOz8gtDlee83e2kClwMviRCds55NnHc5SpAapxHI4M6u6zrgDfo=',
+  svcOtp: {
+    baseUrl: 'http://api-internal.s.sicepat.io/authsvc',
+    otpRequiredUrl: 'https://sms-otp.s3.ap-southeast-1.amazonaws.com/otp_config.json',
+    isBypass: false,
+    bypassCode: "815413",
   },
 };
