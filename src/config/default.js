@@ -132,4 +132,10 @@ module.exports = {
     apiKey:
       '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',
   },
+  svcOtp: {
+    baseUrl: 'http://api-internal.s.sicepat.io/authsvc',
+    otpRequiredUrl: 'https://sms-otp.s3.ap-southeast-1.amazonaws.com/otp_config.json',
+    isBypass: false,
+    bypassCode: "815413",
+  },
 };

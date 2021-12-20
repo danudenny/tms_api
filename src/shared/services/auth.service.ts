@@ -2,7 +2,7 @@ import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenExpiredError } from 'jsonwebtoken';
-import { map, toInteger } from 'lodash';
+import { map } from 'lodash';
 import ms = require('ms');
 
 import { PermissionAccessResponseVM } from '../../servers/auth/models/auth.vm';
@@ -16,7 +16,6 @@ import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
 import { GetRoleResult, UserRoleResponse } from '../models/get-role-result';
 import { Branch } from '../orm-entity/branch';
 import { User } from '../orm-entity/user';
-import { UserRole } from '../orm-entity/user-role';
 import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
 import { RequestErrorService } from './request-error.service';
@@ -502,3 +501,4 @@ export class AuthService {
     return await qb.getRawMany();
   }
 }
+
