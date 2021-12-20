@@ -1,7 +1,8 @@
 const crypto = require('crypto');
-import axios from 'axios';
 import moment = require('moment');
+import axios from 'axios';
 import ms = require('ms');
+
 import { TokenExpiredError } from 'jsonwebtoken';
 import { JwtService } from '@nestjs/jwt';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -71,7 +72,7 @@ export class AuthV2Service {
 
     const result = new LoginChannelOtpAddressesResponse();
     result.token = generateToken;
-    result.isOtpRequired = isOtpRequired; //deafult
+    result.isOtpRequired = isOtpRequired;
     result.addresses = addresses;
     return result;
   }
@@ -207,9 +208,6 @@ export class AuthV2Service {
     } catch (err) {
       if(err.response && undefined != err.response.data){
         console.log('error:::::', err.response.data)
-        // const messageResponse = err.response.data.message ?
-        //   err.response.data.message : err.response.data;
-        // const codeResponse = err.response.data.code;
         const messageResponse = await this.messageErrorAuthOtp(err.response.data);
         RequestErrorService.throwObj({
           message: messageResponse,
@@ -225,7 +223,6 @@ export class AuthV2Service {
   async refreshAccessTokenV2(
     refreshToken: string,
   ): Promise<AuthLoginResultMetadataV2> {
-    // TODO: find user on table or redis??
     const userLoginSession = await RedisService.get(`session:v2:${refreshToken}`);
 
     if (!userLoginSession) {
@@ -257,7 +254,6 @@ export class AuthV2Service {
     const accessToken = this.generateAccessToken(clientId, user, employeeName);
     const refreshToken = this.generateRefreshToken(clientId, user);
 
-    // NOTE: set data user on redis
     // Set key to hold the string value and set key to timeout after a given number of seconds
     const expireInSeconds = Math.floor(
       ms(ConfigService.get('jwt.refreshTokenExpiration')) / 1000,
@@ -291,7 +287,6 @@ export class AuthV2Service {
   }
 
   private async getAddress(userName: string): Promise<Array<LoginChannelOtpAddresses>> {
-    //START - PISAH 1 PRIVATE FUNCTION
     const url = `${ConfigService.get('svcOtp.baseUrl')}/auth/otp/lookup`
     const jsonData = {
       id: userName,
@@ -342,17 +337,14 @@ export class AuthV2Service {
       addresses.push({ ...loginChannelOtpAddresses });
     }
     return addresses;
-    //END - PISAH 1 PRIVATE FUNCTION
   }
 
   private async generateToken(userId: number, clientId: string): Promise<string> {
-    //START - PISAH 1 PRIVATE FUNCTION
     const text = `${userId}${moment().toDate()}`;
     const generateToken = crypto
       .createHash('md5')
       .update(text)
       .digest('hex');
-    //END - PISAH 1 PRIVATE FUNCTION
 
     return generateToken;
   }

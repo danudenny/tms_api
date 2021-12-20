@@ -1,10 +1,8 @@
-//#region import
-import { Body, Controller, Get, HttpCode, HttpStatus, Post} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post} from '@nestjs/common';
 import { AuthV2Service } from '../../../../shared/services/v2/auth-v2.service';
 import { ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
-import {
-    Transactional,
-} from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
+import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
+import { RefreshAccessTokenPayload } from '../../models/refresh-access-token.model';
 import {
     AuthLoginByEmailOrUsernamePayloadVM,
     AuthLoginV2ResponseVM,
@@ -12,8 +10,6 @@ import {
     LoginChannelOtpAddressesResponse,
     ValidateOtpPayloadVM,
 } from '../../models/auth.vm';
-import { RefreshAccessTokenPayload } from '../../models/refresh-access-token.model';
-//#endregion
 
 @ApiUseTags('AuthenticationV2')
 @Controller('auth/v2')

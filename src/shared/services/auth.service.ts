@@ -26,7 +26,6 @@ import { PartnerTokenPayload } from '../interfaces/partner-payload.interface';
 import { createQueryBuilder } from 'typeorm';
 import { Employee } from '../orm-entity/employee';
 
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -500,12 +499,6 @@ export class AuthService {
     qb.andWhere('t1.is_deleted = false');
 
     return await qb.getRawMany();
-  }
-
-  private static get headerReqOtp() {
-    return {
-      'Content-Type': 'application/json',
-    };
   }
 }
 
