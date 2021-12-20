@@ -9,6 +9,8 @@ export abstract class DatabaseConfig {
 
   private static masterDataDbPool: Pool;
 
+  private static superAppRedShiftDbPool: Pool;
+
   private static podDbConnectionString = {
     user: 'spartan',
     password: '5pArtAaAn116688_6969_',
@@ -95,6 +97,23 @@ export abstract class DatabaseConfig {
     }
 
     return this.masterDataDbPool;
+  }
+
+  public static getSuperAppRedShiftDbPool() {
+    if (!this.superAppRedShiftDbPool) {
+      this.superAppRedShiftDbPool = new Pool({
+        host: 'sicepat-staging.ch5gz4gtufds.ap-southeast-1.redshift.amazonaws.com',
+        port: 5439,
+        database: 'sicepatdata',
+        user: 'user_superapps',
+        password: '3SkxnUolwjgt5coSvPti3gSDXQV+hkT8E9NO9U0xKRU=',
+        schema: 'superapps',
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 30000,
+      });
+    }
+    return this.superAppRedShiftDbPool;
   }
 
 }
