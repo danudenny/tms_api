@@ -8,16 +8,16 @@ export class ImageProxyUrlResponseVm{
 }
 
 export class ImageProxyUrlParamVm {
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   awbNumber: string;
 
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   doPodId: string;
 
   @ApiModelPropertyOptional({ example: 'photo, photoCod, signature'})
   attachmentType: string;
 
-  @ApiModelPropertyOptional({ example: 'deliver=1, return=2, manifested=3'})
+  @ApiModelProperty({ example: 'deliver=1, return=2, manifested=3'})
   photoType: number;
 }
 
