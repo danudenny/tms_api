@@ -276,7 +276,7 @@ export class WebDeliveryInService {
     ];
 
     let timeFrom = null;
-    let timeTo = new Date(moment(new Date()).format("YYYY-MM-DD"));
+    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
     for (let data of payload.filters) {
       if (data.field == 'createdTime') {
         if (data.operator == 'gte') {
