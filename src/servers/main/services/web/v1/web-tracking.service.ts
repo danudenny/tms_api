@@ -299,16 +299,14 @@ export class V1WebTrackingService {
         }
       }
 
-      if(!imageResp || !imageResp.data){
-        result.data = [];
+      if(imageResp && imageResp.data){
+        const resultManifestPhoto = new ImageProxyUrlVm();
+          resultManifestPhoto.url = ImgProxyHelper.sicepatProxyUrl(imageUrl);
+          resultManifestPhoto.awbNumber = payload.awbNumber;
+          resultManifestPhoto.type = 'manifested';
+          result.data = [resultManifestPhoto];
         return result;
       }
-      const resultManifestPhoto = new ImageProxyUrlVm();
-      resultManifestPhoto.url = ImgProxyHelper.sicepatProxyUrl(imageUrl);
-      resultManifestPhoto.awbNumber = payload.awbNumber;
-      resultManifestPhoto.type = 'manifested';
-      result.data = [resultManifestPhoto];
-      return result;
     }
 
     if(PHOTO_TYPE.RETURN == payload.photoType){
