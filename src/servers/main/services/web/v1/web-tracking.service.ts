@@ -38,6 +38,8 @@ import { ConfigService } from '../../../../../shared/services/config.service';
 import { PHOTO_TYPE } from '../../../../../shared/constants/photo-type.constant';
 import { DoPodDeliverAttachment } from '../../../../../shared/orm-entity/do_pod_deliver_attachment';
 import { DoPodReturnDetailService } from '../../master/do-pod-return-detail.service';
+import axiosist from 'axiosist';
+import axios from 'axios';
 
 export class V1WebTrackingService {
   static async awb(
@@ -287,7 +289,20 @@ export class V1WebTrackingService {
     if(PHOTO_TYPE.MANIFESTED == payload.photoType && payload.awbNumber){
       const awbNumberSubstring = payload.awbNumber.substring(0, 7);
       const imageUrl = `${ConfigService.get('cloudStorage.cloudUrl')}/${awbNumberSubstring}/${payload.awbNumber}.jpg`;
+      let imageResp;
+      try{
+        imageResp = await axios.get(imageUrl);
+      } catch(err) {
+        if(err.response){
+          console.log('::::: GAMBAR TIDAK TERSEDIA :::::');
+          console.log(`::::: ERROR_CODE ::::: ${err.response.status}, ::::: ERROR_TEXT ::::: ${err.response.statusText}`);
+        }
+      }
 
+      if(!imageResp || !imageResp.data){
+        result.data = [];
+        return result;
+      }
       const resultManifestPhoto = new ImageProxyUrlVm();
       resultManifestPhoto.url = ImgProxyHelper.sicepatProxyUrl(imageUrl);
       resultManifestPhoto.awbNumber = payload.awbNumber;
