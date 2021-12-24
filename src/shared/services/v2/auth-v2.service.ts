@@ -364,21 +364,23 @@ export class AuthV2Service {
       }
     }
 
-    let isRequired = false;
     if(response && response.data){
       whiteListUserData = response.data;
+      console.log('whiteListUserData:::', whiteListUserData);
       await RedisService.setex(
         `pod:required:otp`,
         JSON.stringify(whiteListUserData),
         1800,
       );
+    }
 
-      if ((clientId.toLowerCase() == 'web' && whiteListUserData.podweb)
-        || (clientId.toLowerCase() == 'mobile' && whiteListUserData.podmobile)) {
-          if (whiteListUserData.userlist.includes(userName)) {
-            isRequired = true;
-          }
-      }
+    let isRequired = false;
+    if (whiteListUserData && ((clientId.toLowerCase() == 'web' && whiteListUserData.podweb)
+      || (clientId.toLowerCase() == 'mobile' && whiteListUserData.podmobile))) {
+        if (whiteListUserData.userlist.includes(userName)) {
+          console.log('masuk:::::::::::');
+          isRequired = true;
+        }
     }
 
     return isRequired;
