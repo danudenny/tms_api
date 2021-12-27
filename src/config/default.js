@@ -56,8 +56,8 @@ module.exports = {
     },
   },
   clearCacheTMS: {
-    urlTMSMobile: 'http://tmsapi-staging.sicepat.com/api/reset_otp/reset_otp_cache',
-    urlTMSWeb: 'http://tms-staging.sicepat.com/numberCache/set_phone',
+    urlTMSMobile: 'http://tmsapi.sicepat.com/api/reset_otp/reset_otp_cache',
+    urlTMSWeb: 'https://tms.sicepat.com/numberCache/set_phone',
     auth: 'SeWdjOtj21iVsbXv9Wfrpwi8Fgg4QmgFbJmrvXOS',
   },
   logger: {
