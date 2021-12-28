@@ -1,5 +1,5 @@
 // #region import
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createQueryBuilder, IsNull, In, Transaction, getManager } from 'typeorm';
 import moment = require('moment');
@@ -2222,6 +2222,11 @@ export class WebDeliveryOutService {
     temp.map(function (item) {
       id += id ? ',\'' + item.doPodDeliverId + '\'' : '\'' + item.doPodDeliverId + '\'';
     });
+
+    if (!id) {
+      throw new BadRequestException("payload invalid");
+    }
+
     const qq = createQueryBuilder();
     qq.addSelect('attachments.url', 'url');
     qq.addSelect('dpda.type', 'type');
