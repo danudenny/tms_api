@@ -16,6 +16,9 @@ import {
   TrackingBagRepresentativeAwbDetailResponseVm,
   LogActivityPayloadVm,
   LogActivityResponseVm,
+  ImageProxyUrlVm,
+  ImageProxyUrlParamVm,
+  ImageProxyUrlResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -31,6 +34,12 @@ import { LOGGER_ACTIVITY } from '../../../../../shared/constants/logger-activity
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
 import { HttpStatus } from '@nestjs/common';
 import { ActivityLogHelper } from '../../../../../shared/helpers/activity-log-helpers';
+import { ConfigService } from '../../../../../shared/services/config.service';
+import { PHOTO_TYPE } from '../../../../../shared/constants/photo-type.constant';
+import { DoPodDeliverAttachment } from '../../../../../shared/orm-entity/do_pod_deliver_attachment';
+import { DoPodReturnDetailService } from '../../master/do-pod-return-detail.service';
+import axiosist from 'axiosist';
+import axios from 'axios';
 
 export class V1WebTrackingService {
   static async awb(
@@ -272,6 +281,83 @@ export class V1WebTrackingService {
       result.bagRepresentativeDetail = data;
     }
     return result;
+  }
+
+  static async getPhotoDetailV2(payload: ImageProxyUrlParamVm): Promise<ImageProxyUrlResponseVm>{
+    const result = new ImageProxyUrlResponseVm();
+    result.data = [];
+    if(PHOTO_TYPE.MANIFESTED == payload.photoType && payload.awbNumber){
+      const awbNumberSubstring = payload.awbNumber.substring(0, 7);
+      const imageUrl = `${ConfigService.get('cloudStorage.cloudUrl')}/${awbNumberSubstring}/${payload.awbNumber}.jpg`;
+      let imageResp;
+      try{
+        imageResp = await axios.get(imageUrl);
+      } catch(err) {
+        if(err.response){
+          console.log('::::: GAMBAR TIDAK TERSEDIA :::::');
+          console.log(`::::: ERROR_CODE ::::: ${err.response.status}, ::::: ERROR_TEXT ::::: ${err.response.statusText}`);
+        }
+      }
+
+      if(imageResp && imageResp.data){
+        const resultManifestPhoto = new ImageProxyUrlVm();
+          resultManifestPhoto.url = ImgProxyHelper.sicepatProxyUrl(imageUrl);
+          resultManifestPhoto.awbNumber = payload.awbNumber;
+          resultManifestPhoto.type = 'manifested';
+          result.data = [resultManifestPhoto];
+        return result;
+      }
+    }
+
+    if(PHOTO_TYPE.RETURN == payload.photoType){
+      result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodId, payload.attachmentType);
+      for(let i = 0; i < result.data.length; i++){
+        result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+      }
+      return result;
+    }
+
+    if(PHOTO_TYPE.DELIVER == payload.photoType){
+      result.data = await this.photoDetails(payload.doPodId, payload.attachmentType);
+      for(let i = 0; i < result.data.length; i++){
+        result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+      }
+      return result;
+    }
+    return result;
+  }
+
+  private static async photoDetails(
+    doPodDeliverDetailId: string,
+    attachmentType: string,
+    ):Promise<any>{
+    const repo = new OrionRepositoryService(DoPodDeliverAttachment, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      ['t1.type', 'type'],
+      ['t3.url', 'url'],
+      ['t2.awb_number', 'awbNumber'],
+    );
+
+    q.innerJoin(e => e.doPodDeliverDetail, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.attachment, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.doPodDeliverDetail.doPodDeliverDetailId, w => w.equals(doPodDeliverDetailId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    if (attachmentType) {
+      q.andWhere(e => e.type, w => w.equals(attachmentType));
+    }
+    q.orderBy({createdTime:'DESC'});
+    q.take(3); // only get 3 data file (photo, signature, photoCod)
+
+    return await q.exec();
   }
 
   // private method
