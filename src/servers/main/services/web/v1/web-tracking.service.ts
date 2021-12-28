@@ -92,13 +92,16 @@ export class V1WebTrackingService {
       if (history && history.length) {
         result.awbHistory = history;
       }
-      // TODO: partial load data
-      const transactionHistory = await this.getTransactionHistory(
-        data.awbItemId,
-        permissonPayload.branchId,
-      );
-      if (transactionHistory && transactionHistory.length) {
-        result.transactionHistory = transactionHistory;
+
+      if(data.isCod){
+        // TODO: partial load data
+        const transactionHistory = await this.getTransactionHistory(
+          data.awbItemId,
+          permissonPayload.branchId,
+        );
+        if (transactionHistory && transactionHistory.length) {
+          result.transactionHistory = transactionHistory;
+        }
       }
     }
     return result;
@@ -365,10 +368,7 @@ export class V1WebTrackingService {
     const query = `
       SELECT
         ai.awb_item_id as "awbItemId",
-        a.total_item as "totalItem",
         a.awb_number as "awbNumber",
-        a.user_id as "userId",
-        e.fullname as "employeeName",
         a.total_sell_price as "totalSellPrice",
         a.total_weight::numeric(10, 2) as "totalWeightFinal",
         a.total_weight_real_rounded::numeric(10, 2) as "totalWeightFinalRounded",
@@ -377,15 +377,12 @@ export class V1WebTrackingService {
         CONCAT(ca.customer_account_code, ' - ',ca.customer_account_name) as "customerName",
         COALESCE(a.ref_prev_customer_account_id, '') as "customerNameRds",
         COALESCE(a.consignee_name, dpd.consignee_name, '') as "consigneeName",
-        COALESCE(a.consignee_address, '') as "consigneeAddress",
         a.awb_date as "awbDate",
         a.is_cod as "isCod",
         a.ref_reseller_phone as "refResellerPhone",
         a.total_weight_volume as "totalWeightVolume",
-        a.consignee_phone as "consigneePhone",
         a.ref_representative_code as "refRepresentativeCode",
         ast.awb_status_name as "awbStatusLast",
-        a.history_date_last as "historyDateLast",
         prd.parcel_value as "parcelValue",
         COALESCE(pt.package_type_code, '') as "packageTypeCode",
         COALESCE(pt.package_type_name, '') as "packageTypeName",
@@ -402,8 +399,6 @@ export class V1WebTrackingService {
         COALESCE(ar.partner_logistic_name, '') as "partnerLogisticName",
         a.total_cod_value as "totalCodValue",
         CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
-        COALESCE(bg.bagging_code, '') as "baggingCode",
-        COALESCE(s.smu_code, '') as "smuCode",
         dpd.do_pod_deliver_detail_id as "doPodDeliverDetailId",
         dprd.do_pod_return_detail_id as "doPodReturnDetailId",
         COALESCE(ai.doreturn_new_awb, ai.doreturn_new_awb_3pl) as "doReturnAwb",
@@ -418,8 +413,6 @@ export class V1WebTrackingService {
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
         LEFT JOIN customer_account ca ON ca.customer_account_id = a.customer_account_id
         LEFT JOIN branch b ON b.branch_id = a.branch_id
-        LEFT JOIN users u on a.user_id = u.user_id
-        LEFT JOIN employee e on u.employee_id = e.employee_id
         LEFT JOIN pickup_request_detail prd ON ai.awb_item_id = prd.awb_item_id
         LEFT JOIN district df ON df.district_id = a.from_id AND a.from_type = 40
         LEFT JOIN district dt ON dt.district_id = a.to_id AND a.to_type = 40
@@ -430,8 +423,6 @@ export class V1WebTrackingService {
         LEFT JOIN payment_method p ON p.payment_method_id = a.payment_method_id
         LEFT JOIN bag_item bi ON bi.bag_item_id = ai.bag_item_id_last AND bi.is_deleted = false
         LEFT JOIN bag ba ON ba.bag_id = bi.bag_id AND ba.is_deleted = false
-        LEFT JOIN bagging bg ON bg.bagging_id = bi.bagging_id_last AND bg.is_deleted = false
-        LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id
           AND dpd.awb_status_id_last <> 14000 AND dpd.is_deleted = false
         LEFT JOIN do_pod_return_detail dprd ON dprd.awb_id = a.awb_id
