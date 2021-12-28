@@ -60,7 +60,7 @@ import { PodScanInHubDetail } from '../../../../shared/orm-entity/pod-scan-in-hu
 
 @Injectable()
 export class WebDeliveryInService {
-  constructor() {}
+  constructor() { }
 
   // #region findAll
   async findAllAwbByRequest(
@@ -202,6 +202,17 @@ export class WebDeliveryInService {
       },
     ];
 
+    let timeFrom = null; 
+    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
+
+    for (let data of payload.filters) {
+      if (data.field == 'createdTime') {
+        if (data.operator == 'gte') {
+          timeFrom = data.value;
+        }
+      }
+    }
+
     const repo = new OrionRepositoryService(PodScanInBranch, 't1');
     const q = repo.findAllRaw();
 
@@ -215,21 +226,97 @@ export class WebDeliveryInService {
       ['COUNT(t4.awb_number)', 'totalAwbScan'],
     );
 
-    q.innerJoin(e => e.PodScanInBranchDetail, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.innerJoin(e => e.PodScanInBranchDetail, 't4', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
+      j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
+      j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
+    }
     );
+
     q.innerJoin(e => e.branch, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
     );
+
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.groupByRaw('t1.pod_scan_in_branch_id, t3.branch_name');
 
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    const total = 0;
 
     const result = new WebScanInBranchListResponseVm();
 
     result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  async findAllBranchInByRequestCount(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInBranchListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchIdFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
+    payload.fieldResolverMap['totalBagScan'] = 't1.total_bag_scan';
+    payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
+    payload.fieldResolverMap['branchName'] = 't3.branch_name';
+    payload.fieldResolverMap['totalAwbScan'] = 'totalAwbScan';
+    payload.fieldResolverMap['totalSealNumberScan'] = 't1.total_seal_number_scan';
+    // payload.fieldResolverMap['totalAwbScan'] = 't2.total_awb_scan';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+    ];
+
+    let timeFrom = null;
+    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
+    for (let data of payload.filters) {
+      if (data.field == 'createdTime') {
+        if (data.operator == 'gte') {
+          timeFrom = data.value;
+        }
+      }
+    }
+
+    const repo = new OrionRepositoryService(PodScanInBranch, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.selectRaw(
+      ['t1.pod_scan_in_branch_id', 'podScanInBranchId'],
+      ['t1.created_time', 'createdTime'],
+      ['t3.branch_name', 'branchName'],
+      ['t1.total_seal_number_scan', 'totalSealNumberScan'],
+      ['t1.total_bag_scan', 'totalBagScan'],
+      ['COUNT(t4.awb_number)', 'totalAwbScan'],
+    );
+
+    q.innerJoin(e => e.PodScanInBranchDetail, 't4', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
+      j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
+      j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
+    }
+    );
+
+    q.innerJoin(e => e.branch, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.groupByRaw('t1.pod_scan_in_branch_id, t3.branch_name');
+
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebScanInBranchListResponseVm();
+
+    result.data = null;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
@@ -1153,7 +1240,7 @@ export class WebDeliveryInService {
           });
           if (bagItem) {
             // update status bagItem
-            await BagItem.update({ bagItemId: bagItem.bagItemId}, {
+            await BagItem.update({ bagItemId: bagItem.bagItemId }, {
               bagItemStatusIdLast: BAG_STATUS.DO_HUB,
               branchIdLast: permissonPayload.branchId,
               updatedTime: timeNow,
@@ -1290,8 +1377,8 @@ export class WebDeliveryInService {
     const podScanInBranch = await PodScanInBranch.findOne({
       where: {
         podScanInBranchId: payload.podScanInBranchId,
-        isDeleted : false,
-        isActive : true
+        isDeleted: false,
+        isActive: true
       },
     });
 
@@ -1313,8 +1400,8 @@ export class WebDeliveryInService {
       where: {
         branchId: permissonPayload.branchId,
         transactionStatusId: 600,
-        isDeleted : false,
-        isActive : true
+        isDeleted: false,
+        isActive: true
       },
     });
 
@@ -1489,7 +1576,7 @@ export class WebDeliveryInService {
     );
 
     let queryCount = await qCount.getQuery();
-    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'awbNumber');
+    let cnt = await QueryServiceApi.executeQuery(queryCount, true, 'awbNumber');
     const total = cnt;
 
     result.data = data;
