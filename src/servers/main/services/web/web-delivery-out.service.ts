@@ -1268,7 +1268,7 @@ export class WebDeliveryOutService {
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
 
-    q.groupByRaw('t1.do_pod_id, t2.fullname, t2.fullname, t5.partner_logistic_id, t3.branch_name');
+    q.groupByRaw('t1.do_pod_id, t2.fullname, t5.partner_logistic_id, t3.branch_name');
     const data = await q.exec();
     const total = 0;
 
@@ -1364,7 +1364,7 @@ export class WebDeliveryOutService {
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
 
-    q.groupByRaw('t1.do_pod_id, t2.fullname, t2.fullname, t5.partner_logistic_id, t3.branch_name');
+    q.groupByRaw('t1.do_pod_id, t2.fullname, t5.partner_logistic_id, t3.branch_name');
     const data = null;
     const total = await q.countWithoutTakeAndSkip();
 
