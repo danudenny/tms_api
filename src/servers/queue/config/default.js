@@ -2,7 +2,7 @@ module.exports = {
   enabled: true,
   port: 4002,
   swagger: {
-    enabled: true,
+    enabled: false,
     title: 'SiCepat TMS Qeueu',
     description: 'SiCepat TMS queue server api',
     path: 'docs',

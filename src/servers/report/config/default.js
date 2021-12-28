@@ -2,7 +2,7 @@ module.exports = {
   enabled: true,
   port: 5100,
   swagger: {
-    enabled: true,
+    enabled: false,
     title: "SiCepat TMS Report",
     description: "SiCepat TMS report server api",
     path: "docs",
