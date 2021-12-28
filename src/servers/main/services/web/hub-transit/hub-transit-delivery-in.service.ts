@@ -268,7 +268,7 @@ export class HubTransitDeliveryInService {
     
     q.selectRaw(
       [
-        `DISTINCT SUBSTR(CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, '0')), 1, 10)`,
+        `DISTINCT SUBSTR(t2.bag_number||LPAD(t3.bag_seq::text, 3, '0'), 1, 10)`,
         'bagNumberCode',
       ],
       ['t2.bag_number', 'bagNumber'],
