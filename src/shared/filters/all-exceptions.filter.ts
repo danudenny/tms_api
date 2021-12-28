@@ -30,9 +30,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
           exception,
           host,
         );
-        PinoLoggerService.error(exception);
+        PinoLoggerService.error('#### All Exception Filter : ', exception);
       } else {
-        PinoLoggerService.warn(requestErrorResponse);
+        PinoLoggerService.warn('#### All Exception Filter, Error Response : ', requestErrorResponse);
       }
       const finalRequestErrorResponse = fclone(requestErrorResponse);
       response.status(status).json(finalRequestErrorResponse);
