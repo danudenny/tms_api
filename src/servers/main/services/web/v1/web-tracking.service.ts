@@ -291,7 +291,7 @@ export class V1WebTrackingService {
     result.data = [];
     if(PHOTO_TYPE.MANIFESTED == payload.photoType && payload.awbNumber){
       const awbNumberSubstring = payload.awbNumber.substring(0, 7);
-      const imageUrl = `${ConfigService.get('cloudStorage.cloudUrl')}/${awbNumberSubstring}/${payload.awbNumber}.jpg`;
+      const imageUrl = `${ConfigService.get('cloudStorage.cloudResiUrl')}/${awbNumberSubstring}/${payload.awbNumber}.jpg`;
       let imageResp;
       try{
         imageResp = await axios.get(imageUrl);
