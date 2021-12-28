@@ -1,5 +1,5 @@
 // #region import
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createQueryBuilder, IsNull, In, Transaction, getManager } from 'typeorm';
 import moment = require('moment');
@@ -174,8 +174,8 @@ export class WebDeliveryOutService {
     const branchData = await Branch.findOne({
       where: {
         branchId: payload.branchIdTo,
-        isDeleted : false,
-        isActive : true,
+        isDeleted: false,
+        isActive: true,
       },
     });
 
@@ -799,17 +799,17 @@ export class WebDeliveryOutService {
 
     await getManager().transaction(async transactional => {
       if (totalSuccess > 0 && doPodDetailBagArr.length > 0) {
-          await transactional.insert(DoPodDetailBag, doPodDetailBagArr);
-          await transactional.update(BagItem,
-            { bagItemId: In(bagItemIds) },
-            {
-              bagItemStatusIdLast: BAG_STATUS.OUT_HUB,
-              branchIdLast: doPod.branchId,
-              branchIdNext: doPod.branchIdTo,
-              updatedTime: timeNow,
-              userIdUpdated: authMeta.userId,
-            },
-          );
+        await transactional.insert(DoPodDetailBag, doPodDetailBagArr);
+        await transactional.update(BagItem,
+          { bagItemId: In(bagItemIds) },
+          {
+            bagItemStatusIdLast: BAG_STATUS.OUT_HUB,
+            branchIdLast: doPod.branchId,
+            branchIdNext: doPod.branchIdTo,
+            updatedTime: timeNow,
+            userIdUpdated: authMeta.userId,
+          },
+        );
 
       }
       // TODO: need improvement
@@ -834,16 +834,16 @@ export class WebDeliveryOutService {
     // loop bull
     for (const item of paramsBull1) {
       BagScanOutHubQueueService.perform(
-          item.bagId,
-          item.bagItemId,
-          item.doPodId,
-          item.branchIdTo,
-          item.userIdDriver,
-          item.bagNumber,
-          item.userId,
-          item.branchId,
-          item.doPodType,
-        );
+        item.bagId,
+        item.bagItemId,
+        item.doPodId,
+        item.branchIdTo,
+        item.userIdDriver,
+        item.bagNumber,
+        item.userId,
+        item.branchId,
+        item.doPodType,
+      );
     }
 
     for (const item of paramsBull2) {
@@ -1205,6 +1205,16 @@ export class WebDeliveryOutService {
       payload.sortBy = 'doPodDateTime';
     }
 
+    let timeFrom = null;
+    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
+    for (let data of payload.filters) {
+      if (data.field == 'createdTime') {
+        if (data.operator == 'gte') {
+          timeFrom = data.value;
+        }
+      }
+    }
+
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -1235,18 +1245,14 @@ export class WebDeliveryOutService {
       ['t2.fullname', 'employeeName'],
       ['t3.branch_name', 'branchName'],
       ['COUNT (t4.do_pod_id)', 'totalAwb'],
-      [`
-        CASE
-          WHEN t1.partner_logistic_name IS NOT NULL THEN t1.partner_logistic_name
-          WHEN t1.partner_logistic_id IS NOT NULL AND t1.partner_logistic_name IS NULL THEN t5.partner_logistic_name
-          ELSE
-            'Internal'
-        END
-      `, 'partnerLogisticName'],
+      [`coalesce(t1.partner_logistic_name,t5.partner_logistic_name,'Internal')`, 'partnerLogisticName'],
     );
 
-    q.innerJoin(e => e.doPodDetails, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.innerJoin(e => e.doPodDetails, 't4', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
+      j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
+      j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
+    }
     );
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -1261,8 +1267,105 @@ export class WebDeliveryOutService {
     q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
-    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name');
+
+    q.groupByRaw('t1.do_pod_id, t2.fullname, t2.fullname, t5.partner_logistic_id, t3.branch_name');
     const data = await q.exec();
+    const total = 0;
+
+    const result = new WebScanOutTransitListResponseVm();
+
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+  
+  async findAllSortHubTransitListCount(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanOutTransitListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDateTime'] = 't1.do_pod_date_time';
+    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['branchTo'] = 't1.branch_id_to';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
+    payload.fieldResolverMap['doPodCode'] = 't1.do_pod_code';
+    payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
+    payload.fieldResolverMap['description'] = 't1.description';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['totalAwb'] = 'totalAwb';
+    payload.fieldResolverMap['employeeName'] = 't2.fullname';
+    payload.fieldResolverMap['branchName'] = 't3.branch_name';
+    payload.fieldResolverMap['awbNumber'] = 't4.awb_number';
+    payload.fieldResolverMap['partnerLogisticName'] = `"partnerLogisticName"`;
+    if (payload.sortBy === '') {
+      payload.sortBy = 'doPodDateTime';
+    }
+
+    let timeFrom = null;
+    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
+    for (let data of payload.filters) {
+      if (data.field == 'createdTime') {
+        if (data.operator == 'gte') {
+          timeFrom = data.value;
+        }
+      }
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'doPodDateTime',
+      },
+      {
+        field: 'doPodCode',
+      },
+      {
+        field: 'branchName',
+      },
+      {
+        field: 'fullname',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(DoPod, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_id', 'doPodId'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.do_pod_code', 'doPodCode'],
+      ['t1.do_pod_date_time', 'doPodDateTime'],
+      ['t1.description', 'description'],
+      ['t2.fullname', 'employeeName'],
+      ['t3.branch_name', 'branchName'],
+      ['COUNT (t4.do_pod_id)', 'totalAwb'],
+      [`coalesce(t1.partner_logistic_name,t5.partner_logistic_name,'Internal')`, 'partnerLogisticName'],
+    );
+
+    q.innerJoin(e => e.doPodDetails, 't4', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
+      j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
+      j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
+    }
+    );
+    q.innerJoin(e => e.branchTo, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.leftJoin(e => e.partnerLogistic, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB_AWB));
+    q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
+
+
+    q.groupByRaw('t1.do_pod_id, t2.fullname, t2.fullname, t5.partner_logistic_id, t3.branch_name');
+    const data = null;
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebScanOutTransitListResponseVm();
@@ -1605,7 +1708,7 @@ export class WebDeliveryOutService {
           'do_pod_detail_bag',
           'do_pod_detail_bag.bag_item_id = bag_item_id.bag_item_id',
         );
-        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd and bag.is_deleted= false' , {
+        qz.where('bag.bag_number = :bag AND bag_item_id.bag_seq = :seq AND do_pod_detail_bag.do_pod_id = :dpdd and bag.is_deleted= false', {
           bag: bag.bag.bagNumber,
           seq: bag.bagSeq,
           dpdd,
@@ -1687,7 +1790,7 @@ export class WebDeliveryOutService {
 
       // await q.stream(response, this.streamTransformBagOrderDetailList);
 
-      const data =  await q.exec();
+      const data = await q.exec();
       await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       console.error(err);
@@ -2116,9 +2219,14 @@ export class WebDeliveryOutService {
     temp = await q.getRawMany();
 
     let id = '';
-    temp.map(function(item) {
+    temp.map(function (item) {
       id += id ? ',\'' + item.doPodDeliverId + '\'' : '\'' + item.doPodDeliverId + '\'';
     });
+
+    if (!id) {
+      throw new BadRequestException("payload invalid");
+    }
+
     const qq = createQueryBuilder();
     qq.addSelect('attachments.url', 'url');
     qq.addSelect('dpda.type', 'type');
@@ -2142,7 +2250,7 @@ export class WebDeliveryOutService {
       result.data = data;
     }
 
-    for(let i = 0; i < result.data.length; i++){
+    for (let i = 0; i < result.data.length; i++) {
       result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
     }
 

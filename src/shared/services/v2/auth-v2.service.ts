@@ -355,29 +355,34 @@ export class AuthV2Service {
       true,
     );
 
+    let response;
     if (!whiteListUserData) {
       try {
-        const response = await axios.get(ConfigService.get('svcOtp.otpRequiredUrl'));
-        whiteListUserData = response.data;
-        await RedisService.setex(
-          `pod:required:otp`,
-          JSON.stringify(whiteListUserData),
-          1800,
-        );
+        response = await axios.get(ConfigService.get('svcOtp.otpRequiredUrl'));
       } catch (err) {
-        RequestErrorService.throwObj({
-          message: 'Bad Request',
-        }, HttpStatus.BAD_REQUEST);
+        console.log('-----ERROR, when try to get user list----', err);
       }
     }
 
-    let isRequired = false;
-    if ((clientId.toLowerCase() == 'web' && whiteListUserData.podweb)
-      || (clientId.toLowerCase() == 'mobile' && whiteListUserData.podmobile)) {
-      if (whiteListUserData.userlist.includes(userName)) {
-        isRequired = true;
-      }
+    if(response && response.data){
+      whiteListUserData = response.data;
+      console.log('whiteListUserData:::', whiteListUserData);
+      await RedisService.setex(
+        `pod:required:otp`,
+        JSON.stringify(whiteListUserData),
+        1800,
+      );
     }
+
+    let isRequired = false;
+    if (whiteListUserData && ((clientId.toLowerCase() == 'web' && whiteListUserData.podweb)
+      || (clientId.toLowerCase() == 'mobile' && whiteListUserData.podmobile))) {
+        if (whiteListUserData.userlist.includes(userName)) {
+          console.log('masuk:::::::::::');
+          isRequired = true;
+        }
+    }
+
     return isRequired;
   }
 
