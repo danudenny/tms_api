@@ -19,7 +19,7 @@ module.exports = {
   },
   cloudStorage: {
     cloudUrl: 'https://sicepatmasterdata.s3-ap-southeast-1.amazonaws.com',
-    cloudResiUrl : 'https://sicepatresi.s3.amazonaws.com'
+    cloudResiUrl : 'https://sicepatresi.s3.amazonaws.com',
     cloudBucket: 'sicepatmasterdata',
     cloudRegion: 'ap-southeast-1',
     cloudAccessKeyId: 'AKIA2ZCLVOSJTBNWP73E',
