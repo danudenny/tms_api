@@ -284,7 +284,7 @@ export class HubTransitDeliveryInService {
 
     q.selectRaw(
       [
-        `SUBSTR(t2.bag_number||LPAD(t3.bag_seq::text, 3, '0'), 1, 10)`,
+        `SUBSTRING(t2.bag_number||LPAD(t3.bag_seq::text, 3, '0'), 1, 10)`,
         'bagNumberCode',
       ],
       ['t2.bag_number', 'bagNumber'],
