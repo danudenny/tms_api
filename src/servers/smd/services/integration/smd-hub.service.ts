@@ -861,8 +861,8 @@ export class SmdHubService {
       let bagSeq = 1;
       const bag = await BagService.validBagNumber(bagNumberRaw);
       if(bag){
-        const bagNumber = bag.bag.bagNumber;
-        const bagSeq = bag.bagSeq;
+        bagNumber = bag.bag.bagNumber;
+        bagSeq = bag.bagSeq;
       }
       // const isValid = re.test(bagNumberStr) && re.test(seqNumberStr);
 
