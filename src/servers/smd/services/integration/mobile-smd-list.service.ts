@@ -202,7 +202,7 @@ export class MobileSmdListService {
     const qb = createQueryBuilder();
     qb.addSelect('dsdi.do_smd_detail_id', 'do_smd_detail_id');
     qb.addSelect('b.bag_id', 'bag_id');
-    qb.addSelect(`CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0'))`, 'bag_number');
+    qb.addSelect(`SUBSTR(CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')), 1, 10)`, 'bag_number');
     qb.from('do_smd_detail_item', 'dsdi');
     qb.innerJoin(
       'do_smd_detail',

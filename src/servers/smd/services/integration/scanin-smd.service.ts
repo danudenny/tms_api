@@ -227,8 +227,6 @@ export class ScaninSmdService {
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
-              bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
-              branchIdLast: permissonPayload.branchId,
               bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
               updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
@@ -461,8 +459,6 @@ export class ScaninSmdService {
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
-              bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
-              branchIdLast: permissonPayload.branchId,
               bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
               updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
@@ -575,7 +571,7 @@ export class ScaninSmdService {
     if (payload.bag_item_number.length > 15) {
       const rawQueryBag = `
         SELECT
-          CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')) AS bagnumber
+          SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
         FROM do_pod_detail_bag doPodDetailBag
         INNER JOIN do_pod doPod ON doPod.do_pod_id=doPodDetailBag.do_pod_id AND (doPod.is_deleted = 'false')
         INNER JOIN bag_item bagItem ON bagItem.bag_item_id=doPodDetailBag.bag_item_id AND (bagItem.is_deleted = 'false')
@@ -591,7 +587,7 @@ export class ScaninSmdService {
 
       const rawQueryBagScanned = `
         SELECT
-          CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')) AS bagnumber
+          SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
         FROM do_pod_detail_bag doPodDetailBag
         INNER JOIN do_pod doPod ON doPod.do_pod_id=doPodDetailBag.do_pod_id AND (doPod.is_deleted = 'false')
         INNER JOIN bag_item bagItem ON bagItem.bag_item_id=doPodDetailBag.bag_item_id AND (bagItem.is_deleted = 'false')
@@ -631,7 +627,7 @@ export class ScaninSmdService {
 
     payload.fieldResolverMap['bagging_datetime'] =  'b.created_time';
     payload.fieldResolverMap['branch_id'] = 'bhin.branch_id';
-    payload.fieldResolverMap['bag_number_seq'] = `CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`;
+    payload.fieldResolverMap['bag_number_seq'] = `SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10)`;
     payload.fieldResolverMap['scan_in_datetime'] = 'bhin.history_date';
 
     payload.globalSearchFields = [
@@ -657,7 +653,7 @@ export class ScaninSmdService {
     q.selectRaw(
       ['b.bag_id', 'bag_id'],
       ['bi.bag_item_id', 'bag_item_id'],
-      [`CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bag_number_seq'],
+      [`SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10)`, 'bag_number_seq'],
       [`TO_CHAR(b.created_time, 'dd-mm-YYYY HH24:MI:SS')`, 'bagging_datetime'],
       [`CASE
           WHEN bhin.history_date IS NULL THEN 'Belum Scan IN'
@@ -896,7 +892,7 @@ export class ScaninSmdService {
   ) {
     const dataReceivedBagDetail = ReceivedBagDetail.create({
       receivedBagId: paramReceivedBagId,
-      bagNumber: paramBagNumber + paramBagSeq,
+      bagNumber: (paramBagNumber + paramBagSeq).substring(0, 10),
       scannedBagNumber: paramBagItemNumber,
       bagWeight: paramWeight,
       userIdCreated: paramUserId,
