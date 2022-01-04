@@ -261,14 +261,30 @@ export class HubTransitDeliveryInService {
       },
     ];
 
+    let payloadBagNumber ='0';
+
+    for (let i = 0; i < payload.filters.length; i++) {
+      if ('bagNumber' == payload.filters[i].field) {
+        payloadBagNumber = payload.filters[i].value;
+        payload.filters.splice(i, 1);
+      }
+    }
+    let bagNumber;
+    let bagSeq;
+    const bag = await BagService.validBagNumber(payloadBagNumber);
+    if (bag) {
+      bagNumber = bag.bag.bagNumber;
+      bagSeq = bag.bagSeq;
+    }
+
     const repo = new OrionRepositoryService(DropoffHub, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
-    
+
     q.selectRaw(
       [
-        `t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`,
+        `SUBSTRING(t2.bag_number||LPAD(t3.bag_seq::text, 3, '0'), 1, 10)`,
         'bagNumberCode',
       ],
       ['t2.bag_number', 'bagNumber'],
@@ -297,6 +313,10 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    if(bagNumber && bagSeq){
+      q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
+      q.andWhere(e => e.bagItem.bagSeq, w => w.equals(bagSeq));
+    }
 
     q.groupByRaw(`
       t1.created_time,
@@ -379,6 +399,22 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     payload.fieldResolverMap['isSmd'] = 't1.is_smd';
 
+    let payloadBagNumber ='0';
+
+    for (let i = 0; i < payload.filters.length; i++) {
+      if ('bagNumber' == payload.filters[i].field) {
+        payloadBagNumber = payload.filters[i].value;
+        payload.filters.splice(i, 1);
+      }
+    }
+    let bagNumber;
+    let bagSeq;
+    const bag = await BagService.validBagNumber(payloadBagNumber);
+    if (bag) {
+      bagNumber = bag.bag.bagNumber;
+      bagSeq = bag.bagSeq;
+    }
+
     const repo = new OrionRepositoryService(DropoffHub, 't1');
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
@@ -399,6 +435,10 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    if(bagNumber && bagSeq){
+      q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
+      q.andWhere(e => e.bagItem.bagSeq, w => w.equals(bagSeq));
+    }
 
     let query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);
@@ -480,7 +520,7 @@ export class HubTransitDeliveryInService {
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;
-  } 
+  }
 
   private static async updateDoPodTransaction(
     doPodDetailBag: any,
