@@ -971,7 +971,7 @@ export class WebDeliveryOutService {
       q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH));
       // q.andWhere(e => e.totalScanOutBag, w => w.greaterThan(0));
     }
-    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_name, t4.url, t6.branch_name, t6.branch_id');
+    q.groupByRaw('t1.do_pod_id, t2.employee_id, t3.branch_id, t4.url, t6.branch_id');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
