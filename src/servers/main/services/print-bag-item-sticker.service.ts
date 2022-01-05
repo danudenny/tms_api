@@ -74,7 +74,7 @@ export class PrintBagItemStickerService {
     const finalWeightRounded2Decimal = parseFloat(`${data.weight}`).toFixed(2);
     const finalBagItemSeq = String(data.bagSeq).padStart(3, '0');
     const finalBagItemBarcodeNumber = `${
-      data.bag.bagNumber
+      data.bag.bagNumber.substring(0,10)
     }${weightNumberOnly}`;
     const branchCode = data.bag.branch
       ? data.bag.branch.branchCode
