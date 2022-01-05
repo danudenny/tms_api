@@ -53,7 +53,8 @@ export class PrintBagItemPaperService {
     if (bagItem.bagSeq.toString().length < 3) {
       newBagSeq = '0'.repeat(3 - bagItem.bagSeq.toString().length) + newBagSeq;
     }
-    bagItem.bag.bagNumber = bagItem.bag.bagNumber + newBagSeq;
+    const bagNumSeq = bagItem.bag.bagNumber + newBagSeq
+    bagItem.bag.bagNumber = bagNumSeq.substring(0, 10);
     this.printBagItemPaperAndQueryMeta(res, bagItem as any, {
       userId: queryParams.userId,
       branchId: queryParams.branchId,

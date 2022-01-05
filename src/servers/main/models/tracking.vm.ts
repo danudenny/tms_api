@@ -294,6 +294,9 @@ export class TrackingBagResponseVm {
   bagNumber: string;
 
   @ApiModelProperty()
+  bagSeq: number;
+
+  @ApiModelProperty()
   weight: number;
 
   @ApiModelProperty()

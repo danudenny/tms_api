@@ -648,7 +648,7 @@ export class WebDeliveryOutService {
       response.message = 'success';
       let bagData;
       let wordingBagNumberOrSeal;
-      if (bagNumber.length == 10 && regexNumber.test(bagNumber.substring(7, 10))) {
+      if (await BagService.isBagNumberLenght(bagNumber)) {
         bagData = await BagService.validBagNumber(bagNumber);
         wordingBagNumberOrSeal = 'dengan nomor bag ';
       } else {
@@ -1642,12 +1642,12 @@ export class WebDeliveryOutService {
         'bag_item_awb',
         'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
       );
-      qz.leftJoin(
+      qz.innerJoin(
         'awb_item',
         'awb_item',
         'awb_item.awb_item_id = bag_item_awb.awb_item_id',
       );
-      qz.leftJoin(
+      qz.innerJoin(
         'awb',
         'awb',
         'awb.awb_id = awb_item.awb_id',
@@ -1775,10 +1775,10 @@ export class WebDeliveryOutService {
       q.innerJoin(e => e.bagItems.bagItemAwbs, 't3', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-      q.leftJoin(e => e.bagItems.bagItemAwbs.awbItem, 't4', j =>
+      q.innerJoin(e => e.bagItems.bagItemAwbs.awbItem, 't4', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-      q.leftJoin(e => e.bagItems.bagItemAwbs.awbItem.awb, 't5', j =>
+      q.innerJoin(e => e.bagItems.bagItemAwbs.awbItem.awb, 't5', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
       q.leftJoin(e => e.bagItems.bagItemAwbs.awbItem.awb.packageType, 't6', j =>
@@ -1816,7 +1816,7 @@ export class WebDeliveryOutService {
 
     payload.fieldResolverMap[
       'bagNumber'
-    ] = `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`;
+    ] = `SUBSTR(CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`;
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -1831,10 +1831,8 @@ export class WebDeliveryOutService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      [
-        `CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`,
-        'bagNumber',
-      ],
+      [`SUBSTR(CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`,
+        'bagNumber',],
       ['t1.created_time', 'createdTime'],
       ['COUNT (t4.*)', 'totalAwb'],
       ['t5.representative_code', 'representativeIdTo'],

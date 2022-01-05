@@ -562,17 +562,39 @@ export class WebDeliveryInService {
       },
     ];
 
+    let payloadBagNumber ='0';
+    let payloadSealNumber;
+
+    for (let i = 0; i < payload.filters.length; i++) {
+      if ('bagNumber' == payload.filters[i].field) {
+        payloadBagNumber = payload.filters[i].value;
+        payload.filters.splice(i, 1);
+      }
+      if ('sealNumber' == payload.filters[i].field) {
+        payloadSealNumber = payload.filters[i].value;
+        payload.filters.splice(i, 1);
+      }
+    }
+
+    let bagNumber;
+    let bagSeq;
+    const bag = await BagService.validBagNumber(payloadBagNumber);
+    if (bag) {
+      bagNumber = bag.bag.bagNumber;
+      bagSeq = bag.bagSeq;
+    }
+
     const repo = new OrionRepositoryService(Bag, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
+      ['t1.bag_number', 'bagNumber'],
       [
-        `CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0'))`,
+        `SUBSTR(CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`,
         'bagNumberCode',
       ],
-      ['t1.bag_number', 'bagNumber'],
       ['t1.ref_representative_code', 'representativeCode'],
       ['t2.bag_seq', 'bagSeq'],
       ['t2.bag_item_id', 'bagItemId'],
@@ -600,6 +622,14 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
+    if(bagNumber && bagSeq){
+      q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
+      q.andWhere(e => e.bagItems.bagSeq, w => w.equals(bagSeq));
+    }
+    if(payloadSealNumber){
+      q.andWhere(e => e.sealNumber, w => w.equals(payloadSealNumber));
+    }
+
 
     q.groupByRaw(`
       t2.created_time,
