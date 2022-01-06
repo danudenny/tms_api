@@ -1216,7 +1216,7 @@ export class ScanoutSmdService {
           `;
           const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
-          if (resultDataRepresentative.length > 0 && !resultDataBagRepresentative[0].bag_item_id) {
+          if (resultDataRepresentative.length > 0 && !resultDataRepresentative[0].bag_item_id) {
             // for (let i = 0; i < resultDataBag.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
               // customer.awbStatusName = data[i].awbStatusName;
