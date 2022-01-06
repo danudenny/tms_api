@@ -1181,7 +1181,7 @@ export class ScanoutSmdService {
           return result;
         }
         const paramBagSeq = bagDetail.bagSeq;
-        console.log('############# errorsmd bag15digit: ' + paramBagNumberWithSeq + ' ###### bag_detail:' + bagDetail);
+        // console.log('############# errorsmd bag15digit: ' + paramBagNumberWithSeq + ' ###### bag_detail:' + bagDetail);
 
         rawQuery = `
           SELECT
@@ -1196,7 +1196,7 @@ export class ScanoutSmdService {
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
 
-        console.log('############# errorsmd bag15digit: ' + paramBagNumberWithSeq + ' ###### resultDataBag:' + resultDataBag);
+        // console.log('############# errorsmd bag15digit: ' + paramBagNumberWithSeq + ' ###### resultDataBag:' + resultDataBag);
 
         if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
           rawQuery = `
@@ -1360,7 +1360,7 @@ export class ScanoutSmdService {
         }
         const paramBagSeq = bagDetail.bagSeq;
 
-        console.log('############# errorsmd bag10digit: ' + payload.item_number + ' ###### bag_detail:' + bagDetail);
+        // console.log('############# errorsmd bag10digit: ' + payload.item_number + ' ###### bag_detail:' + bagDetail);
 
         rawQuery = `
           SELECT
@@ -1374,7 +1374,7 @@ export class ScanoutSmdService {
           LIMIT 1;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
-        console.log('############# errorsmd bag10digit: ' + payload.item_number + ' ###### resultDataBag:' + resultDataBag);
+        // console.log('############# errorsmd bag10digit: ' + payload.item_number + ' ###### resultDataBag:' + resultDataBag);
 
         if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
           rawQuery = `
