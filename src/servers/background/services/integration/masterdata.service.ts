@@ -17,6 +17,10 @@ import { UserPasswordResponseVm } from '../../models/user-password.response.vm';
 
 import moment = require('moment');
 import { Role } from '../../../../shared/orm-entity/role';
+import { EmployeePhonePayloadVm } from '../../models/employee-phone.payload.vm';
+import { EmployeePhoneResponseVm } from '../../models/employee-phone.response.vm';
+import { ConfigService } from '../../../../shared/services/config.service';
+import axios from 'axios';
 
 @Injectable()
 export class MasterDataService {
@@ -431,4 +435,141 @@ export class MasterDataService {
     });
   }
 
+  static async updatePhone(payload: EmployeePhonePayloadVm){
+    const result = new EmployeePhoneResponseVm();
+    result.code = HttpStatus.OK;
+    result.message = 'Success';
+    result.clearCacheMobile = 'Failed';
+    result.clearCacheWeb = 'Failed';
+
+    const nik = payload.nik.trim();
+    const phone = payload.phone.trim();
+
+    if (nik.length > 0 && phone.length > 0){
+      let isnum = /^\d+$/.test(phone);
+      if (isnum && phone.charAt(0) == '0'){
+        if(phone.length < 10 || phone.length > 15){
+          result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+          result.message = 'Phone number length minimum 10 digits and maximal 15 digits';
+          return result;
+        }
+        //#region Process For Master Data
+        const pool: any = DatabaseConfig.getMasterDataDbPool();
+        const client = await pool.connect();
+        try {  
+          const timeNow = moment().toDate();
+  
+          let employeeId = 0;
+          const res = await client.query(`SELECT employee_id FROM employee WHERE nik = $1 AND is_deleted = FALSE`, [nik]);
+  
+          if (res && res.rows && res.rows.length && res.rows.length > 0) {
+            for (const r of res.rows) {
+              employeeId = r.employee_id;
+            }
+          } else{
+            result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+            result.message = 'NIK is not found';
+            return result;
+          }
+          
+          const res2 = await client.query(`SELECT nik FROM employee WHERE phone1 = $1 AND nik <> $2 AND is_deleted = FALSE`, [phone, nik]);
+  
+          if (res2 && res2.rows && res2.rows.length && res2.rows.length > 0) {
+            let r_nik = '';
+            for (const r of res2.rows) {
+              r_nik = r.nik;
+            }
+            result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+            result.message = 'Phone number is already used by NIK ' + r_nik;
+            return result;
+          }
+  
+          const query = `
+            UPDATE employee
+            SET phone1 = $1, is_phone1_patch = $2, updated_time = $3, user_id_updated = $4
+            WHERE employee_id = $5 and is_deleted = FALSE
+          `;
+        
+          await client.query(query, [phone, true, timeNow, 1, employeeId], async function(err) {
+            PinoLoggerService.debug(this.logTitle, this.sql);
+            if (err) {
+              result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+              result.message = 'Error update employee phone';
+              PinoLoggerService.error(this.logTitle, err.message);
+            }
+          });
+          
+          if(result.code = HttpStatus.OK){
+            const sendDataClearCache = await MasterDataService.clearCache(employeeId, phone);
+            result.clearCacheMobile = sendDataClearCache['clearCacheMobile'];
+            result.clearCacheWeb = sendDataClearCache['clearCacheWeb'];
+          }
+        } finally {
+          client.release();
+        }
+        //#endregion
+      } else {
+        result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+        result.message = 'Phone must contains numeric and started with 0';
+      }
+    } else{
+      result.code = HttpStatus.UNPROCESSABLE_ENTITY;
+      result.message = 'NIK and Phone cannot be empty';
+    }
+    return result;
+  }
+
+  public static async clearCache(employeeId, phone) {
+    const urlTMSMobile = `${ConfigService.get('clearCacheTMS.urlTMSMobile')}`;
+    const urlTMSWeb = `${ConfigService.get('clearCacheTMS.urlTMSWeb')}`;
+
+    const headers = {
+      'Authorization': ConfigService.get('clearCacheTMS.auth'),
+      'Content-Type': 'application/json',
+    };
+    
+    const options = {
+      headers: headers,
+    };
+
+    const jsonData = {
+      employee_id: employeeId,
+      phone_number: phone,
+    };
+    
+    const clearCacheMobile = await this.clearCacheTMMobile(urlTMSMobile, jsonData, options);
+    const clearCacheWeb = await this.clearCacheTMSWeb(urlTMSWeb, jsonData, options);
+    
+    return { clearCacheMobile: clearCacheMobile, clearCacheWeb: clearCacheWeb };
+  }
+
+  public static async clearCacheTMMobile(urlTMSMobile, jsonData, options) {
+    let clearCacheMobile = 'Failed';
+    try {
+      const resMobile = await axios.post(urlTMSMobile, jsonData, options);
+      console.log('RESPONSE FROM CLEAR CACHE TMS Mobile: ' + JSON.stringify(resMobile.data));
+      
+      if(resMobile.status == 200 && resMobile.data.code == 200){
+        clearCacheMobile = 'Success';
+      }
+    } catch (error) {
+      console.log('RESPONSE ERROR FROM CLEAR CACHE TMS Mobile2: ' + error.code);
+    }
+    return clearCacheMobile;
+  }
+
+  public static async clearCacheTMSWeb(urlTMSWeb, jsonData, options) {
+    let clearCacheWeb = 'Failed';
+    try {
+      const resWeb = await axios.post(urlTMSWeb, jsonData, options);
+      console.log('RESPONSE FROM CLEAR CACHE TMS Web: ' + JSON.stringify(resWeb.data));
+      
+      if(resWeb.status == 200 && resWeb.data.code == 200){
+        clearCacheWeb = 'Success';
+      }
+    } catch (error) {
+      console.log('RESPONSE ERROR FROM CLEAR CACHE TMS Web2: ' + error.code);
+    }
+    return clearCacheWeb;
+  }
 }

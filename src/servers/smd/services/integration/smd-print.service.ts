@@ -260,7 +260,7 @@ export class SmdPrintService {
     q.selectRaw(
       ['t1.bagging_code', 'baggingCode'],
       ['t1.created_time', 'createdTime'],
-      [`CONCAT(t4.bag_number, LPAD(t3.bag_seq::text, 3, \'0\'))`, 'bagNumber'],
+      [`SUBSTR(CONCAT(t4.bag_number, LPAD(t3.bag_seq::text, 3, \'0\')), 1, 10)`, 'bagNumber'],
       ['CONCAT(t3.weight::numeric(10,2))', 'weight'],
       ['t5.representative_code', 'representativeCode'],
     );

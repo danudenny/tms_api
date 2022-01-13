@@ -827,7 +827,7 @@ export class SmdHubService {
     .selectRaw(
       ['b.bagging_id', 'baggingId'],
       ['b.bagging_item_id', 'baggingItemId'],
-      [`CONCAT(bib.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bagNumber'],
+      [`SUBSTR(CONCAT(bib.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10)`, 'bagNumber'],
     );
 
     const data = await repo.exec();
@@ -856,8 +856,14 @@ export class SmdHubService {
 
     if (bagNumberRaw) {
       // const re = /^[0-9]+$/;
-      const bagNumberStr = bagNumberRaw.substring(0, 7);
-      const seqNumberStr = bagNumberRaw.substring(7, 10);
+      // di buat find bag nya dulu by bagNumber Raw
+      let bagNumber;
+      let bagSeq = 1;
+      const bag = await BagService.validBagNumber(bagNumberRaw);
+      if(bag){
+        bagNumber = bag.bag.bagNumber;
+        bagSeq = bag.bagSeq;
+      }
       // const isValid = re.test(bagNumberStr) && re.test(seqNumberStr);
 
       // if (isValid) {
@@ -871,8 +877,8 @@ export class SmdHubService {
         .innerJoin(i => i.bagItem.bag, 'b', j =>
           j.andWhere(w => w.isDeleted, v => v.isFalse()),
         )
-        .andWhereRaw(`b.bag_number = '${bagNumberStr}'`)
-        .andWhereRaw(`bi.bag_seq = ${Number(seqNumberStr)}`)
+        .andWhereRaw(`b.bag_number = '${bagNumber}'`)
+        .andWhereRaw(`bi.bag_seq = ${bagSeq}`)
         .andWhere(w => w.isDeleted, v => v.isFalse())
         .selectRaw(
           ['bi.bag_item_id', 'baggingItemId'],

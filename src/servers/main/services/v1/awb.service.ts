@@ -132,6 +132,7 @@ export class AwbService {
     });
     // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
     q.where(e => e.awbNumber, w => w.equals(awbNumber));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.take(1);
     return await q.exec();
   }
@@ -248,70 +249,6 @@ export class AwbService {
     return result ? result.awbStatusGroup.code : 'NoGroup';
   }
 
-  // TODO: disable update awb item attr change to trigger
-  public static async updateAwbAttr(
-    awbItemId: number,
-    status: number,
-    branchIdNext: number = null,
-  ) {
-    // // TODO: fix data user id last (from session login or params mobile sync)
-    // const authMeta = AuthService.getAuthData();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
-    // const timeNow = moment().toDate();
-
-    // // TODO: table awb attr and awb item attr
-    // // Update awb_item_attr  semua field dengan suffix _last
-
-    // const awbItemAttr = await AwbItemAttr.findOne({
-    //   where: {
-    //     awbItemId,
-    //   },
-    // });
-    // if (awbItemAttr) {
-    //   // TODO: how to update data??
-    //   // awbItemAttr.awbHistoryIdLast;
-    //   // awbItemAttr.awbStatusIdLastPublic;
-    //   awbItemAttr.awbStatusIdLast = status;
-    //   awbItemAttr.userIdLast = authMeta.userId;
-    //   awbItemAttr.branchIdLast = permissonPayload.branchId;
-    //   if (branchIdNext) {
-    //     awbItemAttr.branchIdNext = branchIdNext;
-    //   }
-    //   awbItemAttr.awbHistoryDateLast = timeNow;
-    //   awbItemAttr.updatedTime = timeNow;
-    //   await AwbItemAttr.save(awbItemAttr);
-    // }
-
-    // const awbItem = await AwbItem.findOne({
-    //   where: {
-    //     awbItemId,
-    //     isDeleted: false,
-    //   },
-    // });
-    // if (awbItem) {
-    //   // Update awb_attr  semua field dengan suffix _last
-    //   const awbAttr = await AwbAttr.findOne({
-    //     where: {
-    //       awbId: awbItem.awbId,
-    //     },
-    //   });
-    //   if (awbAttr) {
-    //     // TODO: how to update data??
-    //     // awbAttr.awbHistoryIdLast;
-    //     // awbAttr.awbStatusIdLastPublic;
-    //     await AwbAttr.update(awbAttr.awbAttrId, {
-    //       branchIdNext,
-    //       awbStatusIdLast: status,
-    //       branchIdLast: permissonPayload.branchId,
-    //       awbhistoryDateLast: timeNow,
-    //       updatedTime: timeNow,
-    //     });
-    //   }
-    // }
-
-    return true;
-  }
-
   public static async isCancelDelivery(
     awbItemId: number,
   ): Promise<boolean> {
@@ -373,6 +310,7 @@ export class AwbService {
     return rawData ? true : false;
   }
 
+  // TODO: open length awb number (12 or 15 digit)
   public static async isAwbNumberLenght(inputNumber: string): Promise<boolean> {
     const regexNumber = /^[0-9]+$/;
     return (inputNumber.length == 12 && regexNumber.test(inputNumber)) ? true : false;

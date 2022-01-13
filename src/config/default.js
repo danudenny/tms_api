@@ -19,6 +19,7 @@ module.exports = {
   },
   cloudStorage: {
     cloudUrl: 'https://sicepatmasterdata.s3-ap-southeast-1.amazonaws.com',
+    cloudResiUrl : 'https://sicepatresi.s3.amazonaws.com',
     cloudBucket: 'sicepatmasterdata',
     cloudRegion: 'ap-southeast-1',
     cloudAccessKeyId: 'AKIA2ZCLVOSJTBNWP73E',
@@ -54,6 +55,11 @@ module.exports = {
       emailTo: 'yonna@e.sicepat.com',
       emailCC: ['ajengaulia937@gmail.com', 'yudha.perwira@sicepat.com', 'Rudian.Syahreza@e.sicepat.com', 'Ali.Shodikin@e.sicepat.com', 'Ahmad.Fikri@e.sicepat.com', 'Jualian_Sa@sicepat.com', 'beben@sicepat.com', 'barizana.arifin@sicepat.com', 'noviaratu@e.sicepat.com', 'tedysicepat@gmail.com'],
     },
+  },
+  clearCacheTMS: {
+    urlTMSMobile: 'http://tmsapi-staging.sicepat.com/api/reset_otp/reset_otp_cache',
+    urlTMSWeb: 'http://tms-staging.sicepat.com/numberCache/set_phone',
+    auth: 'SeWdjOtj21iVsbXv9Wfrpwi8Fgg4QmgFbJmrvXOS',
   },
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
@@ -131,5 +137,11 @@ module.exports = {
     apiKeyId: '03GtPFfkRzS6y47gfg23sQ',
     apiKey:
       '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',
+  },
+  svcOtp: {
+    baseUrl: 'http://api-internal.s.sicepat.io/authsvc',
+    otpRequiredUrl: 'https://sms-otp.s3.ap-southeast-1.amazonaws.com/otp_config.json',
+    isBypass: false,
+    bypassCode: "815413",
   },
 };

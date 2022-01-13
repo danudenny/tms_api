@@ -111,7 +111,7 @@ export class ScanoutSmdVendorListService {
         const rawQuery = `
           SELECT
             b.bag_id,
-            CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')) AS bag_number,
+            SUBSTR(CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')), 1, 10) AS bag_number,,
             CONCAT(bi.weight::numeric(10,2), ' Kg') AS weight,
             r.representative_code,
             br.branch_name
@@ -300,7 +300,7 @@ export class ScanoutSmdVendorListService {
     q.selectRaw(
       ['dsdi.do_smd_detail_id', 'do_smd_detail_id'],
       ['b.bag_id', 'bag_id'],
-      [`CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0'))`, 'bag_number'],
+      [`SUBSTR(CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')), 1, 10)`, 'bag_number'],
       [`CONCAT(bi.weight::numeric(10,2), ' Kg')`, 'weight'],
       ['r.representative_code', 'representative_code'],
       ['br.branch_name', 'branch_name'],
