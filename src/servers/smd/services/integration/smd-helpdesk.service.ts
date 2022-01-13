@@ -22,9 +22,13 @@ export class SmdHelpdeskService {
         r.representative_code
       FROM bag_representative br
       INNER JOIN representative r ON r.representative_id = br.representative_id_to
-      WHERE br.bag_representative_code = '${payload.bag_representative_code}' AND
+      WHERE br.bag_representative_code = :bagRepresentativeNumber AND
       br.is_deleted = FALSE`;
-      const bagRepresentative = await RawQueryService.query(query);
+
+      const bagRepresentative = await RawQueryService.queryWithParams(query, {
+        bagRepresentativeNumber :payload.bag_representative_code,
+      });
+      
       if (bagRepresentative.length < 1) {
         // bag_representative_code not found
         result.message = 'bag_representative_code not found';
