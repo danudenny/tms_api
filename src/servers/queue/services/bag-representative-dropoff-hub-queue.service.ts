@@ -64,7 +64,7 @@ export class BagRepresentativeDropoffHubQueueService {
             dropoffDetailBagRepresentative.userIdUpdated = data.userId;
             dropoffDetailBagRepresentative.createdTime = data.timestamp;
             dropoffDetailBagRepresentative.updatedTime = data.timestamp;
-            await DropoffHubDetailBagRepresentative.save(dropoffDetailBagRepresentative);
+            await DropoffHubDetailBagRepresentative.insert(dropoffDetailBagRepresentative);
 
             // NOTE: queue by Bull
             // add awb history with background process
