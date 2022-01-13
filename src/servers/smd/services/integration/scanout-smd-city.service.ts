@@ -2,14 +2,13 @@ import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { ScanOutSmdVehicleResponseVm, ScanOutSmdRouteResponseVm, ScanOutSmdItemResponseVm, ScanOutSmdSealResponseVm, ScanOutListResponseVm, ScanOutHistoryResponseVm, ScanOutSmdHandoverResponseVm, ScanOutSmdDetailResponseVm, ScanOutSmdDetailBaggingResponseVm, ScanOutSmdItemMoreResponseVm, ScanOutSmdEditResponseVm, ScanOutSmdEditDetailResponseVm, ScanOutSmdItemMoreDataResponseVm } from '../../models/scanout-smd.response.vm';
+import { ScanOutSmdItemResponseVm } from '../../models/scanout-smd.response.vm';
 import { HttpStatus } from '@nestjs/common';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Branch } from '../../../../shared/orm-entity/branch';
-import { Representative } from '../../../../shared/orm-entity/representative';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
-import { IsNull, In, Not, getManager } from 'typeorm';
+import { In } from 'typeorm';
 import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
@@ -18,14 +17,12 @@ import { DoSmdVehicle } from '../../../../shared/orm-entity/do_smd_vehicle';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
-import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
-import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
-import {ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm} from '../../models/scanout-smd.payload.vm';
 import { ScanOutSmdCitySealResponseVm, ScanOutSmdCityVehicleResponseVm } from '../../models/scanout-smd-city.response.vm';
 import { toInteger } from 'lodash';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { BagService } from '../../../main/services/v1/bag.service';
 
 @Injectable()
 export class ScanoutSmdCityService {
@@ -50,8 +47,10 @@ export class ScanoutSmdCityService {
           ds.do_smd_id,
           ds.branch_id
         FROM do_smd_vehicle dsv
-        INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_deleted = FALSE AND ds.do_smd_status_id_last <> 6000
+        INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000 AND ds.is_deleted = FALSE
         WHERE
+          dsv.created_time >= '${moment().subtract(30,'days').format('YYYY-MM-DD 00:00:00')}' AND 
+          dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND  
           dsv.employee_id_driver = ${payload.employee_id_driver} AND
           dsv.is_deleted = FALSE;
       `;
@@ -540,12 +539,18 @@ export class ScanoutSmdCityService {
       }
     } else {
       // cari di bag code
-      if (payload.item_number.length == 15 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
-        const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 8 );
+      if (payload.item_number.length == 15 && payload.item_number.match(/^[A-Z0-9]{10}[0-9]{5}$/)) {
+        const paramBagNumberWithSeq = await payload.item_number.substr(0, payload.item_number.length - 5);
         const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
-        const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 8 , 3);
-        const paramSeq = await paramBagSeq * 1;
         const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+
+        const bagDetail = await BagService.validBagNumber(paramBagNumberWithSeq);
+        if(!bagDetail){
+          result.message = 'Bag Number Not Found';
+          return result;
+        }
+        const paramBagNumber = bagDetail.bag.bagNumber;
+        const paramBagSeq = bagDetail.bagSeq;
         rawQuery = `
           SELECT
             bi.bag_item_id,
@@ -563,7 +568,7 @@ export class ScanoutSmdCityService {
             AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
-            bi.bag_seq = '${paramSeq}' AND
+            bi.bag_seq = '${paramBagSeq}' AND
             bi.is_deleted = FALSE
           ORDER BY b.created_time DESC
           LIMIT 1;
@@ -675,7 +680,7 @@ export class ScanoutSmdCityService {
             total_bagging: resultDoSmdDetail.totalBagging,
             total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
             weight,
-            bag_seq: paramSeq,
+            bag_seq: paramBagSeq,
             representative_code: resultDataBag[0].representative_code,
           });
           result.statusCode = HttpStatus.OK;
@@ -693,12 +698,21 @@ export class ScanoutSmdCityService {
           result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
           return result;
         }
-      } else if (payload.item_number.length == 10 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
-        const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 3 );
+      } else if (payload.item_number.length == 10 && payload.item_number.match(/^[A-Z0-9]{10}$/)) {
+        // const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 3 );
         // const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
-        const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 3 , 3);
-        const paramSeq = await paramBagSeq * 1;
+        // const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 3 , 3);
+        // const paramSeq = await paramBagSeq * 1;
         // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+
+        const bagDetail = await BagService.validBagNumber(payload.item_number);
+        if(!bagDetail){
+          result.message = 'Bag Number Not Found';
+          return result;
+        }
+        const paramBagNumber = bagDetail.bag.bagNumber;
+        const paramBagSeq = bagDetail.bagSeq;
+
         rawQuery = `
           SELECT
             bi.bag_item_id,
@@ -717,7 +731,7 @@ export class ScanoutSmdCityService {
             AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
           WHERE
             b.bag_number = '${escape(paramBagNumber)}' AND
-            bi.bag_seq = '${paramSeq}' AND
+            bi.bag_seq = '${paramBagSeq}' AND
             bi.is_deleted = FALSE
           ORDER BY b.created_time DESC
           LIMIT 1;
@@ -827,7 +841,7 @@ export class ScanoutSmdCityService {
             total_bagging: resultDoSmdDetail.totalBagging,
             total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
             weight: resultDataBag[0].weight,
-            bag_seq: paramSeq,
+            bag_seq: paramBagSeq,
             representative_code: resultDataBag[0].representative_code,
           });
           result.statusCode = HttpStatus.OK;

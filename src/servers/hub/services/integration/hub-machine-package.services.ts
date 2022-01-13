@@ -310,14 +310,13 @@ export class HubMachineService {
         }
       } catch (error) {
         console.log(error);
-        PinoLoggerService.log(error);
+        PinoLoggerService.log(error.message);
       }
 
       return result;
     } catch (error) {
       const errMessage = `ERROR MESIN SORTIR CATCH: ${error.message}`;
       PinoLoggerService.log(errMessage);
-      PinoLoggerService.log(error);
       return generateErrorResult(errMessage);
       // throw error;
     } finally {

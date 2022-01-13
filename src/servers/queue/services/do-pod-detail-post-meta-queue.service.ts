@@ -35,7 +35,7 @@ export class DoPodDetailPostMetaQueueService {
     this.queue.process(10, async job => {
       const data = job.data;
       // Logger.log('### JOB ID =========', job.id);
-      await getManager().transaction(async transactionalEntityManager => {
+      // await getManager().transaction(async transactionalEntityManager => {
 
         // NOTE: get awb_ite_attr and update awb_history_id
         const awbItemAttr = await AwbItemAttr.findOne({
@@ -69,7 +69,8 @@ export class DoPodDetailPostMetaQueueService {
             reasonName: data.reasonName,
             location: data.location,
           });
-          await transactionalEntityManager.insert(AwbHistory, awbHistory);
+          await AwbHistory.insert(awbHistory);
+          // await transactionalEntityManager.insert(AwbHistory, awbHistory);
 
           // TODO: to comment update with trigger SQL
           // await transactionalEntityManager.update(AwbItemAttr, awbItemAttr.awbItemAttrId, {
@@ -77,7 +78,7 @@ export class DoPodDetailPostMetaQueueService {
           //   updatedTime: data.timestamp,
           // });
         }
-      }); // end transaction
+      // }); // end transaction
 
     });
 
@@ -480,7 +481,7 @@ export class DoPodDetailPostMetaQueueService {
     }
 
     // NOTE: geopoint (lat,lon)
-    if (latitudeDelivery != '' && longitudeDelivery != '') {
+    if ((latitudeDelivery && longitudeDelivery) && (latitudeDelivery != '' && longitudeDelivery != '')) {
       location = `${latitudeDelivery},${longitudeDelivery}`;
     }
 

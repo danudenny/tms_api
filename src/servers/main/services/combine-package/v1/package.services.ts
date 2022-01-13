@@ -1,10 +1,9 @@
 // #region import
-import _, { assign, join, sampleSize } from 'lodash';
+import _, { assign, sampleSize } from 'lodash';
 import { createQueryBuilder, getManager } from 'typeorm';
 
 import { BadRequestException } from '@nestjs/common';
 import { AwbItemAttr } from '../../../../../shared/orm-entity/awb-item-attr';
-import { AwbTrouble } from '../../../../../shared/orm-entity/awb-trouble';
 import { Bag } from '../../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../../shared/orm-entity/bag-item-awb';
@@ -14,7 +13,6 @@ import { PodScanInHubBag } from '../../../../../shared/orm-entity/pod-scan-in-hu
 import { PodScanInHubDetail } from '../../../../../shared/orm-entity/pod-scan-in-hub-detail';
 import { Representative } from '../../../../../shared/orm-entity/representative';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
 import { CreateBagAwbScanHubQueueService } from '../../../../queue/services/create-bag-awb-scan-hub-queue.service';
 import { CreateBagFirstScanHubQueueService } from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
@@ -100,7 +98,7 @@ export class V1PackageService {
           where: {
             branchCode: value,
             isActive : true,
-            isDeleted : false
+            isDeleted : false,
           },
         });
         if (branch) {
@@ -119,8 +117,9 @@ export class V1PackageService {
               representative,
             });
           }
+
           // create new bag number sortir
-          const genBagNumber = await this.createBagNumber(
+          const genBagNumber = await this.createBagNumberV2(
             payload,
             branch.branchCode,
           );
@@ -188,7 +187,7 @@ export class V1PackageService {
       qb.innerJoin('branch', 'f', 'f.branch_id = b.branch_id_to');
       qb.where('a.pod_scan_in_hub_id = :podScanInHubId', { podScanInHubId });
       qb.andWhere('a.is_deleted = false');
-      qb.andWhere('f.is_deleted = false and f.is_active = true')
+      qb.andWhere('f.is_deleted = false and f.is_active = true');
 
       const data = await qb.getRawMany();
       let bagNumber;
@@ -400,6 +399,11 @@ export class V1PackageService {
   private static async onFinish(payload: PackagePayloadVm): Promise<boolean> {
     let bagWeightFinal;
     const authMeta = AuthService.getAuthData();
+
+    if (!payload.bagItemId) {
+      throw new BadRequestException("payload invalid");
+    }
+    
     const podScanInHub = await PodScanInHub.findOne({
       where: { podScanInHubId: payload.podScanInHubId },
     });
@@ -589,6 +593,68 @@ export class V1PackageService {
     result.weight = bagItem.weight;
     result.bagSeq = sequence;
     result.bagId = bagId;
+
+    return result;
+  }
+
+  private static async createBagNumberV2(
+    payload,
+    branchCode: string,
+  ): Promise<CreateBagNumberResponseVM> {
+    const result = new CreateBagNumberResponseVM();
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
+    const branchId = payload.branchId;
+    let bagItem;
+    let randomBagNumber;
+
+    await getManager().transaction(async trans => {
+      randomBagNumber = 'SS' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
+      const bagDetail = Bag.create({
+        bagNumber: randomBagNumber,
+        branchIdTo: branchId,
+        refRepresentativeCode: payload.representative
+          ? payload.representative.representativeCode
+          : null,
+        representativeIdTo: payload.representative
+          ? payload.representative.representativeId
+          : null,
+        refBranchCode: branchCode,
+        bagType: 'branch',
+        branchId: permissonPayload.branchId,
+        bagDate: moment().format('YYYY-MM-DD'),
+        bagDateReal: timestamp,
+        createdTime: timestamp,
+        updatedTime: timestamp,
+        userIdCreated: authMeta.userId,
+        userIdUpdated: authMeta.userId,
+        isSortir: true,
+        isManual: true,
+      });
+      const bag = await trans.save(Bag, bagDetail);
+
+      // INSERT INTO TABLE BAG ITEM
+      const bagItemDetail = BagItem.create({
+        bagId: bag.bagId,
+        bagSeq: 1,
+        branchIdLast: permissonPayload.branchId,
+        bagItemStatusIdLast: 3000,
+        userIdCreated: authMeta.userId,
+        weight: 0,
+        createdTime: timestamp,
+        updatedTime: timestamp,
+        userIdUpdated: authMeta.userId,
+        isSortir: true,
+      });
+      bagItem = await trans.save(BagItem, bagItemDetail);
+    });//end transaction
+
+    result.bagItemId = bagItem.bagItemId;
+    // result.bagNumber = `${randomBagNumber}${bagSeq}`;
+    result.bagNumber = `${randomBagNumber}`;
+    result.weight = bagItem.weight;
+    result.bagSeq = 1;//new default bag seq
 
     return result;
   }
@@ -907,30 +973,6 @@ export class V1PackageService {
         `Bag Number ${payload.bagNumber}, tidak ditemukan`,
       );
     }
-  }
-
-  private static async insertAwbTrouble(data): Promise<any> {
-    const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    const awbTroubleCode = await CustomCounterCode.awbTrouble(
-      moment().toDate(),
-    );
-    const awbTroubleData = AwbTrouble.create({
-      awbTroubleCode,
-      awbStatusId: 2600,
-      transactionStatusId: 500,
-      awbNumber: data.awbNumber,
-      troubleDesc: data.troubleDesc,
-      troubleCategory: 'sortir_bag',
-      employeeIdTrigger: authMeta.userId,
-      userIdTrigger: authMeta.userId,
-      branchIdTrigger: permissonPayload.branchId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-      userIdCreated: authMeta.userId,
-      userIdUpdated: authMeta.userId,
-    });
-    await AwbTrouble.save(awbTroubleData);
   }
 
   private static async getAwbItem(

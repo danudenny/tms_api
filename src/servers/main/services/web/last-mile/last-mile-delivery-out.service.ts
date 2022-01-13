@@ -6,7 +6,6 @@ import { DoPodDeliver } from '../../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../../shared/orm-entity/do-pod-deliver-detail';
 import { DoPodDeliverRepository } from '../../../../../shared/orm-repository/do-pod-deliver.repository';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
@@ -167,7 +166,7 @@ export class LastMileDeliveryOutService {
       const branch = await Branch.findOne({
         branchId: permissonPayload.branchId,
         isDeleted : false,
-        isActive : true
+        isActive : true,
       });
       // NOTES: Validation branch
       if (
@@ -597,21 +596,6 @@ export class LastMileDeliveryOutService {
             response.status = 'error';
             response.message = `Resi ${awbNumber} sudah Final Status !`;
           } else {
-            const statusCode = await AwbService.awbStatusGroup(
-              awb.awbStatusIdLast,
-            );
-            // save data to awb_troubleß
-            if (statusCode != 'IN') {
-              const branchName = awb.branchLast
-                ? awb.branchLast.branchName
-                : '';
-              await AwbTroubleService.fromScanOut(
-                awbNumber,
-                branchName,
-                awb.awbStatusIdLast,
-              );
-            }
-
             // Add Locking setnx redis
             const holdRedis = await RedisService.locking(
               `hold:scanoutant:${awb.awbItemId}`,

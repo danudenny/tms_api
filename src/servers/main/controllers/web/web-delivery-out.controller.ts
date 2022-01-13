@@ -239,6 +239,15 @@ export class WebDeliveryOutController {
     return LastMileDeliveryService.findAllScanOutDeliverGroupList(payload);
   }
 
+  @Post('deliverGroupList/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutDeliverGroupListResponseVm })
+  public async deliverGroupListCount(@Body() payload: BaseMetaPayloadVm) {
+    return LastMileDeliveryService.countAllScanOutDeliverGroupList(payload);
+  }
+
   @Post('awbValidate')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -275,6 +284,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllTransitList(payload);
   }
 
+  @Post('transitList/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
+  public async transitListCount(@Body() payload: WebScanOutAwbListPayloadVm) {
+    return this.webDeliveryOutService.countAllTransitList(payload);
+  }
+
   @Post('sortationHub/transitList')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -282,6 +300,15 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
   public async transitListSortHub(@Body() payload: WebScanOutAwbListPayloadVm) {
     return this.webDeliveryOutService.findAllSortHubTransitList(payload);
+  }
+
+  @Post('sortationHub/transitList/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
+  public async transitListSortHubCount(@Body() payload: WebScanOutAwbListPayloadVm) {
+    return this.webDeliveryOutService.findAllSortHubTransitListCount(payload);
   }
 
   @Post('transitListAwb')

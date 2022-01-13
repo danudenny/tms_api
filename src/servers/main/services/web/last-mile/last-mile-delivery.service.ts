@@ -32,14 +32,11 @@ export class LastMileDeliveryService {
       payload.sortBy = 'datePOD';
     }
 
-    // mapping search field and operator default ilike
+    let repoDetail = new OrionRepositoryService(DoPodDeliver, 't1');
+    const q2 = repoDetail.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q2, true);
 
-    const repo = new OrionRepositoryService(DoPodDeliver, 't1');
-    const q = repo.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(q, true);
-
-    q.selectRaw(
+    q2.selectRaw(
       ['t1.do_pod_deliver_date', 'datePOD'],
       ['COUNT(DISTINCT(t1.do_pod_deliver_id))', 'totalSuratJalan'],
       ['t1.user_id_driver', 'userIdDriver'],
@@ -61,6 +58,62 @@ export class LastMileDeliveryService {
       ],
     );
 
+    q2.innerJoin(e => e.userDriver.employee, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q2.innerJoin(e => e.doPodDeliverDetails, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q2.innerJoin(e => e.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
+    );
+
+    q2.groupByRaw(
+      '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
+    );
+    const data = await q2.exec();
+    const total = 0;
+    const result = new WebScanOutDeliverGroupListResponseVm();
+    result.data = data;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async countAllScanOutDeliverGroupList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanOutDeliverGroupListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['doPodDeliverDateTime'] =
+      't1.do_pod_deliver_date';
+    payload.fieldResolverMap['datePOD'] = 'datePOD';
+    payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
+    payload.fieldResolverMap['userIdDriver'] = 't1.user_id_driver';
+    payload.fieldResolverMap['doPodDeliverCode'] = 't1.do_pod_deliver_code';
+    payload.fieldResolverMap['totalSuratJalan'] = 'totalSuratJalan';
+    payload.fieldResolverMap['totalAwb'] = 'totalAwb';
+    payload.fieldResolverMap['totalAntar'] = 'totalAntar';
+    payload.fieldResolverMap['totalDelivery'] = 'totalDelivery';
+    payload.fieldResolverMap['totalProblem'] = 'totalProblem';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'datePOD';
+    }
+
+    const repo = new OrionRepositoryService(DoPodDeliver, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t1.do_pod_deliver_date', 'datePOD'],
+      ['t1.user_id_driver', 'userIdDriver'],
+      ['t5.branch_name', 'branchName'],
+      ['t1.branch_id', 'branchId'],
+      ['t2.fullname', 'nickname']
+    );
+
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -74,11 +127,9 @@ export class LastMileDeliveryService {
       '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
     );
 
-    const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
-
     const result = new WebScanOutDeliverGroupListResponseVm();
-    result.data = data;
+    result.data = null;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;

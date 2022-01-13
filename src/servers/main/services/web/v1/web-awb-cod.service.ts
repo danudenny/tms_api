@@ -90,10 +90,6 @@ export class V1WebAwbCodService {
       ['COUNT(t1.awb_item_id)', 'countAwb'],
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 'pickupdetail', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.codPayment, 'cp', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -229,10 +225,6 @@ export class V1WebAwbCodService {
       j
         .andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.isCod, w => w.isTrue()),
-    );
-
-    q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.awb.packageType, 't5');
@@ -383,10 +375,6 @@ export class V1WebAwbCodService {
         .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     q.innerJoin(e => e.awb.packageType, 't5');
 
     q.innerJoin(e => e.branchLast, 't6', j =>
@@ -461,7 +449,7 @@ export class V1WebAwbCodService {
   ): Promise<WebAwbCodDlvV2ListResponseVm> {
     payload.fieldResolverMap['driverName'] = 't3.first_name';
     payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
-    payload.fieldResolverMap['branchIdFinal'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'driverName';
@@ -474,10 +462,10 @@ export class V1WebAwbCodService {
 
     q.selectRaw(
       ['t3.first_name', 'driverName'],
-      ['count(t1.user_id_driver)', 'totalResi'],
-      ['t1.user_id_driver', 'userIdDriver'],
+      ['count(t3.user_id)', 'totalResi'],
+      ['t3.user_id', 'userIdDriver'],
       ['t4.branch_name', 'branchNameFinal'],
-      ['t1.branch_id', 'branchIdFinal'],
+      ['t4.branch_id', 'branchIdFinal'],
     );
 
     q.innerJoin(e => e.awbItemAttr, 't2', j => {
@@ -489,12 +477,7 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     });
 
-    q.innerJoin(e => e.awbItemAttr.pickupRequestDetail, 'prd', j => {
-      j.andWhere(e => e.isDeleted, w => w.isFalse());
-    });
-
     q.innerJoin(e => e.userDriver, 't3');
-
     q.innerJoin(e => e.branchFinal, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -502,7 +485,7 @@ export class V1WebAwbCodService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     q.groupByRaw(
-      't1.user_id_driver, t3.first_name, t1.branch_id, t4.branch_name',
+      't3.user_id, t4.branch_id',
     );
 
     const data = await q.exec();
@@ -538,7 +521,6 @@ export class V1WebAwbCodService {
     payload.fieldResolverMap['packageTypeCode'] = 't5.package_type_code';
     payload.fieldResolverMap['transactionStatusId'] =
       't1.transaction_status_id';
-    payload.fieldResolverMap['transactionStatusName'] = 't9.status_title';
 
     // mapping search field and operator default ilike
     // payload.globalSearchFields = [
@@ -576,7 +558,6 @@ export class V1WebAwbCodService {
       ['t8.cod_payment_service', 'codPaymentService'],
       ['t8.no_reference', 'noReference'],
       ['t1.transaction_status_id', 'transactionStatusId'],
-      ['t9.created_time', 'pickupRequestTime'],
     );
 
     q.innerJoin(e => e.awb, 't2', j =>
@@ -596,10 +577,6 @@ export class V1WebAwbCodService {
     );
 
     q.innerJoin(e => e.awbStatusFinal, 't7', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -727,10 +704,6 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.pickupRequestDetail, 't9', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
     //#region Cod Merger
     if (
       RoleGroupService.isRoleCodMerge(
@@ -844,6 +817,15 @@ export class V1WebAwbCodService {
     const uuidv1 = require('uuid/v1');
     const uuidString = uuidv1();
 
+    // lock add user
+    const redlock = await RedisService.redlock(
+      `redlock:codUserTransaction:${authMeta.userId}`,
+      10,
+    );
+    if (!redlock) {
+      throw new BadRequestException(`Transaksi sebelum nya masih di proses , coba beberapa saat lagi!`);
+    }
+
     let codTransactionCash: WebCodTransferBranchCashResponseVm;
     if (payload.dataCash.length > 0) {
       codTransactionCash = await this.transferBranchCash(
@@ -871,6 +853,7 @@ export class V1WebAwbCodService {
       ? codTransactionCashless.printIdCashless
       : null;
 
+    // handle error message
     let dataError = [];
     if (codTransactionCash && codTransactionCashless) {
       dataError = codTransactionCash.dataError.concat(
@@ -881,6 +864,9 @@ export class V1WebAwbCodService {
     } else if (codTransactionCashless) {
       dataError = codTransactionCashless.dataError;
     }
+
+    // remove key holdRedis
+    RedisService.del(`redlock:codUserTransaction:${authMeta.userId}`);
 
     const result = new WebCodTransferBranchResponseVm();
     result.printIdCash = printIdCash;
@@ -1808,7 +1794,7 @@ export class V1WebAwbCodService {
       where: {
         branchId,
         isDeleted : false,
-        isActive : true
+        isActive : true,
       },
     });
 

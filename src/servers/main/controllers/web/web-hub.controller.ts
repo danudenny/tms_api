@@ -58,6 +58,13 @@ export class WebHubController {
     return HubTransitDeliveryInService.getDropOffList(payload);
   }
 
+  @Post('dropOffList/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: WebScanInHubSortListResponseVm })
+  public async loadDropOffHubListCount(@Body() payload: BaseMetaPayloadVm) {
+    return HubTransitDeliveryInService.getDropOffListCount(payload);
+  }
+
   @Post('dropOffListDetail')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebDeliveryListResponseVm })
@@ -85,12 +92,12 @@ export class WebHubController {
     return HubSortirService.hubAwbNumber(payload);
   }
 
-  @Post('monitoring/bag')
-  @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: MonitoringBagHubResponseVm })
-  public async monitoringBagHub(@Body() payload: BaseMetaPayloadVm) {
-    return HubMonitoringService.monitoringBagHub(payload);
-  }
+  // @Post('old/monitoring/bag')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiOkResponse({ type: MonitoringBagHubResponseVm })
+  // public async monitoringBagHub(@Body() payload: BaseMetaPayloadVm) {
+  //   return HubMonitoringService.monitoringBagHub(payload);
+  // }
 
   @Post('monitoring/sortir')
   @HttpCode(HttpStatus.OK)

@@ -24,8 +24,7 @@ export class PartnerOneidController {
     return PartnerOneidService.orderActivity(payload);
   }
 
-
-  @Get('oneid/resi')
+  @Post('oneid/resi')
   @HttpCode(HttpStatus.OK)
   @ApiImplicitHeader({ name: 'x-api-key' })
   @UseGuards(AuthXAPIKeyGuard)
@@ -34,12 +33,28 @@ export class PartnerOneidController {
     description: 'Response Success',
     type: ListOneidOrderActivityResponseVm,
   })
-  public async getResi(@Query() queryParams: ListResiVm) {
-    const result = await PartnerOneidService.getOrder(queryParams);
+  public async myOrder(@Body() payload: ListResiVm) {
+   const result = await PartnerOneidService.getOrder(payload);
     // catch err
     if (result.status === false) {
       throw new HttpException(result, result.statusCode);
     }
     return result;
   }
+
+  @Get('oneid/status-resi')
+  @HttpCode(HttpStatus.OK)
+  @ApiImplicitHeader({ name: 'x-api-key' })
+  @UseGuards(AuthXAPIKeyGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async getStatusResi() {
+    const result = await PartnerOneidService.getStatusResi();
+    // catch err
+    if (result.status === false) {
+      throw new HttpException(result, result.statusCode);
+    }
+    return result;
+  }
+
 }
+

@@ -52,10 +52,10 @@ export class ListOneidOrderActivityResponseVm extends BaseMetaResponseVm {
 
 export class ListResiVm {
 
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   limit: string;
 
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   page: string;
 
   @ApiModelPropertyOptional()
@@ -66,4 +66,29 @@ export class ListResiVm {
 
   @ApiModelPropertyOptional()
   senderPhone: string;
+
+  @ApiModelPropertyOptional()
+  status: string;
+
+  @ApiModelPropertyOptional()
+  partnerName: string;
+
+  @ApiModelPropertyOptional()
+  partnerId: number;
+
+  @ApiModelPropertyOptional()
+  excludePartnerId: number;
+
+  @ApiModelProperty({
+    example: '2021-12-07 00:00:00',
+    format: 'date-time',
+  })
+  startDate: string;
+
+  @ApiModelProperty({
+    example: '2021-12-08 00:00:00',
+    format: 'date-time',
+  })
+  endDate: string;
+  
 }

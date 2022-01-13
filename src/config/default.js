@@ -1,11 +1,11 @@
-const { getAllServerConfigurations } = require("./util");
-const path = require("path");
+const { getAllServerConfigurations } = require('./util');
+const path = require('path');
 
 module.exports = {
   redis: {
-    host: '3.1.243.32',
+    host: '18.141.116.177',
     port: '6379',
-    password: '9F864DAF0B09974AA3F0E90646EEFEA3',
+    password: 'r3di5S1c3pat116688_',
     db: process.env.NODE_ENV === 'test' ? 1 : 0,
   },
   jwt: {
@@ -18,8 +18,9 @@ module.exports = {
     assets: path.resolve(__dirname, '..', 'assets'),
   },
   cloudStorage: {
-    cloudUrl: 'https://sicepattesting.s3-ap-southeast-1.amazonaws.com',
-    cloudBucket: 'sicepattesting',
+    cloudUrl: 'https://sicepatmasterdata.s3-ap-southeast-1.amazonaws.com',
+    cloudResiUrl : 'https://sicepatresi.s3.amazonaws.com',
+    cloudBucket: 'sicepatmasterdata',
     cloudRegion: 'ap-southeast-1',
     cloudAccessKeyId: 'AKIA2ZCLVOSJTBNWP73E',
     cloudSecretAccessKey: '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',
@@ -29,6 +30,12 @@ module.exports = {
     urlApiJsReport: 'http://jsreport.sicepat.com/api/report',
     username: 'admin',
     password: '@S1cepat!',
+  },
+  imgProxyHelper: {
+    proxyUrl: 'https://imgproxy.sicepat.com',
+    key: 'WbEZyJ8WsD',
+    salt: 'GV5ueRu21Z',
+    algo: 'SHA-256',
   },
   queue: {
     doPodDetailPostMeta: {
@@ -45,26 +52,38 @@ module.exports = {
     },
     exportHandoverSigesitMeta: {
       repeat: '0 10 * * *',
-      emailTo: 'ajengauliya07@gmail.com',
-      emailCC: ['beben@sicepat.com', 'barizana.arifin@sicepat.com'],
+      emailTo: 'yonna@e.sicepat.com',
+      emailCC: ['ajengaulia937@gmail.com', 'yudha.perwira@sicepat.com', 'Rudian.Syahreza@e.sicepat.com', 'Ali.Shodikin@e.sicepat.com', 'Ahmad.Fikri@e.sicepat.com', 'Jualian_Sa@sicepat.com', 'beben@sicepat.com', 'barizana.arifin@sicepat.com', 'noviaratu@e.sicepat.com', 'tedysicepat@gmail.com'],
     },
+  },
+  clearCacheTMS: {
+    urlTMSMobile: 'http://tmsapi-staging.sicepat.com/api/reset_otp/reset_otp_cache',
+    urlTMSWeb: 'http://tms-staging.sicepat.com/numberCache/set_phone',
+    auth: 'SeWdjOtj21iVsbXv9Wfrpwi8Fgg4QmgFbJmrvXOS',
   },
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
+  queryService :{
+    baseUrl : 'http://api-internal.s.sicepat.io/core/query-service/api/v1/',
+    schema: 'pod',
+  },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',
-    tags: ['API-POD-DEV'],
+    tags: ['API-POD'],
+  },
+  activityLog: {
+    baseUrl: 'http://api-internal.sicepat.io/core/logger',
   },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
     ttlToken: 1000,
-    username: 'T1F2V4Xgof0hTvYlS9QYvTpitBka',
-    password: 'tGLlYLfqRSiK7IA2mYHeu_EMbbwa',
-    baseUrl: 'https://sandbox.posindonesia.co.id:8245/',
+    username: 'rHzS2Pf0djuTlBffxvIOtXWqSL0a',
+    password: 'bqYVa8cAZDA0FjYfVpMIrGJMYFga',
+    baseUrl: 'https://api.posindonesia.co.id:8245/',
     tokenEndpoint: 'token',
-    postAwbEndpoint: 'webhookpos/1.0.1/AddPostingDoc',
+    postAwbEndpoint: 'webhook/1.0/AddPostingDoc',
   },
   gojek: {
     baseUrl: 'https://integration-kilat-api.gojekapi.com/gokilat/v10/',
@@ -88,15 +107,15 @@ module.exports = {
   },
   sunfish: {
     postDlvUrl:
-      'https://sfcola1.dataon.com/sfapi/index.cfm?endpoint=/sicepat_FULL_postDelivPaket',
+      'https://sfapisicepat.dataon.com/sfapiv2/index.cfm?endpoint=/sicepat_FULL_postDelivPaket',
     headerAccount: 'sicepat',
     headerAppname: 'sfapi',
     headerKey:
-      'MIIC1DCCAbwCAQAwgY4xCzAJBgNVBAYTAklEMRQwEgYDVQQIDAtES0kgSmFrYXJ0YTEUMBIGA1UEBwwLREtJIEpha2FydGExEDAOBgNVBAoMB1NJQ0VQQVQxDjAMBgNVBAsMBXNmYXBpMRAwDgYDVQQDDAdzaWNlcGF0MR8wHQYJKoZIhvcNAQkBFhB6YWtreUBkYXRhb24uY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApcrWbXVUOCzvB+bs0kRjKw7LoWtLTN601J/yGizYMSLYhm/FNbWBzfaDhdlqpplYWkGUB3ZQ07fmFGKiOJUhSX3MB0lYWKQL88jHivnWG0mprI+/vhOxbJj5bb3i0aCFoz1kKm+P42cV6m5V+hyrW8qcsf8YBrY74Dhfie3ZthTEgKfUyXYV6YiVJUmLQdwg3ltFzwKDLWba/DQa3MtKfi3zbzGXN7cdmC9ajsktTOG3REOy5+ln0VzorqPYnAlUMKCb4mZjrKqmLZzmIgIpNQn6Yb3FsD5WOSzgDT7GQlFx+6W1gqstZquE5RR3qYfAMhywQ3OsdjBFZ7TV16K27QIDAQABoAAwDQYJKoZIhvcNAQELBQADggEBAJJSN5MYRK0rWlNrnfY3K+MMuvy9C08AzGRwc5CkEatk6/18Q8r4jx4FMVgKmdPpUNcffh0UkNs2vrtQBajJE/UND7ex444QiEF7j3efJsleQdvF6FzfM+yUZdOdIQUgRfg5O8QFRa068amkoPiMzXnLUbwi7sHTHZpkBVVoLO9hUk/xek1yX6DApZ6V8gNy3lyIX8PpD7DjBQ5pfDQCC6r4PdDKLjy7hCXFJjkwCetDz0YlzXuaH3oqb7i1ZWCHUkYyDgqCIJUekG+OaXQvECn/1tt9eo9+EtAZoOz8gtDlee83e2kClwMviRCds55NnHc5SpAapxHI4M6u6zrgDfo=',
+      'MIICzzCCAbcCAQAwgYkxCzAJBgNVBAYTAklEMRQwEgYDVQQIDAtES0kgSmFrYXJ0YTEUMBIGA1UEBwwLREtJIEpha2FydGExEDAOBgNVBAoMB1NJQ0VQQVQxDjAMBgNVBAsMBXNmYXBpMQswCQYDVQQDDAI1OTEfMB0GCSqGSIb3DQEJARYQemFra3lAZGF0YW9uLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKXK1m11VDgs7wfm7NJEYysOy6FrS0zetNSf8hos2DEi2IZvxTW1gc32g4XZaqaZWFpBlAd2UNO35hRiojiVIUl9zAdJWFikC/PIx4r51htJqayPv74TsWyY+W294tGghaM9ZCpvj+NnFepuVfocq1vKnLH/GAa2O+A4X4nt2bYUxICn1Ml2FemIlSVJi0HcIN5bRc8Cgy1m2vw0GtzLSn4t828xlze3HZgvWo7JLUzht0RDsufpZ9Fc6K6j2JwJVDCgm+JmY6yqpi2c5iICKTUJ+mG9xbA+Vjks4A0+xkJRcfultYKrLWarhOUUd6mHwDIcsENzrHYwRWe01deitu0CAwEAAaAAMA0GCSqGSIb3DQEBCwUAA4IBAQBLRnQOBakC84WgBgi530WCSu/o3knGypisjM9DVTpSRgRXER2QcP+CtHqRZ1BXDR9mes2uldB7XvSbtUGB9IJV6dKiBl51pOPhSR6rRgZhSSfry5Ykulr1iix+2lfwAO5/nDBxzy7bltwitCO28zu2ZfOF3MV3ke/kPWs2NnN3iHMAH6jfIF/zj0xR/klOIKufiLSjVoANLvp8MfFs4yVuHBLy0odGCXKgsCNHWwlYclJkNRbCss+LzdBu4/6r1csgCJ6vZXlDGxzMO3P3B+ryfpJmsacCDCL2esyKJlxYj6tHdjcgmy3VsV6sy4pzx/I8Mo3LrSWH8RRBYb7spZAr',
   },
   korwil: {
     korwilRoleId: [38, 155],
-    smdRoleId: 117,
+    smdRoleId: 104,
     palkurRoleId: [40, 41],
     korwilHrdRoleId: 154,
   },
@@ -112,11 +131,17 @@ module.exports = {
   },
   mongodb: {
     sicepat:
-      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-staging-cluster.nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
+      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-tracking-cluster-nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
   },
   sendgrid: {
-    apiKeyId: 'le77jXQbS9K4wtbDwV4zwg',
+    apiKeyId: '03GtPFfkRzS6y47gfg23sQ',
     apiKey:
-      'SG.le77jXQbS9K4wtbDwV4zwg.Wt4-nTIvN4CZergYNnnrwT9AaX-ZCKz62KQD5e7n8ww',
+      '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',
+  },
+  svcOtp: {
+    baseUrl: 'http://api-internal.s.sicepat.io/authsvc',
+    otpRequiredUrl: 'https://sms-otp.s3.ap-southeast-1.amazonaws.com/otp_config.json',
+    isBypass: false,
+    bypassCode: "815413",
   },
 };

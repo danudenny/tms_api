@@ -14,6 +14,12 @@ import {
   TrackingBagRepresentativeDetailPayloadVm,
   TrackingBagRepresentativeDetailResponseVm,
   TrackingBagRepresentativeAwbDetailResponseVm,
+  LogActivityPayloadVm,
+  LogActivityResponseVm,
+  ImageProxyUrlVm,
+  ImageProxyUrlParamVm,
+  ImageProxyUrlResponseVm,
+  BagHistoryResponseVm,
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
@@ -23,6 +29,18 @@ import { PhotoResponseVm } from '../../../models/bag-order-detail-response.vm';
 import { createQueryBuilder } from 'typeorm';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { Branch } from '../../../../../shared/orm-entity/branch';
+import { ImgProxyHelper } from '../../../../../shared/helpers/imgproxy-helper'
+import { Awb } from '../../../../../shared/orm-entity/awb';
+import { LOGGER_ACTIVITY } from '../../../../../shared/constants/logger-activity.constant';
+import { RequestErrorService } from '../../../../../shared/services/request-error.service';
+import { HttpStatus } from '@nestjs/common';
+import { ActivityLogHelper } from '../../../../../shared/helpers/activity-log-helpers';
+import { ConfigService } from '../../../../../shared/services/config.service';
+import { PHOTO_TYPE } from '../../../../../shared/constants/photo-type.constant';
+import { DoPodDeliverAttachment } from '../../../../../shared/orm-entity/do_pod_deliver_attachment';
+import { DoPodReturnDetailService } from '../../master/do-pod-return-detail.service';
+import axiosist from 'axiosist';
+import axios from 'axios';
 
 export class V1WebTrackingService {
   static async awb(
@@ -42,7 +60,7 @@ export class V1WebTrackingService {
       result.branchName                = data.branchName;
       result.branchToName              = data.branchToName;
       result.consigneeName             = data.consigneeName;
-      result.consigneeAddress          = data.consigneeAddress;
+      result.consigneeAddress          = "-";
       result.customerName              = data.customerName;
       result.customerNameRds           = data.customerNameRds;
       result.packageTypeCode           = data.packageTypeCode;
@@ -55,7 +73,7 @@ export class V1WebTrackingService {
       result.isCod                     = data.isCod;
       result.totalWeightVolume         = data.totalWeightVolume;
       result.refResellerPhone          = data.refResellerPhone;
-      result.consigneePhone            = data.consigneePhone;
+      result.consigneePhone            = "-";
       result.refRepresentativeCode     = data.refRepresentativeCode;
       result.parcelValue               = data.parcelValue;
       result.partnerLogisticAwb        = data.partnerLogisticAwb;
@@ -75,13 +93,16 @@ export class V1WebTrackingService {
       if (history && history.length) {
         result.awbHistory = history;
       }
-      // TODO: partial load data
-      const transactionHistory = await this.getTransactionHistory(
-        data.awbItemId,
-        permissonPayload.branchId,
-      );
-      if (transactionHistory && transactionHistory.length) {
-        result.transactionHistory = transactionHistory;
+
+      if(data.isCod){
+        // TODO: partial load data
+        const transactionHistory = await this.getTransactionHistory(
+          data.awbItemId,
+          permissonPayload.branchId,
+        );
+        if (transactionHistory && transactionHistory.length) {
+          result.transactionHistory = transactionHistory;
+        }
       }
     }
     return result;
@@ -90,26 +111,39 @@ export class V1WebTrackingService {
   static async bag(
     payload: TrackingBagPayloadVm,
   ): Promise<TrackingBagResponseVm> {
-    const result = new TrackingBagResponseVm();
-    const data = await this.getRawBag(payload.bagNumber);
+    let data: TrackingBagResponseVm = null;
+    let isNewFormat = false;
+
+    // TODO: handle format bagNUmber
+    const regexNumber = /^[0-9]+$/;
+    if (regexNumber.test(payload.bagNumber.substring(7, 10))) {
+      const bagNumber: string = payload.bagNumber.substring(0, 7);
+      const seqNumber: number = Number(
+        payload.bagNumber.substring(7, 10),
+      );
+      data = await this.getRawBag(bagNumber, seqNumber);
+      if(!data){
+        isNewFormat = true;
+        data = await this.getRawBag(payload.bagNumber, 1);
+      }
+    } else {
+      // format Alphanumeric, default set seq = 1
+      isNewFormat = true;
+      data = await this.getRawBag(payload.bagNumber, 1);
+    }
+
     if (data) {
-      result.bagNumber         = data.bagNumber;
-      result.weight            = data.weight;
-      result.bagItemId         = data.bagItemId;
-      result.bagItemStatusId   = data.bagItemStatusId;
-      result.bagItemStatusName = data.bagItemStatusName;
-      result.branchCodeLast    = data.branchCodeLast;
-      result.branchNameLast    = data.branchNameLast;
-      result.branchCodeNext    = data.branchCodeNext;
-      result.branchNameNext    = data.branchNameNext;
-      result.representativeCode = data.representativeCode;
-      const history = await this.getRawBagHistory(data.bagItemId);
+      const finalBagNumber = isNewFormat ? data.bagNumber : data.bagNumber + data.bagSeq.toString().padStart(3, '0');
+      data.bagNumber = finalBagNumber;
+      const history = await this.getRawBagHistory(
+        data.bagItemId,
+      );
       if (history && history.length) {
-        result.bagHistory = history;
+        data.bagHistory = history;
       }
     }
 
-    return result;
+    return data;
   }
 
   // TODO: to be removed
@@ -184,6 +218,9 @@ export class V1WebTrackingService {
 
     const result = new PhotoResponseVm();
     result.data = await qq.getRawMany();
+    for(let i = 0; i < result.data.length; i++){
+      result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+    }
     return result;
   }
 
@@ -263,15 +300,89 @@ export class V1WebTrackingService {
     return result;
   }
 
+  static async getPhotoDetailV2(payload: ImageProxyUrlParamVm): Promise<ImageProxyUrlResponseVm>{
+    const result = new ImageProxyUrlResponseVm();
+    result.data = [];
+    if(PHOTO_TYPE.MANIFESTED == payload.photoType && payload.awbNumber){
+      const awbNumberSubstring = payload.awbNumber.substring(0, 7);
+      const imageUrl = `${ConfigService.get('cloudStorage.cloudResiUrl')}/${awbNumberSubstring}/${payload.awbNumber}.jpg`;
+      let imageResp;
+      try{
+        imageResp = await axios.get(imageUrl);
+      } catch(err) {
+        if(err.response){
+          console.log('::::: GAMBAR TIDAK TERSEDIA :::::');
+          console.log(`::::: ERROR_CODE ::::: ${err.response.status}, ::::: ERROR_TEXT ::::: ${err.response.statusText}`);
+        }
+      }
+
+      if(imageResp && imageResp.data){
+        const resultManifestPhoto = new ImageProxyUrlVm();
+          resultManifestPhoto.url = ImgProxyHelper.sicepatProxyUrl(imageUrl);
+          resultManifestPhoto.awbNumber = payload.awbNumber;
+          resultManifestPhoto.type = 'manifested';
+          result.data = [resultManifestPhoto];
+        return result;
+      }
+    }
+
+    if(PHOTO_TYPE.RETURN == payload.photoType){
+      result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodId, payload.attachmentType);
+      for(let i = 0; i < result.data.length; i++){
+        result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+      }
+      return result;
+    }
+
+    if(PHOTO_TYPE.DELIVER == payload.photoType){
+      result.data = await this.photoDetails(payload.doPodId, payload.attachmentType);
+      for(let i = 0; i < result.data.length; i++){
+        result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+      }
+      return result;
+    }
+    return result;
+  }
+
+  private static async photoDetails(
+    doPodDeliverDetailId: string,
+    attachmentType: string,
+    ):Promise<any>{
+    const repo = new OrionRepositoryService(DoPodDeliverAttachment, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      ['t1.type', 'type'],
+      ['t3.url', 'url'],
+      ['t2.awb_number', 'awbNumber'],
+    );
+
+    q.innerJoin(e => e.doPodDeliverDetail, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.innerJoin(e => e.attachment, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.doPodDeliverDetail.doPodDeliverDetailId, w => w.equals(doPodDeliverDetailId));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    if (attachmentType) {
+      q.andWhere(e => e.type, w => w.equals(attachmentType));
+    }
+    q.orderBy({createdTime:'DESC'});
+    q.take(3); // only get 3 data file (photo, signature, photoCod)
+
+    return await q.exec();
+  }
+
   // private method
   private static async getRawAwb(awbNumber: string): Promise<any> {
     const query = `
       SELECT
         ai.awb_item_id as "awbItemId",
-        a.total_item as "totalItem",
         a.awb_number as "awbNumber",
-        a.user_id as "userId",
-        e.fullname as "employeeName",
         a.total_sell_price as "totalSellPrice",
         a.total_weight::numeric(10, 2) as "totalWeightFinal",
         a.total_weight_real_rounded::numeric(10, 2) as "totalWeightFinalRounded",
@@ -280,15 +391,12 @@ export class V1WebTrackingService {
         CONCAT(ca.customer_account_code, ' - ',ca.customer_account_name) as "customerName",
         COALESCE(a.ref_prev_customer_account_id, '') as "customerNameRds",
         COALESCE(a.consignee_name, dpd.consignee_name, '') as "consigneeName",
-        COALESCE(a.consignee_address, '') as "consigneeAddress",
         a.awb_date as "awbDate",
         a.is_cod as "isCod",
         a.ref_reseller_phone as "refResellerPhone",
         a.total_weight_volume as "totalWeightVolume",
-        a.consignee_phone as "consigneePhone",
         a.ref_representative_code as "refRepresentativeCode",
         ast.awb_status_name as "awbStatusLast",
-        a.history_date_last as "historyDateLast",
         prd.parcel_value as "parcelValue",
         COALESCE(pt.package_type_code, '') as "packageTypeCode",
         COALESCE(pt.package_type_name, '') as "packageTypeName",
@@ -304,9 +412,7 @@ export class V1WebTrackingService {
         COALESCE(ar.partner_logistic_awb, '') as "partnerLogisticAwb",
         COALESCE(ar.partner_logistic_name, '') as "partnerLogisticName",
         a.total_cod_value as "totalCodValue",
-        CONCAT(ba.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber",
-        COALESCE(bg.bagging_code, '') as "baggingCode",
-        COALESCE(s.smu_code, '') as "smuCode",
+        SUBSTR(CONCAT(ba.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10) as "bagNumber",
         dpd.do_pod_deliver_detail_id as "doPodDeliverDetailId",
         dprd.do_pod_return_detail_id as "doPodReturnDetailId",
         COALESCE(ai.doreturn_new_awb, ai.doreturn_new_awb_3pl) as "doReturnAwb",
@@ -321,8 +427,6 @@ export class V1WebTrackingService {
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
         LEFT JOIN customer_account ca ON ca.customer_account_id = a.customer_account_id
         LEFT JOIN branch b ON b.branch_id = a.branch_id
-        LEFT JOIN users u on a.user_id = u.user_id
-        LEFT JOIN employee e on u.employee_id = e.employee_id
         LEFT JOIN pickup_request_detail prd ON ai.awb_item_id = prd.awb_item_id
         LEFT JOIN district df ON df.district_id = a.from_id AND a.from_type = 40
         LEFT JOIN district dt ON dt.district_id = a.to_id AND a.to_type = 40
@@ -333,8 +437,6 @@ export class V1WebTrackingService {
         LEFT JOIN payment_method p ON p.payment_method_id = a.payment_method_id
         LEFT JOIN bag_item bi ON bi.bag_item_id = ai.bag_item_id_last AND bi.is_deleted = false
         LEFT JOIN bag ba ON ba.bag_id = bi.bag_id AND ba.is_deleted = false
-        LEFT JOIN bagging bg ON bg.bagging_id = bi.bagging_id_last AND bg.is_deleted = false
-        LEFT JOIN smu s ON s.smu_id = bg.smu_id_last AND s.is_deleted = false
         LEFT JOIN do_pod_deliver_detail dpd ON dpd.awb_id = a.awb_id
           AND dpd.awb_status_id_last <> 14000 AND dpd.is_deleted = false
         LEFT JOIN do_pod_return_detail dprd ON dprd.awb_id = a.awb_id
@@ -422,7 +524,7 @@ export class V1WebTrackingService {
     return rawData ? rawData[0] : null;
   }
 
- private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<TrackingBagRepresentativeAwbDetailResponseVm[]> {
+private static async getRawBagRepresentativeDetail(bagRepresentativeId: number): Promise<TrackingBagRepresentativeAwbDetailResponseVm[]> {
     const query = `
       SELECT
         bri.ref_awb_number AS "awbNumber",
@@ -464,41 +566,35 @@ export class V1WebTrackingService {
     return await RawQueryService.queryWithParams(query, { bagRepresentativeId });
   }
 
-  private static async getRawBag(bagNumberSeq: string): Promise<any> {
-    const regexNumber = /^[0-9]+$/;
-    if (regexNumber.test(bagNumberSeq.substring(7, 10))) {
-      const bagNumber: string = bagNumberSeq.substring(0, 7);
-      const seqNumber: number = Number(bagNumberSeq.substring(7, 10));
-      const query = `
-        SELECT
-          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as "bagNumber",
-          bi.weight::numeric(10,2) as weight,
-          bi.bag_item_id as "bagItemId",
-          bis.bag_item_status_id as "bagItemStatusId",
-          bis.bag_item_status_name as "bagItemStatusName",
-          blast.branch_code as "branchCodeLast",
-          blast.branch_name as "branchNameLast",
-          bto.branch_code as "branchCodeNext",
-          bto.branch_name as "branchNameNext",
-          b.ref_representative_code as "representativeCode"
-        FROM bag b
-        INNER JOIN bag_item bi ON b.bag_id = bi.bag_id AND bi.is_deleted = false
-        LEFT JOIN bag_item_status bis ON bi.bag_item_status_id_last = bis.bag_item_status_id AND bis.is_deleted = false
-        LEFT JOIN branch blast ON bi.branch_id_last = blast.branch_id AND blast.is_deleted = false
-        LEFT JOIN branch bto ON bi.branch_id_next = bto.branch_id AND bto.is_deleted = false
-        WHERE b.bag_number = :bagNumber AND bi.bag_seq = :seqNumber LIMIT 1
-      `;
-      const rawData = await RawQueryService.queryWithParams(query, {
-        bagNumber,
-        seqNumber,
-      });
-      return rawData ? rawData[0] : null;
-    } else {
-      return null;
-    }
+  private static async getRawBag(bagNumber: string, seqNumber: number): Promise<TrackingBagResponseVm> {
+    const query = `
+      SELECT
+        b.bag_number as "bagNumber",
+        bi.bag_seq as "bagSeq",
+        bi.weight::numeric(10,2) as weight,
+        bi.bag_item_id as "bagItemId",
+        bis.bag_item_status_id as "bagItemStatusId",
+        bis.bag_item_status_name as "bagItemStatusName",
+        blast.branch_code as "branchCodeLast",
+        blast.branch_name as "branchNameLast",
+        bto.branch_code as "branchCodeNext",
+        bto.branch_name as "branchNameNext",
+        b.ref_representative_code as "representativeCode"
+      FROM bag b
+      INNER JOIN bag_item bi ON b.bag_id = bi.bag_id AND bi.is_deleted = false
+      LEFT JOIN bag_item_status bis ON bi.bag_item_status_id_last = bis.bag_item_status_id AND bis.is_deleted = false
+      LEFT JOIN branch blast ON bi.branch_id_last = blast.branch_id AND blast.is_deleted = false
+      LEFT JOIN branch bto ON bi.branch_id_next = bto.branch_id AND bto.is_deleted = false
+      WHERE b.bag_number = :bagNumber AND bi.bag_seq = :seqNumber LIMIT 1
+    `;
+    const rawData = await RawQueryService.queryWithParams(query, {
+      bagNumber,
+      seqNumber,
+    });
+    return rawData ? rawData[0] : null;
   }
 
-  private static async getRawBagHistory(bagItemId: number): Promise<any> {
+  private static async getRawBagHistory(bagItemId: number): Promise<BagHistoryResponseVm[]> {
     const query = `
       SELECT
         bh.bag_item_history_id,
@@ -578,4 +674,50 @@ export class V1WebTrackingService {
     return await qb.getRawMany();
   }
 
+  public static async awbDetail(
+    payload: LogActivityPayloadVm,
+  ): Promise<LogActivityResponseVm> {
+    const authMeta = AuthService.getAuthMetadata();
+    const ipAddress: string = AuthService.getRequestIP();
+
+    const awbDetail = await Awb.findOne({
+      where: {
+        awbNumber: payload.awb_number,
+        isDeleted: false,
+      },
+    });
+
+    const result = new LogActivityResponseVm();
+    result.key = payload.key;
+
+    switch (payload.key) {
+      case LOGGER_ACTIVITY.HANDPHONE:
+        result.value = awbDetail.consigneeNumber ? awbDetail.consigneeNumber : "-";
+        break;
+      case LOGGER_ACTIVITY.ADDRESS:
+        result.value = awbDetail.consigneeAddress ? awbDetail.consigneeAddress : "-";
+        break;
+      default:
+        RequestErrorService.throwObj(
+          {
+            message: 'Invalid Payload',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+    }
+
+    await ActivityLogHelper.logActivityWithPayload(
+      {
+        ip: ipAddress,
+        awb_number: payload.awb_number,
+        source: "pod",
+        type: payload.type,
+        user_id: authMeta.userId.toString(),
+        value: result.value,
+        key: result.key,
+      }
+    );
+
+    return result;
+  }
 }

@@ -82,17 +82,8 @@ export class WebDeliveryVm {
   @ApiModelProperty()
   employeeId: number;
 
-  // @ApiModelProperty()
-  // employeeName: string;
-
-  // @ApiModelProperty()
-  // awbId: number;
-
   @ApiModelPropertyOptional()
   awbItemId: number;
-
-  // @ApiModelProperty({ format: 'date-time' })
-  // awbDate: string;
 
   @ApiModelProperty()
   awbNumber: string;
@@ -100,29 +91,8 @@ export class WebDeliveryVm {
   @ApiModelProperty()
   awbStatusId: number;
 
-  // @ApiModelProperty()
-  // awbStatusName: string;
-
-  // @ApiModelProperty()
-  // merchant: string;
-
-  // @ApiModelProperty()
-  // consigneeName: string;
-
   @ApiModelProperty()
   consigneeNameNote: string;
-
-  // @ApiModelProperty()
-  // consigneeAddress: string;
-
-  // @ApiModelProperty()
-  // consigneeNote: string;
-
-  // @ApiModelProperty()
-  // consigneeNumber: string;
-
-  // @ApiModelProperty()
-  // packageTypeName: string;
 
   @ApiModelProperty()
   reasonId: number;
@@ -130,6 +100,8 @@ export class WebDeliveryVm {
   @ApiModelProperty()
   reasonNotes: string;
 
+  @ApiModelProperty()
+  totalCodValue: number;
 }
 
 export class WebAwbDeliverSyncPayloadVm {

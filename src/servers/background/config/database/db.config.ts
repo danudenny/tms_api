@@ -9,6 +9,8 @@ export abstract class DatabaseConfig {
 
   private static masterDataDbPool: Pool;
 
+  private static superAppRedShiftDbPool: Pool;
+
   private static podDbConnectionString = {
     user: 'spartan',
     password: '5pArtAaAn116688_6969_',
@@ -63,7 +65,7 @@ export abstract class DatabaseConfig {
   private static mysqlDbConnectionString = {
     user: 'rudydarw_damar',
     password: 'Rudybosnyasicepat168168',
-    host: 'sicepatrds-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+    host: 'sicepatrds.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
     database: 'rudydarw_sicepat',
     connectionTimeout: 12000000, // 2 minutes,
     requestTimeout: 12000000,
@@ -83,11 +85,11 @@ export abstract class DatabaseConfig {
   public static getMasterDataDbPool() {
     if (!this.masterDataDbPool) {
       this.masterDataDbPool = new Pool({
-        host: 'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+        host: 'pgpool-masterdata-staging-f2fb677d6129b4e5.elb.ap-southeast-1.amazonaws.com',
         port: 5432,
-        database: 'sicepatmasterdatastaging2',
-        user: 'sicepatstaging',
-        password: 's1c3p4T$t46Ingb05$sQu',
+        database: 'sicepatmasterdata',
+        user: 'pgpoolmasterdata',
+        password: 'ODaOfxF3phfosjZcK340',
         max: 20,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 30000,
@@ -95,6 +97,23 @@ export abstract class DatabaseConfig {
     }
 
     return this.masterDataDbPool;
+  }
+
+  public static getSuperAppRedShiftDbPool() {
+    if (!this.superAppRedShiftDbPool) {
+      this.superAppRedShiftDbPool = new Pool({
+        host: 'sicepat-staging.ch5gz4gtufds.ap-southeast-1.redshift.amazonaws.com',
+        port: 5439,
+        database: 'sicepatdata',
+        user: 'user_superapps',
+        password: '3SkxnUolwjgt5coSvPti3gSDXQV+hkT8E9NO9U0xKRU=',
+        schema: 'superapps',
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 30000,
+      });
+    }
+    return this.superAppRedShiftDbPool;
   }
 
 }

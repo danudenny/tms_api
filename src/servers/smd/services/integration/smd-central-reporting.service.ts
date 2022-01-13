@@ -68,6 +68,8 @@ export class SmdCentralReportingService {
       switch (type) {
         case 'smd_tiba' :
           encodeQuery = await this.querySmdTiba(payload); break;
+        case 'monitoring_smd' :
+          encodeQuery = await this.queryMonitoringSmd(payload); break;
         case 'smd_berangkat' :
           encodeQuery = await this.querySmdBerangkat(payload); break;
         case 'smd_vendor' :
@@ -84,6 +86,13 @@ export class SmdCentralReportingService {
         branchName = 'Semua_Perwakilan';
         if (payload.representativeCode != '') {
           branchName = await this.getRepresentative(payload.representativeCode);
+        }
+      } else if (type === 'monitoring_smd') {
+        branchName = 'Semua_Surat_Jalan';
+        if (payload.isIntercity == 1) {
+          branchName = 'Surat_Jalan_Dalam_Kota';
+        } else if (payload.isIntercity == 2) {
+          branchName = 'Surat_Jalan_Darat';
         }
       } else {
         if (payload.branchId != null && payload.branchId != 0) {
@@ -299,6 +308,73 @@ ORDER BY t1.created_time DESC`;
     return Buffer.from(query).toString('base64');
   }
 
+  static async queryMonitoringSmd(payload) {
+    let query = `SELECT \n 
+    ds.do_smd_code AS nomor_smd, \n
+  ds.departure_date_time AS tanggal_berangkat, \n
+  ds.do_smd_intercity AS surat_sj, \n
+  ds.transit_date_time AS tanggal_transit, \n
+  ds.arrival_date_time AS tanggal_tiba, \n
+  ds.vehicle_number AS nomor_polisi, \n
+  ds.vehicle_name AS type_kendaraan, \n
+  ds.employee_driver_name AS nama_driver, \n
+  ds.trip AS trip, \n 
+  ds.smd_trip AS rute, \n
+  ds.branch_name_from AS hub_asal, \n
+  ds.branch_name_to AS hub_tujuan, \n
+  ds.seal_number_last AS nomor_segel, \n
+  ds.total_colly AS total_colly, \n
+  COALESCE(ds.total_weight::integer, 0) AS aktual_berat, \n
+  COALESCE(ds.vehicle_capacity::integer, 0) AS kapasitas, \n
+  COALESCE((total_weight / vehicle_capacity::integer) * 100, 0.00) AS load \n  
+    FROM ( \n
+    SELECT ds.trip AS trip, \n 
+    ds.do_smd_code, \n
+    ds.is_intercity AS is_intercity, \n
+    CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END AS do_smd_intercity, \n 
+    bf.branch_name AS branch_name_from, \n 
+    ds.branch_to_name_list AS branch_name_to, \n 
+    dsv.vehicle_number AS vehicle_number, \n
+    v.vehicle_name AS vehicle_name, \n
+    ds.seal_number_last AS seal_number_last, \n 
+    'T' || ds.counter_trip AS smd_trip, \n
+    e.fullname AS employee_driver_name, \n
+    ( \n
+        select \n
+            sum(bi.weight) \n
+        from do_smd_detail dsd \n
+        inner join do_smd_detail_item dsdi on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsdi.is_deleted = false \n
+        left join bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = false \n
+        where dsd.do_smd_id = ds.do_smd_id \n
+        group by dsd.do_smd_id \n
+    ) AS total_weight, \n
+    ds.total_item AS total_colly, \n 
+    v.vehicle_capacity AS vehicle_capacity, \n 
+    ds.departure_date_time AS departure_date_time, \n 
+    ds.transit_date_time AS transit_date_time, \n
+    ds.arrival_date_time AS arrival_date_time \n
+  FROM public.do_smd ds \n
+  INNER JOIN public.do_smd_vehicle dsv ON ds.vehicle_id_last = dsv.do_smd_vehicle_id and dsv.is_deleted = false \n   
+  LEFT JOIN public.branch bf ON ds.branch_id = bf.branch_id and bf.is_deleted = false \n 
+  LEFT JOIN public.vehicle v ON dsv.vehicle_number = v.vehicle_number and v.is_deleted = false \n   
+  LEFT JOIN public.employee e ON dsv.employee_id_driver = e.employee_id and e.is_deleted = false \n
+  WHERE ( \n
+    ds.departure_date_time >= '${moment(payload.startDate).format('YYYY-MM-DD 00:00:00')}' \n 
+    AND ds.departure_date_time < '${moment(payload.endDate).format('YYYY-MM-DD 00:00:00')}' \n
+    ) 
+    AND ds.is_vendor = false \n
+    AND ds.is_deleted = false \n
+    ) ds \n`;
+    if (payload.isIntercity == 1) {
+      query = query + `WHERE (ds.is_intercity = 1) \n`;
+    } else if (payload.isIntercity == 2) {
+      query = query + `WHERE (ds.is_intercity != 1) \n`;
+    }
+    query = query + `ORDER BY ds.departure_date_time DESC`;
+    console.log('query', query);
+    return Buffer.from(query).toString('base64');
+  }
+
   static async listQueueRequest(params: ListQueueRequestParamPayloadVm): Promise<any> {
     const url = `${this.baseUrlInternal}/v1/reporting/report`;
     const offset = Number(params.page - 1) * Number(params.limit);
@@ -323,9 +399,9 @@ ORDER BY t1.created_time DESC`;
         if (splitFilename[1]) {
           const splitVendor = splitFilename[1].split('_vendor_');
           if (splitVendor.length > 0) {
-            branch_name = splitVendor[0].replace('_', ' ');
+            branch_name = splitVendor[0].replace(/_/g, ' ');
             if (splitVendor[1]) {
-              vendor_name = splitVendor[1].replace('_', ' ');
+              vendor_name = splitVendor[1].replace(/_/g, ' ');
             }
           }
         }

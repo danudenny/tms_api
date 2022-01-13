@@ -9,7 +9,6 @@ import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
 import { DoPodDetailBag } from '../../../../../shared/orm-entity/do-pod-detail-bag';
 import { DoPodRepository } from '../../../../../shared/orm-repository/do-pod.repository';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { AwbTroubleService } from '../../../../../shared/services/awb-trouble.service';
 import { BagTroubleService } from '../../../../../shared/services/bag-trouble.service';
 import { CustomCounterCode } from '../../../../../shared/services/custom-counter-code.service';
 import { DeliveryService } from '../../../../../shared/services/delivery.service';
@@ -128,7 +127,7 @@ export class FirstMileDeliveryOutService {
       where: {
         branchId: payload.branchIdTo,
         isDeleted : false,
-        isActive : true
+        isActive : true,
       },
     });
 
@@ -463,7 +462,7 @@ export class FirstMileDeliveryOutService {
       // lock: { mode: 'pessimistic_write' },
     });
 
-    if(!doPod){
+    if (!doPod) {
       throw new BadRequestException('Surat Jalan tidak valid!');
     }
 
@@ -493,18 +492,6 @@ export class FirstMileDeliveryOutService {
             // NOTE: check resi cancel delivery
             const isCancel = await AwbService.isCancelDelivery(awb.awbItemId);
             if (!isCancel) {
-              const statusCode = await AwbService.awbStatusGroup(
-                awb.awbStatusIdLast,
-              );
-              // save data to awb_trouble
-              if (statusCode != 'IN') {
-                const branchName = awb.branchLast ? awb.branchLast.branchName : '';
-                await AwbTroubleService.fromScanOut(
-                  awbNumber,
-                  branchName,
-                  awb.awbStatusIdLast,
-                );
-              }
 
               // NOTE: create data do pod detail per awb number
               const doPodDetail = DoPodDetail.create();
@@ -580,7 +567,7 @@ export class FirstMileDeliveryOutService {
     } // end of loop
 
     await getManager().transaction(async transactional => {
-      if(totalSuccess > 0 && doPodDetailArr.length > 0){
+      if (totalSuccess > 0 && doPodDetailArr.length > 0) {
         await transactional.insert(DoPodDetail, doPodDetailArr);
         // TODO: need improvement
         if (doPod) {
@@ -602,7 +589,7 @@ export class FirstMileDeliveryOutService {
       }
     });
 
-    for(const item of paramsBull){
+    for (const item of paramsBull) {
       DoPodDetailPostMetaQueueService.createJobByScanOutAwbBranch(
         item.awbItemId,
         item.awbStatus,
