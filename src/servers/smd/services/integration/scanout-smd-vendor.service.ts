@@ -582,10 +582,12 @@ export class ScanoutSmdVendorService {
         FROM bag_representative br
         INNER JOIN representative  r on br.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         WHERE
-          br.bag_representative_code = '${payload.item_number}' AND
+          br.bag_representative_code = :bagRepresentativeNumber AND
           br.is_deleted = FALSE;
       `;
-    const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
+      const resultDataBagRepresentative = await RawQueryService.queryWithParams(rawQuery, {
+        bagRepresentativeNumber : payload.item_number,
+      });
 
     const resultDoSmd = await DoSmd.findOne({
       where: {
