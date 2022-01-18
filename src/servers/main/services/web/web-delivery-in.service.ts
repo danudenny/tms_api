@@ -489,6 +489,19 @@ export class WebDeliveryInService {
       },
     ];
 
+    let validPayload = false;
+    for (let data of payload.filters) {
+      if (data.field == 'podScanInBranchId') {
+        if (data.value) {
+          validPayload = true;
+        }
+      }
+    }
+
+    if (!validPayload) {
+      throw new BadRequestException("payload invalid");
+    }
+
     const repo = new OrionRepositoryService(PodScanInBranchDetail, 't1');
     const q = repo.findAllRaw();
 
