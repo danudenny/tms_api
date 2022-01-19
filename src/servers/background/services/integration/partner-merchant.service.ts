@@ -88,7 +88,7 @@ export class PartnerMerchantService {
         pr.merchant_code, pr.pickup_request_name, MD5(pr.pickup_request_address), pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned
       ))
     `;
-    let endpid = pid + 5000;
+    let endpid = Number(pid) + 5000;
     let where = `
       and w.work_order_id > :pid
       and w.work_order_id <= :endpid
