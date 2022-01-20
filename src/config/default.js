@@ -143,5 +143,6 @@ module.exports = {
     otpRequiredUrl: 'https://sms-otp.s3.ap-southeast-1.amazonaws.com/otp_config.json',
     isBypass: false,
     bypassCode: "815413",
+    checkingConfig: true,
   },
 };
