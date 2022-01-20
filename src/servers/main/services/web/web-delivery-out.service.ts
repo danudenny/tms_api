@@ -1011,6 +1011,16 @@ export class WebDeliveryOutService {
       payload.sortBy = 'doPodDateTime';
     }
 
+    let timeFrom = null;
+    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
+    for (let data of payload.filters) {
+      if (data.field == 'createdTime') {
+        if (data.operator == 'gte') {
+          timeFrom = data.value;
+        }
+      }
+    }
+
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
       {
@@ -1055,8 +1065,11 @@ export class WebDeliveryOutService {
       `, 'partnerLogisticName'],
     );
 
-    q.innerJoin(e => e.doPodDetails, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    q.innerJoin(e => e.doPodDetails, 't4', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
+      j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
+      j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
+    }
     );
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -1074,7 +1087,7 @@ export class WebDeliveryOutService {
     q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
-    q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name, t2.nik, t6.branch_id, t6.branch_name');
+    q.groupByRaw('t1.do_pod_id, t3.branch_name, t5.partner_logistic_name, t2.employee_id, t6.branch_id');
     const data = await q.exec();
     const total = 0;
 
