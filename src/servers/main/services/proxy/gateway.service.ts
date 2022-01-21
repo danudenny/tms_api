@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '../../../../shared/services/config.service';
 import axios, { AxiosRequestConfig } from 'axios';
+import { AuthService } from '../../../../shared/services/auth.service';
 
 @Injectable()
 export class GatewayService {
@@ -19,11 +20,11 @@ export class GatewayService {
       timeout: this.config.apiTimeoutMs,
     };
 
-    options.url = this.config.apiGatewayBaseUrl + req.url.replace('/pod-proxy', '');
-    options.headers["api-key"] = this.config.apiKey;
+    options.url = this.config.apiInternalBaseUrl + this.getDestination(req.url);
 
-    // remove host for api gateway purpose
-    delete options.headers["host"];
+    const authMeta = AuthService.getAuthMetadata();
+    options.headers['x-user-id'] = authMeta.userId.toString();
+    options.headers['x-channel-id'] = authMeta.clientId.toString();
 
     return axios.request(options)
       .then(function(response) {
@@ -43,5 +44,21 @@ export class GatewayService {
         }
         throw new BadRequestException(err.stack);
       });
+  }
+
+  private getDestination(path: string) {
+    let destPath;
+    const url = path.replace('/pod-proxy', '');
+    const service = url.split('/')[1];
+
+    const cfg = this.config.allowedService[service];
+
+    if (!cfg) {
+      throw new BadRequestException('Unforwardable request');
+    }
+
+    destPath = cfg.destination + url.replace(cfg.service, '');
+
+    return destPath;
   }
 }

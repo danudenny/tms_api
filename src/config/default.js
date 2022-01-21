@@ -115,9 +115,16 @@ module.exports = {
   },
   proxy: {
     notification: 'https://swagger.s.sicepat.tech/operation/pod-notification',
-    apiGatewayBaseUrl: 'https://api.s.sicepat.io',
-    apiKey: 'E64J6jat8EGhRLEA6e25KR74itvqpy9YoWW4z7yJ9b7A',
+    apiInternalBaseUrl: 'http://api-internal.s.sicepat.io',
     apiTimeoutMs: 15000,
+    allowedService: {
+      "pod-notification": {
+        destination: "/operation/pod-notification"
+      },
+      "pod-punishment": {
+        destination: "/operation/pod-punishment"
+      }
+    }
   },
   korwil: {
     korwilRoleId: [38, 155],
