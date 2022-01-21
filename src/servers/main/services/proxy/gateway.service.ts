@@ -57,7 +57,8 @@ export class GatewayService {
       throw new BadRequestException('Unforwardable request');
     }
 
-    destPath = cfg.destination + url.replace(cfg.service, '');
+    const replaceService = '/' + service;
+    destPath = cfg.destination + url.replace(replaceService, '');
 
     return destPath;
   }
