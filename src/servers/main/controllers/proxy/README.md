@@ -15,7 +15,7 @@ format:
 ###**Example:**
 
 ```
-{pod_base_url}/pod-proxy/pod-punishment/v1/categories
+{pod_base_url}/pod-proxy/pod-punishment/pod-punishment/v1/categories
 ```
 
 above request will redirect to api internal with this url:
