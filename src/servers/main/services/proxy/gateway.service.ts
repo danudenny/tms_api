@@ -25,6 +25,7 @@ export class GatewayService {
     const authMeta = AuthService.getAuthMetadata();
     options.headers['x-user-id'] = authMeta.userId.toString();
     options.headers['x-channel-id'] = authMeta.clientId.toString();
+    delete options.headers['host'];
 
     return axios.request(options)
       .then(function(response) {
