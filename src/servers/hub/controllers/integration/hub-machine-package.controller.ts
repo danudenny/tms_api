@@ -23,17 +23,37 @@ export class HubMachinePackageController {
   @ApiOkResponse({ type: MachinePackageResponseVm })
   public async checkSpk(@Body() payload: PackageMachinePayloadVm) {
     const hashObj = {
-      // sorting_branch_id: payload.sorting_branch_id,
-      // reference_numbers: payload.reference_numbers,
       tag_seal_number: payload.tag_seal_number,
-      // chute_number: payload.chute_number,
     };
 
     const h = hash(hashObj);
     const cacheKey = `cache:sorting-machine:push-payload:${h}`;
     const data = await RedisService.get(cacheKey, true);
-    if (data) { return data; }
-
-    return await HubMachineService.processMachineBagging(payload, cacheKey);
+    if (data) {
+      return data;
+    }
+    const api = 'seal';
+    return await HubMachineService.processMachineBagging(payload, cacheKey, api);
   }
+
+  // @Post('packages-non-seal')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiImplicitHeader({ name: 'x-api-key' })
+  // @UseGuards(AuthXAPIKeyGuard)
+  // @ApiOkResponse({ type: MachinePackageResponseVm })
+  // public async packages(@Body() payload: PackageMachinePayloadNonSealVm) {
+  //   const hashObj = {
+  //     sorting_branch_id: payload.sorting_branch_id,
+  //     reference_numbers: payload.reference_numbers,
+  //   };
+  //
+  //   const h = hash(hashObj);
+  //   const cacheKey = `cache:sorting-machine:push-payload-non-seal:${h}`;
+  //   const data = await RedisService.get(cacheKey, true);
+  //   if (data) {
+  //     return data;
+  //   }
+  //   const api = 'non-seal';
+  //   return await HubMachineService.processMachineBagging(payload, cacheKey, api);
+  // }
 }
