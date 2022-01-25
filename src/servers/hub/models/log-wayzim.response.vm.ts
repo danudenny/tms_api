@@ -54,7 +54,6 @@ export class LogwayzimPayloadVm {
   @ApiModelProperty({
     example: 1234,
   })
-  @IsDefined({ message: 'branch_id_lastmile tidak boleh kosong' })
   branch_id_lastmile?: number;
 }
 
