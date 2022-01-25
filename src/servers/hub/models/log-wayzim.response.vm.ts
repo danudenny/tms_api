@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
 import { IsDefined, IsNotEmpty } from 'class-validator';
 
 export class LogwayzimPayloadVm {
@@ -51,7 +51,7 @@ export class LogwayzimPayloadVm {
   })
   scan_date?: string;
 
-  @ApiModelProperty({
+  @ApiModelPropertyOptional({
     example: 1234,
   })
   branch_id_lastmile?: number;
