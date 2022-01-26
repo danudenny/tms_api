@@ -53,7 +53,7 @@ module.exports = {
     exportHandoverSigesitMeta: {
       repeat: '0 10 * * *',
       emailTo: 'yonna@e.sicepat.com',
-      emailCC: ['ajengaulia937@gmail.com', 'yudha.perwira@sicepat.com', 'Rudian.Syahreza@e.sicepat.com', 'Ali.Shodikin@e.sicepat.com', 'Ahmad.Fikri@e.sicepat.com', 'Jualian_Sa@sicepat.com', 'beben@sicepat.com', 'barizana.arifin@sicepat.com', 'noviaratu@e.sicepat.com', 'tedysicepat@gmail.com'],
+      emailCC: ['ajengaulia937@gmail.com', 'yudha.perwira@sicepat.com', 'Rudian.Syahreza@e.sicepat.com', 'Ali.Shodikin@e.sicepat.com', 'Ahmad.Fikri@e.sicepat.com', 'Jualian_Sa@sicepat.com', 'beben@sicepat.com', 'barizana.arifin@sicepat.com', 'noviaratu@e.sicepat.com', 'tedysicepat@gmail.com', 'ido.tony@sicepat.com', 'galih.nugraha@sicepat.com', 'elva.deliyanin@sicepat.com', 'meisa.ewita@sicepat.com', 'Rajiebadilfi@sicepat.com', 'taufik.prihatin@sicepat.com'],
     },
   },
   clearCacheTMS: {
