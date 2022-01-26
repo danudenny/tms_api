@@ -54,7 +54,7 @@ export class HubMachineSortirService {
     const ArrChute = [];
     let paramBranchIdLastmile: number = null;
     let paramChute;
-    let cod_biaya;
+    let cod_nilai;
     let tujuan;
 
     const dateNow = moment().toDate();
@@ -72,6 +72,7 @@ export class HubMachineSortirService {
     const rawQueryAwb = `
       SELECT
         codbiaya,
+        codnilai,
         tujuan,
         berat
       FROM temp_stt
@@ -83,10 +84,11 @@ export class HubMachineSortirService {
     if (resultDataAwb.length > 0 ) {
       for (let a = 0; a < resultDataAwb.length; a++) {
         tujuan = resultDataAwb[a].tujuan;
-        cod_biaya = resultDataAwb[a].codbiaya;
+        // cod_biaya = resultDataAwb[a].codbiaya;
+        cod_nilai = resultDataAwb[a].codnilai;
       }
 
-      if( cod_biaya > 0) {
+      if(cod_nilai > 0) {
         is_cod = true;
       } else {
         is_cod = false;
