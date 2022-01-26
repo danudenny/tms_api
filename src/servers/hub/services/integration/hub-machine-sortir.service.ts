@@ -133,6 +133,7 @@ export class HubMachineSortirService {
       // Cek District ID
       let resultDistrict = await District.findOne({
         districtCode: tujuan,
+        isDeleted: false,
       });
       if (!resultDistrict) {
         data.push({
