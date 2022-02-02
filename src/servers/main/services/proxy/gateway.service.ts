@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Response } from 'express';
 import { ConfigService } from '../../../../shared/services/config.service';
 import axios, { AxiosRequestConfig } from 'axios';
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -12,7 +13,7 @@ export class GatewayService {
     this.config = ConfigService.get('proxy');
   }
 
-  public async routeRequest(req: any) {
+  public async routeRequest(req: any, resp: Response) {
     const options: AxiosRequestConfig = {
       method: req.method,
       headers: req.headers,
@@ -27,9 +28,27 @@ export class GatewayService {
     options.headers['x-channel-id'] = authMeta.clientId.toString();
     delete options.headers['host'];
 
+    if (options.url.includes('export')) {
+      options.responseType = 'stream';
+    }
+
     return axios.request(options)
       .then(function(response) {
-        return response.data;
+        let isCD = false;
+        for (const key in response.headers) {
+          if (key != 'transfer-encoding') {
+            resp.setHeader(key, response.headers[key]);
+          }
+          if (key == 'content-disposition') {
+            isCD = true;
+          }
+        }
+        resp.status(response.status);
+        if (!isCD) {
+          resp.send(response.data);
+        } else {
+          response.data.pipe(resp);
+        }
       })
       .catch(function(err) {
         console.log('[Pod-Proxy-Gateway] error api ',

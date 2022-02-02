@@ -8,8 +8,9 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  UseGuards, Post, Patch, Delete, Request, Put,
+  UseGuards, Post, Patch, Delete, Request, Put, Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { NotificationProxyService } from '../../services/proxy/notification.service';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { GatewayService } from '../../services/proxy/gateway.service';
@@ -59,35 +60,35 @@ export class PodProxyController {
   @Get('*')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  public async proxyGet(@Request() req) {
-    return this.gatewayService.routeRequest(req);
+  public async proxyGet(@Request() req, @Res() resp: Response) {
+    return this.gatewayService.routeRequest(req, resp);
   }
 
   @Post('*')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  public async proxyPost(@Request() req) {
-    return this.gatewayService.routeRequest(req);
+  public async proxyPost(@Request() req, @Res() resp: Response) {
+    return this.gatewayService.routeRequest(req, resp);
   }
 
   @Patch('*')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  public async proxyPatch(@Request() req) {
-    return this.gatewayService.routeRequest(req);
+  public async proxyPatch(@Request() req, @Res() resp: Response) {
+    return this.gatewayService.routeRequest(req, resp);
   }
 
   @Put('*')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  public async proxyPut(@Request() req) {
-    return this.gatewayService.routeRequest(req);
+  public async proxyPut(@Request() req, @Res() resp: Response) {
+    return this.gatewayService.routeRequest(req, resp);
   }
 
   @Delete('*')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard)
-  public async proxyDelete(@Request() req) {
-    return this.gatewayService.routeRequest(req);
+  public async proxyDelete(@Request() req, @Res() resp: Response) {
+    return this.gatewayService.routeRequest(req, resp);
   }
 }
