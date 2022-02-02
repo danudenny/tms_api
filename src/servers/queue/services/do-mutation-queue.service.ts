@@ -104,7 +104,7 @@ export class DoMutationQueueService {
         outHistory.updatedTime = nextMinute;
         await BagItemHistory.insert(outHistory);
         await BagItem.update(
-          { bagItemId },
+          { bagItemId, isDeleted: false },
           {
             bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
             bagItemHistoryId: Number(outHistory.bagItemHistoryId),
