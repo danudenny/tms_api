@@ -28,26 +28,25 @@ export class GatewayService {
     options.headers['x-channel-id'] = authMeta.clientId.toString();
     delete options.headers['host'];
 
+    let isStream = false;
+
     if (options.url.includes('export')) {
       options.responseType = 'stream';
+      isStream = true;
     }
 
     return axios.request(options)
       .then(function(response) {
-        let isCD = false;
         for (const key in response.headers) {
           if (key != 'transfer-encoding') {
             resp.setHeader(key, response.headers[key]);
           }
-          if (key == 'content-disposition') {
-            isCD = true;
-          }
         }
         resp.status(response.status);
-        if (!isCD) {
-          resp.send(response.data);
-        } else {
+        if (isStream) {
           response.data.pipe(resp);
+        } else {
+          resp.send(response.data);
         }
       })
       .catch(function(err) {
