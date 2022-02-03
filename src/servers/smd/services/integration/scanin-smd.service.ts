@@ -227,6 +227,7 @@ export class ScaninSmdService {
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
+              bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
               bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
               updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
@@ -459,6 +460,7 @@ export class ScaninSmdService {
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
+              bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
               bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
               updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
