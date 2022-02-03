@@ -90,6 +90,9 @@ export class PrintScaninDetailUserDataVm {
 export class PrintScaninDetailBranchDataVm {
   @ApiModelProperty()
   branchName: string;
+
+  @ApiModelProperty()
+  branchNameTo: string;
 }
 
 export class PrintScaninDetailVm {
