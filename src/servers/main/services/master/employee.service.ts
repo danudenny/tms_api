@@ -39,7 +39,8 @@ export class EmployeeService {
       DISTINCT(users.user_id) AS "userId",
       employee.nik AS "nik",
       employee.employee_id AS "employeeId",
-      employee.fullname AS "employeeName"
+      employee.fullname AS "employeeName",
+      employee.employee_role_id As "employeeRoleId"
     `);
     q.innerJoin(u => u.user, 'users', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -219,7 +220,7 @@ export class EmployeeService {
   async findById(employeeId: number): Promise<EmployeeResponseVm> {
     // TODO: to be improvement
     const authMeta = AuthService.getAuthData();
-    
+
     if(authMeta.employeeId != employeeId) {
       RequestErrorService.throwObj({
         message: 'User tidak eligible, silahkan hubungi admin.',
@@ -292,7 +293,7 @@ export class EmployeeService {
     payload.fieldResolverMap['employeeRoleId'] = 'employee.employee_role_id';
     payload.fieldResolverMap['roleId'] = 'user_role.role_id';
     payload.fieldResolverMap['branchId'] = 'user_role.branch_id';
-    
+
     const q = RepositoryService.employee.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
