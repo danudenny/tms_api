@@ -10,8 +10,8 @@ import { MobileSmdListController } from './integration/mobile-smd-list.controlle
 import { MobileSmdController } from './integration/mobile-smd.controller';
 import { ReasonSmdController } from './integration/reason-smd.controller';
 import { SmdBaggingController } from './integration/smd-bagging.controller';
-import {MasterDataController} from './integration/masterdata.controller';
-import {SmdPrintController} from './integration/print-smd.controller';
+import { MasterDataController } from './integration/masterdata.controller';
+import { SmdPrintController } from './integration/print-smd.controller';
 import { VehicleSmdController } from './integration/vehicle-smd.controller';
 import { MonitoringSmdController } from './integration/smd-monitoring.controller';
 import { ScanOutExportController } from './integration/scanout-export.controller';
@@ -24,6 +24,8 @@ import { ReceiptScaninListController } from './integration/receipt-scanin-list.c
 import { ScanOutCityController } from './integration/scanout-city.controller';
 import { SmdHelpdeskController } from './integration/smd-helpdesk.controller';
 import { SmdCentralReportingController } from './integration/smd-central-reporting.controller';
+import { SmdMutationController } from './integration/smd-mutation.controller';
+import { PrintSmdMutationController } from './integration/print-smd-mutation.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -50,6 +52,8 @@ import { SmdCentralReportingController } from './integration/smd-central-reporti
     ScanOutCityController,
     SmdHelpdeskController,
     SmdCentralReportingController,
+    SmdMutationController,
+    PrintSmdMutationController,
   ],
 })
 export class SmdServerControllersModule {}

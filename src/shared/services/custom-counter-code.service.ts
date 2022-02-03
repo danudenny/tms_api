@@ -3,7 +3,6 @@ import { SysCounter } from '../orm-entity/sys-counter';
 import { sampleSize } from 'lodash';
 
 export class CustomCounterCode {
-
   static randomCode(digit: number = 8) {
     const size = Math.round(digit / 2);
     const randAlfa = sampleSize('ABCDEFGHIJKLMNOPQRSTUVWXYZ', size).join('');
@@ -11,7 +10,10 @@ export class CustomCounterCode {
     return randAlfa + randNumber;
   }
 
-  public static async pickupRequestPartner(dateTime: string, digit: number = 5) {
+  public static async pickupRequestPartner(
+    dateTime: string,
+    digit: number = 5,
+  ) {
     const prefix = `SPKA/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
     return prefix + last_number.toString().padStart(digit, '0');
@@ -48,13 +50,13 @@ export class CustomCounterCode {
     return prefix + randomCode;
   }
 
-    public static async doPodReturn(dateTime: Date, digit: number = 8) {
+  public static async doPodReturn(dateTime: Date, digit: number = 8) {
     const prefix = `DOPR/${moment(dateTime).format('YYMM/DD/')}`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode;
   }
 
-    public static async doPodReturnMobile(dateTime: Date, digit: number = 8) {
+  public static async doPodReturnMobile(dateTime: Date, digit: number = 8) {
     const prefix = `DOPRM/${moment(dateTime).format('YYMM/DD/')}`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode;
@@ -104,7 +106,10 @@ export class CustomCounterCode {
     return prefix + randomCode.toString();
   }
 
-  public static async receivedBagCodeCounter(dateTime: Date, digit: number = 5) {
+  public static async receivedBagCodeCounter(
+    dateTime: Date,
+    digit: number = 5,
+  ) {
     const prefix = `TB/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
     return prefix + last_number.toString().padStart(digit, '0');
@@ -116,14 +121,29 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
-  public static async doSmdCodeRandomCounter(dateTime: Date, digit: number = 8) {
+  public static async doMutationCodeCounter(
+    dateTime: Date,
+    digit: number = 5,
+  ): Promise<string> {
+    const prefix = `TBM/${moment(dateTime).format('YYMM')}/`;
+    const last_number = await this.getLastNumber(prefix);
+    return prefix + last_number.toString().padStart(digit, '0');
+  }
+
+  public static async doSmdCodeRandomCounter(
+    dateTime: Date,
+    digit: number = 8,
+  ) {
     // Format Code: GSK/1907/13/XYZA1234
     const prefix = `DMD/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
   }
 
-  public static async doSmdEmptyCodeRandomCounter(dateTime: Date, digit: number = 8) {
+  public static async doSmdEmptyCodeRandomCounter(
+    dateTime: Date,
+    digit: number = 8,
+  ) {
     const prefix = `DME/${moment(dateTime).format('YYMM/DD')}/`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
@@ -135,7 +155,10 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
-  public static async baggingCodeRandomCounter(dateTime: Date, digit: number = 6) {
+  public static async baggingCodeRandomCounter(
+    dateTime: Date,
+    digit: number = 6,
+  ) {
     const prefix = `BGX${moment(dateTime).format('YYMMDD')}`;
     const randomCode = this.randomCode(digit);
     return prefix + randomCode.toString();
@@ -147,7 +170,10 @@ export class CustomCounterCode {
     return prefix + last_number.toString().padStart(digit, '0');
   }
 
-  public static async bagCityCodeRandomCounter(dateTime: Date, digit: number = 6) {
+  public static async bagCityCodeRandomCounter(
+    dateTime: Date,
+    digit: number = 6,
+  ) {
     // Format Code: GSK190713XYZA12
     const prefix = `GSK${moment(dateTime).format('YYMMDD')}`;
     const randomCode = this.randomCode(digit);

@@ -2,7 +2,15 @@ import express = require('express');
 import { RepositoryService } from '../../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
-import { PrintSmdPayloadVm, PrintBaggingPaperPayloadVm, PrintVendorPaperPayloadVm, PrintReceivedBagPaperPayloadVm, PrintScaninVm, PrintBaggingStickerPayloadVm } from '../../models/print-smd-payload.vm';
+import {
+  PrintSmdPayloadVm,
+  PrintBaggingPaperPayloadVm,
+  PrintVendorPaperPayloadVm,
+  PrintReceivedBagPaperPayloadVm,
+  PrintScaninVm,
+  PrintBaggingStickerPayloadVm,
+  PrintSmdMutation,
+} from '../../models/print-smd-payload.vm';
 import moment = require('moment');
 import { PrintDoSmdPayloadQueryVm } from '../../models/print-do-smd-payload.vm';
 import { PrintDoSmdDataVm, PrintDoSmdDataDoSmdDetailBagVm, PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm, PrintDoSmdVm, PrintDoSmdDataDoSmdDetailVm, PrintDoSmdDataDoSmdDetailBaggingVm, PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm, PrintDoSmdDataDoSmdDetailBagRepresentativeVm, PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm, PrintVendorDataVm, PrintVendorVm, PrintVendorDataVendorDetailVm } from '../../models/print-do-smd.vm';
@@ -1174,4 +1182,83 @@ export class SmdPrintService {
   ) {
     return RedisService.get<T>(`print-store-smd-${prefix}-${identifier}`, true);
   }
+
+  static async storeSmdMutationPrint(payloadBody: PrintSmdMutation) {
+    return this.storeGenericPrintData(
+      'smd-mutation',
+      payloadBody.data.doMutationId,
+      payloadBody,
+    );
+  }
+
+  static async executeSmdMutationPrint(
+    res: express.Response,
+    queryParams: PrintReceivedBagPaperPayloadVm,
+  ) {
+    const printPayload = await this.retrieveGenericPrintData<PrintSmdMutation>(
+      'smd-mutation',
+      queryParams.id,
+    );
+    // const data = printPayload.data;
+
+    if (!printPayload || (printPayload && !printPayload.data)) {
+      RequestErrorService.throwObj({
+        message: 'Tanda terima tidak ditemukan',
+      });
+    }
+
+    const data = printPayload.data;
+    if (queryParams.userId) {
+      const currentUser = await RepositoryService.user
+        .loadById(queryParams.userId)
+        .select({
+          userId: true, // needs to be selected due to users relations are being included
+          employee: {
+            nickname: true,
+          },
+        });
+
+      if (!currentUser) {
+        RequestErrorService.throwObj({
+          message: 'User tidak ditemukan',
+        });
+      }
+    }
+
+    if (queryParams.branchId) {
+      const currentBranch = await RepositoryService.branch
+        .loadById(queryParams.branchId)
+        .select({
+          branchName: true,
+        });
+
+      if (!currentBranch) {
+        RequestErrorService.throwObj({
+          message: 'Gerai asal tidak ditemukan',
+        });
+      }
+    }
+
+    const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
+    const date = moment(data.doMutationDate).format('YYYY-MM-DD');
+    const time = moment(data.doMutationDate).format('HH:mm');
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'ttd-mutation',
+          templateData: {
+            data,
+            meta: {
+              date,
+              time,
+            },
+          },
+          printCopy: queryParams.printCopy ? queryParams.printCopy : 3,
+        },
+      ],
+      listPrinterName,
+    });
+  }
+
 }
