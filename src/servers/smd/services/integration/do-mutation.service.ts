@@ -420,37 +420,77 @@ export class DoMutationService {
   public static async detailSmdMutationPrint(
     payload: InsertDoMutationStatusPayloadVm,
   ): Promise<any> {
-    const result = new PrintDetailDoMutationResponseVm();
-    const qb = createQueryBuilder();
-    // qb.addSelect('dm.do_mutation_id', 'do_mutation_id');
-    // qb.addSelect('dm.do_mutation_code', 'do_mutation_code');
-    // qb.addSelect('dm.do_mutation_date', 'do_mutation_date');
-    qb.addSelect('bi.weight', 'bagWeight');
-    qb.addSelect('b.bag_number', 'bagNumber');
-    qb.addSelect('bi.bag_seq', 'bagSeq');
-    qb.from('do_mutation', 'dm');
-    qb.innerJoin(
-      'do_mutation_detail',
-      'dmd',
-      'dm.do_mutation_id = dmd.do_mutation_id AND dmd.is_deleted = FALSE',
-    );
-    qb.innerJoin(
-      'bag_item',
-      'bi',
-      'bi.bag_item_id = dmd.bag_item_id AND bi.is_deleted = FALSE',
-    );
-    qb.innerJoin('bag', 'b', 'b.bag_id = bi.bag_id AND b.is_deleted = FALSE');
-    qb.andWhere(`dm.do_mutation_id = '${payload.do_mutation_id}'`);
-    qb.andWhere(`dm.is_deleted = FALSE`);
-    const getData = await qb.getRawMany();
-    result.data = getData.map(data => ({
-      bagNumber: `${data.bagNumber}${
-        data.bagSeq && data.bagNumber.length < 10
-          ? data.bagSeq.toString().padStart(3, '0')
-          : ''
-      }`,
-      bagWeight: data.bagWeight,
-    }));
-    return result;
+    try {
+      const getDataMutation = await DoMutation.findOne(
+        {
+          doMutationId: payload.do_mutation_id,
+        },
+        {
+          select: ['userIdCreated'],
+        },
+      );
+
+      if (getDataMutation) {
+        const qbUser = createQueryBuilder();
+        qbUser.addSelect('u.user_id', 'userId');
+        qbUser.addSelect('e.nik', 'nik');
+        qbUser.addSelect('e.fullname', 'employeeName');
+        qbUser.from('users', 'u');
+        qbUser.innerJoin(
+          'employee',
+          'e',
+          'e.employee_id = u.employee_id AND e.is_deleted = FALSE',
+        );
+        qbUser.andWhere(`u.user_id = '${getDataMutation.userIdCreated}'`);
+        qbUser.andWhere(`u.is_deleted = FALSE`);
+        const getDataUser = await qbUser.getRawOne();
+
+        const result = new PrintDetailDoMutationResponseVm();
+        const qb = createQueryBuilder();
+        // qb.addSelect('dm.do_mutation_id', 'do_mutation_id');
+        // qb.addSelect('dm.do_mutation_code', 'do_mutation_code');
+        // qb.addSelect('dm.do_mutation_date', 'do_mutation_date');
+        qb.addSelect('bi.weight', 'bagWeight');
+        qb.addSelect('b.bag_number', 'bagNumber');
+        qb.addSelect('bi.bag_seq', 'bagSeq');
+        qb.from('do_mutation', 'dm');
+        qb.innerJoin(
+          'do_mutation_detail',
+          'dmd',
+          'dm.do_mutation_id = dmd.do_mutation_id AND dmd.is_deleted = FALSE',
+        );
+        qb.innerJoin(
+          'bag_item',
+          'bi',
+          'bi.bag_item_id = dmd.bag_item_id AND bi.is_deleted = FALSE',
+        );
+        qb.innerJoin(
+          'bag',
+          'b',
+          'b.bag_id = bi.bag_id AND b.is_deleted = FALSE',
+        );
+        qb.andWhere(`dm.do_mutation_id = '${payload.do_mutation_id}'`);
+        qb.andWhere(`dm.is_deleted = FALSE`);
+        const getData = await qb.getRawMany();
+        result.user = {
+          userId: getDataUser.userId,
+          employee: {
+            nik: getDataUser.nik,
+            employeeName: getDataUser.employeeName,
+          },
+        };
+        result.data = getData.map(data => ({
+          bagNumber: `${data.bagNumber}${
+            data.bagSeq && data.bagNumber.length < 10
+              ? data.bagSeq.toString().padStart(3, '0')
+              : ''
+          }`,
+          bagWeight: data.bagWeight,
+        }));
+        return result;
+      }
+    } catch (e) {
+      throw e.message;
+    }
   }
 }

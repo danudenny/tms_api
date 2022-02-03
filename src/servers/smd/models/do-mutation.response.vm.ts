@@ -134,7 +134,26 @@ export class DoMutationDataDetailResponseVm {
   bagNumber: string;
 }
 
+export class DoMutationDataEmployeeResponseVm {
+  @ApiModelProperty()
+  nik: string;
+
+  @ApiModelProperty()
+  employeeName: string;
+}
+
+export class DoMutationDataUserResponseVm {
+  @ApiModelProperty()
+  userId: string;
+  @ApiModelProperty({ type: () => [DoMutationDataEmployeeResponseVm] })
+  employee: DoMutationDataEmployeeResponseVm;
+
+}
+
 export class PrintDetailDoMutationResponseVm {
+  @ApiModelProperty({ type: () => [DoMutationDataUserResponseVm] })
+  user: DoMutationDataUserResponseVm;
+
   @ApiModelProperty({ type: () => [DoMutationDataDetailResponseVm] })
   data: DoMutationDataDetailResponseVm[];
 }
