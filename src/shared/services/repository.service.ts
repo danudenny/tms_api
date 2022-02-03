@@ -44,6 +44,8 @@ import { EmployeePenalty } from '../orm-entity/employee-penalty';
 import { EmployeeRole } from '../orm-entity/employee-role';
 import { MobileDeviceInfo } from '../orm-entity/mobile-device-info';
 import { PenaltyCategoryFee } from '../orm-entity/penalty-category-fee';
+import { DoMutation } from '../orm-entity/do-mutation';
+import { DoMutationDetail } from '../orm-entity/do-mutation-detail';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -184,5 +186,11 @@ export class RepositoryService {
   }
   static get penaltyCategoryFee() {
     return new OrionRepositoryService(PenaltyCategoryFee);
+  }
+  static get doMutation() {
+    return new OrionRepositoryService(DoMutation);
+  }
+  static get doMutationDetail() {
+    return new OrionRepositoryService(DoMutationDetail);
   }
 }

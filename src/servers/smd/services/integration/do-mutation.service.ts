@@ -45,10 +45,13 @@ export class DoMutationService {
         data: null,
       };
     }
-    const toBranch = await Branch.findOne({
-      branchId: payload.branch_id,
-      isDeleted: false,
-    });
+    const toBranch = await Branch.findOne(
+      {
+        branchId: payload.branch_id,
+        isDeleted: false,
+      },
+      { select: ['branchId'] },
+    );
     if (!toBranch) {
       return {
         statusCode: HttpStatus.BAD_REQUEST,
@@ -113,11 +116,15 @@ export class DoMutationService {
     }
     const q = RepositoryService.doMutationDetail.createQueryBuilder();
     const existingDetail = await q
-      .innerJoin('do_mutation_detail.doMutation', 'dm')
-      .where('do_mutation_detail.is_deleted = :deleted', { deleted: false })
-      .andWhere('dm.is_deleted = :dmDeleted', { dmDeleted: false })
+      .innerJoin(
+        'do_mutation_detail.doMutation',
+        'dm',
+        'dm.is_deleted = :dmDeleted',
+        { dmDeleted: false },
+      )
+      .where('do_mutation_detail.bagItemId = :id', { id: bag.bagItemId })
       .andWhere('dm.branch_id_from = :branch', { branch })
-      .andWhere('do_mutation_detail.bagItemId = :id', { id: bag.bagItemId })
+      .andWhere('do_mutation_detail.is_deleted = :deleted', { deleted: false })
       .getCount();
 
     if (existingDetail) {
@@ -129,10 +136,15 @@ export class DoMutationService {
         data: null,
       };
     }
-    const mutation = await DoMutation.findOne({
-      doMutationId: id,
-      isDeleted: false,
-    });
+    const mutation = await DoMutation.findOne(
+      {
+        doMutationId: id,
+        isDeleted: false,
+      },
+      {
+        select: ['doMutationId', 'totalBag', 'totalWeight'],
+      },
+    );
     if (!mutation) {
       return {
         statusCode: HttpStatus.BAD_REQUEST,
@@ -156,10 +168,18 @@ export class DoMutationService {
     await DoMutationDetail.insert(mutationDetail);
 
     // update do mutation total bag and total weight
-    mutation.totalBag += 1;
-    mutation.totalWeight =
-      mutation.totalWeight + parseFloat(bag.weight.toString());
-    await mutation.save();
+    await DoMutation.update(
+      {
+        doMutationId: mutation.doMutationId,
+        isDeleted: false,
+      },
+      {
+        totalBag: mutation.totalBag + 1,
+        totalWeight: mutation.totalWeight + parseFloat(bag.weight.toString()),
+        updatedTime: timeNow,
+        userIdUpdated: authMeta.userId,
+      },
+    );
 
     return {
       statusCode: HttpStatus.CREATED,
@@ -176,10 +196,15 @@ export class DoMutationService {
   public static async insertBagStatus(
     id: string,
   ): Promise<DoMutationBagStatusResponseVm> {
-    const mutation = await DoMutation.findOne({
-      doMutationId: id,
-      isDeleted: false,
-    });
+    const mutation = await DoMutation.findOne(
+      {
+        doMutationId: id,
+        isDeleted: false,
+      },
+      {
+        select: ['doMutationId', 'branchIdTo'],
+      },
+    );
     if (!mutation) {
       return {
         statusCode: HttpStatus.BAD_REQUEST,
@@ -190,8 +215,16 @@ export class DoMutationService {
     const q = repo.createQueryBuilder();
     const bagItems = await q
       .select('bi.bag_id, bi.bag_item_id, bi.bag_item_status_id_last')
-      .innerJoin('do_mutation_detail.bagItem', 'bi')
+      .innerJoin(
+        'do_mutation_detail.bagItem',
+        'bi',
+        'bi.is_deleted = :isDeleted',
+        { isDeleted: false },
+      )
       .where('do_mutation_detail.do_mutation_id = :id', { id })
+      .andWhere('do_mutation_detail.is_deleted = :dmdDeleted', {
+        dmdDeleted: false,
+      })
       .getRawMany();
     if (bagItems.length === 0) {
       return {
@@ -232,25 +265,49 @@ export class DoMutationService {
   }
 
   public static async delete(id: string): Promise<DeleteDoMutationResponseVm> {
-    const mutation = await DoMutation.findOne({
-      doMutationId: id,
-      isDeleted: false,
-    });
+    const authMeta = AuthService.getAuthMetadata();
+
+    const mutation = await DoMutation.findOne(
+      {
+        doMutationId: id,
+        isDeleted: false,
+      },
+      {
+        select: ['doMutationId'],
+      },
+    );
     if (!mutation) {
       return {
         statusCode: HttpStatus.BAD_REQUEST,
         message: 'Mutation id not found',
       };
     }
-    mutation.isDeleted = true;
-    await mutation.save();
-    const mutationDetailRepo = RepositoryService.doMutationDetail;
-    const q = mutationDetailRepo.createQueryBuilder();
-    await q
-      .update()
-      .set({ isDeleted: true })
-      .where({ doMutationId: id })
-      .execute();
+    const timeNow = moment().toDate();
+    await Promise.all([
+      DoMutation.update(
+        {
+          doMutationId: id,
+          isDeleted: false,
+        },
+        {
+          isDeleted: true,
+          updatedTime: timeNow,
+          userIdUpdated: authMeta.userId,
+        },
+      ),
+      DoMutationDetail.update(
+        {
+          doMutationId: id,
+          isDeleted: false,
+        },
+        {
+          isDeleted: true,
+          updatedTime: timeNow,
+          userIdUpdated: authMeta.userId,
+        },
+      ),
+    ]);
+
     return {
       statusCode: HttpStatus.OK,
       message: 'Sukses menghapus mutasi',
@@ -263,15 +320,14 @@ export class DoMutationService {
     // construct query
     const q = RepositoryService.doMutation.createQueryBuilder();
     const selectColumns =
-      ' do_mutation_id, do_mutation_code, do_mutation.created_time do_mutation_date, bf.branch_name branch_from, bt.branch_name branch_to, total_bag, total_weight, note as do_mutation_note';
+      'do_mutation_id, do_mutation_code, do_mutation.created_time do_mutation_date, bf.branch_name branch_from, bt.branch_name branch_to, total_bag, total_weight, note as do_mutation_note';
     q.select(selectColumns)
       .leftJoin('do_mutation.branchFrom', 'bf', 'bf.is_deleted = :isDeleted', {
         isDeleted: false,
       })
       .leftJoin('do_mutation.branchTo', 'bt', 'bt.is_deleted = :btIsDeleted', {
         btIsDeleted: false,
-      })
-      .where('do_mutation.is_deleted = :isDeleted', { isDeleted: false });
+      });
 
     // apply filters
     payload.filters.forEach(filter => {
@@ -283,6 +339,7 @@ export class DoMutationService {
         { [filter.field]: filter.value },
       );
     });
+    q.andWhere('do_mutation.is_deleted = :isDeleted', { isDeleted: false });
 
     // add sort, limit & offset
     let sortBy: string = payload.sortBy;
@@ -324,11 +381,18 @@ export class DoMutationService {
     }
     const q = RepositoryService.doMutationDetail.createQueryBuilder();
     q.select('b.bag_number, bi.bag_seq')
-      .innerJoin('do_mutation_detail.bagItem', 'bi')
-      .innerJoin('bi.bag', 'b')
-      .where('do_mutation_detail.is_deleted = :isDeleted', { isDeleted: false })
+      .innerJoin(
+        'do_mutation_detail.bagItem',
+        'bi',
+        'bi.is_deleted = :biDeleted',
+        { biDeleted: false },
+      )
+      .innerJoin('bi.bag', 'b', 'b.is_deleted = :bDeleted', { bDeleted: false })
       .andWhere(`${filter.field} = :${filter.field}`, {
         [filter.field]: filter.value,
+      })
+      .andWhere('do_mutation_detail.is_deleted = :isDeleted', {
+        isDeleted: false,
       })
       .orderBy('do_mutation_detail.created_time', 'DESC')
       .limit(payload.limit)
