@@ -119,7 +119,8 @@ export class DoMutationService {
       .innerJoin(
         'do_mutation_detail.doMutation',
         'dm',
-        'dm.is_deleted = FALSE AND dm.branch_id_from = :branch', { branch },
+        'dm.is_deleted = FALSE AND dm.branch_id_from = :branch',
+        { branch },
       )
       .where('do_mutation_detail.bagItemId = :id', { id: bag.bagItemId })
       .andWhere('do_mutation_detail.is_deleted = :deleted', { deleted: false })
@@ -317,6 +318,7 @@ export class DoMutationService {
   ): Promise<GetDoMutationResponseVm> {
     // construct query
     const q = RepositoryService.doMutation.createQueryBuilder();
+    const countQuery = RepositoryService.doMutation.createQueryBuilder();
     const selectColumns =
       'do_mutation_id, do_mutation_code, do_mutation.created_time do_mutation_date, bf.branch_name branch_from, bt.branch_name branch_to, total_bag, total_weight, note as do_mutation_note';
     q.select(selectColumns)
@@ -332,12 +334,17 @@ export class DoMutationService {
       const field = ['end_date', 'start_date'].includes(filter.field)
         ? 'do_mutation_date'
         : filter.field;
-      q.andWhere(
-        `do_mutation.${field} ${filter.sqlOperator} :${filter.field}`,
-        { [filter.field]: filter.value },
-      );
+      const where = `do_mutation.${field} ${filter.sqlOperator} :${
+        filter.field
+      }`;
+      const whereParams = { [filter.field]: filter.value };
+      q.andWhere(where, whereParams);
+      countQuery.andWhere(where, whereParams);
     });
     q.andWhere('do_mutation.is_deleted = :isDeleted', { isDeleted: false });
+    countQuery.andWhere('do_mutation.is_deleted = :isDeleted', {
+      isDeleted: false,
+    });
 
     // add sort, limit & offset
     let sortBy: string = payload.sortBy;
@@ -355,7 +362,7 @@ export class DoMutationService {
       .offset((payload.page - 1) * payload.limit);
     const [mutations, count] = await Promise.all([
       q.getRawMany(),
-      q.getCount(),
+      countQuery.getCount(),
     ]);
 
     const result = new GetDoMutationResponseVm();
