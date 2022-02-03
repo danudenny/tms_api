@@ -119,11 +119,9 @@ export class DoMutationService {
       .innerJoin(
         'do_mutation_detail.doMutation',
         'dm',
-        'dm.is_deleted = :dmDeleted',
-        { dmDeleted: false },
+        'dm.is_deleted = FALSE AND dm.branch_id_from = :branch', { branch },
       )
       .where('do_mutation_detail.bagItemId = :id', { id: bag.bagItemId })
-      .andWhere('dm.branch_id_from = :branch', { branch })
       .andWhere('do_mutation_detail.is_deleted = :deleted', { deleted: false })
       .getCount();
 
