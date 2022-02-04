@@ -28,6 +28,12 @@ export class GatewayService {
     options.headers['x-channel-id'] = authMeta.clientId.toString();
     delete options.headers['host'];
 
+    const fileSvcAuth = req.headers['x-filesvc-auth'];
+    if (fileSvcAuth != '') {
+      // replace bearer token to call filesvc
+      options.headers['authorization'] = fileSvcAuth;
+    }
+
     let isStream = false;
 
     if (options.url.includes('export') || options.url.includes('download')) {
