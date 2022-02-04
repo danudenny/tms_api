@@ -30,7 +30,7 @@ export class GatewayService {
 
     let isStream = false;
 
-    if (options.url.includes('export')) {
+    if (options.url.includes('export') || options.url.includes('download')) {
       options.responseType = 'stream';
       isStream = true;
     }
