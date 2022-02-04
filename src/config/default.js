@@ -123,7 +123,10 @@ module.exports = {
       },
       "pod-punishment": {
         destination: "/operation/pod-punishment"
-      }
+      },
+      "filesvc": {
+        destination: "/core/filesvc"
+      },
     }
   },
   korwil: {
