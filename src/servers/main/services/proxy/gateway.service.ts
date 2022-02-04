@@ -29,7 +29,7 @@ export class GatewayService {
     delete options.headers['host'];
 
     const fileSvcAuth = req.headers['x-filesvc-auth'];
-    if (fileSvcAuth != '') {
+    if (fileSvcAuth) {
       // replace bearer token to call filesvc
       options.headers['authorization'] = fileSvcAuth;
     }
