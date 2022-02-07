@@ -188,7 +188,7 @@ export class LastMileTransitOutService {
         let notDeliver = true;
         if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
           notDeliver =
-            awb.awbStatusIdLast != AWB_STATUS.OUT_BRANCH ? true : false;
+            awb.awbStatusIdLast != AWB_STATUS.OUT_BRANCH || awb.awbStatusIdLast != AWB_STATUS.OUT_TRANSIT  ? true : false;
         }
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
@@ -247,7 +247,7 @@ export class LastMileTransitOutService {
             // handle status out branch transit
             paramsBull.push({
               awbItemId: awb.awbItemId,
-              awbStatus: AWB_STATUS.OUT_BRANCH,
+              awbStatus: AWB_STATUS.OUT_TRANSIT,
               branchId: permissonPayload.branchId,
               userId: authMeta.userId,
               userIdDriver: doPod.userIdDriver,
