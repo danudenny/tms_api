@@ -62,8 +62,8 @@ export class CodUserToBranchService {
         });
         if (checkData) {
           // hard delete
-          await CodUserToBranch.delete({
-            codUserToBranchId,
+          await CodUserToBranch.update({codUserToBranchId}, {
+            isDeleted: true,
           });
         }
       }
