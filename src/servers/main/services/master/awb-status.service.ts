@@ -93,7 +93,7 @@ export class AwbStatusService {
     optionalInBranch?: Boolean,
     optionalManifested?: Boolean,
   ) {
-    let message = null;
+    let message = `Resi ${awbItemAttr.awbNumber} tidak dapat di proses.`;
     let isValid = false;
     if (awbItemAttr.awbStatusIdLast) {
       if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
