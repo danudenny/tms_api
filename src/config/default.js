@@ -62,7 +62,7 @@ module.exports = {
     auth: 'SeWdjOtj21iVsbXv9Wfrpwi8Fgg4QmgFbJmrvXOS',
   },
   logger: {
-    level: 'debug', // trace / debug / info / warn / error / silent
+    level: 'error', // trace / debug / info / warn / error / silent
   },
   queryService :{
     baseUrl : 'http://api-internal.sicepat.io/core/query-service/api/v1/',
