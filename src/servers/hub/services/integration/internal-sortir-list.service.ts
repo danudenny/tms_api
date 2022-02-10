@@ -118,6 +118,7 @@ export class InternalSortirListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.orderByRaw('bsls.updated_time', 'DESC');
     // q.andWhere(e => e.awbNumber, w => w.notEquals(''));
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
