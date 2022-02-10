@@ -61,9 +61,9 @@ export class CodUserToBranchService {
           isDeleted: false,
         });
         if (checkData) {
-          // hard delete
-          await CodUserToBranch.delete({
-            codUserToBranchId,
+          // soft delete
+          await CodUserToBranch.update({codUserToBranchId}, {
+            isDeleted: true,
           });
         }
       }
