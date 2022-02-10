@@ -36,9 +36,11 @@ export class RolePodManual {
         const result = new RolePodManualResponseVm();
         const deleteData = await getConnection()
         .createQueryBuilder()
-        .delete()
-        .from(RolePodManualStatus)
-        .where(`role_id = ${payload.roleId}`, { roleId: payload.roleId })
+        .update(RolePodManualStatus)
+        .set({
+          isDeleted: true,
+        })
+        .where(`role_id = :roleId`, { roleId: payload.roleId })
         .execute();
 
         payload.data.forEach(async data => {

@@ -40,6 +40,8 @@ export class ScaninSmdService {
     result.statusCode = HttpStatus.BAD_REQUEST;
     let receivedBagCode = '';
     let receivedBagDate = '';
+    let sliceDoPodCode = 'DOP';
+    let statusItem = 4550;
 
     if (payload.bag_item_number.length == 15 && payload.bag_item_number.match(/^[A-Z0-9]{10}[0-9]{5}$/)) {
       const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
@@ -97,10 +99,24 @@ export class ScaninSmdService {
           const usernameScan = resultData[0].username_scan;
           paramBagItemId = resultData[0].bag_item_id;
 
+          // check smu
+          const getDoBagQuery = `select db.do_bag_code from do_bag_detail dbd inner join do_bag db on db.do_bag_id = dbd.do_bag_id AND db.is_deleted = FALSE
+                where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
+          const resultDoBag = await RawQueryService.query(getDoBagQuery);
+          console.log('resultDoBag', resultDoBag);
+          if (resultDoBag.length > 0) {
+            console.log('resultDoPodCodeQuery', resultDoBag[0]);
+            sliceDoPodCode = resultDoBag[0].do_bag_code.slice(0, 3);
+            console.log('sliceDoPodCode', sliceDoPodCode);
+            if (sliceDoPodCode === 'SGB') {
+              statusItem = 4500;
+            }
+          }
+
           if (weight == 0) { // handle error weight = 0 from request payload
             weight = parseFloat(resultData[0].weight);
           }
-          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 || resultData[0].bag_item_status_id == 1000 ) {
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == statusItem || resultData[0].bag_item_status_id == 500 || resultData[0].bag_item_status_id == 1000 ) {
             // do nothing
           } else if ( resultData[0].bag_item_status_id == 3550 || resultData[0].bag_item_status_id == 3500 ) {
             errCode = errCode + 1;
@@ -332,6 +348,20 @@ export class ScaninSmdService {
           const usernameScan = resultData[0].username_scan;
           paramBagItemId = resultData[0].bag_item_id;
           weight =  resultData[0].weight;
+
+          // check smu
+          const getDoBagQuery = `select db.do_bag_code from do_bag_detail dbd inner join do_bag db on db.do_bag_id = dbd.do_bag_id AND db.is_deleted = FALSE
+where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
+          const resultDoBag = await RawQueryService.query(getDoBagQuery);
+          console.log('resultDoBag', resultDoBag);
+          if (resultDoBag.length > 0) {
+            console.log('resultDoPodCodeQuery', resultDoBag[0]);
+            sliceDoPodCode = resultDoBag[0].do_bag_code.slice(0, 3);
+            console.log('sliceDoPodCode', sliceDoPodCode);
+            if (sliceDoPodCode === 'SGB') {
+              statusItem = 4500;
+            }
+          }
 
           if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 || resultData[0].bag_item_status_id == 1000 ) {
             // do nothing
@@ -571,7 +601,9 @@ export class ScaninSmdService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     if (payload.bag_item_number.length > 15) {
-      const rawQueryBag = `
+      // check type surat jalan
+      const sliceSuratJalan = payload.bag_item_number.slice(0, 3);
+      let rawQueryBag = `
         SELECT
           SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
         FROM do_pod_detail_bag doPodDetailBag
@@ -585,9 +617,8 @@ export class ScaninSmdService {
           doPodDetailBag.is_deleted = false
         GROUP BY bagnumber
         `;
-      const resultDataBag = await RawQueryService.query(rawQueryBag);
 
-      const rawQueryBagScanned = `
+      let rawQueryBagScanned = `
         SELECT
           SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
         FROM do_pod_detail_bag doPodDetailBag
@@ -601,6 +632,48 @@ export class ScaninSmdService {
           doPodDetailBag.is_deleted = false
         GROUP BY bagnumber
         `;
+      // smu
+      if (sliceSuratJalan === 'SGB') {
+
+        const findDoBag = `select do_bag_id from do_bag where do_bag_code = '${payload.bag_item_number}' AND is_deleted = FALSE`;
+        const resultFindDoBag = await RawQueryService.query(findDoBag);
+
+        if (resultFindDoBag.length > 0) {
+
+          rawQueryBag = `
+            select
+              SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
+            from do_bag_detail doBagDetail
+            INNER JOIN bag_item bagItem ON bagItem.bag_item_id = doBagDetail.bag_item_id AND (bagItem.is_deleted = 'false')
+            LEFT JOIN bag bag ON bag.bag_id=bagItem.bag_id AND (bag.is_deleted = 'false')
+            LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
+            AND (bih.bag_item_status_id IN (4500, 500) OR bih.bag_item_status_id IS NULL)
+            WHERE
+              doBagDetail.do_bag_id = '${resultFindDoBag[0].do_bag_id}' AND
+              doBagDetail.is_deleted = false
+            GROUP BY bagnumber
+            `;
+
+          rawQueryBagScanned = `
+         select
+              SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
+            from do_bag_detail doBagDetail
+            INNER JOIN bag_item bagItem ON bagItem.bag_item_id = doBagDetail.bag_item_id AND (bagItem.is_deleted = 'false')
+            LEFT JOIN bag bag ON bag.bag_id=bagItem.bag_id AND (bag.is_deleted = 'false')
+            LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
+            AND (bih.bag_item_status_id NOT IN (4500, 500) OR bih.bag_item_status_id IS NULL)
+            WHERE
+              doBagDetail.do_bag_id = '${resultFindDoBag[0].do_bag_id}' AND
+              doBagDetail.is_deleted = false
+            GROUP BY bagnumber
+        `;
+
+        } else {
+          throw new BadRequestException('Resi yang Valid tidak Ditemukan di ' + payload.bag_item_number);
+        }
+      }
+
+      const resultDataBag = await RawQueryService.query(rawQueryBag);
       const resultDataBagScanned = await RawQueryService.query(rawQueryBagScanned);
       if (resultDataBag.length > 0) {
         const data = [];
@@ -613,7 +686,7 @@ export class ScaninSmdService {
         result.data = data;
         return result;
       } else {
-        throw new BadRequestException('Resi yang Valid tidak Ditemukan di ' + payload.bag_item_number );
+        throw new BadRequestException('Resi yang Valid tidak Ditemukan di ' + payload.bag_item_number);
       }
     } else {
       throw new BadRequestException('Bag length must > 15');
