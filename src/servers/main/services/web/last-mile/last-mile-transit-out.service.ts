@@ -270,7 +270,7 @@ export class LastMileTransitOutService {
           // remove key holdRedis
           RedisService.del(`hold:scanout:${awb.awbItemId}`);
         } else {
-          if(haveInBranch == false){
+          if(haveInBranch == false && notDeliver == false){
             totalError += 1;
             response.status = 'error';
             response.message = `Resi ${awbNumber} belum di scan masuk.`;
