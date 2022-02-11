@@ -190,10 +190,10 @@ export class LastMileTransitOutService {
         if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
           notDeliver =
             awb.awbStatusIdLast != AWB_STATUS.OUT_BRANCH || awb.awbStatusIdLast != AWB_STATUS.OUT_TRANSIT  ? true : false;
-        }
 
-        if (awb.awbStatusIdLast == AWB_STATUS.IN_BRANCH){
-          haveInBranch = true
+            if (awb.awbStatusIdLast == AWB_STATUS.IN_BRANCH){
+              haveInBranch = true
+            }
         }
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
@@ -270,7 +270,7 @@ export class LastMileTransitOutService {
           // remove key holdRedis
           RedisService.del(`hold:scanout:${awb.awbItemId}`);
         } else {
-          if(haveInBranch == false && notDeliver == false){
+          if(haveInBranch == false && awb.awbStatusIdLast != AWB_STATUS.OUT_TRANSIT){
             totalError += 1;
             response.status = 'error';
             response.message = `Resi ${awbNumber} belum di scan masuk.`;
