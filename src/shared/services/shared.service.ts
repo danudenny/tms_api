@@ -73,7 +73,7 @@ export class SharedService {
     const regex = new RegExp(`([^*]${left})([^*]${middle})([^*]${right})`);
 
     return str.replace(regex, function(match, p, p1, p2) {
-      return match.replace(p1, p1.replace(/./g, '*'));
+      return p + p1.replace(/./g, '*') + p2; 
     })
   }
 
