@@ -136,15 +136,12 @@ export class WebDeliveryOutService {
     try {
       // await for get do pod id
       await this.doPodRepository.save(doPod);
+      await this.createAuditHistory(doPod.doPodId, false);
     } catch (err) {
-      console.log('ERROR INSERT:::::: ', err);
       RequestErrorService.throwObj({
         message: 'global.error.SERVER_BUSY',
       });
     }
-
-    await this.doPodRepository.save(doPod);
-    await this.createAuditHistory(doPod.doPodId, false);
 
     // Populate return value
     result.status = 'ok';
@@ -1292,7 +1289,7 @@ export class WebDeliveryOutService {
 
     return result;
   }
-  
+
   async findAllSortHubTransitListCount(
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanOutTransitListResponseVm> {

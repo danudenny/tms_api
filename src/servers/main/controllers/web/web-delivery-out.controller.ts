@@ -200,15 +200,6 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllScanOutList(payload);
   }
 
-  @Post('deliverPartnerList')
-  @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanOutDeliverPartnerListResponseVm })
-  public async deliverPartnerList(@Body() payload: BaseMetaPayloadVm) {
-    return LastMileDeliveryService.findAllDeliverPartner(payload);
-  }
-
   @Post('deliverList')
   @HttpCode(HttpStatus.OK)
   // @ApiBearerAuth()
