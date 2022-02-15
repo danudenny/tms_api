@@ -59,8 +59,18 @@ export class SharedService {
     return awbStatus;
   }
 
-  static maskString(str: string, padLeft: number, padRight: number) {
-    const regex = new RegExp(`([^*]{${padLeft}})([^*]+)([^*]{${padRight}})`);
+  /*
+    will update middle value to *
+    input: 
+    + = rest of string
+    0-9 = one string
+  */
+  static maskString(str: string, left: string, middle: string, right: string) {
+    left = left == '+' ? '+' : `{${left}}`;
+    middle = middle == '+' ? '+' : `{${middle}}`;
+    right = right == '+' ? '+' : `{${right}}`;
+
+    const regex = new RegExp(`([^*]${left})([^*]${middle})([^*]${right})`);
 
     return str.replace(regex, function(match, p, p1, p2) {
       return match.replace(p1, p1.replace(/./g, '*'));
