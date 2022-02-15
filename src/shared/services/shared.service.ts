@@ -59,6 +59,14 @@ export class SharedService {
     return awbStatus;
   }
 
+  static maskString(str: string, padLeft: number, padRight: number) {
+    const regex = new RegExp(`([^*]{${padLeft}})([^*]+)([^*]{${padRight}})`);
+
+    return str.replace(regex, function(match, p, p1, p2) {
+      return match.replace(p1, p1.replace(/./g, '*'));
+    })
+  }
+
   // string inject array
   static stringInject(str: string, arr: string[]) {
     if (typeof str !== 'string' || !(arr instanceof Array)) {

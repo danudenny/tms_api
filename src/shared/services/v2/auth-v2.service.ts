@@ -18,6 +18,7 @@ import { Employee } from '../../orm-entity/employee';
 import { JwtRefreshTokenPayload } from '../../interfaces/jwt-payload.interface';
 import { User } from '../../orm-entity/user';
 import { MESSAGE_ERROR_OTP } from '../../constants/auth-otp-error.constant';
+import { SharedService } from '../shared.service';
 
 @Injectable()
 export class AuthV2Service {
@@ -331,7 +332,7 @@ export class AuthV2Service {
     for (const address of response.data.result.addresses) {
       const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
       loginChannelOtpAddresses.channel = address.channel;
-      loginChannelOtpAddresses.address = address.address;
+      loginChannelOtpAddresses.address = SharedService.maskString(address.address, 5, 4);
       loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
 
       addresses.push({ ...loginChannelOtpAddresses });
