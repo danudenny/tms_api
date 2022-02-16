@@ -71,6 +71,7 @@ import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller
 import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
 import { WebDoPodReturnController } from './web/web-do-pod-return.controller';
 import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.controller';
+import { RejectPackageController } from './combine-package/reject-package.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -147,6 +148,7 @@ import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.contr
     V1WebAwbHandoverController,
     WebDoPodReturnController,
     MobileDoPodReturnController,
+    RejectPackageController,
   ],
 })
 export class MainServerControllersModule {}

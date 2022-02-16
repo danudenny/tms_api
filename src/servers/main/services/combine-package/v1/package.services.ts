@@ -28,6 +28,7 @@ import {
 import { BagService } from '../../v1/bag.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import moment = require('moment');
+import { RejectPackagePayloadVm } from '../../../models/reject-package-payload.vm';
 // #endregion
 const uuidv1 = require('uuid/v1');
 
@@ -35,7 +36,7 @@ export class V1PackageService {
   constructor() {}
 
   static async awbPackage(
-    payload: PackagePayloadVm,
+    payload: PackagePayloadVm | RejectPackagePayloadVm,
   ): Promise<PackageAwbResponseVm> {
     const regexNumber = /^[0-9]+$/;
     const value = payload.value;
@@ -403,7 +404,7 @@ export class V1PackageService {
     if (!payload.bagItemId) {
       throw new BadRequestException("payload invalid");
     }
-    
+
     const podScanInHub = await PodScanInHub.findOne({
       where: { podScanInHubId: payload.podScanInHubId },
     });
@@ -740,6 +741,7 @@ export class V1PackageService {
             authMeta.userId,
             permissonPayload.branchId,
             moment().toDate(),
+            payload.note,
           );
 
           // NOTE: background job for insert bag item history
@@ -782,7 +784,7 @@ export class V1PackageService {
     }
   }
 
-  private static async awbScan(payload: PackagePayloadVm): Promise<any> {
+  private static async awbScan(payload: PackagePayloadVm | RejectPackagePayloadVm): Promise<any> {
     const awbNumber = payload.value;
     const branchId: number = payload.branchId;
     const result = new Object();
@@ -947,6 +949,7 @@ export class V1PackageService {
           authMeta.userId,
           permissonPayload.branchId,
           moment().toDate(),
+          payload.note,
         );
         // #endregion
 
