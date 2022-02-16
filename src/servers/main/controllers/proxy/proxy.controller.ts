@@ -11,7 +11,6 @@ import {
   UseGuards, Post, Patch, Delete, Request, Put, Res,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { NotificationProxyService } from '../../services/proxy/notification.service';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { GatewayService } from '../../services/proxy/gateway.service';
 
@@ -23,39 +22,6 @@ export class PodProxyController {
   constructor(
     private gatewayService: GatewayService,
   ) {}
-
-  @Get('pod-notification/message/info')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
-  public async notificationInfo() {
-    return NotificationProxyService.notificationInfo();
-  }
-
-  @Get('pod-notification/message')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
-  public async notificationDetail(@Query()
-  queryParams: {
-    notificationId: string;
-  }) {
-    return NotificationProxyService.notificationDetail(
-      queryParams.notificationId,
-    );
-  }
-
-  @Get('pod-notification/message/list')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
-  public async notificationList(@Query()
-  queryParams: {
-    page: string;
-    limit: string;
-  }) {
-    return NotificationProxyService.notificationList(
-      queryParams.page,
-      queryParams.limit,
-    );
-  }
 
   @Get('*')
   @HttpCode(HttpStatus.OK)
