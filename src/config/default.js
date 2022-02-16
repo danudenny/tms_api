@@ -3,9 +3,9 @@ const path = require('path');
 
 module.exports = {
   redis: {
-    host: '3.1.243.32',
+    host: '18.141.116.177',
     port: '6379',
-    password: '9F864DAF0B09974AA3F0E90646EEFEA3',
+    password: 'r3di5S1c3pat116688_',
     db: process.env.NODE_ENV === 'test' ? 1 : 0,
   },
   jwt: {
@@ -18,9 +18,9 @@ module.exports = {
     assets: path.resolve(__dirname, '..', 'assets'),
   },
   cloudStorage: {
-    cloudUrl: 'https://sicepattesting.s3-ap-southeast-1.amazonaws.com',
+    cloudUrl: 'https://sicepatmasterdata.s3-ap-southeast-1.amazonaws.com',
     cloudResiUrl : 'https://sicepatresi.s3.amazonaws.com',
-    cloudBucket: 'sicepattesting',
+    cloudBucket: 'sicepatmasterdata',
     cloudRegion: 'ap-southeast-1',
     cloudAccessKeyId: 'AKIA2ZCLVOSJTBNWP73E',
     cloudSecretAccessKey: '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',
@@ -32,7 +32,7 @@ module.exports = {
     password: '@S1cepat!',
   },
   imgProxyHelper: {
-    proxyUrl: 'https://imgproxy-stag.sicepat.com',
+    proxyUrl: 'https://imgproxy.sicepat.com',
     key: 'WbEZyJ8WsD',
     salt: 'GV5ueRu21Z',
     algo: 'SHA-256',
@@ -74,7 +74,7 @@ module.exports = {
     tags: ['API-POD'],
   },
   activityLog: {
-    baseUrl: 'http://api-internal.s.sicepat.io/core/logger',
+    baseUrl: 'http://api-internal.sicepat.io/core/logger',
   },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
@@ -115,7 +115,7 @@ module.exports = {
   },
   korwil: {
     korwilRoleId: [38, 155],
-    smdRoleId: 117,
+    smdRoleId: 104,
     palkurRoleId: [40, 41],
     korwilHrdRoleId: 154,
   },
@@ -131,12 +131,12 @@ module.exports = {
   },
   mongodb: {
     sicepat:
-      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-staging-cluster.nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
+      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-tracking-cluster-nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
   },
   sendgrid: {
-    apiKeyId: 'le77jXQbS9K4wtbDwV4zwg',
+    apiKeyId: '03GtPFfkRzS6y47gfg23sQ',
     apiKey:
-      'SG.le77jXQbS9K4wtbDwV4zwg.Wt4-nTIvN4CZergYNnnrwT9AaX-ZCKz62KQD5e7n8ww',
+      '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',
   },
   svcOtp: {
     baseUrl: 'http://api-internal.sicepat.io/core/authsvc',
