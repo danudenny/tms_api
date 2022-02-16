@@ -511,9 +511,8 @@ export class MonitoringProblemListService {
         CASE WHEN hsa.do_hub = TRUE THEN 'Yes' ELSE 'No' END AS "do",
         CASE WHEN hsa.in_hub = TRUE THEN 'Yes' ELSE 'No' END AS "in",
         CASE WHEN hsa.out_hub = TRUE THEN 'Yes' ELSE 'No' END AS "out",
-        ast.awb_status_name AS "awbStatusName"
+        hsa.note AS "awbStatusName"
       FROM hub_summary_awb hsa
-      LEFT JOIN awb_status ast ON hsa.awb_status_id_last = ast.awb_status_id AND ast.is_deleted = FALSE
       LEFT JOIN bag_item bdo ON hsa.bag_item_id_do = bdo.bag_Item_id AND bdo.is_deleted = FALSE
       LEFT JOIN bag b ON bdo.bag_id = b.bag_id AND b.is_deleted = FALSE
       LEFT JOIN bag_item bin ON hsa.bag_item_id_in = bin.bag_Item_id AND bin.is_deleted = FALSE
