@@ -22,6 +22,7 @@ export class RolePermissionService {
       })
       .where(e => e.role_id, w => w.equals(roleId))
       .andWhere(e => e.app_name, w => w.equals(appName))
+      .andWhere(e => e.isDeleted, w => w.isFalse())
       .exec();
 
     const rolePermissionNames = rolePermissions.map(
@@ -64,8 +65,10 @@ export class RolePermissionService {
     await getConnection().transaction(async entityManager => {
       await entityManager
         .createQueryBuilder()
-        .delete()
-        .from(RolePermission)
+        .update(RolePermission)
+        .set({
+          isDeleted: true,
+        })
         .where('role_id = :roleId AND app_name = :appName', { roleId, appName })
         .execute();
 

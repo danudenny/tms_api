@@ -183,6 +183,7 @@ export class AuthService {
       const user = await RepositoryService.user
         .loadById(authMeta.userId)
         .innerJoinAndSelect(e => e.userRoles.role.rolePermissions)
+        .andWhere(e => e.userRoles.role.rolePermissions.isDeleted, w => w.isFalse())
         .andWhere(e => e.userRoles.roleId, w => w.equals(roleId))
         .andWhere(e => e.userRoles.branchId, w => w.equals(branchId))
         .exec();
