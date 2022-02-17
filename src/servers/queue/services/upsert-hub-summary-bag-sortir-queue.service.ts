@@ -3,7 +3,6 @@ import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import moment= require('moment');
 
-
 // DOC: https://optimalbits.github.io/bull/
 
 export class UpsertHubSummaryBagSortirQueueService {
@@ -80,11 +79,12 @@ export class UpsertHubSummaryBagSortirQueueService {
       // }); // end transaction
       try {
         const dateNow = moment().format('YYYY-MM-DD HH:mm:ss');
+        const note = data.note ? `'${data.note}'` : null;
         await getManager().transaction(async transactional => {
           const upsertRawHubSummaryAwbSql = `insert into hub_summary_awb (awb_number, scan_date_in_hub, in_hub, bag_item_id_in, bag_id_in, awb_item_id, note, user_id_updated, updated_time, branch_id, user_id_created, created_time)
-                            values ('${escape(data.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${data.awbItemId}, ${data.note}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
+                            values ('${escape(data.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${data.awbItemId}, ${note}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
                             ON CONFLICT (awb_number,branch_id) DO
-                            UPDATE SET in_hub = true, scan_date_in_hub = '${dateNow}', bag_item_id_in = ${data.bagItemId}, bag_id_in = ${data.bagId}, note=${data.note}, user_id_updated=${data.userId}, updated_time='${dateNow}';`;
+                            UPDATE SET in_hub = true, scan_date_in_hub = '${dateNow}', bag_item_id_in = ${data.bagItemId}, bag_id_in = ${data.bagId}, note=${note}, user_id_updated=${data.userId}, updated_time='${dateNow}';`;
           console.log('### UPSERT IN HUB SUMMARY QUERY =========', upsertRawHubSummaryAwbSql);
           await transactional.query(upsertRawHubSummaryAwbSql);
         });
