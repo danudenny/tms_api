@@ -553,6 +553,7 @@ export class MonitoringProblemListService {
     `;
 
     const data = await RawQueryService.query(queryFix);
+    console.log("data:", data);
     const queryCount = `SELECT
             COUNT(1) AS total
           FROM hub_summary_awb hsa
@@ -570,7 +571,7 @@ export class MonitoringProblemListService {
     result.data = data.map(r => ({
       scanDate: r.scanDate,
       awbNumber: r.awbNumber,
-      bagNumber: r.biBagNumber != null ? r.biBagNumber + r.binBagSeq.padStart(3, '0') : r.bBagNumber + r.bdoBagSeq.padStart(3, '0'),
+      bagNumber: r.biBagNumber != null ? r.biBagNumber.toString() +  r.binBagSeq.toString().padStart(3, '0') : r.bBagNumber.toString() + r.bdoBagSeq.toString().padStart(3, '0'),
       do: r.doHub ? 'Yes' : 'No',
       in: r.inHub ? 'Yes' : 'No',
       out: r.outHub ? 'Yes' : 'No',
