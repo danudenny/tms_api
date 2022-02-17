@@ -185,10 +185,15 @@ export class LastMileTransitOutService {
       if (awb) {
         // TODO: validation need improvement
         // handle if awb status is null
-        let notDeliver = true;
+        let notDeliver = false;
+        let haveInBranch = false;
         if (awb.awbStatusIdLast && awb.awbStatusIdLast != 0) {
           notDeliver =
-            awb.awbStatusIdLast != AWB_STATUS.OUT_BRANCH ? true : false;
+            awb.awbStatusIdLast != AWB_STATUS.OUT_BRANCH || awb.awbStatusIdLast != AWB_STATUS.OUT_TRANSIT  ? true : false;
+
+            if (awb.awbStatusIdLast == AWB_STATUS.IN_BRANCH){
+              haveInBranch = true
+            }
         }
         // Add Locking setnx redis
         const holdRedis = await RedisService.locking(
@@ -196,7 +201,7 @@ export class LastMileTransitOutService {
           'locking',
         );
 
-        if (notDeliver && holdRedis) {
+        if (notDeliver && holdRedis && haveInBranch) {
           if (doPod) {
             // NOTE: create data do pod detail per awb number
             const doPodDetail = DoPodDetail.create();
@@ -247,7 +252,7 @@ export class LastMileTransitOutService {
             // handle status out branch transit
             paramsBull.push({
               awbItemId: awb.awbItemId,
-              awbStatus: AWB_STATUS.OUT_BRANCH,
+              awbStatus: AWB_STATUS.OUT_TRANSIT,
               branchId: permissonPayload.branchId,
               userId: authMeta.userId,
               userIdDriver: doPod.userIdDriver,
@@ -265,9 +270,15 @@ export class LastMileTransitOutService {
           // remove key holdRedis
           RedisService.del(`hold:scanout:${awb.awbItemId}`);
         } else {
-          totalError += 1;
-          response.status = 'error';
-          response.message = `Resi ${awbNumber} sudah di proses.`;
+          if(haveInBranch == false && awb.awbStatusIdLast != AWB_STATUS.OUT_TRANSIT){
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} belum di scan masuk.`;
+          }else{
+            totalError += 1;
+            response.status = 'error';
+            response.message = `Resi ${awbNumber} sudah di proses.`;
+          }
         }
       } else {
         totalError += 1;
