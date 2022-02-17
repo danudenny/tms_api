@@ -532,7 +532,17 @@ export class MonitoringProblemListService {
     `;
 
     const data = await RawQueryService.query(queryFix);
-    const total = await RawQueryService.query('SELECT COUNT(*) AS total FROM(' + query + ') n');
+    const queryCount = `SELECT
+            COUNT(1) AS total
+          FROM hub_summary_awb hsa
+          LEFT JOIN bag_item bdo ON hsa.bag_item_id_do = bdo.bag_Item_id AND bdo.is_deleted = FALSE
+          LEFT JOIN bag b ON bdo.bag_id = b.bag_id AND b.is_deleted = FALSE
+          LEFT JOIN bag_item bin ON hsa.bag_item_id_in = bin.bag_Item_id AND bin.is_deleted = FALSE
+          LEFT JOIN bag bi ON bin.bag_id = bi.bag_id AND bi.is_deleted = FALSE
+    WHERE
+        hsa.is_deleted = FALSE ${whereQuery ? 'AND ' + whereQuery : ''} ${problemFilter ? 'AND ' + problemFilter : ''}  ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''}
+`;
+    const total = await RawQueryService.query(queryCount);
 
     const result = new MonitoringHubProblemVm();
 
