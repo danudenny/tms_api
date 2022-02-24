@@ -30,6 +30,7 @@ import { createQueryBuilder } from 'typeorm';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { ImgProxyHelper } from '../../../../../shared/helpers/imgproxy-helper'
+import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { Awb } from '../../../../../shared/orm-entity/awb';
 import { LOGGER_ACTIVITY } from '../../../../../shared/constants/logger-activity.constant';
 import { RequestErrorService } from '../../../../../shared/services/request-error.service';
@@ -311,8 +312,7 @@ export class V1WebTrackingService {
         imageResp = await axios.get(imageUrl);
       } catch(err) {
         if(err.response){
-          console.log('::::: GAMBAR TIDAK TERSEDIA :::::');
-          console.log(`::::: ERROR_CODE ::::: ${err.response.status}, ::::: ERROR_TEXT ::::: ${err.response.statusText}`);
+          PinoLoggerService.warn('[LOG PHOTO DETAIL TRACKING]', err.response);
         }
       }
 
