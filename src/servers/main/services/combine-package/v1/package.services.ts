@@ -861,7 +861,6 @@ export class V1PackageService {
         troubleDesc,
       });
 
-      console.log('asdfkasdjfkasdf\n\n');
       // NOTE: critical path
       // get data bag / create new data bag
       if (payload.podScanInHubId) {
