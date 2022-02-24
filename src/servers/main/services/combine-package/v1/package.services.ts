@@ -209,7 +209,7 @@ export class V1PackageService {
         bagWeight = data[0].bagWeight;
         bagSeq = data[0].bagSeq;
 
-        result.bagNumber = bagNumber;
+        result.bagNumber = bagNumber.substring(0, 10);
         result.branchId = branchId;
         result.branchName = branchName;
         result.branchCode = branchCode;
@@ -610,7 +610,7 @@ export class V1PackageService {
     let randomBagNumber;
 
     await getManager().transaction(async trans => {
-      randomBagNumber = 'SS' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
+      randomBagNumber = this.getRandomBagNumber(payload);
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
         branchIdTo: branchId,
@@ -1004,5 +1004,15 @@ export class V1PackageService {
 
     const awbDetail = await qb.getRawOne();
     return awbDetail;
+  }
+
+  private static getRandomBagNumber(payload) {
+    let bagNumberPrefix = 'SS';
+    if (payload.note === 'Reject') {
+      bagNumberPrefix = 'SR';
+    } else if (payload.note === 'Irregular') {
+      bagNumberPrefix = 'SI';
+    }
+    return bagNumberPrefix + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
   }
 }
