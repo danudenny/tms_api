@@ -66,6 +66,7 @@ import { RolePodManualController } from './web/web-role-pod-manual.controller';
 import { V1WebAwbHighValueController } from './web/v1/web-awb-high-value.controller';
 import { V2MobileInitController } from './mobile/v2/mobile-init.controller';
 import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
+import { PodProxyController } from './proxy/proxy.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
 import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller';
 import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
@@ -144,6 +145,7 @@ import { RejectPackageController } from './combine-package/reject-package.contro
     WebHubReportController,
     V1WebAwbHighValueController,
     EmployeePenalty,
+    PodProxyController,
     MobileDeviceInfoController,
     V1WebAwbHandoverController,
     WebDoPodReturnController,
