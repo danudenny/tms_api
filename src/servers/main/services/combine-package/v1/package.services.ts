@@ -16,7 +16,8 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
 import { CreateBagAwbScanHubQueueService } from '../../../../queue/services/create-bag-awb-scan-hub-queue.service';
 import { CreateBagFirstScanHubQueueService } from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
-import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
+import { PackagePayloadVm, LoadPackagesPayloadVm } from '../../../models/gabungan-payload.vm';
+import { RejectPackagePayloadVm } from '../../../models/reject-package-payload.vm';
 import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
 import {
   CreateBagNumberResponseVM,
@@ -28,7 +29,6 @@ import {
 import { BagService } from '../../v1/bag.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import moment = require('moment');
-import { RejectPackagePayloadVm } from '../../../models/reject-package-payload.vm';
 // #endregion
 const uuidv1 = require('uuid/v1');
 
@@ -143,16 +143,15 @@ export class V1PackageService {
     return result;
   }
 
-  static async loadAwbPackage(): Promise<PackageAwbResponseVm> {
+  static async loadAwbPackage(payload: LoadPackagesPayloadVm): Promise<PackageAwbResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const result = new PackageAwbResponseVm();
-
+    const { scanInType } = payload;
     result.branchId = 0;
-
     const podScanInHub = await PodScanInHub.findOne({
       where: {
-        scanInType: 'BAG',
+        scanInType: scanInType ? scanInType.toUpperCase() : 'BAG',
         transactionStatusId: 100,
         branchId: permissonPayload.branchId,
         userIdCreated: authMeta.userId,
@@ -402,7 +401,7 @@ export class V1PackageService {
     const authMeta = AuthService.getAuthData();
 
     if (!payload.bagItemId) {
-      throw new BadRequestException("payload invalid");
+      throw new BadRequestException('payload invalid');
     }
 
     const podScanInHub = await PodScanInHub.findOne({
@@ -649,13 +648,13 @@ export class V1PackageService {
         isSortir: true,
       });
       bagItem = await trans.save(BagItem, bagItemDetail);
-    });//end transaction
+    }); // end transaction
 
     result.bagItemId = bagItem.bagItemId;
     // result.bagNumber = `${randomBagNumber}${bagSeq}`;
     result.bagNumber = `${randomBagNumber}`;
     result.weight = bagItem.weight;
-    result.bagSeq = 1;//new default bag seq
+    result.bagSeq = 1; // new default bag seq
 
     return result;
   }
@@ -701,9 +700,10 @@ export class V1PackageService {
         // });
 
         // #region PodScanInHub process
+        const scanInType = payload.note ? payload.note.toUpperCase() : 'BAG';
         const podScanInHub = await PodScanInHub.findOne({
           where: {
-            scanInType: 'BAG',
+            scanInType,
             transactionStatusId: 100,
             branchId: permissonPayload.branchId,
             userIdCreated: authMeta.userId,
@@ -720,7 +720,7 @@ export class V1PackageService {
           const podScanInHubData = PodScanInHub.create({
             podScanInHubId,
             branchId: permissonPayload.branchId,
-            scanInType: 'BAG',
+            scanInType,
             transactionStatusId: 100,
             userIdCreated: authMeta.userId,
             createdTime: moment().toDate(),
@@ -860,6 +860,7 @@ export class V1PackageService {
         troubleDesc,
       });
 
+      console.log('asdfkasdjfkasdf\n\n');
       // NOTE: critical path
       // get data bag / create new data bag
       if (payload.podScanInHubId) {
