@@ -1,5 +1,5 @@
 // #region import
-import _, { assign, sampleSize } from 'lodash';
+import _, { assign, sampleSize, sum } from 'lodash';
 import { createQueryBuilder, getManager } from 'typeorm';
 
 import { BadRequestException } from '@nestjs/common';
@@ -215,7 +215,7 @@ export class V1PackageService {
         result.branchName = branchName;
         result.branchCode = branchCode;
         result.bagSeq = bagSeq;
-        result.bagWeight = bagWeight;
+        result.bagWeight = sum(data.map(item => Number(item.totalWeightFinalRounded)));
         result.podScanInHubId = podScanInHubId;
         result.bagItemId = bagItemId;
         result.dataBag = data;
