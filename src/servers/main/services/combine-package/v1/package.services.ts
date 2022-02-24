@@ -147,11 +147,12 @@ export class V1PackageService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const result = new PackageAwbResponseVm();
-    const { scanInType } = payload;
+    let { scanInType } = payload;
+    scanInType = scanInType ? this.getRejectScanInType(scanInType) : 'BAG',
     result.branchId = 0;
     const podScanInHub = await PodScanInHub.findOne({
       where: {
-        scanInType: scanInType ? scanInType.toUpperCase() : 'BAG',
+        scanInType,
         transactionStatusId: 100,
         branchId: permissonPayload.branchId,
         userIdCreated: authMeta.userId,
@@ -700,7 +701,7 @@ export class V1PackageService {
         // });
 
         // #region PodScanInHub process
-        const scanInType = payload.note ? payload.note.toUpperCase() : 'BAG';
+        const scanInType = payload.note ? this.getRejectScanInType(payload.note) : 'BAG';
         const podScanInHub = await PodScanInHub.findOne({
           where: {
             scanInType,
@@ -1014,5 +1015,9 @@ export class V1PackageService {
       bagNumberPrefix = 'SI';
     }
     return bagNumberPrefix + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
+  }
+
+  private static getRejectScanInType(type: string) {
+    return `BAG-${type.toUpperCase().substring(0, 2)}`;
   }
 }
