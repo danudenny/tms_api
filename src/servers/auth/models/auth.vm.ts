@@ -65,6 +65,11 @@ export class AuthLoginResponseVM {
   displayName: string;
 }
 
+export class AuthLoginV2ResponseVM extends AuthLoginResponseVM{
+  @ApiModelProperty()
+  statusCode: string;
+}
+
 export class AuthLoginWithRolesResponseVM {
   @ApiModelProperty()
   userId: string;
@@ -155,4 +160,55 @@ export class PermissionAccessResponseVM {
   isSigesitReturn: boolean;
 }
 
+export class LoginChannelOtpAddresses {
+  @ApiModelProperty()
+  address: string;
+
+  @ApiModelProperty()
+  channel: string;
+
+  @ApiModelProperty()
+  enable: boolean;
+}
+
+export class LoginChannelOtpAddressesResponse {
+  @ApiModelProperty()
+  token: string;
+
+  @ApiModelProperty()
+  isOtpRequired: boolean;
+
+  @ApiModelProperty({ type: [LoginChannelOtpAddresses]})
+  addresses: LoginChannelOtpAddresses[];
+}
+
+export class AuthLoginOtpByEmailOrUsernamePayloadVM {
+  @ApiModelPropertyOptional()
+  @IsEmail({})
+  @IsOptional({})
+  email?: string;
+
+  @ApiModelPropertyOptional()
+  username: string;
+
+  @ApiModelProperty()
+  @IsNotEmpty()
+  password: string;
+}
+
+export class GetOtpPayloadVM {
+  @ApiModelProperty()
+  channel: string;
+
+  @ApiModelProperty()
+  token: string;
+}
+
+export class ValidateOtpPayloadVM {
+  @ApiModelProperty()
+  code: string;
+
+  @ApiModelProperty()
+  token: string;
+}
 // #endregion

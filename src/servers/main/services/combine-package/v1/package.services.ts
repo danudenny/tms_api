@@ -117,8 +117,9 @@ export class V1PackageService {
               representative,
             });
           }
+
           // create new bag number sortir
-          const genBagNumber = await this.createBagNumber(
+          const genBagNumber = await this.createBagNumberV2(
             payload,
             branch.branchCode,
           );
@@ -398,6 +399,11 @@ export class V1PackageService {
   private static async onFinish(payload: PackagePayloadVm): Promise<boolean> {
     let bagWeightFinal;
     const authMeta = AuthService.getAuthData();
+
+    if (!payload.bagItemId) {
+      throw new BadRequestException("payload invalid");
+    }
+    
     const podScanInHub = await PodScanInHub.findOne({
       where: { podScanInHubId: payload.podScanInHubId },
     });
@@ -587,6 +593,68 @@ export class V1PackageService {
     result.weight = bagItem.weight;
     result.bagSeq = sequence;
     result.bagId = bagId;
+
+    return result;
+  }
+
+  private static async createBagNumberV2(
+    payload,
+    branchCode: string,
+  ): Promise<CreateBagNumberResponseVM> {
+    const result = new CreateBagNumberResponseVM();
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const timestamp = moment().toDate();
+    const branchId = payload.branchId;
+    let bagItem;
+    let randomBagNumber;
+
+    await getManager().transaction(async trans => {
+      randomBagNumber = 'SS' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
+      const bagDetail = Bag.create({
+        bagNumber: randomBagNumber,
+        branchIdTo: branchId,
+        refRepresentativeCode: payload.representative
+          ? payload.representative.representativeCode
+          : null,
+        representativeIdTo: payload.representative
+          ? payload.representative.representativeId
+          : null,
+        refBranchCode: branchCode,
+        bagType: 'branch',
+        branchId: permissonPayload.branchId,
+        bagDate: moment().format('YYYY-MM-DD'),
+        bagDateReal: timestamp,
+        createdTime: timestamp,
+        updatedTime: timestamp,
+        userIdCreated: authMeta.userId,
+        userIdUpdated: authMeta.userId,
+        isSortir: true,
+        isManual: true,
+      });
+      const bag = await trans.save(Bag, bagDetail);
+
+      // INSERT INTO TABLE BAG ITEM
+      const bagItemDetail = BagItem.create({
+        bagId: bag.bagId,
+        bagSeq: 1,
+        branchIdLast: permissonPayload.branchId,
+        bagItemStatusIdLast: 3000,
+        userIdCreated: authMeta.userId,
+        weight: 0,
+        createdTime: timestamp,
+        updatedTime: timestamp,
+        userIdUpdated: authMeta.userId,
+        isSortir: true,
+      });
+      bagItem = await trans.save(BagItem, bagItemDetail);
+    });//end transaction
+
+    result.bagItemId = bagItem.bagItemId;
+    // result.bagNumber = `${randomBagNumber}${bagSeq}`;
+    result.bagNumber = `${randomBagNumber}`;
+    result.weight = bagItem.weight;
+    result.bagSeq = 1;//new default bag seq
 
     return result;
   }

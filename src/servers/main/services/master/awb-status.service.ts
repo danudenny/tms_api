@@ -93,8 +93,8 @@ export class AwbStatusService {
     optionalInBranch?: Boolean,
     optionalManifested?: Boolean,
   ) {
-    let message = null;
-    const isValid = false;
+    let message = `Resi ${awbItemAttr.awbNumber} tidak dapat di proses.`;
+    let isValid = false;
     if (awbItemAttr.awbStatusIdLast) {
       if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
         message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
@@ -119,7 +119,9 @@ export class AwbStatusService {
         message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
         return { isValid, message };
       }
+
+      isValid = true;
     }
-    return { isValid: true, message };
+    return { isValid, message };
   }
 }

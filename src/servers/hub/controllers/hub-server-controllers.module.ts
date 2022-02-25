@@ -8,6 +8,7 @@ import { InternalSortirListController } from './integration/internal-sortir-list
 import { MonitoringProblemListController } from './integration/monitoring-problem-list.controller';
 import { MonitoringProblemLebihSortirListController } from './integration/monitoring-problem-lebih-sortir-list.controller';
 import { CentralSortirController } from './integration/central-sortir.controller';
+import { LogWayzimController } from './integration/log-wayzim.controller';
 
 @Module({
   imports: [SharedModule, HubServerServicesModule],
@@ -18,6 +19,7 @@ import { CentralSortirController } from './integration/central-sortir.controller
     MonitoringProblemListController,
     MonitoringProblemLebihSortirListController,
     CentralSortirController,
+    LogWayzimController,
   ],
 })
 export class HubServerControllersModule {}

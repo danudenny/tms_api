@@ -24,11 +24,10 @@ import { PinoLoggerService } from '../../../../../shared/services/pino-logger.se
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { UploadImagePodQueueService } from '../../../../queue/services/upload-pod-image-queue.service';
-import { CodPayment } from '../../../../../shared/orm-entity/cod-payment';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { RedisService } from '../../../../../shared/services/redis.service';
-import { AwbSunfishV2QueueService } from '../../../../queue/services/integration/awb-sunfish-v2-queue.service';
 import { AwbNotificationMailQueueService } from '../../../../queue/services/notification/awb-notification-mail-queue.service';
+import { AwbCodService } from '../../cod/awb-cod.service';
 // #endregion
 
 export class V2MobileSyncService {
@@ -110,9 +109,9 @@ export class V2MobileSyncService {
       const historyDateTime = this.getHistoryDateTime(lastDoPodDeliverHistory, doPodDeliver);
 
       try {
-        const awbdDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
+        const awbDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
         const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
-        if (awbdDelivery && !finalStatus.includes(Number(awbdDelivery.awbStatusIdLast))) {
+        if (awbDelivery && !finalStatus.includes(Number(awbDelivery.awbStatusIdLast))) {
           const awbStatus = await AwbStatus.findOne(
             { awbStatusId: lastDoPodDeliverHistory.awbStatusId },
             { cache: true },
@@ -146,61 +145,25 @@ export class V2MobileSyncService {
 
             // only awb COD and DLV
             if (delivery.isCOD && lastDoPodDeliverHistory.awbStatusId == AWB_STATUS.DLV) {
-              // find and update
-              const codPayment = await transactionEntityManager.findOne(
-                CodPayment,
+              await AwbCodService.transfer(
                 {
-                  where: {
-                    awbItemId: delivery.awbItemId,
-                    isDeleted: false,
-                  },
-                },
-              );
-              if (codPayment) {
-                // update data
-                await transactionEntityManager.update(
-                  CodPayment,
-                  {
-                    codPaymentId: codPayment.codPaymentId,
-                  },
-                  {
-                    codValue: delivery.totalCodValue,
-                    codPaymentMethod: delivery.codPaymentMethod,
-                    codPaymentService: delivery.codPaymentService,
-                    note: delivery.note,
-                    noReference: delivery.noReference,
-                    userIdUpdated: authMeta.userId,
-                    userIdDriver: authMeta.userId,
-                    branchId: awbdDelivery.branchId,
-                    updatedTime: moment().toDate(),
-                  },
-                );
-              } else {
-                await transactionEntityManager.insert(
-                  CodPayment,
-                  {
-                  awbNumber: delivery.awbNumber,
-                  codValue: delivery.totalCodValue,
-                  codPaymentMethod: delivery.codPaymentMethod,
-                  codPaymentService: delivery.codPaymentService,
-                  note: delivery.note,
-                  noReference: delivery.noReference,
                   doPodDeliverDetailId: delivery.doPodDeliverDetailId,
+                  awbNumber: delivery.awbNumber,
                   awbItemId: delivery.awbItemId,
-                  branchId: awbdDelivery.branchId,
-                  userIdDriver: authMeta.userId,
-                  userIdCreated: authMeta.userId,
-                  userIdUpdated: authMeta.userId,
-                  createdTime: moment().toDate(),
-                  updatedTime: moment().toDate(),
-                });
-              }
-              // TODO: update transaction_status_id = TRANSACTION_STATUS.SIGESIT
-
+                  amount: delivery.totalCodValue,
+                  method: delivery.codPaymentMethod,
+                  service: delivery.codPaymentService,
+                  noReference: delivery.noReference,
+                  note: delivery.note,
+                },
+                awbDelivery.branchId,
+                authMeta.userId,
+                transactionEntityManager,
+              );
             }
 
             if (doPodDeliver) {
-
+              // TODO: need improvment
               if (awbStatus.isProblem) {
                 await transactionEntityManager.increment(
                   DoPodDeliver,
@@ -238,10 +201,10 @@ export class V2MobileSyncService {
 
           // NOTE: queue by Bull
           DoPodDetailPostMetaQueueService.createJobV1MobileSync(
-            awbdDelivery.awbItemId,
+            awbDelivery.awbItemId,
             lastDoPodDeliverHistory.awbStatusId,
             authMeta.userId,
-            awbdDelivery.branchId,
+            awbDelivery.branchId,
             authMeta.userId,
             delivery.employeeId,
             lastDoPodDeliverHistory.reasonId,
@@ -265,7 +228,7 @@ export class V2MobileSyncService {
           } else {
             // NOTE: mail notification status problem
             AwbNotificationMailQueueService.perform(
-              awbdDelivery.awbItemId,
+              awbDelivery.awbItemId,
               awbStatus.awbStatusId,
             );
           }

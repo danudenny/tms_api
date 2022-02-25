@@ -19,4 +19,12 @@ export class HubMachineSortirController {
   public async checkSpk(@Body() payload: CheckAwbPayloadVm) {
     return HubMachineSortirService.checkAwb(payload);
   }
+
+  @Post('deleteKeyRedis')
+  @HttpCode(HttpStatus.OK)
+  @ApiImplicitHeader({ name: 'x-api-key' })
+  @UseGuards(AuthXAPIKeyGuard)
+  public async deleteKeyRedis(@Body() payload) {
+    return HubMachineSortirService.deleteKeyRedis(payload);
+  }
 }

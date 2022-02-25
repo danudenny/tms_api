@@ -7,8 +7,31 @@ import { BranchSortirLogQueueService } from '../../../queue/services/branch-sort
 import { BranchSortirLogSummary } from '../../../../shared/orm-entity/branch-sortir-log-summary';
 import { getConnection } from 'typeorm';
 import { District } from '../../../../shared/orm-entity/district';
+import { RedisService } from '../../../../shared/services/redis.service';
 
 export class HubMachineSortirService {
+
+  static async deleteKeyRedis(payload): Promise<any> {
+    const key = payload.key;
+    const data = await RedisService.get(key, true);
+    // console.log('data: ', data);
+    const result = { statusCode : HttpStatus.OK, message: '' };
+    if (data) {
+      // delete key redis
+      const deleteKey = await RedisService.del(key);
+      if (deleteKey) {
+        result.message = `Key ${key} has been deleted`;
+      } else {
+        result.statusCode = HttpStatus.BAD_REQUEST;
+        result.message = `delete key failed`;
+      }
+
+    } else {
+      result.message = `Key ${key} not found`;
+    }
+
+    return result;
+  }
 
   static async checkAwb(
     payload: CheckAwbPayloadVm,
@@ -29,7 +52,7 @@ export class HubMachineSortirService {
     let district_code;
     let branchSortirLogSummaryId;
     const ArrChute = [];
-    let paramBranchIdLastmile;
+    let paramBranchIdLastmile: number = null;
     let paramChute;
     let cod_nilai;
     let tujuan;
@@ -61,6 +84,7 @@ export class HubMachineSortirService {
     if (resultDataAwb.length > 0 ) {
       for (let a = 0; a < resultDataAwb.length; a++) {
         tujuan = resultDataAwb[a].tujuan;
+        // cod_biaya = resultDataAwb[a].codbiaya;
         cod_nilai = resultDataAwb[a].codnilai;
       }
 
@@ -69,37 +93,40 @@ export class HubMachineSortirService {
       } else {
         is_cod = false;
       }
+
       if (!tujuan) {
         data.push({
           state: 1,
           tracking_number: payload.tracking_number,
+          is_cod,
         });
         result.statusCode = HttpStatus.BAD_REQUEST;
         result.message = `District NULL for AWB: ` + payload.tracking_number;
         result.data = data;
 
-        await this.upsertBranchSortirLog(
-          result.message,
-          dateNow,
-          1,
-          payload.sorting_branch_id,
-          payload.tracking_number,
-          null,
-          null,
-          false,
-          1,
-        );
+        // Remark Sementara karena Wayzim mau testing pke mesin distaging
+        // await this.upsertBranchSortirLog(
+        //   result.message,
+        //   dateNow,
+        //   1,
+        //   payload.sorting_branch_id,
+        //   payload.tracking_number,
+        //   null,
+        //   null,
+        //   false,
+        //   1,
+        // );
 
-        branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
-          result.message,
-          0,
-          dateNow,
-          payload.sorting_branch_id,
-          payload.tracking_number,
-          null,
-          null,
-          is_cod,
-        );
+        // branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+        //   result.message,
+        //   0,
+        //   dateNow,
+        //   payload.sorting_branch_id,
+        //   payload.tracking_number,
+        //   null,
+        //   null,
+        //   is_cod,
+        // );
 
         return result;
       }
@@ -112,33 +139,35 @@ export class HubMachineSortirService {
         data.push({
           state: 1,
           tracking_number: payload.tracking_number,
+          is_cod,
         });
         result.statusCode = HttpStatus.BAD_REQUEST;
         result.message = `Can't Find District for AWB: ` + payload.tracking_number;
         result.data = data;
 
-        await this.upsertBranchSortirLog(
-          result.message,
-          dateNow,
-          1,
-          payload.sorting_branch_id,
-          payload.tracking_number,
-          null,
-          null,
-          false,
-          1,
-        );
+        // Remark Sementara karena Wayzim mau testing pke mesin distaging
+        // await this.upsertBranchSortirLog(
+        //   result.message,
+        //   dateNow,
+        //   1,
+        //   payload.sorting_branch_id,
+        //   payload.tracking_number,
+        //   null,
+        //   null,
+        //   false,
+        //   1,
+        // );
 
-        branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
-          result.message,
-          0,
-          dateNow,
-          payload.sorting_branch_id,
-          payload.tracking_number,
-          null,
-          null,
-          is_cod,
-        );
+        // branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+        //   result.message,
+        //   0,
+        //   dateNow,
+        //   payload.sorting_branch_id,
+        //   payload.tracking_number,
+        //   null,
+        //   null,
+        //   is_cod,
+        // );
 
         return result;
       }
@@ -183,40 +212,44 @@ export class HubMachineSortirService {
             for (let a = 0; a < resultData.length; a++) {
               ArrChute.push(resultData[a].no_chute);
 
-              await this.upsertBranchSortirLog(
-                result.message,
-                dateNow,
-                0,
-                payload.sorting_branch_id,
-                payload.tracking_number,
-                resultData[a].no_chute,
-                resultData[a].branch_id_lastmile,
-                resultData[a].is_cod,
-                1,
-              );
-              paramBranchIdLastmile = resultData[a].branch_id_lastmile,
-              paramChute = resultData[a].no_chute;
+              // Remark Sementara karena Wayzim mau testing pke mesin distaging
+              // await this.upsertBranchSortirLog(
+              //   result.message,
+              //   dateNow,
+              //   0,
+              //   payload.sorting_branch_id,
+              //   payload.tracking_number,
+              //   resultData[a].no_chute,
+              //   resultData[a].branch_id_lastmile,
+              //   resultData[a].is_cod,
+              //   1,
+              // );
+              paramBranchIdLastmile = Number(resultData[a].branch_id_lastmile),
+                paramChute = resultData[a].no_chute;
               if (paramChute) {
                 combineChute.push(paramChute);
               }
             }
 
-            branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
-              result.message,
-              1,
-              dateNow,
-              payload.sorting_branch_id,
-              payload.tracking_number,
-              paramBranchIdLastmile,
-              combineChute.join(','),
-              is_cod,
-            );
+            // Remark Sementara karena Wayzim mau testing pke mesin distaging
+            // branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+            //   result.message,
+            //   1,
+            //   dateNow,
+            //   payload.sorting_branch_id,
+            //   payload.tracking_number,
+            //   paramBranchIdLastmile,
+            //   combineChute.join(','),
+            //   is_cod,
+            // );
 
             data.push({
               state: 0,
               tracking_number: payload.tracking_number,
               chute_number: ArrChute,
-              request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
+              request_time: moment().format('YYYY/MM/DD HH:mm:ss'),
+              is_cod,
+              branch_id_lastmile: paramBranchIdLastmile,
             });
             result.statusCode = HttpStatus.OK;
             result.data = data;
@@ -225,33 +258,36 @@ export class HubMachineSortirService {
             data.push({
               state: 1,
               tracking_number: payload.tracking_number,
+              is_cod,
+              branch_id_lastmile: paramBranchIdLastmile,
             });
             result.statusCode = HttpStatus.BAD_REQUEST;
             result.message = `Can't Find Chute COD For AWB: ` + payload.tracking_number;
             result.data = data;
 
-            await this.upsertBranchSortirLog(
-              result.message,
-              dateNow,
-              1,
-              payload.sorting_branch_id,
-              payload.tracking_number,
-              null,
-              null,
-              false,
-              1,
-            );
+            // Remark Sementara karena Wayzim mau testing pke mesin distaging
+            // await this.upsertBranchSortirLog(
+            //   result.message,
+            //   dateNow,
+            //   1,
+            //   payload.sorting_branch_id,
+            //   payload.tracking_number,
+            //   null,
+            //   null,
+            //   false,
+            //   1,
+            // );
 
-            branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
-              result.message,
-              0,
-              dateNow,
-              payload.sorting_branch_id,
-              payload.tracking_number,
-              null,
-              null,
-              is_cod,
-            );
+            // branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+            //   result.message,
+            //   0,
+            //   dateNow,
+            //   payload.sorting_branch_id,
+            //   payload.tracking_number,
+            //   null,
+            //   null,
+            //   is_cod,
+            // );
 
             return result;
           }
@@ -285,40 +321,44 @@ export class HubMachineSortirService {
             for (let a = 0; a < resultData.length; a++) {
               ArrChute.push(resultData[a].no_chute);
 
-              await this.upsertBranchSortirLog(
-                result.message,
-                dateNow,
-                0,
-                payload.sorting_branch_id,
-                payload.tracking_number,
-                resultData[a].no_chute,
-                resultData[a].branch_id_lastmile,
-                resultData[a].is_cod,
-                1,
-              );
-              paramBranchIdLastmile = resultData[a].branch_id_lastmile,
-              paramChute = resultData[a].no_chute;
+              // Remark Sementara karena Wayzim mau testing pke mesin distaging
+              // await this.upsertBranchSortirLog(
+              //   result.message,
+              //   dateNow,
+              //   0,
+              //   payload.sorting_branch_id,
+              //   payload.tracking_number,
+              //   resultData[a].no_chute,
+              //   resultData[a].branch_id_lastmile,
+              //   resultData[a].is_cod,
+              //   1,
+              // );
+              paramBranchIdLastmile = Number(resultData[a].branch_id_lastmile),
+                paramChute = resultData[a].no_chute;
               if (paramChute) {
                 combineChute.push(paramChute);
               }
             }
 
-            branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
-              result.message,
-              1,
-              dateNow,
-              payload.sorting_branch_id,
-              payload.tracking_number,
-              paramBranchIdLastmile,
-              combineChute.join(','),
-              is_cod,
-            );
+            // Remark Sementara karena Wayzim mau testing pke mesin distaging
+            // branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+            //   result.message,
+            //   1,
+            //   dateNow,
+            //   payload.sorting_branch_id,
+            //   payload.tracking_number,
+            //   paramBranchIdLastmile,
+            //   combineChute.join(','),
+            //   is_cod,
+            // );
 
             data.push({
               state: 0,
               tracking_number: payload.tracking_number,
               chute_number: ArrChute,
-              request_time: moment().format('DD/MM/YYYY, h:mm:ss a'),
+              request_time: moment().format('YYYY/MM/DD HH:mm:ss'),
+              is_cod,
+              branch_id_lastmile: paramBranchIdLastmile,
             });
             result.statusCode = HttpStatus.OK;
             result.data = data;
@@ -328,33 +368,36 @@ export class HubMachineSortirService {
             data.push({
               state: 1,
               tracking_number: payload.tracking_number,
+              is_cod,
+              branch_id_lastmile: paramBranchIdLastmile,
             });
             result.statusCode = HttpStatus.BAD_REQUEST;
             result.message = `Can't Find Chute For AWB: ` + payload.tracking_number;
             result.data = data;
 
-            await this.upsertBranchSortirLog(
-              result.message,
-              dateNow,
-              1,
-              payload.sorting_branch_id,
-              payload.tracking_number,
-              null,
-              null,
-              false,
-              1,
-            );
+            // Remark Sementara karena Wayzim mau testing pke mesin distaging
+            // await this.upsertBranchSortirLog(
+            //   result.message,
+            //   dateNow,
+            //   1,
+            //   payload.sorting_branch_id,
+            //   payload.tracking_number,
+            //   null,
+            //   null,
+            //   false,
+            //   1,
+            // );
 
-            branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
-              result.message,
-              0,
-              dateNow,
-              payload.sorting_branch_id,
-              payload.tracking_number,
-              null,
-              null,
-              false,
-            );
+            // branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+            //   result.message,
+            //   0,
+            //   dateNow,
+            //   payload.sorting_branch_id,
+            //   payload.tracking_number,
+            //   null,
+            //   null,
+            //   false,
+            // );
 
             return result;
           }
@@ -363,32 +406,36 @@ export class HubMachineSortirService {
         data.push({
           state: 1,
           tracking_number: payload.tracking_number,
+          is_cod,
+          branch_id_lastmile: paramBranchIdLastmile,
         });
         result.statusCode = HttpStatus.BAD_REQUEST;
         result.message = `Can't Find District For: ` + payload.tracking_number;
         result.data = data;
-        await this.upsertBranchSortirLog(
-          result.message,
-          dateNow,
-          1,
-          payload.sorting_branch_id,
-          payload.tracking_number,
-          null,
-          null,
-          false,
-          1,
-        );
 
-        branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
-          result.message,
-          0,
-          dateNow,
-          payload.sorting_branch_id,
-          payload.tracking_number,
-          null,
-          null,
-          false,
-        );
+        // Remark Sementara karena Wayzim mau testing pke mesin distaging
+        // await this.upsertBranchSortirLog(
+        //   result.message,
+        //   dateNow,
+        //   1,
+        //   payload.sorting_branch_id,
+        //   payload.tracking_number,
+        //   null,
+        //   null,
+        //   false,
+        //   1,
+        // );
+
+        // branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+        //   result.message,
+        //   0,
+        //   dateNow,
+        //   payload.sorting_branch_id,
+        //   payload.tracking_number,
+        //   null,
+        //   null,
+        //   false,
+        // );
 
         return result;
       }
@@ -396,33 +443,36 @@ export class HubMachineSortirService {
       data.push({
         state: 1,
         tracking_number: payload.tracking_number,
+        is_cod,
+        branch_id_lastmile: paramBranchIdLastmile,
       });
       result.statusCode = HttpStatus.BAD_REQUEST;
       result.message = `Can't Find AWB: ` + payload.tracking_number;
       result.data = data;
 
-      await this.upsertBranchSortirLog(
-        result.message,
-        dateNow,
-        1,
-        payload.sorting_branch_id,
-        payload.tracking_number,
-        null,
-        null,
-        false,
-        1,
-      );
+      // Remark Sementara karena Wayzim mau testing pke mesin distaging
+      // await this.upsertBranchSortirLog(
+      //   result.message,
+      //   dateNow,
+      //   1,
+      //   payload.sorting_branch_id,
+      //   payload.tracking_number,
+      //   null,
+      //   null,
+      //   false,
+      //   1,
+      // );
 
-      branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
-        result.message,
-        0,
-        dateNow,
-        payload.sorting_branch_id,
-        payload.tracking_number,
-        null,
-        null,
-        false,
-      );
+      // branchSortirLogSummaryId = await this.upsertBranchSortirLogSummary(
+      //   result.message,
+      //   0,
+      //   dateNow,
+      //   payload.sorting_branch_id,
+      //   payload.tracking_number,
+      //   null,
+      //   null,
+      //   false,
+      // );
 
       return result;
     }

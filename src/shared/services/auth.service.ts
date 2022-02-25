@@ -2,7 +2,7 @@ import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenExpiredError } from 'jsonwebtoken';
-import { map, toInteger } from 'lodash';
+import { map } from 'lodash';
 import ms = require('ms');
 
 import { PermissionAccessResponseVM } from '../../servers/auth/models/auth.vm';
@@ -16,7 +16,6 @@ import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
 import { GetRoleResult, UserRoleResponse } from '../models/get-role-result';
 import { Branch } from '../orm-entity/branch';
 import { User } from '../orm-entity/user';
-import { UserRole } from '../orm-entity/user-role';
 import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
 import { RequestErrorService } from './request-error.service';
@@ -184,6 +183,7 @@ export class AuthService {
       const user = await RepositoryService.user
         .loadById(authMeta.userId)
         .innerJoinAndSelect(e => e.userRoles.role.rolePermissions)
+        .andWhere(e => e.userRoles.role.rolePermissions.isDeleted, w => w.isFalse())
         .andWhere(e => e.userRoles.roleId, w => w.equals(roleId))
         .andWhere(e => e.userRoles.branchId, w => w.equals(branchId))
         .exec();
@@ -202,7 +202,7 @@ export class AuthService {
         where: {
           branchId,
           isDeleted : false,
-          isActive : true
+          isActive : true,
         },
       });
 
@@ -436,6 +436,10 @@ export class AuthService {
     }
   }
 
+  public static getRequestIP() {
+    return RequestContextMetadataService.getMetadata('REQUEST_IP');
+  }
+
   public static getPermissionToken() {
     return RequestContextMetadataService.getMetadata('PERMISSION_TOKEN');
   }
@@ -490,7 +494,7 @@ export class AuthService {
     qb.innerJoin(
       'branch',
       't3',
-      't1.branch_id = t3.branch_id AND t2.is_deleted = false',
+      't1.branch_id = t3.branch_id AND t3.is_deleted = false',
     );
     qb.where('t1.user_id = :userId', { userId });
     qb.andWhere('t1.is_deleted = false');
@@ -498,3 +502,4 @@ export class AuthService {
     return await qb.getRawMany();
   }
 }
+

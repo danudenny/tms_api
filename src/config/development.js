@@ -42,6 +42,11 @@ module.exports = {
       emailCC: ['beben@sicepat.com', 'barizana.arifin@sicepat.com'],
     },
   },
+  clearCacheTMS: {
+    urlTMSMobile: 'http://tmsapi-staging.sicepat.com/api/reset_otp/reset_otp_cache',
+    urlTMSWeb: 'http://tms-staging.sicepat.com/numberCache/set_phone',
+    auth: 'SeWdjOtj21iVsbXv9Wfrpwi8Fgg4QmgFbJmrvXOS',
+  },
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
   },

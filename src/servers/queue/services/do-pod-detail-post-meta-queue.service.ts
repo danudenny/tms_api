@@ -481,7 +481,7 @@ export class DoPodDetailPostMetaQueueService {
     }
 
     // NOTE: geopoint (lat,lon)
-    if (latitudeDelivery != '' && longitudeDelivery != '') {
+    if ((latitudeDelivery && longitudeDelivery) && (latitudeDelivery != '' && longitudeDelivery != '')) {
       location = `${latitudeDelivery},${longitudeDelivery}`;
     }
 

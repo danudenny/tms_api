@@ -144,6 +144,14 @@ export class Bag extends TmsBaseEntity {
   })
   sealNumber: string | null;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'chute_number',
+  })
+  chuteNumber: string | null;
+
+
   // relation model
   @OneToMany(() => BagItem, e => e.bag, { cascade: ['insert'] })
   bagItems: BagItem[];

@@ -10,10 +10,14 @@ export class ErrorParserService {
     host: ArgumentsHost,
   ): RequestError {
     const requestError = new RequestError();
-    requestError.detail = exception;
     requestError.messageList = this.populateErrorMessages(exception);
     requestError.buildMessage();
-
+    if (process.env.NODE_ENV === 'development') {
+      requestError.detail = exception;
+    } else {
+      requestError.stack = null;
+    }
+    
     return requestError;
   }
 

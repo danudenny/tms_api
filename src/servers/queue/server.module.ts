@@ -1,8 +1,16 @@
 // #region import
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ModuleRef, NestFactory } from '@nestjs/core';
 
-import { DocumentBuilder, SwaggerModule } from '../../shared/external/nestjs-swagger';
+import {
+  DocumentBuilder,
+  SwaggerModule,
+} from '../../shared/external/nestjs-swagger';
 import { AllExceptionsFilter } from '../../shared/filters/all-exceptions.filter';
 import { LoggingInterceptor } from '../../shared/interceptors/logging.interceptor';
 import { ResponseSerializerInterceptor } from '../../shared/interceptors/response-serializer.interceptor';
@@ -57,12 +65,14 @@ import { UpsertHubSummaryAwbQueueService } from './services/upsert-hub-summary-a
 import { UpdateHubSummaryAwbOutQueueService } from './services/update-hub-summary-awb-out-queue.service';
 import { UpdateBranchSortirLogSummaryQueueService } from './services/update-branch-sortir-log-summary-queue.service';
 import { UpdatePackageCombineHubQueueService } from './services/update-package-combine-hub-queue.service';
+import { DoMutationQueueService } from './services/do-mutation-queue.service';
 
 // #endregion import
 @Module({
   imports: [SharedModule, LoggingInterceptor, QueueServerServicesModule],
 })
-export class QueueServerModule extends MultiServerAppModule implements NestModule {
+export class QueueServerModule extends MultiServerAppModule
+  implements NestModule {
   constructor(private readonly moduleRef: ModuleRef) {
     super();
     QueueServerInjectorService.setModuleRef(this.moduleRef);
@@ -70,11 +80,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
 
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(
-        LogglyMiddleware,
-        HeaderMetadataMiddleware,
-        AuthMiddleware,
-      )
+      .apply(LogglyMiddleware, HeaderMetadataMiddleware, AuthMiddleware)
       .forRoutes({
         path: '*',
         method: RequestMethod.ALL,
@@ -91,12 +97,9 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
         imports: [QueueServerModule],
       }).compile()).createNestApplication();
     } else {
-      app = await NestFactory.create(
-        QueueServerModule,
-        {
-          logger: new PinoLoggerService(),
-        },
-      );
+      app = await NestFactory.create(QueueServerModule, {
+        logger: new PinoLoggerService(),
+      });
     }
     this.app = app;
 
@@ -114,32 +117,27 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       new ResponseSerializerInterceptor(),
       new LoggingInterceptor(),
     );
-    app.useGlobalFilters(
-      new AllExceptionsFilter(),
-    );
+    app.useGlobalFilters(new AllExceptionsFilter());
 
     if (serverConfig.swagger.enabled) {
       const swaggerModule = new SwaggerModule();
       const options = new DocumentBuilder()
         .setTitle(serverConfig.swagger.title)
-        .setDescription(
-          serverConfig.swagger.description,
-        )
+        .setDescription(serverConfig.swagger.description)
         .setVersion('1.0')
         .addBearerAuth()
         .build();
       const document = swaggerModule.createDocument(app, options);
-      swaggerModule.setup(
-        serverConfig.swagger.path,
-        app,
-        document,
-      );
+      swaggerModule.setup(serverConfig.swagger.path, app, document);
     }
 
     if (process.env.NODE_ENV === 'test') {
       await app.init();
     } else {
-      await app.listen(process.env.PORT || serverConfig.port, serverConfig.host || '0.0.0.0');
+      await app.listen(
+        process.env.PORT || serverConfig.port,
+        serverConfig.host || '0.0.0.0',
+      );
     }
 
     // init connection mongodb
@@ -192,6 +190,7 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       BagRepresentativeSmdQueueService.boot();
       BaggingDropoffHubQueueService.boot();
       BagRepresentativeDropoffHubQueueService.boot();
+      DoMutationQueueService.boot();
       // CodCronSettlementQueueService.init();
       // Titip Bull HUB
       BranchSortirLogQueueService.boot();
@@ -203,6 +202,5 @@ export class QueueServerModule extends MultiServerAppModule implements NestModul
       UpsertHubSummaryBagSortirQueueService.boot();
       UpdateBranchSortirLogSummaryQueueService.boot();
     }
-
   }
 }

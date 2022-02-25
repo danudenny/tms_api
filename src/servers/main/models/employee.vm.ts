@@ -13,6 +13,9 @@ export class EmployeeVm {
   @ApiModelProperty()
   employeeName: string;
 
+  @ApiModelProperty()
+  employeeRoleId: number;
+
 }
 
 export class EmployeeSearchVm {

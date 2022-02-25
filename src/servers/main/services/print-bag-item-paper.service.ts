@@ -53,7 +53,8 @@ export class PrintBagItemPaperService {
     if (bagItem.bagSeq.toString().length < 3) {
       newBagSeq = '0'.repeat(3 - bagItem.bagSeq.toString().length) + newBagSeq;
     }
-    bagItem.bag.bagNumber = bagItem.bag.bagNumber + newBagSeq;
+    const bagNumSeq = bagItem.bag.bagNumber + newBagSeq
+    bagItem.bag.bagNumber = bagNumSeq.substring(0, 10);
     this.printBagItemPaperAndQueryMeta(res, bagItem as any, {
       userId: queryParams.userId,
       branchId: queryParams.branchId,
@@ -102,17 +103,17 @@ export class PrintBagItemPaperService {
 
     const currentDate = moment();
     let totalWeight = 0;
-    if (data.bagItemAwbs.length) {
-      data.bagItemAwbs.map(function(detail) {
-        if (detail.awbItem && detail.awbItem.awb){
-            if(detail.awbItem.awb.totalWeightFinalRounded){
-              totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
-              // totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeightFinalRounded)) / 100;
-            }
-          }
-      });
-    }
-    totalWeight = Math.round(totalWeight * 100)/100;
+    // if (data.bagItemAwbs.length) {
+    //   data.bagItemAwbs.map(function(detail) {
+    //     if (detail.awbItem && detail.awbItem.awb){
+    //         if(detail.awbItem.awb.totalWeightFinalRounded){
+    //           totalWeight += Number(detail.awbItem.awb.totalWeightFinalRounded);
+    //           // totalWeight = Math.round(100 * Number(detail.awbItem.awb.totalWeightFinalRounded)) / 100;
+    //         }
+    //       }
+    //   });
+    // }
+    totalWeight = Math.round(data.weight * 100)/100;
 
     return this.printBagItemPaper(
       res,

@@ -30,6 +30,7 @@ import { DoPodDetailPostMetaInQueueService } from '../../../../servers/queue/ser
 import { UpsertHubSummaryBagSortirQueueService } from '../../../queue/services/upsert-hub-summary-bag-sortir-queue.service';
 import { TempStt } from '../../../../shared/orm-entity/temp-stt';
 import { UpdateBranchSortirLogSummaryQueueService } from '../../../queue/services/update-branch-sortir-log-summary-queue.service';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 export class HubMachineService {
   constructor() { }
@@ -45,12 +46,13 @@ export class HubMachineService {
       where: {
         branchId,
         isDeleted : false,
-        isActive : true
+        isActive : true,
       },
     })) as any;
 
     if (data) {
       // cache 30 minutes
+      // @ts-ignore
       RedisService.setex(cacheKey, data, 60 * 30, true).then();
       return data;
     }
@@ -73,6 +75,7 @@ export class HubMachineService {
 
     if (data) {
       // cache 30 minutes
+      // @ts-ignore
       RedisService.setex(cacheKey, data, 60 * 30, true).then();
       return data;
     }
@@ -94,6 +97,7 @@ export class HubMachineService {
 
     if (data) {
       // cache 6 hours
+      // @ts-ignore
       RedisService.setex(cacheKey, data, 60 * 60 * 6, true).then();
       return data;
     }
@@ -115,6 +119,7 @@ export class HubMachineService {
 
     if (data) {
       // cache 30 minutes
+      // @ts-ignore
       RedisService.setex(cacheKey, data, 60 * 60 * 6, true).then();
       return data;
     }
@@ -164,10 +169,11 @@ export class HubMachineService {
   //#endregion
 
   static async processMachineBagging(
-    payload: PackageMachinePayloadVm,
+    payload,
     cacheKey: string,
+    api: string,
   ): Promise<MachinePackageResponseVm> {
-    console.log('payload data', payload);
+    // console.log('payload data', payload);
 
     const generateErrorResult = (message: string): MachinePackageResponseVm => {
       const errResult = new MachinePackageResponseVm();
@@ -188,6 +194,7 @@ export class HubMachineService {
 
     const branchResults = await Promise.all([
       this.getBranch(payload.sorting_branch_id),
+      // tslint:disable-next-line:radix
       this.getBranchSortir(payload.sorting_branch_id, (payload.chute_number) ? parseInt(payload.chute_number) : null),
     ]);
 
@@ -204,6 +211,7 @@ export class HubMachineService {
 
     const awbNumbers: string[] = chain(payload.reference_numbers)
       .groupBy(g => g)
+      // tslint:disable-next-line:no-shadowed-variable
       .reduce((result, value) => {
         result.push(value[0]);
         return result;
@@ -233,9 +241,10 @@ export class HubMachineService {
     // Process Create GS
     // const redlockKey = `redlock:createMachineGS:${payload.sorting_branch_id}-${payload.chute_number}`;
     // const redlock = await RedisService.redlock(redlockKey, 10);
-    const redlockKey = `redlock:createMachineGS:${payload.tag_seal_number}`;
+    const redlockKey = (api === 'seal') ? `redlock:createMachineGS:${payload.tag_seal_number}` : `redlock:createMachineGS:${payload.sorting_branch_id}-${payload.chute_number}`;
     const redlock = await RedisService.redlock(redlockKey, 15);
-
+    const tagSeal = (api === 'seal') ? payload.tag_seal_number :  '';
+    const chuteNumber = (payload.chute_number) ? payload.chute_number : '';
     if (!redlock) {
       return generateErrorResult(`Nomor resi sedang di PROSESS !`);
     }
@@ -246,7 +255,7 @@ export class HubMachineService {
 
     try {
       const trxResults = await getConnection().transaction(async transactionManager => {
-        const createBagResult = await this.createBag(transactionManager, branch, branchSortir, district, payload.tag_seal_number, totalWeight, mCurrentTime);
+        const createBagResult = await this.createBagV2(transactionManager, branch, branchSortir, district, tagSeal, totalWeight, mCurrentTime, chuteNumber);
 
         const bagAwbBatch: CreateBagFirstScanHubQueueServiceBatch = {
           bagId: createBagResult.bag.bagId,
@@ -257,7 +266,7 @@ export class HubMachineService {
           branchId: branch.branchId,
           timestamp: currentTimeStr,
           awbs: [],
-          tagSeal: payload.tag_seal_number,
+          tagSeal,
         };
 
         for (const awbNumber of awbNumbers) {
@@ -277,6 +286,29 @@ export class HubMachineService {
         return createBagResult;
       });
 
+      // console.log('trxResults', trxResults);
+
+      // get print sticker
+      const [{ cnt: bagItemAwbsTotal }] = await RawQueryService.exec(
+        `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
+        { bagItemId: trxResults.bagItem.bagItemId },
+      );
+
+      const getBranchTo = await this.getBranch(trxResults.bag.branchIdTo);
+      const printSticker = {
+        // koli: trxResults.fullBagNumber.slice(-3),
+        koli: '001',
+        berat: trxResults.bagItem.weight.toFixed(2).toString(),
+        isi: bagItemAwbsTotal,
+        print_date: moment().format('YYYY-MM-DD HH:mm:ss'),
+        branch_code: getBranchTo ? getBranchTo.branchCode : '',
+        branch_name: getBranchTo ? getBranchTo.branchName : '',
+        tag_seal_number: payload.tag_seal_number,
+        chute_number: chuteNumber,
+        branch_id_lastmile: getBranchTo ? Number(getBranchTo.branchId) : null,
+      };
+
+      // tslint:disable-next-line:no-shadowed-variable
       const result = new MachinePackageResponseVm();
 
       result.statusCode = HttpStatus.OK;
@@ -284,12 +316,13 @@ export class HubMachineService {
       result.data = [{
         state: 0,
         no_gabung_sortir: trxResults.fullBagNumber,
+        ...printSticker,
       }];
-
 
       PinoLoggerService.log(result);
 
       // Cache For 3 Days
+      // @ts-ignore
       RedisService.setex(cacheKey, result, 60 * 60 * 24 * 3, true).then();
 
       // create background process
@@ -300,7 +333,7 @@ export class HubMachineService {
 
         for (const awbNumber of awbNumbers) {
           const awbItemAttr = awbItemAttrs.find(x => x.awbNumber === awbNumber);
-          
+
           // background job to insert awb history
           DoPodDetailPostMetaInQueueService.createJobByAwbFilter(
             awbItemAttr.awbItemId,
@@ -309,7 +342,7 @@ export class HubMachineService {
           );
         }
       } catch (error) {
-        console.log(error);
+        // console.log(error);
         PinoLoggerService.log(error);
       }
 
@@ -324,7 +357,84 @@ export class HubMachineService {
       // release lock
       // RedisService.del(redlockKey).then();
     }
-  }  
+  }
+
+  private static async createBagV2(transactionManager, branch: Branch, branchSortir: BranchSortir, district: District, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment, chuteNumber: string): Promise<CreateBagResult> {
+    const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
+    const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
+
+    // generate bag number
+    // Prefix ZA for tangerang, ZB for BDO
+    const randomBagNumber = 'ZA' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 8).join('');
+    const refBranchCode = branch ? branch.branchCode : '';
+    const representativeCode = district ? district.districtCode.substring(0, 3) : null;
+    const representative = await this.getRepresentative(representativeCode);
+
+    const bagQueryData = Bag.create({
+      bagNumber: randomBagNumber,
+      branchIdTo: branchSortir.branchIdLastmile,
+      refRepresentativeCode: representative ? representative.representativeCode : null,
+      representativeIdTo: representative ? representative.representativeId : null,
+      refBranchCode,
+      bagType: 'branch',
+      branchId: branch.branchId,
+      bagDate: currentDateStr,
+      bagDateReal: currentTimeStr,
+      createdTime: currentTimeStr,
+      updatedTime: currentTimeStr,
+      userIdCreated: 1,
+      userIdUpdated: 1,
+      isSortir: true,
+      isManual: false,
+      sealNumber,
+      chuteNumber,
+    });
+
+    const bag = await transactionManager.getRepository(Bag).save(bagQueryData);
+    const bagId = bag.bagId;
+    const sequence = 1;
+
+    const bagSeq: string = sequence.toString().padStart(3, '0');
+
+    // INSERT INTO TABLE BAG ITEM
+    const bagItemQueryData = BagItem.create({
+      bagId,
+      bagSeq: sequence,
+      branchIdLast: branch.branchId,
+      bagItemStatusIdLast: 3000,
+      userIdCreated: 1,
+      weight: totalWeight,
+      createdTime: currentTimeStr,
+      updatedTime: currentTimeStr,
+      userIdUpdated: 1,
+      isSortir: true,
+    });
+
+    const bagItem = await transactionManager.getRepository(BagItem).save(bagItemQueryData);
+
+    // insert into pod scan in hub
+    // 100 = inprogress, 200 = done
+    const podScanInHubQueryData = transactionManager.getRepository(PodScanInHub).create({
+      branchId: branch.branchId,
+      scanInType: 'BAG',
+      transactionStatusId: 200,
+      userIdCreated: 1,
+      createdTime: currentTimeStr,
+      updatedTime: currentTimeStr,
+      userIdUpdated: 1,
+    });
+
+    const podScanInHub = await transactionManager.getRepository(PodScanInHub).save(podScanInHubQueryData);
+
+    return {
+      randomBagNumber,
+      fullBagNumber: `${randomBagNumber}`,
+      bagSeq: sequence,
+      bag,
+      bagItem,
+      podScanInHub,
+    };
+  }
 
   private static async createBag(transactionManager, branch: Branch, branchSortir: BranchSortir, district: District, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment): Promise<CreateBagResult> {
     const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
@@ -363,7 +473,7 @@ export class HubMachineService {
 
     // INSERT INTO TABLE BAG ITEM
     const bagItemQueryData = BagItem.create({
-      bagId: bagId,
+      bagId,
       bagSeq: sequence,
       branchIdLast: branch.branchId,
       bagItemStatusIdLast: 3000,
@@ -442,7 +552,7 @@ export class HubMachineService {
         batchData.branchId,
         x.awbNumber,
         batchData.tagSeal,
-        0
+        0,
       );
 
       return PodScanInHubDetail.create({
@@ -501,7 +611,7 @@ export class HubMachineService {
     //   );
     // }
 
-    // UPDATE STATUS IN HUB IN AWB SUMMARY    
+    // UPDATE STATUS IN HUB IN AWB SUMMARY
     // const chunkAwbNumbers = chunk(awbNumbers, 30);
     // for (const c of chunkAwbNumbers) {
     //   await transactionManager.update(
