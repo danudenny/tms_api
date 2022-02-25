@@ -22,12 +22,6 @@ export class AwbItemAttr extends BaseEntity {
   })
   awbItemAttrId: string;
 
-  // @Column('bigint', {
-  //   nullable: true,
-  //   name: 'awb_attr_id',
-  // })
-  // awbAttrId: number | null;
-
   @Column('bigint', {
     nullable: false,
     name: 'awb_item_id',
@@ -136,6 +130,12 @@ export class AwbItemAttr extends BaseEntity {
     name: 'doreturn_new_awb_3pl',
   })
   doreturnNewAwb3Pl: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -266,7 +266,7 @@ export class AwbItemAttr extends BaseEntity {
   @OneToOne(() => AwbStatusGrpDetail)
   @JoinColumn({ name: 'awb_status_id_last', referencedColumnName: 'awbStatusId' })
   awbStatusGrpDetail: AwbStatusGrpDetail;
-  
+
   @OneToOne(() => AwbHighValueUpload)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbHighValueUpload: AwbHighValueUpload;
