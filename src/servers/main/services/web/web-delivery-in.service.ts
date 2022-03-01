@@ -1462,8 +1462,6 @@ export class WebDeliveryInService {
           })
           .value();
       }
-    } else {
-      console.log('not found!');
     }
 
     // TODO: response vm ??

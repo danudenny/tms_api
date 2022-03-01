@@ -3,9 +3,9 @@ const path = require('path');
 
 module.exports = {
   redis: {
-    host: '18.141.116.177',
+    host: '3.1.243.32',
     port: '6379',
-    password: 'r3di5S1c3pat116688_',
+    password: '9F864DAF0B09974AA3F0E90646EEFEA3',
     db: process.env.NODE_ENV === 'test' ? 1 : 0,
   },
   jwt: {
@@ -18,9 +18,9 @@ module.exports = {
     assets: path.resolve(__dirname, '..', 'assets'),
   },
   cloudStorage: {
-    cloudUrl: 'https://sicepatmasterdata.s3-ap-southeast-1.amazonaws.com',
+    cloudUrl: 'https://sicepattesting.s3-ap-southeast-1.amazonaws.com',
     cloudResiUrl : 'https://sicepatresi.s3.amazonaws.com',
-    cloudBucket: 'sicepatmasterdata',
+    cloudBucket: 'sicepattesting',
     cloudRegion: 'ap-southeast-1',
     cloudAccessKeyId: 'AKIA2ZCLVOSJTBNWP73E',
     cloudSecretAccessKey: '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',
@@ -32,7 +32,7 @@ module.exports = {
     password: '@S1cepat!',
   },
   imgProxyHelper: {
-    proxyUrl: 'https://imgproxy.sicepat.com',
+    proxyUrl: 'https://imgproxy-stag.sicepat.com',
     key: 'WbEZyJ8WsD',
     salt: 'GV5ueRu21Z',
     algo: 'SHA-256',
@@ -68,13 +68,16 @@ module.exports = {
     baseUrl : 'http://api-internal.s.sicepat.io/core/query-service/api/v1/',
     schema: 'pod',
   },
+  exportService: {
+    baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
+  },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',
     tags: ['API-POD'],
   },
   activityLog: {
-    baseUrl: 'http://api-internal.sicepat.io/core/logger',
+    baseUrl: 'http://api-internal.s.sicepat.io/core/logger',
   },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
@@ -113,9 +116,24 @@ module.exports = {
     headerKey:
       'MIICzzCCAbcCAQAwgYkxCzAJBgNVBAYTAklEMRQwEgYDVQQIDAtES0kgSmFrYXJ0YTEUMBIGA1UEBwwLREtJIEpha2FydGExEDAOBgNVBAoMB1NJQ0VQQVQxDjAMBgNVBAsMBXNmYXBpMQswCQYDVQQDDAI1OTEfMB0GCSqGSIb3DQEJARYQemFra3lAZGF0YW9uLmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKXK1m11VDgs7wfm7NJEYysOy6FrS0zetNSf8hos2DEi2IZvxTW1gc32g4XZaqaZWFpBlAd2UNO35hRiojiVIUl9zAdJWFikC/PIx4r51htJqayPv74TsWyY+W294tGghaM9ZCpvj+NnFepuVfocq1vKnLH/GAa2O+A4X4nt2bYUxICn1Ml2FemIlSVJi0HcIN5bRc8Cgy1m2vw0GtzLSn4t828xlze3HZgvWo7JLUzht0RDsufpZ9Fc6K6j2JwJVDCgm+JmY6yqpi2c5iICKTUJ+mG9xbA+Vjks4A0+xkJRcfultYKrLWarhOUUd6mHwDIcsENzrHYwRWe01deitu0CAwEAAaAAMA0GCSqGSIb3DQEBCwUAA4IBAQBLRnQOBakC84WgBgi530WCSu/o3knGypisjM9DVTpSRgRXER2QcP+CtHqRZ1BXDR9mes2uldB7XvSbtUGB9IJV6dKiBl51pOPhSR6rRgZhSSfry5Ykulr1iix+2lfwAO5/nDBxzy7bltwitCO28zu2ZfOF3MV3ke/kPWs2NnN3iHMAH6jfIF/zj0xR/klOIKufiLSjVoANLvp8MfFs4yVuHBLy0odGCXKgsCNHWwlYclJkNRbCss+LzdBu4/6r1csgCJ6vZXlDGxzMO3P3B+ryfpJmsacCDCL2esyKJlxYj6tHdjcgmy3VsV6sy4pzx/I8Mo3LrSWH8RRBYb7spZAr',
   },
+  proxy: {
+    apiInternalBaseUrl: 'http://api-internal.s.sicepat.io',
+    apiTimeoutMs: 15000,
+    allowedService: {
+      "pod-notification": {
+        destination: "/operation/pod-notification"
+      },
+      "pod-punishment": {
+        destination: "/operation/pod-punishment"
+      },
+      "filesvc": {
+        destination: "/core/filesvc"
+      },
+    }
+  },
   korwil: {
     korwilRoleId: [38, 155],
-    smdRoleId: 104,
+    smdRoleId: 117,
     palkurRoleId: [40, 41],
     korwilHrdRoleId: 154,
   },
@@ -131,12 +149,12 @@ module.exports = {
   },
   mongodb: {
     sicepat:
-      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-tracking-cluster-nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
+      'mongodb+srv://sicepatmongo:5icepaTmong0888@sicepat-staging-cluster.nrgvr.mongodb.net/test?retryWrites=true&w=majority&readPreference=secondaryPreferred',
   },
   sendgrid: {
-    apiKeyId: '03GtPFfkRzS6y47gfg23sQ',
+    apiKeyId: 'le77jXQbS9K4wtbDwV4zwg',
     apiKey:
-      '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',
+      'SG.le77jXQbS9K4wtbDwV4zwg.Wt4-nTIvN4CZergYNnnrwT9AaX-ZCKz62KQD5e7n8ww',
   },
   svcOtp: {
     baseUrl: 'http://api-internal.s.sicepat.io/authsvc',
