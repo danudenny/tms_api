@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany, ManyToOne } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany, ManyToOne, PrimaryColumn} from 'typeorm';
 
 import { AwbItem } from './awb-item';
 import { BagItem } from './bag-item';
@@ -17,7 +17,8 @@ import { AwbHighValueUpload } from './awb-high-value-upload';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
-  @PrimaryGeneratedColumn('uuid', {
+  @PrimaryColumn({
+    type: 'uuid',
     name: 'awb_item_attr_id',
   })
   awbItemAttrId: string;
