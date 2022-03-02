@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany, ManyToOne } from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany, ManyToOne, PrimaryColumn} from 'typeorm';
 
 import { AwbItem } from './awb-item';
 import { BagItem } from './bag-item';
@@ -17,16 +17,11 @@ import { AwbHighValueUpload } from './awb-high-value-upload';
 
 @Entity('awb_item_attr', { schema: 'public' })
 export class AwbItemAttr extends BaseEntity {
-  @PrimaryGeneratedColumn('uuid', {
+  @PrimaryColumn({
+    type: 'uuid',
     name: 'awb_item_attr_id',
   })
   awbItemAttrId: string;
-
-  // @Column('bigint', {
-  //   nullable: true,
-  //   name: 'awb_attr_id',
-  // })
-  // awbAttrId: number | null;
 
   @Column('bigint', {
     nullable: false,
@@ -136,6 +131,12 @@ export class AwbItemAttr extends BaseEntity {
     name: 'doreturn_new_awb_3pl',
   })
   doreturnNewAwb3Pl: string | null;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
 
   @Column('timestamp without time zone', {
     nullable: false,
@@ -266,7 +267,7 @@ export class AwbItemAttr extends BaseEntity {
   @OneToOne(() => AwbStatusGrpDetail)
   @JoinColumn({ name: 'awb_status_id_last', referencedColumnName: 'awbStatusId' })
   awbStatusGrpDetail: AwbStatusGrpDetail;
-  
+
   @OneToOne(() => AwbHighValueUpload)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbHighValueUpload: AwbHighValueUpload;
