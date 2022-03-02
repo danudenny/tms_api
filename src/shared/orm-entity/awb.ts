@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, OneToMany, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 import { Partner } from './partner';
 import { AwbItem } from './awb-item';
@@ -28,7 +28,7 @@ import { PickupRequestDetail } from './pickup-request-detail';
 @Index('awb_to_type_idx', ['toType'])
 @Index('awb_updated_time_idx', ['updatedTime'])
 export class Awb extends BaseEntity {
-  @PrimaryGeneratedColumn({
+  @PrimaryColumn({
     type: 'bigint',
     name: 'awb_id',
   })
