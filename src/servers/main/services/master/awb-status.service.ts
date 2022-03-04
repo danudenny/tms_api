@@ -120,6 +120,16 @@ export class AwbStatusService {
         return { isValid, message };
       }
 
+      if(await AwbService.isRTN(awbItemAttr.awbNumber, awbItemAttr.awbItemId)){
+        message = `Resi ${awbItemAttr.awbNumber} sedang RTN`;
+        return { isValid, message };
+      }
+
+      if(await AwbService.isRTN(awbItemAttr.awbNumber, awbItemAttr.awbItemId)){
+        message = `Resi ${awbItemAttr.awbNumber} belum cancel return`;
+        return { isValid, message };
+      }
+
       isValid = true;
     }
     return { isValid, message };

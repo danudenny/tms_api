@@ -6,6 +6,7 @@ import { AwbDeliverManualVm } from '../../models/web-awb-deliver.vm';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { of } from 'rxjs';
 
 export class AwbService {
 
@@ -305,6 +306,78 @@ export class AwbService {
     }
 
     return rawData ? true : false;
+  }
+
+  public static async isRTN(
+    awbNumber: string,
+    awbItemId: number,
+  ): Promise<boolean>{
+    const query = `
+      SELECT
+        nostt as "awbNumber"
+      FROM
+        temp_stt
+      WHERE
+        nostt = :awbNumber
+      LIMIT
+        1;
+    `;
+
+    let rawData = await RawQueryService.queryWithParams(query,{
+      awbNumber,
+    });
+
+    if(rawData.length < 1){
+       rawData = await AwbHistory.findOne({
+        select: ['awbHistoryId'],
+        where: {
+          awbItemId,
+          awbStatusId: AWB_STATUS.RTN,
+          isDeleted: false,
+        },
+      });
+    }
+
+    return rawData ? true : false;
+  }
+
+  public static async isCancelReturn(
+    awbNumber: string,
+    awbItemId: number,
+  ): Promise<boolean>{
+    let isRTN = await this.isRTN(awbNumber, awbItemId);
+    const query = `
+      SELECT
+        nostt as "awbNumber"
+      FROM
+        temp_stt
+      WHERE
+        nostt = :awbNumber
+      LIMIT
+        1;
+    `;
+
+    let rawData = await RawQueryService.queryWithParams(query,{
+      awbNumber,
+    });
+
+    if(rawData.length < 1){
+       rawData = await AwbHistory.findOne({
+        select: ['awbHistoryId'],
+        where: {
+          awbItemId,
+          awbStatusId: AWB_STATUS.CANCEL_RETURN,
+          isDeleted: false,
+        },
+      });
+    }
+
+    if(rawData && isRTN){
+      return true;
+    }else{
+      return false;
+    }
+
   }
 
   // TODO: open length awb number (12 or 15 digit)
