@@ -1,17 +1,13 @@
 import { WebAwbReturnCancelCreatePayload} from '../../models/web-awb-return-cancel.vm';
-import { Awb } from '../../../../shared/orm-entity/awb';
 import { AwbService } from '../v1/awb.service';
-import { WebReturCancelListResponse, ScanAwbVm } from '../../models/web-retur-cancel-response.vm';
+import { WebReturCancelListResponse, WebAwbReturnCancelCreateResponse,ScanAwbVm } from '../../models/web-retur-cancel-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 import { AwbReturnCancel } from '../../../../shared/orm-entity/awb-return-cancel';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { MetaService } from '../../../../shared/services/meta.service';
-import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
-import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
-import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import {DoPodDetailPostMetaQueueService} from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
 import { QueryServiceApi } from '../../../../shared/services/query.service.api';
@@ -58,22 +54,21 @@ export class WebAwbReturnCancelService {
     return `${values.join(',')} \n`;
   }
 
-  static async createAwbReturnCancel(payload: WebAwbReturnCancelCreatePayload): Promise<WebReturCancelListResponse> {
+  static async createAwbReturnCancel(payload: WebAwbReturnCancelCreatePayload): Promise<WebAwbReturnCancelCreateResponse> {
     const uuidv1 = require('uuid/v1');
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-    const result = new WebReturCancelListResponse();
+    const result = new WebAwbReturnCancelCreateResponse();
     const timeNow = moment().toDate();
     const dataItem = [];
     const awbCancelReturnArr = new Array();
-    const paramsBull = new Array();
     for (const awbNumber of payload.scanValue) {
       const awb = await AwbService.validAwbNumber(awbNumber);
       const response = new ScanAwbVm();
       if(awb){
         if(awb.awbStatusIdLast == AWB_STATUS.RTS || awb.awbStatusIdLast == AWB_STATUS.DLV){
           response.status = 'error';
-          response.message = `Resi ${awbNumber} sudah RTS/DLV`;
+          response.message = `Resi ${awbNumber} Status final tidak dapat di proses`;
         }else{
           let awbReturn = await AwbReturn.findOne({
             where :{
@@ -118,9 +113,7 @@ export class WebAwbReturnCancelService {
     await getManager().transaction(async transactional => {
       for(const data of awbCancelReturnArr){
         //extract and update
-        console.log(data.awbNumber);
         transactional.insert(AwbReturnCancel, data);
-        //tanya besok
         transactional.update(AwbReturn,{
           originAwbNumber : data.awbNumber
         },{
@@ -131,9 +124,13 @@ export class WebAwbReturnCancelService {
 
     //send to bull
     for( const item of awbCancelReturnArr) {
-      // DoPodDetailPostMetaQueueService.createJobByAwbReturnCancel(
-        
-      // );
+      DoPodDetailPostMetaQueueService.createJobByAwbReturnCancel(
+        item.awbItemId,
+        AWB_STATUS.CANCEL_RETURN,
+        item.branchId,
+        item.userIdCreated,
+        item.notes
+      );
     }
 
     result.data = dataItem;
@@ -247,6 +244,7 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['awbReturnCancelId'] = 't1.id';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['awbItemId'] = 't1.awb_item_id';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['nik'] = 't2.nik';
@@ -279,6 +277,7 @@ export class WebAwbReturnCancelService {
       ['t1.awb_item_id', 'awbItemId'],
       ['t1.created_time', 'createdTime'],
       ['t1.updated_time', 'updatedTime'],
+      ['t1.branch_id', 'branchId'],
       ['t2.nik', 'nik'],
       ['t2.fullname', 'empolyeeName'],
     );
@@ -303,6 +302,7 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['awbReturnCancelId'] = 't1.id';
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['awbItemId'] = 't1.awb_item_id';
+    payload.fieldResolverMap['branchId'] = 't1.branch_id';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['nik'] = 't2.nik';
@@ -333,6 +333,7 @@ export class WebAwbReturnCancelService {
       ['t1.id', 'awbReturnCancelId'],
       ['t1.awb_number', 'awbNumber'],
       ['t1.awb_item_id', 'awbItemId'],
+      ['t1.branch_id', 'branchId'],
       ['t1.created_time', 'createdTime'],
       ['t1.updated_time', 'updatedTime'],
       ['t2.nik', 'nik'],
@@ -343,7 +344,7 @@ export class WebAwbReturnCancelService {
     const total = await q.countWithoutTakeAndSkip();
 
     const result = new WebReturCancelListResponse();
-    result.data = null;
+    result.data = [];
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
     return result;

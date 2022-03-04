@@ -4,7 +4,7 @@ import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm
 //VM for item List
 export class ItemReturCancelResponse {
   @ApiModelProperty()
-  awbCancelId: string;
+  awbReturnCancelId: string;
 
   @ApiModelProperty()
   awbNumber: string;

@@ -3,7 +3,7 @@ import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
 import { Employee } from './employee';
 
-@Entity('awb_request', { schema: 'public' })
+@Entity('awb_return_cancel', { schema: 'public' })
 export class AwbReturnCancel extends TmsBaseEntity {
   @PrimaryGeneratedColumn('uuid', {
     name: 'id',

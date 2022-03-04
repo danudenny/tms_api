@@ -999,10 +999,10 @@ export class DoPodDetailPostMetaQueueService {
     awbStatusId: number,
     branchId: number,
     userId: number,
-    employeeName: string,
+    notes: string,
   ) {
-    const noteInternal = `Paket Retur Cancel dibawa [SIGESIT - ${employeeName}]`;
-    const notePublic = `Paket Retur Cancel dibawa [SIGESIT - ${employeeName}]`;
+    const noteInternal = `Paket batal Retur: Catatan : ${notes}`;
+    const notePublic = `Paket batal retur`;
     // provide data
     const obj = {
       awbItemId,

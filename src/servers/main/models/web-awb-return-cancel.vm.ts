@@ -6,7 +6,7 @@ import { Type } from 'class-transformer';
 export class WebAwbReturnCancelCreatePayload {
   @IsDefined({message: 'Nomor resi harus diisi'})
   @IsAwbNumber({ message: 'No Resi tidak sesuai' })
-  @Type(() => String)
+  @ApiModelProperty()
   scanValue: string[];
 
   @ApiModelProperty()
