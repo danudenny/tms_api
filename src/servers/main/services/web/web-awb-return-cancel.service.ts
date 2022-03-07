@@ -122,6 +122,7 @@ export class WebAwbReturnCancelService {
       payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
       payload.fieldResolverMap['nik'] = 't2.nik';
       payload.fieldResolverMap['empolyeeName'] = 't2.fullname';
+      payload.fieldResolverMap['notes'] = 't1.notes';
 
       // mapping search field and operator default ilike
       payload.globalSearchFields = [
@@ -143,6 +144,7 @@ export class WebAwbReturnCancelService {
         [`t1.awb_number`, 'Resi'],
         [`concat(t2.nik,' - ',t2.fullname)`, 'User Update'],
         [`concat(t3.branch_code,' - ',t3.branch_name)`, 'Cabang/ Gerai'],
+        [`t1.notes`, 'Keterangan'],
       );
 
       q.innerJoin(e => e.user.employee, 't2');
@@ -152,7 +154,6 @@ export class WebAwbReturnCancelService {
       
       const query = await q.getQuery();
       let data =  await QueryServiceApi.executeQuery(query, false, null);
-
       await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       throw err;
