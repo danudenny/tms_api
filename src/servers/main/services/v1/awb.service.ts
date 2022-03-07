@@ -320,7 +320,6 @@ export class AwbService {
       select: ['awbStatusId'],
       where: {
         awbItemId,
-        awbStatusId: In([AWB_STATUS.CANCEL_RETURN, AWB_STATUS.RTN, AWB_STATUS.MANIFESTED, AWB_STATUS.CANCEL_DLV]),
         isDeleted: false,
       }
     })
@@ -332,6 +331,7 @@ export class AwbService {
     if(collectArrStatus.includes(AWB_STATUS.CANCEL_DLV)){
       retVal = true
       retNote = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
+      return [retVal, retNote]
     }
 
     if(!collectArrStatus.includes(AWB_STATUS.MANIFESTED)){
@@ -353,17 +353,20 @@ export class AwbService {
       if(rawData.length < 1){
         retVal = true;
         retNote = `Resi ${awbNumber} belum pernah di MANIFESTED`;
+        return [retVal, retNote]
       }
     }
 
     if(collectArrStatus.includes(AWB_STATUS.RTN) && collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
       retVal = true;
       retNote = `Resi ${awbNumber} sedang cancel return`;
+      return [retVal, retNote]
     }
 
     if(collectArrStatus.includes(AWB_STATUS.RTN) && !collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
       retVal = true;
       retNote = `Resi ${awbNumber} sedang RTN`;
+      return [retVal, retNote]
     }
 
     return [retVal, retNote];
