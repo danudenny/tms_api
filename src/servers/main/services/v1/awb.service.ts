@@ -312,7 +312,7 @@ export class AwbService {
     return rawData ? true : false;
   }
   
-  public static async validationContainAwBStatus(awbNumber, awbItemId): Promise<[boolean, string]> {
+  public static async validationContainAwBStatus(optionalManifested, awbNumber, awbItemId): Promise<[boolean, string]> {
     let retVal = false;
     let retNote = null;
     let collectArrStatus = []
@@ -334,7 +334,7 @@ export class AwbService {
       return [retVal, retNote]
     }
 
-    if(!collectArrStatus.includes(AWB_STATUS.MANIFESTED)){
+    if(!collectArrStatus.includes(AWB_STATUS.MANIFESTED) && optionalManifested){
       const query = `
         SELECT
           nostt as "awbNumber"
@@ -357,9 +357,9 @@ export class AwbService {
       }
     }
 
-    if(collectArrStatus.includes(AWB_STATUS.RTN) && collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
+    if(!collectArrStatus.includes(AWB_STATUS.RTN) && !collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
       retVal = true;
-      retNote = `Resi ${awbNumber} sedang cancel return`;
+      retNote = `Resi ${awbNumber} sedang RTN`;
       return [retVal, retNote]
     }
 

@@ -112,7 +112,7 @@ export class AwbStatusService {
         return { isValid, message };
       }
 
-      let arrRetval = await AwbService.validationContainAwBStatus(awbItemAttr.awbNumber, awbItemAttr.awbItemId)
+      let arrRetval = await AwbService.validationContainAwBStatus(optionalManifested, awbItemAttr.awbNumber, awbItemAttr.awbItemId)
       if(arrRetval[0] == true){
         let message = arrRetval[1]
         return {isValid, message};

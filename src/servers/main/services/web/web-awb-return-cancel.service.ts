@@ -12,7 +12,7 @@ import {DoPodDetailPostMetaQueueService} from '../../../queue/services/do-pod-de
 import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
 import { QueryServiceApi } from '../../../../shared/services/query.service.api';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { getManager } from 'typeorm';
+import { getManager, In } from 'typeorm';
 import e = require('express');
 
 export class WebAwbReturnCancelService {
@@ -25,6 +25,8 @@ export class WebAwbReturnCancelService {
     const timeNow = moment().toDate();
     const dataItem = [];
     const awbCancelReturnArr = new Array();
+    const dataAwb = [];
+    let totalSuccses = 0;
     for (const awbNumber of payload.scanValue) {
       const awb = await AwbService.validAwbNumber(awbNumber);
       const response = new ScanAwbVm();
@@ -53,10 +55,13 @@ export class WebAwbReturnCancelService {
             awbReturnCancel.updatedTime = timeNow;
             awbReturnCancel.userIdUpdated = authMeta.userId;
             awbReturnCancel.isDeleted = false;
+
+            dataAwb.push(awbNumber);
             awbCancelReturnArr.push(awbReturnCancel);
 
             response.status = 'ok';
             response.message = `success`;
+            totalSuccses++;
           }else{
             response.status = 'error';
             response.message = `Resi ${awbNumber} bukan resi return`;
@@ -74,11 +79,10 @@ export class WebAwbReturnCancelService {
     }
 
     await getManager().transaction(async transactional => {
-      for(const data of awbCancelReturnArr){
-        //extract and update
-        transactional.insert(AwbReturnCancel, data);
-        transactional.update(AwbReturn,{
-          originAwbNumber : data.awbNumber
+      if(awbCancelReturnArr.length > 0 && totalSuccses > 0){
+        await transactional.insert(AwbReturnCancel, awbCancelReturnArr);
+        await transactional.update(AwbReturn,{
+          originAwbNumber : In(dataAwb)
         },{
           isDeleted : true
         })
