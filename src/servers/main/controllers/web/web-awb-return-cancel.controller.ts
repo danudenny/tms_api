@@ -27,6 +27,9 @@ export class WebAwbReturnCancelController {
   @Post('list/cancel')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebReturCancelListResponse })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbReturnCancelCreateResponse })
   public async listReturnCancel(@Body() payload: BaseMetaPayloadVm) {
     return WebAwbReturnCancelService.listReturnCancel(payload);
   }
@@ -34,6 +37,9 @@ export class WebAwbReturnCancelController {
   @Post('list/cancel/count')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WebReturCancelListResponse })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbReturnCancelCreateResponse })
   public async listReturnCancelCount(@Body() payload: BaseMetaPayloadVm) {
     return WebAwbReturnCancelService.listReturnCountCancel(payload);
   }
@@ -41,6 +47,9 @@ export class WebAwbReturnCancelController {
   @Post('list/cancel/stream')
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebAwbReturnCancelCreateResponse })
   public async exportListAwbReturnCancel(
     @Body() payload: BaseMetaPayloadVm,
     @Res() outgoingHTTP,
