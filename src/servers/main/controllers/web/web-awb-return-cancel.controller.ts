@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
 import {
-    ApiBearerAuth, ApiOkResponse, ApiUseTags,
+  ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
@@ -9,6 +9,7 @@ import { WebReturCancelListResponse, WebAwbReturnCancelCreateResponse } from '..
 import { WebAwbReturnCancelCreatePayload } from '../../models/web-awb-return-cancel.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
+import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 @ApiUseTags('Web Awb Return')
 @Controller('web/v1/pod/return')
 export class WebAwbReturnCancelController {
@@ -36,4 +37,18 @@ export class WebAwbReturnCancelController {
   public async listReturnCancelCount(@Body() payload: BaseMetaPayloadVm) {
     return WebAwbReturnCancelService.listReturnCountCancel(payload);
   }
+
+  @Post('list/cancel/stream')
+  @HttpCode(HttpStatus.OK)
+  @ResponseSerializerOptions({ disable: true })
+  public async exportListAwbReturnCancel(
+    @Body() payload: BaseMetaPayloadVm,
+    @Res() outgoingHTTP,
+  ) {
+    return await WebAwbReturnCancelService.exportReturnCancelList(
+      payload,
+      outgoingHTTP,
+    );
+  }
+
 }

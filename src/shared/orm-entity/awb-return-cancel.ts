@@ -1,6 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn,OneToOne, JoinColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { Branch } from './branch';
+import { User } from './user';
 import { Employee } from './employee';
 
 @Entity('awb_return_cancel', { schema: 'public' })
@@ -43,10 +44,7 @@ export class AwbReturnCancel extends TmsBaseEntity {
   @JoinColumn({ name: 'branch_id' })
   branch: Branch;
 
-  @OneToOne(() => Employee, employee => employee, {
-    eager: false,
-    nullable: true,
-  })
+  @OneToOne(() => User)
   @JoinColumn({ name: 'user_id_created' })
-  employee: Employee;
+  user: User;
 }

@@ -13,46 +13,9 @@ import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
 import { QueryServiceApi } from '../../../../shared/services/query.service.api';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { getManager } from 'typeorm';
+import e = require('express');
 
 export class WebAwbReturnCancelService {
-  static ExportHeaderReturnList = [
-    'Resi',
-    'Status',
-    'Tanggal Retur',
-    'Gerai Manifest',
-    'Gerai Asal Retur',
-    'Gerai Terakhir Retur',
-    // 'Partner',
-    'Resi Retur',
-    'Jenis Return',
-    'Pengirim',
-  ];
-
-  private static strReplaceFunc = str => {
-    return str
-      ? str
-          .replace(/\n/g, ' ')
-          .replace(/\r/g, ' ')
-          .replace(/;/g, '|')
-          .replace(/,/g, '.')
-      : null;
-  }
-
-  private static streamTransformReturList(d) {
-    const values = [
-      `'${d.originAwbNumber}`,
-      WebAwbReturnCancelService.strReplaceFunc(d.awbStatus),
-      d.createdTime ?  moment(d.createdTime).format('YYYY-MM-DD') : '-',
-      WebAwbReturnCancelService.strReplaceFunc(d.branchManifest),
-      WebAwbReturnCancelService.strReplaceFunc(d.branchFrom),
-      WebAwbReturnCancelService.strReplaceFunc(d.branchTo),
-      // WebAwbReturnService.strReplaceFunc(d.partnerName),
-      d.returnAwbNumber ? WebAwbReturnCancelService.strReplaceFunc(`'${d.returnAwbNumber}`) : '-',
-      d.userIdDriver ? 'Manual' : (d.isPartnerLogistic ? d.partnerLogisticName : 'Internal'),
-      WebAwbReturnCancelService.strReplaceFunc(d.consignerName),
-    ];
-    return `${values.join(',')} \n`;
-  }
 
   static async createAwbReturnCancel(payload: WebAwbReturnCancelCreatePayload): Promise<WebAwbReturnCancelCreateResponse> {
     const uuidv1 = require('uuid/v1');
@@ -147,86 +110,41 @@ export class WebAwbReturnCancelService {
         `attachment; filename=${fileName}`,
       );
 
-      payload.fieldResolverMap['awbReturnId'] = 't1.awb_return_id';
-      payload.fieldResolverMap['originAwbId'] = 't1.origin_awb_id';
-      payload.fieldResolverMap['originAwbNumber'] = 't1.origin_awb_number';
-      payload.fieldResolverMap['returnAwbId'] = 't1.return_awb_id';
-      payload.fieldResolverMap['partnerLogisticAwb'] = 't1.partner_logistic_awb';
-      payload.fieldResolverMap['returnAwbNumber'] = 't1.return_awb_number';
-      payload.fieldResolverMap['isPartnerLogistic'] = 't1.is_partner_logistic';
-      payload.fieldResolverMap['partnerLogisticName'] = 't1.partner_logistic_name';
-      payload.fieldResolverMap['branchIdTo'] = 't1.branch_id';
-      payload.fieldResolverMap['branchTo'] = 't3.branch_name';
+      payload.fieldResolverMap['awbReturnCancelId'] = 't1.id';
+      payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
+      payload.fieldResolverMap['awbItemId'] = 't1.awb_item_id';
+      payload.fieldResolverMap['branchId'] = 't1.branch_id';
       payload.fieldResolverMap['createdTime'] = 't1.created_time';
       payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
-      payload.fieldResolverMap['awbReplacementTime'] = 't1.awb_replacement_time';
-      payload.fieldResolverMap['awbStatus'] = 't2.awb_status_name';
-      payload.fieldResolverMap['awbStatusId'] = 't2.awb_status_id';
-      payload.fieldResolverMap['partnerLogisticId'] = 't1.partner_logistic_id';
-      payload.fieldResolverMap['branchManifest'] = 't4.branch_name';
-      payload.fieldResolverMap['branchIdManifest'] = 't4.branch_id';
-      payload.fieldResolverMap['branchIdFrom'] = 't6.branch_id';
-      payload.fieldResolverMap['branchFrom'] = 't6.branch_name';
-      payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
-      payload.fieldResolverMap['userUpdatedName'] = '"userUpdatedName"';
-      payload.fieldResolverMap['replacementAwbStatusLast'] = '"replacementAwbStatusLast"';
+      payload.fieldResolverMap['nik'] = 't2.nik';
+      payload.fieldResolverMap['empolyeeName'] = 't2.fullname';
 
+      // mapping search field and operator default ilike
       payload.globalSearchFields = [
         {
-          field: 'originAwbNumber',
+          field: 'createdTime',
+        },
+        {
+          field: 'branchId',
         },
       ];
 
-      const repo = new OrionRepositoryService(AwbReturn, 't1');
+      const repo = new OrionRepositoryService(AwbReturnCancel, 't1');
       const q = repo.findAllRaw();
 
       payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
-        [`''''||t1.origin_awb_number`, 'Resi'],
-        ['t2.awb_status_name', 'Status'],
-        ['t9.awb_status_name', 'Status Resi Pengganti'],
-        ['TO_CHAR(t1.created_time, \'YYYY-MM-DD\')', 'Tanggal Retur'],
-        ['TO_CHAR(t1.updated_time, \'YYYY-MM-DD\')', 'Tanggal Update Retur'],
-        ['TO_CHAR(t1.awb_replacement_time, \'YYYY-MM-DD\')', 'Tanggal Status Resi Pengganti'],
-        ['t4.branch_name', 'Gerai Manifest'],
-        ['t6.branch_name', 'Gerai Asal Retur'],
-        ['t3.branch_name', 'Gerai Terakhir Retur'],
-        [`CAST(t7.total_cod_value AS NUMERIC(20,2))`, 'Nilai COD'],
-        [`COALESCE(''''||t1.return_awb_number, '-')`, 'Resi Retur'],
-        [`CASE
-            WHEN t1.user_id_driver IS NOT NULL THEN 'Manual'
-            WHEN t1.partner_logistic_name IS NOT NULL THEN t1.partner_logistic_name
-            ELSE 'Internal'
-          END`, 'Jenis Retur'],
-        [
-          `COALESCE(t7.ref_prev_customer_account_id, t7.ref_customer_account_id,'')`,
-          'Pengirim',
-        ],
-        [`t8.nik||' - '||t8.fullname`, 'User Update'],
+        [`date(t1.created_time)`, 'Tanggal'],
+        [`t1.awb_number`, 'Resi'],
+        [`concat(t2.nik,' - ',t2.fullname)`, 'User Update'],
+        [`concat(t3.branch_code,' - ',t3.branch_name)`, 'Cabang/ Gerai'],
       );
 
-      q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-      q.innerJoin(e => e.branch, 't3', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-      q.innerJoin(e => e.awb, 't7', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-      q.leftJoin(e => e.awb.branch, 't4', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-      q.leftJoin(e => e.branchFrom, 't6', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-      q.leftJoin(e => e.userUpdated.employee, 't8', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-      q.leftJoin(e => e.returnAwb.awbStatus, 't9', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
+      q.innerJoin(e => e.user.employee, 't2');
+      q.innerJoin(e => e.branch, 't3');
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
       
       const query = await q.getQuery();
       let data =  await QueryServiceApi.executeQuery(query, false, null);
@@ -281,7 +199,7 @@ export class WebAwbReturnCancelService {
       ['t2.nik', 'nik'],
       ['t2.fullname', 'empolyeeName'],
     );
-    q.innerJoin(e => e.employee, 't2');
+    q.innerJoin(e => e.user.employee, 't2');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
@@ -339,7 +257,7 @@ export class WebAwbReturnCancelService {
       ['t2.nik', 'nik'],
       ['t2.fullname', 'empolyeeName'],
     );
-    q.innerJoin(e => e.employee, 't2');
+    q.innerJoin(e => e.user.employee, 't2');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     const total = await q.countWithoutTakeAndSkip();
 
