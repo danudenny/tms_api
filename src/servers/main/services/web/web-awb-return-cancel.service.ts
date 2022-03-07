@@ -37,7 +37,7 @@ export class WebAwbReturnCancelService {
         }else{
           let awbReturn = await AwbReturn.findOne({
             where :{
-              returnAwbNumber : awbNumber,
+              originAwbNumber : awbNumber,
               isDeleted : false
             }
           })
