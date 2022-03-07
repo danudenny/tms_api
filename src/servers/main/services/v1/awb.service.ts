@@ -6,7 +6,11 @@ import { AwbDeliverManualVm } from '../../models/web-awb-deliver.vm';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { In } from 'typeorm';
 import { of } from 'rxjs';
+import { includes } from 'lodash';
+import { AwbStatus } from 'src/shared/orm-entity/awb-status';
+import { hashmap } from 'aws-sdk/clients/glacier';
 
 export class AwbService {
 
@@ -278,7 +282,7 @@ export class AwbService {
   public static async isManifested(
     awbNumber: string,
     awbItemId: number,
-  ): Promise<boolean>{
+  ): Promise<boolean> {
     const query = `
       SELECT
         nostt as "awbNumber"
@@ -290,12 +294,12 @@ export class AwbService {
         1;
     `;
 
-    let rawData = await RawQueryService.queryWithParams(query,{
+    let rawData = await RawQueryService.queryWithParams(query, {
       awbNumber,
     });
 
-    if(rawData.length < 1){
-       rawData = await AwbHistory.findOne({
+    if (rawData.length < 1) {
+      rawData = await AwbHistory.findOne({
         select: ['awbHistoryId'],
         where: {
           awbItemId,
@@ -307,77 +311,62 @@ export class AwbService {
 
     return rawData ? true : false;
   }
+  
+  public static async validationContainAwBStatus(awbNumber, awbItemId): Promise<[boolean, string]> {
+    let retVal = false;
+    let retNote = null;
+    let collectArrStatus = []
+    let rawData = await AwbHistory.find({
+      select: ['awbStatusId'],
+      where: {
+        awbItemId,
+        awbStatusId: In([AWB_STATUS.CANCEL_RETURN, AWB_STATUS.RTN, AWB_STATUS.MANIFESTED, AWB_STATUS.CANCEL_DLV]),
+        isDeleted: false,
+      }
+    })
 
-  public static async isRTN(
-    awbNumber: string,
-    awbItemId: number,
-  ): Promise<boolean>{
-    const query = `
-      SELECT
-        nostt as "awbNumber"
-      FROM
-        temp_stt
-      WHERE
-        nostt = :awbNumber
-      LIMIT
-        1;
-    `;
+    for(let data of rawData){
+      collectArrStatus.push(data.awbStatusId)
+    }
 
-    let rawData = await RawQueryService.queryWithParams(query,{
-      awbNumber,
-    });
+    if(collectArrStatus.includes(AWB_STATUS.CANCEL_DLV)){
+      retVal = true
+      retNote = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
+    }
 
-    if(rawData.length < 1){
-       rawData = await AwbHistory.findOne({
-        select: ['awbHistoryId'],
-        where: {
-          awbItemId,
-          awbStatusId: AWB_STATUS.RTN,
-          isDeleted: false,
-        },
+    if(!collectArrStatus.includes(AWB_STATUS.MANIFESTED)){
+      const query = `
+        SELECT
+          nostt as "awbNumber"
+        FROM
+          temp_stt
+        WHERE
+          nostt = :awbNumber
+        LIMIT
+          1;
+      `;
+
+      let rawData = await RawQueryService.queryWithParams(query, {
+        awbNumber,
       });
+
+      if(rawData.length < 1){
+        retVal = true;
+        retNote = `Resi ${awbNumber} belum pernah di MANIFESTED`;
+      }
     }
 
-    return rawData ? true : false;
-  }
-
-  public static async isCancelReturn(
-    awbNumber: string,
-    awbItemId: number,
-  ): Promise<boolean>{
-    let isRTN = await this.isRTN(awbNumber, awbItemId);
-    const query = `
-      SELECT
-        nostt as "awbNumber"
-      FROM
-        temp_stt
-      WHERE
-        nostt = :awbNumber
-      LIMIT
-        1;
-    `;
-
-    let rawData = await RawQueryService.queryWithParams(query,{
-      awbNumber,
-    });
-
-    if(rawData.length < 1){
-       rawData = await AwbHistory.findOne({
-        select: ['awbHistoryId'],
-        where: {
-          awbItemId,
-          awbStatusId: AWB_STATUS.CANCEL_RETURN,
-          isDeleted: false,
-        },
-      });
+    if(collectArrStatus.includes(AWB_STATUS.RTN) && collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
+      retVal = true;
+      retNote = `Resi ${awbNumber} sedang cancel return`;
     }
 
-    if(rawData && isRTN){
-      return true;
-    }else{
-      return false;
+    if(collectArrStatus.includes(AWB_STATUS.RTN) && !collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
+      retVal = true;
+      retNote = `Resi ${awbNumber} sedang RTN`;
     }
 
+    return [retVal, retNote];
   }
 
   // TODO: open length awb number (12 or 15 digit)
