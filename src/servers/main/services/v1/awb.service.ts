@@ -334,7 +334,7 @@ export class AwbService {
       return [retVal, retNote]
     }
 
-    if(!collectArrStatus.includes(AWB_STATUS.MANIFESTED) && optionalManifested){
+    if(!collectArrStatus.includes(AWB_STATUS.MANIFESTED) && !optionalManifested){
       const query = `
         SELECT
           nostt as "awbNumber"
