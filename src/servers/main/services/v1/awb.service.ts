@@ -357,12 +357,6 @@ export class AwbService {
       }
     }
 
-    if(!collectArrStatus.includes(AWB_STATUS.RTN) && !collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
-      retVal = true;
-      retNote = `Resi ${awbNumber} sedang RTN`;
-      return [retVal, retNote]
-    }
-
     if(collectArrStatus.includes(AWB_STATUS.RTN) && !collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
       retVal = true;
       retNote = `Resi ${awbNumber} sedang RTN`;
