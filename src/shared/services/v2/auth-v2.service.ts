@@ -48,6 +48,12 @@ export class AuthV2Service {
       });
     }
 
+    if (!user.validatePasswordPolicy(password)) {
+      RequestErrorService.throwObj({
+        message: 'global.error.PASSWORD_POLICY_INVALID',
+      });
+    }
+
     // validate user password hash md5
     if (!user.validatePassword(password)) {
       RequestErrorService.throwObj({
