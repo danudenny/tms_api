@@ -172,6 +172,7 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['nik'] = 't2.nik';
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
+    payload.fieldResolverMap['notes'] = 't1.notes';
     if (payload.sortBy === '') {
       payload.sortBy = 'updatedTime';
     }
@@ -204,6 +205,7 @@ export class WebAwbReturnCancelService {
       ['t2.nik', 'nik'],
       ['t2.fullname', 'employeeName'],
       ['t3.branch_name', 'branchName'],
+      ['t1.notes', 'notes'],
     );
     q.innerJoin(e => e.user.employee, 't2');
     q.innerJoin(e => e.branch, 't3');
@@ -233,6 +235,7 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['nik'] = 't2.nik';
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
+    payload.fieldResolverMap['notes'] = 't1.notes';
     if (payload.sortBy === '') {
       payload.sortBy = 'updatedTime';
     }
@@ -265,6 +268,7 @@ export class WebAwbReturnCancelService {
       ['t2.nik', 'nik'],
       ['t2.fullname', 'employeeName'],
       ['t3.branch_name', 'branchName'],
+      ['t1.notes', 'notes'],
     );
     q.innerJoin(e => e.user.employee, 't2');
     q.innerJoin(e => e.branch, 't3');
