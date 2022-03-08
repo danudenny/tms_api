@@ -121,7 +121,7 @@ export class WebAwbReturnCancelService {
       payload.fieldResolverMap['createdTime'] = 't1.created_time';
       payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
       payload.fieldResolverMap['nik'] = 't2.nik';
-      payload.fieldResolverMap['empolyeeName'] = 't2.fullname';
+      payload.fieldResolverMap['employeeName'] = 't2.fullname';
       payload.fieldResolverMap['notes'] = 't1.notes';
 
       // mapping search field and operator default ilike
@@ -152,8 +152,7 @@ export class WebAwbReturnCancelService {
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
       
-      const query = await q.getQuery();
-      let data =  await QueryServiceApi.executeQuery(query, false, null);
+      const data = await q.exec();
       await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
       throw err;
@@ -171,7 +170,7 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['nik'] = 't2.nik';
-    payload.fieldResolverMap['empolyeeName'] = 't2.fullname';
+    payload.fieldResolverMap['employeeName'] = 't2.fullname';
     if (payload.sortBy === '') {
       payload.sortBy = 'updatedTime';
     }
@@ -202,7 +201,7 @@ export class WebAwbReturnCancelService {
       ['t1.updated_time', 'updatedTime'],
       ['t1.branch_id', 'branchId'],
       ['t2.nik', 'nik'],
-      ['t2.fullname', 'empolyeeName'],
+      ['t2.fullname', 'employeeName'],
     );
     q.innerJoin(e => e.user.employee, 't2');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -229,7 +228,7 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['nik'] = 't2.nik';
-    payload.fieldResolverMap['empolyeeName'] = 't2.fullname';
+    payload.fieldResolverMap['employeeName'] = 't2.fullname';
     if (payload.sortBy === '') {
       payload.sortBy = 'updatedTime';
     }
@@ -260,7 +259,7 @@ export class WebAwbReturnCancelService {
       ['t1.created_time', 'createdTime'],
       ['t1.updated_time', 'updatedTime'],
       ['t2.nik', 'nik'],
-      ['t2.fullname', 'empolyeeName'],
+      ['t2.fullname', 'employeeName'],
     );
     q.innerJoin(e => e.user.employee, 't2');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
