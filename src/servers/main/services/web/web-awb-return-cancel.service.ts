@@ -171,6 +171,7 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['nik'] = 't2.nik';
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
+    payload.fieldResolverMap['branchName'] = 't3.branch_name';
     if (payload.sortBy === '') {
       payload.sortBy = 'updatedTime';
     }
@@ -202,8 +203,10 @@ export class WebAwbReturnCancelService {
       ['t1.branch_id', 'branchId'],
       ['t2.nik', 'nik'],
       ['t2.fullname', 'employeeName'],
+      ['t3.branch_name', 'branchName'],
     );
     q.innerJoin(e => e.user.employee, 't2');
+    q.innerJoin(e => e.branch, 't3');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
@@ -229,6 +232,7 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['updatedTime'] = 't1.updated_time';
     payload.fieldResolverMap['nik'] = 't2.nik';
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
+    payload.fieldResolverMap['branchName'] = 't3.branch_name';
     if (payload.sortBy === '') {
       payload.sortBy = 'updatedTime';
     }
@@ -260,8 +264,10 @@ export class WebAwbReturnCancelService {
       ['t1.updated_time', 'updatedTime'],
       ['t2.nik', 'nik'],
       ['t2.fullname', 'employeeName'],
+      ['t3.branch_name', 'branchName'],
     );
     q.innerJoin(e => e.user.employee, 't2');
+    q.innerJoin(e => e.branch, 't3');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     const total = await q.countWithoutTakeAndSkip();
 

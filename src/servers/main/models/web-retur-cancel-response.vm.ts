@@ -25,7 +25,10 @@ export class ItemReturCancelResponse {
   nik: string;
 
   @ApiModelProperty()
-  empolyeeName: string;
+  employeeName: string;
+
+  @ApiModelProperty()
+  branchName: string;
 }
 
 export class WebReturCancelListResponse extends BaseMetaResponseVm {
