@@ -1650,7 +1650,7 @@ export class WebDeliveryOutService {
       qz.innerJoin(
         'bag_item_awb',
         'bag_item_awb',
-        'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
+        'bag_item_awb.bag_item_id = bag_item_id.bag_item_id and bag_item_awb.is_deleted = false',
       );
       qz.innerJoin(
         'awb_item',
@@ -1709,7 +1709,7 @@ export class WebDeliveryOutService {
       qz.innerJoin(
         'bag_item_awb',
         'bag_item_awb',
-        'bag_item_awb.bag_item_id = bag_item_id.bag_item_id',
+        'bag_item_awb.bag_item_id = bag_item_id.bag_item_id and bag_item_awb.is_deleted = false',
       );
 
       if (dpdd) {
