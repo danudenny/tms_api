@@ -34,6 +34,9 @@ export class WebAwbReturnCancelService {
         if(awb.awbStatusIdLast == AWB_STATUS.RTS || awb.awbStatusIdLast == AWB_STATUS.DLV){
           response.status = 'error';
           response.message = `Resi ${awbNumber} Status final tidak dapat di proses`;
+        }else if(awb.awbStatusIdLast == AWB_STATUS.CANCEL_RETURN){
+          response.status = 'error';
+          response.message = `Resi ${awbNumber} sudah diproses`;
         }else{
           let awbReturn = await AwbReturn.findOne({
             where :{
