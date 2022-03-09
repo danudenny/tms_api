@@ -837,6 +837,7 @@ export class V1PackageService {
       const bagItemAwb = await BagItemAwb.findOne({
         awbItemId: awbItemAttr.awbItemId,
         isSortir: true,
+        isDeleted: true,
       });
       if (bagItemAwb) {
         const bagItem = await BagService.getBagNumber(bagItemAwb.bagItemId);
