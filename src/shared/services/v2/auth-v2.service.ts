@@ -115,7 +115,8 @@ export class AuthV2Service {
     const url = `${ConfigService.get('svcOtp.baseUrl')}/otp`
     const jsonData = {
       channel: channel,
-      id: user.username
+      id: user.username,
+      source: `pod-${redisData.clientId}`
     }
     const options = {
       headers: this.headerReqOtp,
@@ -378,6 +379,15 @@ export class AuthV2Service {
         JSON.stringify(whiteListUserData),
         1800,
       );
+    }
+
+    /*
+      Check "otpConfigCheck" key on s3config
+      if value is "false", otp will open to all user 
+      if value is "true", will check other config to determine user required otp or not
+    */
+    if (whiteListUserData && !whiteListUserData.otpConfigCheck) {
+      return true;
     }
 
     let isRequired = false;
