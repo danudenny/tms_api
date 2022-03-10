@@ -10,7 +10,7 @@ import { MonitoringProblemLebihSortirListController } from './integration/monito
 import { CentralSortirController } from './integration/central-sortir.controller';
 import { LogWayzimController } from './integration/log-wayzim.controller';
 import { SortationScanOutController } from './sortation/web/sortation-scanout.controller';
-import { SortationScanOutListController } from './sortation/web/sosrtation-scanout-list.controller';
+import { SortationScanOutListController } from './sortation/web/sortation-scanout-list.controller';
 import { MobileSortationController } from './sortation/mobile/mobile-sortation.controller';
 import { MobileSortationListController } from './sortation/mobile/mobile-sortation-list.controller';
 
@@ -28,7 +28,6 @@ import { MobileSortationListController } from './sortation/mobile/mobile-sortati
     SortationScanOutListController,
     MobileSortationController,
     MobileSortationListController,
-
   ],
 })
 export class HubServerControllersModule {}
