@@ -11,5 +11,7 @@ module.exports = {
   bullCod: false,
   bullPodMobile: true,
   bullSmd: true,
-  bullHub: true
+  bullHub: true,
+  enablePriority: true,
+  enableNonPriority: true
 };
