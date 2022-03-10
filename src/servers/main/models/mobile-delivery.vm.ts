@@ -86,6 +86,9 @@ export class MobileDeliveryVm {
   @ApiModelPropertyOptional()
   noReference: string;
 
+  @ApiModelProperty()
+  recipientAddressType: string;
+
   @ApiModelProperty({ type: [MobileDeliveryHistoryVm] })
   deliveryHistory: MobileDeliveryHistoryVm[];
 }
