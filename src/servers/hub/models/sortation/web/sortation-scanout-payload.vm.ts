@@ -53,3 +53,11 @@ export class SortationScanOutDonePayloadVm {
   @ApiModelProperty()
   employeeIdDriver: number;
 }
+
+export class SortationScanOutImagePayloadVm {
+  @ApiModelProperty()
+  doSortationHistoryId: string;
+
+  @ApiModelProperty()
+  doSortationStatusId: number;
+}

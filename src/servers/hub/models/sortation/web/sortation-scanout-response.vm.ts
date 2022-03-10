@@ -76,6 +76,7 @@ export class SortationScanOutBagsResponseVm {
   @ApiModelProperty({type: () => [SortationBagDetailResponseVm]})
   data: SortationBagDetailResponseVm[];
 }
+
 export class SortationLoadDetailResponseVm {
   @ApiModelProperty()
   doSortationDetailId: string;
@@ -89,6 +90,7 @@ export class SortationLoadDetailResponseVm {
   @ApiModelProperty()
   bagItems: string[];
 }
+
 export class SortationScanOutLoadResponseVm {
   @ApiModelProperty()
   doSortationId: string;
@@ -98,4 +100,26 @@ export class SortationScanOutLoadResponseVm {
 
   @ApiModelProperty({type: () => [SortationLoadDetailResponseVm]})
   doSortationDetails: SortationLoadDetailResponseVm[];
+}
+
+export class SortationScanOutImageVm {
+  @ApiModelProperty()
+  doSortationDetailAttachmentId: string;
+
+  @ApiModelProperty()
+  imageUrl: string;
+
+  @ApiModelProperty()
+  imageType: string;
+}
+
+export class SortationScanOutImageResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  data: SortationScanOutImageVm;
 }
