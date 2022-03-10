@@ -143,64 +143,72 @@ export class QueueServerModule extends MultiServerAppModule
     // init connection mongodb
     MongoDbConfig.getSicepatMonggoClient();
     // init boot Queue
-    if (serverConfig.bullPod) {
-      DoPodDetailPostMetaQueueService.boot();
-      BagItemHistoryQueueService.boot();
-      BagScanOutBranchQueueService.boot();
-      BagScanOutHubQueueService.boot();
-      MappingRoleQueueService.boot();
-      // AwbSendPartnerQueueService.boot();
-      BagDropoffHubQueueService.boot();
-      UploadImagePodQueueService.boot();
-      CreateBagFirstScanHubQueueService.boot();
-      CreateBagAwbScanHubQueueService.boot();
-      AwbNotificationMailQueueService.boot();
-      UpsertHubSummaryAwbQueueService.boot();
-      UpdateHubSummaryAwbOutQueueService.boot();
-      UpdatePackageCombineHubQueueService.boot();
+    if (serverConfig.enableNonPriority) {
+      if (serverConfig.bullPod) {
+        BagScanOutBranchQueueService.boot();
+        BagScanOutHubQueueService.boot();
+        MappingRoleQueueService.boot();
+        // AwbSendPartnerQueueService.boot();
+        BagDropoffHubQueueService.boot();
+        UploadImagePodQueueService.boot();
+        AwbNotificationMailQueueService.boot();
+        UpsertHubSummaryAwbQueueService.boot();
+        UpdateHubSummaryAwbOutQueueService.boot();
+      }
+  
+      if (serverConfig.bullCod) {
+        // CodPaymentQueueService.boot();
+        CodSyncTransactionQueueService.boot();
+        CodTransactionHistoryQueueService.boot();
+        CodUpdateSupplierInvoiceQueueService.boot();
+        CodExportMongoQueueService.boot();
+        CodSqlExportMongoQueueService.boot();
+        // NOTE: disable cron diva
+        // CodCronSettlementQueueService.init();
+      }
+  
+      if (serverConfig.bullSmd) {
+        // CodCronSettlementQueueService.init();
+        // Titip Bull HUB
+        BranchSortirLogQueueService.boot();
+      }
+  
+      if (serverConfig.bullHub) {
+        UpsertHubSummaryBagSortirQueueService.boot();
+        UpdateBranchSortirLogSummaryQueueService.boot();
+      }
     }
 
-    if (serverConfig.bullPodMobile) {
-      AwbSunfishV2QueueService.boot();
-    }
-
-    if (serverConfig.bullCod) {
-      // CodPaymentQueueService.boot();
-      CodFirstTransactionQueueService.boot();
-      CodTransferTransactionQueueService.boot();
-      CodSyncTransactionQueueService.boot();
-      CodUpdateTransactionQueueService.boot();
-      CodTransactionHistoryQueueService.boot();
-      CodUpdateSupplierInvoiceQueueService.boot();
-      CodExportMongoQueueService.boot();
-      CodSqlExportMongoQueueService.boot();
-      // NOTE: disable cron diva
-      // CodCronSettlementQueueService.init();
-    }
-
-    if (serverConfig.bullSmd) {
-      BagRepresentativeScanOutHubQueueService.boot();
-      BagScanVendorQueueService.boot();
-      DoSmdPostAwbHistoryMetaQueueService.boot();
-      BagScanInBranchSmdQueueService.boot();
-      BagScanOutBranchSmdQueueService.boot();
-      BagScanDoSmdQueueService.boot();
-      BagRepresentativeScanDoSmdQueueService.boot();
-      BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
-      BagRepresentativeSmdQueueService.boot();
-      BaggingDropoffHubQueueService.boot();
-      BagRepresentativeDropoffHubQueueService.boot();
-      DoMutationQueueService.boot();
-      // CodCronSettlementQueueService.init();
-      // Titip Bull HUB
-      BranchSortirLogQueueService.boot();
-    }
-
-    if (serverConfig.bullHub) {
-      BagItemHistoryQueueService.boot();
-      DoPodDetailPostMetaInQueueService.boot();
-      UpsertHubSummaryBagSortirQueueService.boot();
-      UpdateBranchSortirLogSummaryQueueService.boot();
+    if (serverConfig.enablePriority) {
+      if (serverConfig.bullPod) {
+        DoPodDetailPostMetaQueueService.boot();
+        BagItemHistoryQueueService.boot();
+        CreateBagFirstScanHubQueueService.boot();
+        CreateBagAwbScanHubQueueService.boot();
+        UpdatePackageCombineHubQueueService.boot();
+      }
+      if (serverConfig.bullCod) {
+        CodFirstTransactionQueueService.boot();
+        CodTransferTransactionQueueService.boot();
+        CodUpdateTransactionQueueService.boot();
+      }
+      if (serverConfig.bullSmd) {
+        BagRepresentativeScanOutHubQueueService.boot();
+        BagScanVendorQueueService.boot();
+        DoSmdPostAwbHistoryMetaQueueService.boot();
+        BagScanInBranchSmdQueueService.boot();
+        BagScanOutBranchSmdQueueService.boot();
+        BagScanDoSmdQueueService.boot();
+        BagRepresentativeScanDoSmdQueueService.boot();
+        BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
+        BagRepresentativeSmdQueueService.boot();
+        BaggingDropoffHubQueueService.boot();
+        BagRepresentativeDropoffHubQueueService.boot();
+        DoMutationQueueService.boot();
+      }
+      if (serverConfig.bullHub) {
+        DoPodDetailPostMetaInQueueService.boot();
+      }
     }
   }
 }
