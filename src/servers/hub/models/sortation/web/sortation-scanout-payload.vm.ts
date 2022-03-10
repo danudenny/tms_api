@@ -19,7 +19,7 @@ export class SortationScanOutVehiclePayloadVm {
   desc: string;
 }
 
-export class SortaionScanOutRoutePayloadVm {
+export class SortationScanOutRoutePayloadVm {
   @ApiModelProperty()
   doSortationId: string;
 
@@ -27,7 +27,7 @@ export class SortaionScanOutRoutePayloadVm {
   branchCode: string;
 }
 
-export class SortaionScanOutBagsPayloadVm {
+export class SortationScanOutBagsPayloadVm {
   @ApiModelProperty({
     example: 'asdnkasndkasd',
     skipValidation: true,
@@ -41,12 +41,12 @@ export class SortaionScanOutBagsPayloadVm {
   bagNumbers: string[];
 }
 
-export class SortaionScanOutLoadPayloadVm {
+export class SortationScanOutLoadPayloadVm {
   @ApiModelProperty()
   doSortationId: string;
 }
 
-export class SortaionScanOutDonePayloadVm {
+export class SortationScanOutDonePayloadVm {
   @ApiModelProperty()
   doSortationId: string;
 
