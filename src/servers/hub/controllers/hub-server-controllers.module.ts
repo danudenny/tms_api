@@ -9,6 +9,8 @@ import { MonitoringProblemListController } from './integration/monitoring-proble
 import { MonitoringProblemLebihSortirListController } from './integration/monitoring-problem-lebih-sortir-list.controller';
 import { CentralSortirController } from './integration/central-sortir.controller';
 import { LogWayzimController } from './integration/log-wayzim.controller';
+import { SortationScanOutController } from './sortation/web/sortation-scanout.controller';
+import { SortationScanOutListController } from './sortation/web/sosrtation-scanout-list.controller';
 
 @Module({
   imports: [SharedModule, HubServerServicesModule],
@@ -20,6 +22,9 @@ import { LogWayzimController } from './integration/log-wayzim.controller';
     MonitoringProblemLebihSortirListController,
     CentralSortirController,
     LogWayzimController,
+    SortationScanOutController,
+    SortationScanOutListController,
+
   ],
 })
 export class HubServerControllersModule {}
