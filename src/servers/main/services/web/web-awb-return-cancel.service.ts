@@ -1,6 +1,6 @@
-import { WebAwbReturnCancelCreatePayload} from '../../models/web-awb-return-cancel.vm';
+import { WebAwbReturnCancelCreatePayload } from '../../models/web-awb-return-cancel.vm';
 import { AwbService } from '../v1/awb.service';
-import { WebReturCancelListResponse, WebAwbReturnCancelCreateResponse,ScanAwbVm } from '../../models/web-retur-cancel-response.vm';
+import { WebReturCancelListResponse, WebAwbReturnCancelCreateResponse, ScanAwbVm } from '../../models/web-retur-cancel-response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 import { AwbReturnCancel } from '../../../../shared/orm-entity/awb-return-cancel';
@@ -8,9 +8,11 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { MetaService } from '../../../../shared/services/meta.service';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
-import {DoPodDetailPostMetaQueueService} from '../../../queue/services/do-pod-detail-post-meta-queue.service';
-import {CsvHelper} from '../../../../shared/helpers/csv-helpers';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { CsvHelper } from '../../../../shared/helpers/csv-helpers';
 import { QueryServiceApi } from '../../../../shared/services/query.service.api';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { HttpStatus } from '@nestjs/common';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { getManager, In } from 'typeorm';
 import e = require('express');
@@ -27,25 +29,35 @@ export class WebAwbReturnCancelService {
     const awbCancelReturnArr = new Array();
     const dataAwb = [];
     let totalSuccses = 0;
+
+    if (payload.scanValue.length > 20) {
+      RequestErrorService.throwObj(
+        {
+          message: 'Cannot scan more than 20 AWB number',
+        },
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
     for (const awbNumber of payload.scanValue) {
       const awb = await AwbService.validAwbNumber(awbNumber);
       const response = new ScanAwbVm();
-      if(awb){
-        if(awb.awbStatusIdLast == AWB_STATUS.RTS || awb.awbStatusIdLast == AWB_STATUS.DLV){
+      if (awb) {
+        if (awb.awbStatusIdLast == AWB_STATUS.RTS || awb.awbStatusIdLast == AWB_STATUS.DLV) {
           response.status = 'error';
           response.message = `Resi ${awbNumber} Status final tidak dapat di proses`;
-        }else if(awb.awbStatusIdLast == AWB_STATUS.CANCEL_RETURN){
+        } else if (awb.awbStatusIdLast == AWB_STATUS.CANCEL_RETURN) {
           response.status = 'error';
           response.message = `Resi ${awbNumber} sudah diproses`;
-        }else{
+        } else {
           let awbReturn = await AwbReturn.findOne({
-            where :{
-              originAwbNumber : awbNumber,
-              isDeleted : false
+            where: {
+              originAwbNumber: awbNumber,
+              isDeleted: false
             }
           })
 
-          if(awbReturn){
+          if (awbReturn) {
             // insert to array
             const awbReturnCancel = AwbReturnCancel.create();
             awbReturnCancel.id = uuidv1();
@@ -65,12 +77,12 @@ export class WebAwbReturnCancelService {
             response.status = 'ok';
             response.message = `success`;
             totalSuccses++;
-          }else{
+          } else {
             response.status = 'error';
             response.message = `Resi ${awbNumber} bukan resi return`;
           }
         }
-      }else{
+      } else {
         response.status = 'error';
         response.message = `Resi ${awbNumber} Tidak di Temukan`;
       }
@@ -82,18 +94,18 @@ export class WebAwbReturnCancelService {
     }
 
     await getManager().transaction(async transactional => {
-      if(awbCancelReturnArr.length > 0 && totalSuccses > 0){
+      if (awbCancelReturnArr.length > 0 && totalSuccses > 0) {
         await transactional.insert(AwbReturnCancel, awbCancelReturnArr);
-        await transactional.update(AwbReturn,{
-          originAwbNumber : In(dataAwb)
-        },{
-          isDeleted : true
+        await transactional.update(AwbReturn, {
+          originAwbNumber: In(dataAwb)
+        }, {
+          isDeleted: true
         })
       }
     });
 
     //send to bull
-    for( const item of awbCancelReturnArr) {
+    for (const item of awbCancelReturnArr) {
       DoPodDetailPostMetaQueueService.createJobByAwbReturnCancel(
         item.awbItemId,
         AWB_STATUS.CANCEL_RETURN,
@@ -104,7 +116,7 @@ export class WebAwbReturnCancelService {
     }
 
     result.data = dataItem;
-    
+
     return result;
   }
 
@@ -154,7 +166,6 @@ export class WebAwbReturnCancelService {
       q.innerJoin(e => e.branch, 't3');
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-      
       const data = await q.exec();
       await CsvHelper.generateCSV(response, data, fileName);
     } catch (err) {
@@ -239,9 +250,6 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['employeeName'] = 't2.fullname';
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['notes'] = 't1.notes';
-    if (payload.sortBy === '') {
-      payload.sortBy = 'updatedTime';
-    }
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -255,28 +263,20 @@ export class WebAwbReturnCancelService {
         field: 'branchId',
       },
     ];
-    
+
     const repo = new OrionRepositoryService(AwbReturnCancel, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.id', 'awbReturnCancelId'],
-      ['t1.awb_number', 'awbNumber'],
-      ['t1.awb_item_id', 'awbItemId'],
-      ['t1.branch_id', 'branchId'],
-      ['t1.created_time', 'createdTime'],
-      ['t1.updated_time', 'updatedTime'],
-      ['t2.nik', 'nik'],
-      ['t2.fullname', 'employeeName'],
-      ['t3.branch_name', 'branchName'],
-      ['t1.notes', 'notes'],
+      ['count(t1.id)', 'cnt'],
     );
     q.innerJoin(e => e.user.employee, 't2');
     q.innerJoin(e => e.branch, 't3');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    const total = await q.countWithoutTakeAndSkip();
+    let total = await q.exec();
+    total = total[0].cnt;
 
     const result = new WebReturCancelListResponse();
     result.data = [];
