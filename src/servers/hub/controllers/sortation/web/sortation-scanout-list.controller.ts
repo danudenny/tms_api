@@ -38,6 +38,12 @@ export class SortationScanOutListController {
     return null;
   }
 
+  @Post('image')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async FindscanOutImage(@Body() payload: any) {
+    return null;
+  }
+
   @Post('monitoring/list')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async monitoringSortationList(@Body() payload: any) {
