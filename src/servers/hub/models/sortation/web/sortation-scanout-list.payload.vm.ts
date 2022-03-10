@@ -1,7 +1,7 @@
 import {
   ApiModelProperty,
   ApiModelPropertyOptional,
-} from '../../../shared/external/nestjs-swagger';
+} from '../../../../../shared/external/nestjs-swagger';
 
 abstract class ListPayloadVm {
   @ApiModelPropertyOptional()
@@ -15,44 +15,6 @@ abstract class ListPayloadVm {
 
   @ApiModelPropertyOptional()
   sortDir?: 'ASC' | 'DESC';
-}
-
-export class SortationScanOutPayloadVm {
-  @ApiModelProperty()
-  employeeDriverId: number;
-
-  @ApiModelProperty()
-  doSortationDate: string;
-
-  @ApiModelProperty()
-  vehicleNumber: string;
-
-  @ApiModelProperty()
-  sortationTrip: number;
-
-  @ApiModelProperty()
-  desc: string;
-}
-
-export class SortationScanoutRoutePayloadVm {
-  @ApiModelProperty()
-  doSortationId: string;
-
-  @ApiModelProperty()
-  branchCode: string;
-}
-
-export class SortationScanOutBagsPayloadVm {
-  @ApiModelProperty()
-  doSortationDetailId: string;
-
-  @ApiModelProperty()
-  bagNumbers: string[];
-}
-
-export class LoadDoSortationPayloadVm {
-  @ApiModelProperty()
-  doSortationId: string;
 }
 
 class DoSortationListFilterVm {
