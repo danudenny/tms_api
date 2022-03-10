@@ -8,6 +8,7 @@ import {
   WebScanOutDeliverPartnerListResponseVm,
 } from '../../../models/web-scan-out-response.vm';
 import { WebScanOutDeliverListPayloadVm } from '../../../models/web-scan-out.vm';
+import moment = require('moment');
 
 export class LastMileDeliveryService {
   static async findAllScanOutDeliverGroupList(
@@ -212,7 +213,11 @@ export class LastMileDeliveryService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     // TODO: fix query
-    q.andWhereRaw(`DATE(t1.do_pod_deliver_date_time) = '${datePod}'`);
+    const dateFrom = moment(datePod, 'YYYY-MM-DD').toDate();
+    const dateTo = moment(new Date().setDate(dateFrom.getDate() + 1)).format("YYYY-MM-DD");
+
+    q.andWhereRaw(`t1.do_pod_deliver_date_time >= '${datePod}'`);
+    q.andWhereRaw(`t1.do_pod_deliver_date_time < '${dateTo}'`);
     q.groupByRaw('t1.do_pod_deliver_id, t2.fullname');
 
     const data = await q.exec();
