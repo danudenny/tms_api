@@ -28,10 +28,10 @@ class DoSortationListFilterVm {
   branchIdFrom?: number;
 
   @ApiModelProperty()
-  branchIdTo  ?: number;
+  branchIdTo?: number;
 
   @ApiModelProperty()
-  doSortationCode  ?: number;
+  doSortationCode?: number;
 }
 
 class DoSortationBagMoreFilterVm {
@@ -92,4 +92,9 @@ export class DoSortationHistoryPayloadVm extends ListPayloadVm {
     | 'historyStatus'
     | 'username'
     | 'assignee';
+}
+
+export class ScanOutSortationRouteDetailPayloadVm {
+  @ApiModelProperty()
+  doSortationId: string;
 }

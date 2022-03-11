@@ -8,18 +8,17 @@ import { SortationScanOutListService } from '../../../services/sortation/web/sor
 @ApiUseTags('Scan Out Sortation')
 @Controller('sortation/scanOut')
 export class SortationScanOutListController {
-  constructor() {}
-
   @Post('list')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public scanOutList(@Body() payload: BaseMetaPayloadVm) {
-    return SortationScanOutListService.getDoSortationList(payload);
+    return SortationScanOutListService.getScanOutSortationList(payload);
   }
 
   @Post('list/detailRoute')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanOutListDetailRoute(@Body() payload: any) {
-    return null;
+    console.log('asdf\n\n');
+    return SortationScanOutListService.getScanOutSortationList(payload);
   }
 
   @Post('list/detailBag')
