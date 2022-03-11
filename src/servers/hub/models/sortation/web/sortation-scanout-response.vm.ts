@@ -11,7 +11,7 @@ export class SortationScanOutVehicleResponseVm {
   doSortationCode: string;
 
   @ApiModelProperty()
-  doSortationTime: string;
+  doSortationTime: Date;
 
   @ApiModelPropertyOptional()
   employeeIdDriver: number;

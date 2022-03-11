@@ -1,11 +1,10 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { DoSortationStatus } from './do-sortation-status';
 
 @Entity('do_sortation_history', { schema: 'public' })
 export class DoSortationHistory extends TmsBaseEntity {
-  @PrimaryColumn({
-    type: 'uuid',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_sortation_history_id',
   })
   doSortationHistoryId: string;

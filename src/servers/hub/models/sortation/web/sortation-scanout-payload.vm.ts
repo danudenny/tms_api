@@ -10,7 +10,10 @@ export class SortationScanOutVehiclePayloadVm {
   doSortationDate: Date;
 
   @ApiModelProperty()
-  vehicleId: string;
+  vehicleId: number;
+
+  @ApiModelProperty()
+  vehicleNumber: string;
 
   @ApiModelProperty()
   sortationTrip: number;

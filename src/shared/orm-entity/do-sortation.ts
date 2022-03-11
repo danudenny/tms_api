@@ -4,7 +4,7 @@ import {
   JoinColumn,
   OneToMany,
   OneToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { DoSortationDetail } from './do-sortation-detail';
@@ -14,8 +14,7 @@ import { DoSortationStatus } from './do-sortation-status';
 
 @Entity('do_sortation', { schema: 'public' })
 export class DoSortation extends TmsBaseEntity {
-  @PrimaryColumn({
-    type: 'uuid',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_sortation_id',
   })
   doSortationId: string;
@@ -42,12 +41,14 @@ export class DoSortation extends TmsBaseEntity {
   @Column('character varying', {
     name: 'branch_id_to_list',
     array: true,
+    default: 'array[]::integer[]',
   })
   branchIdToList: string[];
 
   @Column('character varying', {
     name: 'branch_name_to_list',
     array: true,
+    default: 'array[]::string[]',
   })
   branchNameToList: string[];
 

@@ -1,11 +1,10 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Employee } from './employee';
 import { TmsBaseEntity } from './tms-base';
 
 @Entity('do_sortation_vehicle', { schema: 'public' })
 export class DoSortationVehicle extends TmsBaseEntity {
-  @PrimaryColumn({
-    type: 'uuid',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_sortation_vehicle_id',
   })
   doSortationVehicleId: string;
@@ -32,6 +31,7 @@ export class DoSortationVehicle extends TmsBaseEntity {
   @Column('integer', {
     nullable: false,
     name: 'vehicle_seq',
+    default: () => 0,
   })
   vehicleSeq: number;
 

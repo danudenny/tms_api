@@ -149,6 +149,15 @@ export class CustomCounterCode {
     return prefix + randomCode.toString();
   }
 
+  public static async doSortationCodeRandomCounter(
+    dateTime: Date,
+    digit: number = 8,
+  ) {
+    const prefix = `DOPS/${moment(dateTime).format('YYMM/DD')}/`;
+    const randomCode = this.randomCode(digit);
+    return prefix + randomCode.toString();
+  }
+
   public static async baggingCodeCounter(dateTime: Date, digit: number = 5) {
     const prefix = `BGX/${moment(dateTime).format('YYMM')}/`;
     const last_number = await this.getLastNumber(prefix);
