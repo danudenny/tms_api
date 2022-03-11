@@ -6,6 +6,7 @@ import {
   OneToMany,
   OneToOne,
   PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { DoSortationDetailItem } from './do-sortation-detail-item';
@@ -14,22 +15,19 @@ import { DoSortation } from './do-sortation';
 
 @Entity('do_sortation_detail', { schema: 'public' })
 export class DoSortationDetail extends TmsBaseEntity {
-  @PrimaryColumn({
-    type: 'uuid',
+ @PrimaryGeneratedColumn('uuid', {
     name: 'do_sortation_detail_id',
   })
   doSortationDetailId: string;
 
-  @Column({
-    nullable: true,
-    type: 'uuid',
+  @Column('character varying', {
+    nullable: false,
     name: 'do_sortation_id',
   })
   doSortationId: string;
 
-  @Column({
-    nullable: true,
-    type: 'uuid',
+  @Column('character varying', {
+    nullable: false,
     name: 'do_sortation_vehicle_id',
   })
   doSortationVehicleId: string;
@@ -159,5 +157,6 @@ export class DoSortationDetail extends TmsBaseEntity {
   branchTo: Branch;
 
   @ManyToOne(() => DoSortation, sortation => sortation.doSortationId)
+  @JoinColumn({name: 'do_sortation_id', referencedColumnName: 'doSortationId'})
   doSortation: DoSortation;
 }

@@ -30,10 +30,10 @@ export class SortationScanOutRouteResponseVm {
   @ApiModelProperty()
   branchName: string;
 
-  @ApiModelPropertyOptional()
+  @ApiModelProperty()
   branchCode: string;
 
-  @ApiModelPropertyOptional()
+  @ApiModelProperty()
   branchId: number;
 }
 

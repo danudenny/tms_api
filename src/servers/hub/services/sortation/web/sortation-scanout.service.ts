@@ -2,8 +2,8 @@
 import moment = require('moment');
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
-import { SortationScanOutVehicleResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import { SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
+import { SortationScanOutRouteResponseVm, SortationScanOutVehicleResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { toInteger } from 'lodash';
@@ -12,6 +12,8 @@ import { CustomCounterCode } from '../../../../../shared/services/custom-counter
 import { RedisService } from '../../../../../shared/services/redis.service';
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
 import { SortationService } from './sortation.service';
+import { Vehicle } from '../../../../../shared/orm-entity/vehicle';
+import { Branch } from '../../../../../shared/orm-entity/branch';
 
 @Injectable()
 export class SortationScanOutService {
@@ -21,6 +23,17 @@ export class SortationScanOutService {
       const authMeta = AuthService.getAuthData();
       const permissonPayload = AuthService.getPermissionTokenPayload();
       const timeNow = moment().toDate();
+
+      const vehicle = await Vehicle.findOne({
+          where: {
+            vehicleId: payload.vehicleId,
+            isActive : 1,
+            isDeleted : false,
+          },
+        });
+      if (!vehicle) {
+        throw new BadRequestException('Kendaraan tidak ditemukan!.');
+      }
 
       const dataDrivers = await this.getDataDriver(payload.employeeDriverId);
       if (dataDrivers) {
@@ -48,8 +61,8 @@ export class SortationScanOutService {
 
       const doSortationVehicleId = await SortationService.createDoSortationVehicle(
             doSortationId,
-            payload.vehicleId,
-            payload.vehicleNumber,
+            vehicle.vehicleId,
+            vehicle.vehicleNumber,
             1,
             payload.employeeDriverId,
             permissonPayload.branchId,
@@ -82,6 +95,97 @@ export class SortationScanOutService {
       result.doSortationVehicleId = doSortationVehicleId;
       result.doSortationTime = payload.doSortationDate;
       result.employeeIdDriver = payload.employeeDriverId;
+      return result;
+  }
+
+  static async sortationScanOutRoute(
+    payload: SortationScanOutRoutePayloadVm)
+    : Promise<SortationScanOutRouteResponseVm> {
+      const authMeta = AuthService.getAuthData();
+      const permissonPayload = AuthService.getPermissionTokenPayload();
+      const timeNow = moment().toDate();
+
+      const resultDoSortaion = await DoSortation.findOne({
+        where: {
+          doSortationId: payload.doSortationId,
+          isDeleted: false,
+        },
+      });
+
+      if (!resultDoSortaion) {
+        throw new BadRequestException(`ID Sortation ${payload.doSortationId.toString()} tidak ditemukan`);
+      }
+
+      console.log(`resultDoSortation:::::::: ${JSON.stringify(resultDoSortaion)}`);
+
+      const resultBranchTo = await Branch.findOne({
+        where: {
+          branchCode: payload.branchCode,
+          isDeleted : false,
+          isActive : true,
+        },
+      });
+
+      if (!resultBranchTo) {
+        throw new BadRequestException(`Kode Gerai ${payload.branchCode} tidak ditemukan`);
+      }
+
+      console.log(`resultBranchTo:::::::: ${JSON.stringify(resultBranchTo)}`);
+
+      const resultDoSortaionDetail = await DoSortationDetail.findOne({
+        where: {
+          doSortationId: resultDoSortaion.doSortationId,
+          branchIdTo: resultBranchTo.branchId,
+          isDeleted: false,
+        },
+      });
+
+      if (resultDoSortaionDetail) {
+        throw new BadRequestException(`Kode Gerai ${payload.branchCode} sudah di scan!!`);
+      }
+
+      console.log(`resultDoSortaionDetail:::::::: ${resultDoSortaionDetail}`);
+
+      const doSortationDetailId = await SortationService.createDoSortationDetail(
+        resultDoSortaion.doSortationId,
+        resultDoSortaion.doSortationVehicleIdLast,
+        resultDoSortaion.doSortationTime,
+        permissonPayload.branchId,
+        resultBranchTo.branchId,
+        authMeta.userId,
+        DO_SORTATION_STATUS.CREATED,
+      );
+
+      let branchIdToArray = [];
+      let branchNameToArray = [];
+      if ((resultDoSortaion.branchIdToList && resultDoSortaion.branchIdToList.length > 0)
+        || (resultDoSortaion.branchNameToList && resultDoSortaion.branchNameToList.length > 0)) {
+          branchIdToArray = resultDoSortaion.branchIdToList;
+          branchNameToArray = resultDoSortaion.branchNameToList;
+      }
+      branchIdToArray.push(resultBranchTo.branchId.toString());
+      branchNameToArray.push(resultBranchTo.branchName);
+
+      await DoSortation.update(
+        {doSortationId: resultDoSortaion.doSortationId},
+        {
+          branchIdToList: branchIdToArray,
+          branchNameToList: branchNameToArray,
+          totalDoSortationDetail: resultDoSortaion.totalDoSortationDetail + 1,
+          trip: resultDoSortaion.trip + 1,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      const result = new SortationScanOutRouteResponseVm();
+      result.doSortationDetailId = doSortationDetailId;
+      result.doSortationId = resultDoSortaion.doSortationId,
+      result.doSortationCode = resultDoSortaion.doSortationCode;
+      result.branchId = resultBranchTo.branchId;
+      result.branchCode = resultBranchTo.branchCode;
+      result.branchName = resultBranchTo.branchName;
+
       return result;
   }
 

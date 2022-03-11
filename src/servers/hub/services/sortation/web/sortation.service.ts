@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import moment = require('moment');
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
+import { DoSortationDetail } from '../../../../../shared/orm-entity/do-sortation-detail';
 import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 
@@ -88,6 +89,33 @@ export class SortationService {
     const doSortationHistory = await DoSortationHistory.insert(dataDoSortationHistory);
     return doSortationHistory.identifiers.length
       ? doSortationHistory.identifiers[0].doSortationHistoryId
+      : null;
+  }
+
+  static async createDoSortationDetail(
+    doSortationId: string,
+    doSortationVehicleId: string,
+    doSortationTime: Date,
+    branchIdLogin: number,
+    branchIdTo: number,
+    userId: number,
+    doSortationStatusIdLast: number,
+  ) {
+    const dataDoSortationDetail = DoSortationDetail.create({
+      doSortationId,
+      doSortationVehicleId,
+      doSortationTime,
+      branchIdFrom: branchIdLogin,
+      branchIdTo,
+      userIdCreated: userId,
+      createdTime: moment().toDate(),
+      userIdUpdated: userId,
+      updatedTime: moment().toDate(),
+      doSortationStatusIdLast,
+    });
+    const doSortationDetail = await DoSortationDetail.insert(dataDoSortationDetail);
+    return doSortationDetail.identifiers.length
+      ? doSortationDetail.identifiers[0].doSortationDetailId
       : null;
   }
 

@@ -3,8 +3,8 @@ import { ApiOkResponse, ApiUseTags } from '../../../../../shared/external/nestjs
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import { SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
-import { SortationScanOutVehicleResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import { SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
+import { SortationScanOutRouteResponseVm, SortationScanOutVehicleResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import { SortationScanOutService } from '../../../services/sortation/web/sortation-scanout.service';
 
 @ApiUseTags('Scan Out Sortation')
@@ -21,9 +21,11 @@ export class SortationScanOutController {
   }
 
   @Post('route')
+  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async scanOutRoute(@Body() payload: any) {
-    return null;
+  @ApiOkResponse({ type: SortationScanOutRouteResponseVm })
+  public async scanOutRoute(@Body() payload: SortationScanOutRoutePayloadVm) {
+    return SortationScanOutService.sortationScanOutRoute(payload);
   }
 
   @Post('bags')

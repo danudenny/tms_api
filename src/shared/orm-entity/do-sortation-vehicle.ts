@@ -9,9 +9,8 @@ export class DoSortationVehicle extends TmsBaseEntity {
   })
   doSortationVehicleId: string;
 
-  @Column({
+  @Column('character varying', {
     nullable: false,
-    type: 'uuid',
     name: 'do_sortation_id',
   })
   doSortationId: string;

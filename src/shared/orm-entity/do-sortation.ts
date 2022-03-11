@@ -41,7 +41,7 @@ export class DoSortation extends TmsBaseEntity {
   @Column('character varying', {
     name: 'branch_id_to_list',
     array: true,
-    default: 'array[]::integer[]',
+    default: 'array[]::string[]',
   })
   branchIdToList: string[];
 
