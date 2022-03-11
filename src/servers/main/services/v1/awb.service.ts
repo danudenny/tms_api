@@ -327,7 +327,7 @@ export class AwbService {
     for(let data of rawData){
       collectArrStatus.push(parseInt(data.awbStatusId.toString()))
     }
-    
+
     if(collectArrStatus.includes(AWB_STATUS.CANCEL_DLV)){
       retVal = true
       retNote = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
@@ -362,8 +362,7 @@ export class AwbService {
       retNote = `Resi ${awbNumber} sedang RTN`;
       return [retVal, retNote]
     }
-
-    retVal = true;
+    
     return [retVal, retNote];
   }
 
