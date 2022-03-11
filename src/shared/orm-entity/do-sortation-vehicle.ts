@@ -1,52 +1,88 @@
-import {Column, Entity, JoinColumn, OneToOne, PrimaryColumn} from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 import { Employee } from './employee';
-import {TmsBaseEntity} from './tms-base';
+import { TmsBaseEntity } from './tms-base';
 
-@Entity('do_sortation_vehicle', {schema: 'public'})
+@Entity('do_sortation_vehicle', { schema: 'public' })
 export class DoSortationVehicle extends TmsBaseEntity {
-    @PrimaryColumn({
-        type: 'uuid',
-        name: 'do_sortation_vehicle_id',
-    })
-    doSortationVehicleId: string;
+  @PrimaryColumn({
+    type: 'uuid',
+    name: 'do_sortation_vehicle_id',
+  })
+  doSortationVehicleId: string;
 
-    @Column({
-        type: 'uuid',
-        name: 'do_sortation_id',
-    })
-    doSortationId: string;
+  @Column({
+    nullable: false,
+    type: 'uuid',
+    name: 'do_sortation_id',
+  })
+  doSortationId: string;
 
-    @Column('integer', {
-        name: 'vehicle_id',
-    })
-    vehicleId: number;
+  @Column('integer', {
+    nullable: false,
+    name: 'vehicle_id',
+  })
+  vehicleId: number;
 
-    @Column('character varying', {
-        name: 'vehicle_number',
-    })
-    vehicleNumber: string;
+  @Column('character varying', {
+    nullable: false,
+    name: 'vehicle_number',
+  })
+  vehicleNumber: string;
 
-    @Column('integer', {
-        name: 'vehicle_seq',
-    })
-    vehicleSeq: number;
+  @Column('integer', {
+    nullable: false,
+    name: 'vehicle_seq',
+  })
+  vehicleSeq: number;
 
-    @Column('integer', {
-        name: 'employee_driver_id',
-    })
-    employeeDriverId: number;
+  @Column('integer', {
+    nullable: false,
+    name: 'employee_driver_id',
+  })
+  employeeDriverId: number;
 
-    @Column('integer', {
-        name: 'branch_id_created',
-    })
-    branchIdCreated: number;
+  @Column('integer', {
+    nullable: false,
+    name: 'branch_id_created',
+  })
+  branchIdCreated: number;
 
-    @Column('text', {
-        name: 'note',
-    })
-    note: string;
+  @Column('text', {
+    name: 'note',
+  })
+  note: string;
 
-    @OneToOne(() => Employee)
-    @JoinColumn({ name: 'employee_driver_id' })
-    employee: Employee;
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_created',
+  })
+  userIdCreated: number;
+
+  @Column('bigint', {
+    nullable: false,
+    name: 'user_id_updated',
+  })
+  userIdUpdated: number;
+
+  @Column('boolean', {
+    default: () => 'false',
+    name: 'is_deleted',
+  })
+  isDeleted: boolean;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'created_time',
+  })
+  createdTime: Date;
+
+  @Column('timestamp without time zone', {
+    nullable: false,
+    name: 'updated_time',
+  })
+  updatedTime: Date;
+
+  @OneToOne(() => Employee)
+  @JoinColumn({ name: 'employee_driver_id' })
+  employee: Employee;
 }
