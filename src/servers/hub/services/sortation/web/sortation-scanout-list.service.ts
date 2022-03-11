@@ -1,12 +1,17 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { ScanOutSortationListResponseVm, ScanOutSortationRouteDetailResponseVm } from '../../../models/sortation/web/sortation-scanout-list.response.vm';
+import {
+  ScanOutSortationListResponseVm,
+  ScanOutSortationRouteDetailResponseVm,
+} from '../../../models/sortation/web/sortation-scanout-list.response.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { RepositoryService } from '../../../../../shared/services/repository.service';
 import { ScanOutSortationRouteDetailPayloadVm } from 'src/servers/hub/models/sortation/web/sortation-scanout-list.payload.vm';
 
 @Injectable()
 export class SortationScanOutListService {
-  static async getScanOutSortationList(payload: BaseMetaPayloadVm): Promise<ScanOutSortationListResponseVm> {
+  static async getScanOutSortationList(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutSortationListResponseVm> {
     const q = RepositoryService.doSortation.createQueryBuilder();
 
     // SELECT CLAUSE
@@ -29,19 +34,33 @@ export class SortationScanOutListService {
     ];
     q.select(selectColumns)
       .innerJoin('do_sortation.branchFrom', 'br', 'br.is_deleted = FALSE')
-      .innerJoin('do_sortation.doSortationVehicle', 'dsv', 'dsv.is_deleted = FALSE')
-      .innerJoin('do_sortation.doSortationStatus', 'dss', 'dss.is_deleted = FALSE')
+      .innerJoin(
+        'do_sortation.doSortationVehicle',
+        'dsv',
+        'dsv.is_deleted = FALSE',
+      )
+      .innerJoin(
+        'do_sortation.doSortationStatus',
+        'dss',
+        'dss.is_deleted = FALSE',
+      )
       .innerJoin('dsv.employee', 'e', 'e.is_deleted = FALSE');
 
     // WHERE CLAUSE
+    let where;
     if (payload.filters) {
       payload.filters.forEach(filter => {
         const field = ['endDate', 'startDate'].includes(filter.field)
           ? 'do_sortation_time'
           : filter.field;
-        const where = `do_sortation.${field} ${filter.sqlOperator} :${
-          filter.field
-        }`;
+        if (field == 'branchIdTo') {
+          // handles where clause for column type varchar[]
+          where = `'${filter.value}' = ANY(do_sortation.branch_id_to_list)`;
+        } else {
+          where = `do_sortation.${field} ${filter.sqlOperator} :${
+            filter.field
+          }`;
+        }
         const whereParams = { [filter.field]: filter.value };
         q.andWhere(where, whereParams);
       });
@@ -60,13 +79,16 @@ export class SortationScanOutListService {
       vehicleNumber: 'dsv.vehicle_number',
       nickName: 'e.nickname',
     };
-    const orderBy: string =  sortMap[payload.sortBy] || sortMap.doSortationTime;
+    const orderBy: string = sortMap[payload.sortBy] || sortMap.doSortationTime;
     const orderDir: 'ASC' | 'DESC' = payload.sortDir === 'asc' ? 'ASC' : 'DESC';
     q.orderBy(orderBy, orderDir)
       .limit(payload.limit)
       .offset((payload.page - 1) * payload.limit);
 
-    const [scanOutSortations, count] = await Promise.all([q.getRawMany(), q.getCount()]);
+    const [scanOutSortations, count] = await Promise.all([
+      q.getRawMany(),
+      q.getCount(),
+    ]);
 
     const result = new ScanOutSortationListResponseVm();
     result.statusCode = HttpStatus.OK;
@@ -78,9 +100,29 @@ export class SortationScanOutListService {
     return result;
   }
 
-  static async getScanOutSortationRouteDetail(payload: ScanOutSortationRouteDetailPayloadVm): Promise<ScanOutSortationRouteDetailResponseVm> {
+  static async getScanOutSortationRouteDetail(
+    payload: ScanOutSortationRouteDetailPayloadVm,
+  ): Promise<ScanOutSortationRouteDetailResponseVm> {
+    const q = RepositoryService.doSortationDetail.createQueryBuilder();
 
-    return {} as ScanOutSortationRouteDetailResponseVm;
+    const selectColumns = [
+      'do_sortation_detail.do_sortation_detail_id AS doSortationDetailId',
+      'br.branch_name AS branchToName',
+    ];
+
+    q.select(selectColumns)
+      .innerJoin('do_sortation_detail.branchTo', 'br', 'br.is_deleted = FALSE')
+      .andWhere('do_sortation_detail.do_sortation_id = :doSortationId', {
+        doSortationId: payload.doSortationId,
+      })
+      .andWhere('do_sortation_detail.is_deleted = FALSE');
+
+    const result = await q.getRawMany();
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Sukses ambil daftar rute sortation',
+      data: result,
+    } as ScanOutSortationRouteDetailResponseVm;
   }
-
 }
