@@ -1,6 +1,6 @@
 import { BaseMetaResponseVm } from '../../../../../shared/models/base-meta-response.vm';
 import { ApiModelProperty } from '../../../../../shared/external/nestjs-swagger';
-class LoadDoSortationVm {
+class LoadScanOutSortationVm {
   @ApiModelProperty()
   doSortationDetailId: string;
 
@@ -14,18 +14,18 @@ class LoadDoSortationVm {
   bagItems: string[];
 }
 
-export class LoadDoSortationResponseVm {
+export class LoadScanOutSortationResponseVm {
   @ApiModelProperty()
   doSortationId: string;
 
   @ApiModelProperty()
   doSortationCode: string;
 
-  @ApiModelProperty({ type: () => [LoadDoSortationVm] })
-  doSortationDetails: LoadDoSortationVm[];
+  @ApiModelProperty({ type: () => [LoadScanOutSortationVm] })
+  doSortationDetails: LoadScanOutSortationVm[];
 }
 
-class DoSortationListVm {
+class ScanOutSortationListVm {
   @ApiModelProperty()
   doSortationId: string;
 
@@ -45,10 +45,10 @@ class DoSortationListVm {
   vehicleNumber: string;
 
   @ApiModelProperty()
-  bracnhFromName: string;
+  branchFromName: string;
 
   @ApiModelProperty()
-  bracnhToName: string;
+  branchToName: string;
 
   @ApiModelProperty()
   totalBag: number;
@@ -72,18 +72,18 @@ class DoSortationListVm {
   departureDateTime: string;
 }
 
-export class DoSortationListResponseVm extends BaseMetaResponseVm {
+export class ScanOutSortationListResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty()
   statusCode: number;
 
   @ApiModelProperty()
   message: string;
 
-  @ApiModelProperty({ type: () => [DoSortationListVm] })
-  data: DoSortationListVm[];
+  @ApiModelProperty({ type: () => [ScanOutSortationListVm] })
+  data: ScanOutSortationListVm[];
 }
 
-export class DoSortationRouteDetailVm {
+export class ScanOutSortationRouteDetailVm {
   @ApiModelProperty()
   doSortationDetailId: string;
 
@@ -91,18 +91,18 @@ export class DoSortationRouteDetailVm {
   branchToName: string;
 }
 
-export class DoSortationRouteDetailResponseVm {
+export class ScanOutSortationRouteDetailResponseVm {
   @ApiModelProperty()
   statusCode: number;
 
   @ApiModelProperty()
   message: string;
 
-  @ApiModelProperty({ type: () => [DoSortationRouteDetailVm] })
-  data: DoSortationRouteDetailVm[];
+  @ApiModelProperty({ type: () => [ScanOutSortationRouteDetailVm] })
+  data: ScanOutSortationRouteDetailVm[];
 }
 
-export class DoSortationBagDetailVm {
+export class ScanOutSortationBagDetailVm {
   @ApiModelProperty()
   doSortationDetailId: string;
 
@@ -119,29 +119,29 @@ export class DoSortationBagDetailVm {
   branchToName: string;
 }
 
-export class DoSortationBagDetailResponseVm {
+export class ScanOutSortationBagDetailResponseVm {
   @ApiModelProperty()
   statusCode: number;
 
   @ApiModelProperty()
   message: string;
 
-  @ApiModelProperty({ type: () => [DoSortationBagDetailVm] })
-  data: DoSortationBagDetailVm[];
+  @ApiModelProperty({ type: () => [ScanOutSortationBagDetailVm] })
+  data: ScanOutSortationBagDetailVm[];
 }
 
-export class DoSortationBagDetailMoreResponseVm extends BaseMetaResponseVm {
+export class ScanOutSortationBagDetailMoreResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty()
   statusCode: number;
 
   @ApiModelProperty()
   message: string;
 
-  @ApiModelProperty({ type: () => [DoSortationBagDetailVm] })
-  data: DoSortationBagDetailVm[];
+  @ApiModelProperty({ type: () => [ScanOutSortationBagDetailVm] })
+  data: ScanOutSortationBagDetailVm[];
 }
 
-class DoSortationHistoryVm {
+class ScanOutSortationHistoryVm {
   @ApiModelProperty()
   doSortationHistoryId: string;
 
@@ -173,13 +173,13 @@ class DoSortationHistoryVm {
   reasonNotes: string;
 }
 
-export class DoSortationHistoryResponseVm extends BaseMetaResponseVm {
+export class ScanOutSortationHistoryResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty()
   statusCode: number;
 
   @ApiModelProperty()
   message: string;
 
-  @ApiModelProperty({ type: () => [DoSortationHistoryVm] })
-  data: DoSortationHistoryVm[];
+  @ApiModelProperty({ type: () => [ScanOutSortationHistoryVm] })
+  data: ScanOutSortationHistoryVm[];
 }

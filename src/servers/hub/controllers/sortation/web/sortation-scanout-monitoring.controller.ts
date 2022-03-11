@@ -1,5 +1,5 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';

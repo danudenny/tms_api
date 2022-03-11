@@ -1,4 +1,5 @@
-import {Column, Entity, PrimaryColumn} from "typeorm";
+import {Column, Entity, JoinColumn, OneToOne, PrimaryColumn} from 'typeorm';
+import { Employee } from './employee';
 import {TmsBaseEntity} from './tms-base';
 
 @Entity('do_sortation_vehicle', {schema: 'public'})
@@ -44,4 +45,8 @@ export class DoSortationVehicle extends TmsBaseEntity {
         name: 'note',
     })
     note: string;
+
+    @OneToOne(() => Employee)
+    @JoinColumn({ name: 'employee_driver_id' })
+    employee: Employee;
 }
