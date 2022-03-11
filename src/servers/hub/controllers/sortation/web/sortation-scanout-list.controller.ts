@@ -4,6 +4,10 @@ import { ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { SortationScanOutListService } from '../../../services/sortation/web/sortation-scanout-list.service';
+import {
+  ScanOutSortationBagDetailPayloadVm,
+  ScanOutSortationRouteDetailPayloadVm,
+} from '../../../models/sortation/web/sortation-scanout-list.payload.vm';
 
 @ApiUseTags('Scan Out Sortation')
 @Controller('sortation/scanOut')
@@ -16,32 +20,37 @@ export class SortationScanOutListController {
 
   @Post('list/detailRoute')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async scanOutListDetailRoute(@Body() payload: any) {
-    console.log('asdf\n\n');
-    return SortationScanOutListService.getScanOutSortationList(payload);
+  public scanOutListDetailRoute(
+    @Body() payload: ScanOutSortationRouteDetailPayloadVm,
+  ) {
+    return SortationScanOutListService.getScanOutSortationRouteDetail(payload);
   }
 
   @Post('list/detailBag')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async scanOutListDetailBag(@Body() payload: any) {
-    return null;
+  public scanOutListDetailBag(
+    @Body() payload: ScanOutSortationBagDetailPayloadVm,
+  ) {
+    return SortationScanOutListService.getScanOutSortationBagDetail(payload);
   }
 
   @Post('list/detailBag/more')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async scanOutListDetailMore(@Body() payload: any) {
-    return null;
+  public scanOutListDetailMore(@Body() payload: BaseMetaPayloadVm) {
+    return SortationScanOutListService.getScanOutSortationBagDetailMore(
+      payload,
+    );
   }
 
   @Post('history')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async scanOutDoSortationHistory(@Body() payload: any) {
+  public scanOutDoSortationHistory(@Body() payload: any) {
     return null;
   }
 
   @Post('image')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async FindscanOutImage(@Body() payload: any) {
+  public FindscanOutImage(@Body() payload: any) {
     return null;
   }
 }

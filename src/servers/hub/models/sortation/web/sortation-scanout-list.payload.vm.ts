@@ -77,9 +77,7 @@ export class DoSortationBagMorePayloadVm extends ListPayloadVm {
   filters?: DoSortationBagMoreFilterVm;
 
   @ApiModelPropertyOptional()
-  sortBy?:
-    | 'doSortationDetailId'
-    | 'isSortir';
+  sortBy?: 'doSortationDetailId' | 'isSortir';
 }
 
 export class DoSortationHistoryPayloadVm extends ListPayloadVm {
@@ -87,14 +85,18 @@ export class DoSortationHistoryPayloadVm extends ListPayloadVm {
   filters?: DoSortationHistoryFilterVm;
 
   @ApiModelPropertyOptional()
-  sortBy?:
-    | 'historyDate'
-    | 'historyStatus'
-    | 'username'
-    | 'assignee';
+  sortBy?: 'historyDate' | 'historyStatus' | 'username' | 'assignee';
 }
 
 export class ScanOutSortationRouteDetailPayloadVm {
   @ApiModelProperty()
   doSortationId: string;
+}
+
+export class ScanOutSortationBagDetailPayloadVm {
+  @ApiModelProperty()
+  doSortationDetailId: string;
+
+  @ApiModelPropertyOptional()
+  isSortir?: boolean;
 }

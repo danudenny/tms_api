@@ -1,6 +1,14 @@
-import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryColumn,
+} from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { DoSortationDetail } from './do-sortation-detail';
+import { BagItem } from './bag-item';
 
 @Entity('do_sortation_detail_item', { schema: 'public' })
 export class DoSortationDetailItem extends TmsBaseEntity {
@@ -60,6 +68,11 @@ export class DoSortationDetailItem extends TmsBaseEntity {
   })
   updatedTime: Date;
 
-  @ManyToOne(() => DoSortationDetail, detail => detail.doSortationDetailId)
+  @ManyToOne(() => DoSortationDetail, detail => detail.doSortationDetailItems)
+  @JoinColumn({ name: 'do_sortation_detail_id' })
   doSortationDetail: DoSortationDetail;
+
+  @OneToOne(() => BagItem)
+  @JoinColumn({ name: 'bag_item_id' })
+  bagItem: BagItem;
 }

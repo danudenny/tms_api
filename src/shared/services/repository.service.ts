@@ -48,6 +48,8 @@ import { DoMutation } from '../orm-entity/do-mutation';
 import { DoMutationDetail } from '../orm-entity/do-mutation-detail';
 import { DoSortation } from '../orm-entity/do-sortation';
 import { DoSortationDetail } from '../orm-entity/do-sortation-detail';
+import { DoSortationDetailItem } from '../orm-entity/do-sortation-detail-item';
+import { DoSortationHistory } from '../orm-entity/do-sortation-history';
 
 /**
  * For now, we are using getter methods due to repositories would always be defined once imported
@@ -200,5 +202,11 @@ export class RepositoryService {
   }
   static get doSortationDetail() {
     return new OrionRepositoryService(DoSortationDetail);
+  }
+  static get doSortationDetailItem() {
+    return new OrionRepositoryService(DoSortationDetailItem);
+  }
+  static get doSortationHistory() {
+    return new OrionRepositoryService(DoSortationHistory);
   }
 }

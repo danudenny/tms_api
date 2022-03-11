@@ -1,11 +1,18 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import {
+  ScanOutSortationBagDetailMoreResponseVm,
+  ScanOutSortationBagDetailResponseVm,
   ScanOutSortationListResponseVm,
   ScanOutSortationRouteDetailResponseVm,
 } from '../../../models/sortation/web/sortation-scanout-list.response.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { RepositoryService } from '../../../../../shared/services/repository.service';
-import { ScanOutSortationRouteDetailPayloadVm } from 'src/servers/hub/models/sortation/web/sortation-scanout-list.payload.vm';
+import {
+  ScanOutSortationBagDetailPayloadVm,
+  ScanOutSortationRouteDetailPayloadVm,
+} from '../../../models/sortation/web/sortation-scanout-list.payload.vm';
+import { SelectQueryBuilder } from 'typeorm';
+import { DoSortationDetailItem } from 'src/shared/orm-entity/do-sortation-detail-item';
 
 @Injectable()
 export class SortationScanOutListService {
@@ -124,5 +131,97 @@ export class SortationScanOutListService {
       message: 'Sukses ambil daftar rute sortation',
       data: result,
     } as ScanOutSortationRouteDetailResponseVm;
+  }
+
+  static async getScanOutSortationBagDetail(
+    payload: ScanOutSortationBagDetailPayloadVm,
+  ): Promise<ScanOutSortationBagDetailResponseVm> {
+    const id: string = payload.doSortationDetailId;
+    const isSortir: boolean = payload.isSortir;
+    const page: number = 1;
+    const limit: number = 5;
+    const q = this.getDoSortationDetailItemQuery(id, page, limit, isSortir);
+    const result = await q.getRawMany();
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Sukses ambil daftar bag',
+      data: result,
+    } as ScanOutSortationBagDetailResponseVm;
+  }
+
+  static async getScanOutSortationBagDetailMore(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutSortationBagDetailResponseVm> {
+    const idFilter = payload.filters.find(
+      filter => filter.field === 'doSortationDetailId',
+    );
+    if (!idFilter) {
+      throw new BadRequestException('doSortationDetailId filter not found');
+    }
+    const isSortirFilter = payload.filters.find(
+      filter => filter.field === 'isSortir',
+    );
+    const id: string = idFilter.value;
+    const isSortir: boolean = isSortirFilter ? isSortirFilter.value : undefined;
+    const page: number = payload.page;
+    const limit: number = payload.limit;
+    const q = this.getDoSortationDetailItemQuery(id, page, limit, isSortir);
+    const [result, count] = await Promise.all([q.getRawMany(), q.getCount()]);
+    const response = new ScanOutSortationBagDetailMoreResponseVm();
+    response.statusCode = HttpStatus.OK;
+    response.message = 'Sukses ambil daftar bag';
+    response.data = result;
+    response.buildPagingWithPayload(payload, count);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Sukses ambil daftar bag',
+      data: result,
+    } as ScanOutSortationBagDetailMoreResponseVm;
+  }
+
+  private static getDoSortationDetailItemQuery(
+    doSortationDetailId: string,
+    page: number = 1,
+    limit: number = 5,
+    isSortir?: boolean,
+  ): SelectQueryBuilder<DoSortationDetailItem> {
+    const q = RepositoryService.doSortationDetailItem.createQueryBuilder();
+
+    const selectColumns = [
+      'do_sortation_detail_item.do_sortation_detail_item_id AS "doSortationDetailItemId"',
+      'do_sortation_detail_item.do_sortation_detail_id AS "doSortationDetailId"',
+      'b.bag_number AS "bagNumber"',
+      'bi.weight AS "weight"',
+      'br.branch_code AS "branchCode"',
+      'br.branch_name AS "branchToName"',
+    ];
+
+    q.select(selectColumns)
+      .innerJoin(
+        'do_sortation_detail_item.bagItem',
+        'bi',
+        'bi.is_deleted = FALSE',
+      )
+      .innerJoin('bi.bag', 'b', 'b.is_deleted = FALSE')
+      .innerJoin(
+        'do_sortation_detail_item.doSortationDetail',
+        'dsd',
+        'dsd.is_deleted = FALSE AND dsd.do_sortation_detail_id = :dsdId',
+        { dsdId: doSortationDetailId },
+      )
+      .innerJoin('dsd.branchTo', 'br', 'br.is_deleted = FALSE')
+      .andWhere('do_sortation_detail_item.is_deleted = FALSE');
+
+    if (isSortir !== undefined) {
+      q.andWhere('do_sortation_detail_item.is_sortir = :isSortir', {
+        isSortir,
+      });
+    }
+
+    q.orderBy('do_sortation_detail_item.created_time', 'DESC')
+      .limit(limit)
+      .offset((page - 1) * limit);
+
+    return q;
   }
 }
