@@ -36,6 +36,7 @@ export class SortationScanOutService {
       }
 
       const dataDrivers = await this.getDataDriver(payload.employeeDriverId);
+      console.log('dataDrivers:::::::::', JSON.stringify(dataDrivers)); ;
       if (dataDrivers) {
         for (const dataDriver of dataDrivers) {
           await this.validationDriverStatus(dataDriver, permissonPayload.branchId);
@@ -116,8 +117,6 @@ export class SortationScanOutService {
         throw new BadRequestException(`ID Sortation ${payload.doSortationId.toString()} tidak ditemukan`);
       }
 
-      console.log(`resultDoSortation:::::::: ${JSON.stringify(resultDoSortaion)}`);
-
       const resultBranchTo = await Branch.findOne({
         where: {
           branchCode: payload.branchCode,
@@ -130,8 +129,6 @@ export class SortationScanOutService {
         throw new BadRequestException(`Kode Gerai ${payload.branchCode} tidak ditemukan`);
       }
 
-      console.log(`resultBranchTo:::::::: ${JSON.stringify(resultBranchTo)}`);
-
       const resultDoSortaionDetail = await DoSortationDetail.findOne({
         where: {
           doSortationId: resultDoSortaion.doSortationId,
@@ -143,8 +140,6 @@ export class SortationScanOutService {
       if (resultDoSortaionDetail) {
         throw new BadRequestException(`Kode Gerai ${payload.branchCode} sudah di scan!!`);
       }
-
-      console.log(`resultDoSortaionDetail:::::::: ${resultDoSortaionDetail}`);
 
       const doSortationDetailId = await SortationService.createDoSortationDetail(
         resultDoSortaion.doSortationId,
@@ -172,7 +167,6 @@ export class SortationScanOutService {
           branchIdToList: branchIdToArray,
           branchNameToList: branchNameToArray,
           totalDoSortationDetail: resultDoSortaion.totalDoSortationDetail + 1,
-          trip: resultDoSortaion.trip + 1,
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
         },
@@ -202,7 +196,8 @@ export class SortationScanOutService {
         AND ds.is_deleted = FALSE
       WHERE
         dsv.created_time >= '${moment().subtract(30, 'days').format('YYYY-MM-DD 00:00:00')}' AND
-        dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND dsv.employee_driver_id = ${employeeDriverId} AND
+        dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND
+        dsv.employee_driver_id = ${employeeDriverId} AND
         dsv.is_deleted = FALSE;
     `;
     return await RawQueryService.query(rawQueryDriver);
@@ -233,7 +228,7 @@ export class SortationScanOutService {
     if ( toInteger(dataDriver.do_sortation_status_id_last) == DO_SORTATION_STATUS.CREATED
         || toInteger(dataDriver.do_sortation_status_id_last) == DO_SORTATION_STATUS.ASSIGNED
         || toInteger(dataDriver.do_sortation_status_id_last) == DO_SORTATION_STATUS.DRIVER_CHANGED) {
-        if (toInteger(dataDriver.branch_id) != toInteger(payloadBranchId)) {
+        if (toInteger(dataDriver.branch_id_from) != toInteger(payloadBranchId)) {
           throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
         }
     } else if ( toInteger(dataDriver.do_sortation_status_id_last) < DO_SORTATION_STATUS.ON_THE_WAY ) {
