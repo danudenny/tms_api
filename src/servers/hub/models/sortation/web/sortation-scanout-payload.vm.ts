@@ -9,7 +9,7 @@ export class SortationScanOutVehiclePayloadVm {
   @ApiModelProperty()
   doSortationDate: Date;
 
-  @ApiModelProperty()
+  @ApiModelPropertyOptional()
   vehicleId: number;
 
   @ApiModelProperty()

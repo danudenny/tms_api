@@ -1,6 +1,14 @@
 import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../../shared/external/nestjs-swagger';
 
-export class SortationScanOutVehicleResponseVm {
+export class BaseSortsationRepsonseVm {
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  statusCode: number;
+}
+
+export class SortationScanOutVehicleVm {
   @ApiModelProperty()
   doSortationId: string;
 
@@ -16,8 +24,12 @@ export class SortationScanOutVehicleResponseVm {
   @ApiModelPropertyOptional()
   employeeIdDriver: number;
 }
+export class SortationScanOutVehicleResponseVm extends BaseSortsationRepsonseVm {
+  @ApiModelProperty({type: () => SortationScanOutVehicleVm})
+  data: SortationScanOutVehicleVm;
+}
 
-export class SortationScanOutRouteResponseVm {
+export class SortationScanOutRouteVm {
   @ApiModelProperty()
   doSortationId: string;
 
@@ -35,6 +47,11 @@ export class SortationScanOutRouteResponseVm {
 
   @ApiModelProperty()
   branchId: number;
+}
+
+export class SortationScanOutRouteResponseVm extends BaseSortsationRepsonseVm {
+  @ApiModelProperty({type: () => SortationScanOutRouteVm})
+  data: SortationScanOutRouteVm;
 }
 
 export class SortationBagDetailResponseVm {
@@ -66,18 +83,12 @@ export class SortationBagDetailResponseVm {
   weight: number;
 }
 
-export class SortationScanOutBagsResponseVm {
-  @ApiModelProperty()
-  statusCode: number;
-
-  @ApiModelProperty()
-  message: string;
-
+export class SortationScanOutBagsResponseVm extends BaseSortsationRepsonseVm {
   @ApiModelProperty({type: () => [SortationBagDetailResponseVm]})
   data: SortationBagDetailResponseVm[];
 }
 
-export class SortationLoadDetailResponseVm {
+export class SortationLoadDetailVm {
   @ApiModelProperty()
   doSortationDetailId: string;
 
@@ -91,15 +102,20 @@ export class SortationLoadDetailResponseVm {
   bagItems: string[];
 }
 
-export class SortationScanOutLoadResponseVm {
+export class SortationScanOutLoadVm {
   @ApiModelProperty()
   doSortationId: string;
 
   @ApiModelProperty()
   doSortationCode: string;
 
-  @ApiModelProperty({type: () => [SortationLoadDetailResponseVm]})
-  doSortationDetails: SortationLoadDetailResponseVm[];
+  @ApiModelProperty({type: () => [SortationLoadDetailVm]})
+  doSortationDetails: SortationLoadDetailVm[];
+}
+
+export class SortationScanOutLoadResponseVm extends BaseSortsationRepsonseVm {
+  @ApiModelProperty({type: () => SortationScanOutLoadVm})
+  data: SortationScanOutLoadVm;
 }
 
 export class SortationScanOutImageVm {
@@ -113,13 +129,7 @@ export class SortationScanOutImageVm {
   imageType: string;
 }
 
-export class SortationScanOutImageResponseVm {
-  @ApiModelProperty()
-  statusCode: number;
-
-  @ApiModelProperty()
-  message: string;
-
-  @ApiModelProperty()
-  data: SortationScanOutImageVm;
+export class SortationScanOutImageResponseVm extends BaseSortsationRepsonseVm {
+  @ApiModelProperty({type: () => [SortationScanOutImageVm]})
+  data: SortationScanOutImageVm[];
 }

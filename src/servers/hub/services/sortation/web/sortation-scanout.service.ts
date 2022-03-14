@@ -1,9 +1,9 @@
 
 import moment = require('moment');
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
-import { SortationScanOutRouteResponseVm, SortationScanOutVehicleResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import { SortationScanOutBagsPayloadVm, SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
+import { SortationScanOutBagsResponseVm, SortationScanOutRouteResponseVm, SortationScanOutRouteVm, SortationScanOutVehicleResponseVm, SortationScanOutVehicleVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { toInteger } from 'lodash';
@@ -24,19 +24,27 @@ export class SortationScanOutService {
       const permissonPayload = AuthService.getPermissionTokenPayload();
       const timeNow = moment().toDate();
 
-      const vehicle = await Vehicle.findOne({
+      // untuk fase 2 --- START ---
+      let vehicleNumber = payload.vehicleNumber;
+      let vehicleId = null;
+      if (payload.vehicleId) {
+        const vehicle = await Vehicle.findOne({
           where: {
             vehicleId: payload.vehicleId,
             isActive : 1,
             isDeleted : false,
           },
         });
-      if (!vehicle) {
-        throw new BadRequestException('Kendaraan tidak ditemukan!.');
+
+        if (!vehicle) {
+          throw new BadRequestException('Kendaraan tidak ditemukan!.');
+        }
+        vehicleNumber = vehicle.vehicleNumber;
+        vehicleId = vehicle.vehicleId;
       }
+      // untuk fase 2 --- END ---, todo:: setelah fase 2 harap di reafactor bagian code di atas
 
       const dataDrivers = await this.getDataDriver(payload.employeeDriverId);
-      console.log('dataDrivers:::::::::', JSON.stringify(dataDrivers)); ;
       if (dataDrivers) {
         for (const dataDriver of dataDrivers) {
           await this.validationDriverStatus(dataDriver, permissonPayload.branchId);
@@ -62,8 +70,8 @@ export class SortationScanOutService {
 
       const doSortationVehicleId = await SortationService.createDoSortationVehicle(
             doSortationId,
-            vehicle.vehicleId,
-            vehicle.vehicleNumber,
+            vehicleId,
+            vehicleNumber,
             1,
             payload.employeeDriverId,
             permissonPayload.branchId,
@@ -90,12 +98,17 @@ export class SortationScanOutService {
             authMeta.userId,
           );
 
+      const responseDetail = new SortationScanOutVehicleVm();
+      responseDetail.doSortationId = doSortationId;
+      responseDetail.doSortationCode = doSortationCode;
+      responseDetail.doSortationVehicleId = doSortationVehicleId;
+      responseDetail.doSortationTime = payload.doSortationDate;
+      responseDetail.employeeIdDriver = payload.employeeDriverId;
+
       const result = new SortationScanOutVehicleResponseVm();
-      result.doSortationId = doSortationId;
-      result.doSortationCode = doSortationCode;
-      result.doSortationVehicleId = doSortationVehicleId;
-      result.doSortationTime = payload.doSortationDate;
-      result.employeeIdDriver = payload.employeeDriverId;
+      result.statusCode = HttpStatus.OK;
+      result.message = 'sucess';
+      result.data = responseDetail;
       return result;
   }
 
@@ -172,16 +185,30 @@ export class SortationScanOutService {
         },
       );
 
-      const result = new SortationScanOutRouteResponseVm();
-      result.doSortationDetailId = doSortationDetailId;
-      result.doSortationId = resultDoSortaion.doSortationId,
-      result.doSortationCode = resultDoSortaion.doSortationCode;
-      result.branchId = resultBranchTo.branchId;
-      result.branchCode = resultBranchTo.branchCode;
-      result.branchName = resultBranchTo.branchName;
+      const responseDetail = new SortationScanOutRouteVm();
+      responseDetail.doSortationDetailId = doSortationDetailId;
+      responseDetail.doSortationId = resultDoSortaion.doSortationId,
+      responseDetail.doSortationCode = resultDoSortaion.doSortationCode;
+      responseDetail.branchId = resultBranchTo.branchId;
+      responseDetail.branchCode = resultBranchTo.branchCode;
+      responseDetail.branchName = resultBranchTo.branchName;
 
+      const result = new SortationScanOutRouteResponseVm();
+      result.statusCode = HttpStatus.OK;
+      result.message = 'sucess';
+      result.data = responseDetail;
       return result;
   }
+
+  static async sortationScanOutBags(
+    payload: SortationScanOutBagsPayloadVm)
+    : Promise<SortationScanOutBagsResponseVm> {
+      const authMeta = AuthService.getAuthData();
+      const permissonPayload = AuthService.getPermissionTokenPayload();
+      const timeNow = moment().toDate();
+
+      return null;
+    }
 
   private static async getDataDriver(employeeDriverId: number): Promise<any> {
     const rawQueryDriver = `
