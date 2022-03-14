@@ -251,6 +251,7 @@ export class WebAwbReturnCancelService {
     payload.fieldResolverMap['branchName'] = 't3.branch_name';
     payload.fieldResolverMap['notes'] = 't1.notes';
     payload.sortBy ="";
+    payload.page = 1;
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
