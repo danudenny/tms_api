@@ -44,8 +44,8 @@ export class SortationScanOutListController {
 
   @Post('history')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public scanOutDoSortationHistory(@Body() payload: any) {
-    return null;
+  public scanOutDoSortationHistory(@Body() payload: BaseMetaPayloadVm) {
+    return SortationScanOutListService.getHistory(payload);
   }
 
   @Post('image')

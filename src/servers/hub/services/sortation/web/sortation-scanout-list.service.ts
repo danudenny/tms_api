@@ -2,6 +2,7 @@ import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   ScanOutSortationBagDetailMoreResponseVm,
   ScanOutSortationBagDetailResponseVm,
+  ScanOutSortationHistoryResponseVm,
   ScanOutSortationListResponseVm,
   ScanOutSortationRouteDetailResponseVm,
 } from '../../../models/sortation/web/sortation-scanout-list.response.vm';
@@ -88,9 +89,11 @@ export class SortationScanOutListService {
     };
     const orderBy: string = sortMap[payload.sortBy] || sortMap.doSortationTime;
     const orderDir: 'ASC' | 'DESC' = payload.sortDir === 'asc' ? 'ASC' : 'DESC';
+    const limit = payload.limit || 10;
+    const page = payload.page || 1;
     q.orderBy(orderBy, orderDir)
-      .limit(payload.limit)
-      .offset((payload.page - 1) * payload.limit);
+      .limit(limit)
+      .offset((page - 1) * limit);
 
     const [scanOutSortations, count] = await Promise.all([
       q.getRawMany(),
@@ -152,19 +155,19 @@ export class SortationScanOutListService {
   static async getScanOutSortationBagDetailMore(
     payload: BaseMetaPayloadVm,
   ): Promise<ScanOutSortationBagDetailResponseVm> {
-    const idFilter = payload.filters.find(
+    const idFilter = payload.filters ? payload.filters.find(
       filter => filter.field === 'doSortationDetailId',
-    );
+    ) : null;
     if (!idFilter) {
       throw new BadRequestException('doSortationDetailId filter not found');
     }
-    const isSortirFilter = payload.filters.find(
+    const isSortirFilter = payload.filters ? payload.filters.find(
       filter => filter.field === 'isSortir',
-    );
+    ) : undefined;
     const id: string = idFilter.value;
     const isSortir: boolean = isSortirFilter ? isSortirFilter.value : undefined;
-    const page: number = payload.page;
-    const limit: number = payload.limit;
+    const page: number = payload.page || 1;
+    const limit: number = payload.limit || 10;
     const q = this.getDoSortationDetailItemQuery(id, page, limit, isSortir);
     const [result, count] = await Promise.all([q.getRawMany(), q.getCount()]);
     const response = new ScanOutSortationBagDetailMoreResponseVm();
@@ -223,5 +226,86 @@ export class SortationScanOutListService {
       .offset((page - 1) * limit);
 
     return q;
+  }
+
+  static async getHistory(payload: BaseMetaPayloadVm): Promise<ScanOutSortationHistoryResponseVm> {
+    const idFilter = payload.filters ? payload.filters.find(
+      filter => filter.field === 'doSortationId',
+    ) : null;
+    if (!idFilter) {
+      throw new BadRequestException('doSortationId filter not found');
+    }
+
+    const q = RepositoryService.doSortationHistory.createQueryBuilder();
+
+    // SELECT CLAUSE
+    const selectColumns = [
+      'do_sortation_history.do_sortation_history_id AS "doSortationHistoryId"',
+      'do_sortation_history.do_sortation_id AS "doSortationId"',
+      'do_sortation_history.reason_note AS "reasonNotes"',
+      'do_sortation_history.created_time AS "historyDate"',
+      'ds.do_sortation_code AS "doSortationCode"',
+      'bf.branch_name AS "branchFromName"',
+      'bt.branch_name AS "branchToName"',
+      'dss.do_sortation_status_title AS "historyStatus"',
+      `CONCAT(u.first_name, ' ', u.last_name ) AS "username"`,
+      'e.fullname AS "assigne"',
+    ];
+
+    q.select(selectColumns)
+      .innerJoin('do_sortation_history.doSortation', 'ds', 'ds.is_deleted = FALSE')
+      .innerJoin('do_sortation_history.branchFrom', 'bf', 'bf.is_deleted = FALSE')
+      .leftJoin('do_sortation_history.branchTo', 'bt', 'bt.is_deleted = FALSE')
+      .innerJoin('do_sortation_history.doSortationStatus', 'dss', 'dss.is_deleted = FALSE')
+      .innerJoin('ds.user', 'u', 'u.is_deleted = FALSE')
+      .leftJoin('ds.doSortationVehicle', 'dsv', 'dsv.is_deleted = FALSE')
+      .leftJoin('dsv.employee', 'e', 'e.is_deleted = FALSE');
+
+    // WHERE CLAUSE
+    let where;
+    if (payload.filters) {
+      payload.filters.forEach(filter => {
+        const field = ['endDate', 'startDate'].includes(filter.field)
+          ? 'created_time'
+          : filter.field;
+        where = `do_sortation_history.${field} ${filter.sqlOperator} :${
+          filter.field
+        }`;
+        const whereParams = { [filter.field]: filter.value };
+        q.andWhere(where, whereParams);
+      });
+    }
+    q.andWhere('do_sortation_history.is_deleted = FALSE');
+
+    // ORDER & PAGINATION
+    const sortMap = {
+      createdTime: 'do_sortation_history.created_time',
+      historyDate: 'do_sortation.creatd_time',
+      historyStatus: 'dss.do_sortation_status_title',
+      branchFromName: 'bf.branch_name',
+      branchToName: 'bt.branch_name',
+      username: 'u.first_name',
+      assigne: 'e.fullname',
+    };
+    const orderBy: string = sortMap[payload.sortBy] || sortMap.createdTime;
+    const orderDir: 'ASC' | 'DESC' = payload.sortDir === 'asc' ? 'ASC' : 'DESC';
+    const limit = payload.limit || 10;
+    const page = payload.page || 1;
+    q.orderBy(orderBy, orderDir)
+      .limit(limit)
+      .offset((page - 1) * limit);
+
+    const [scanOutHistories, count] = await Promise.all([
+      q.getRawMany(),
+      q.getCount(),
+    ]);
+
+    const result = new ScanOutSortationHistoryResponseVm();
+    result.statusCode = HttpStatus.OK;
+    result.message = 'Sukses ambil daftar riwayat sortation';
+    result.data = scanOutHistories;
+    result.buildPagingWithPayload(payload, count);
+
+    return result;
   }
 }
