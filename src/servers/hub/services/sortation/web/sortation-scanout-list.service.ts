@@ -113,8 +113,8 @@ export class SortationScanOutListService {
     const q = RepositoryService.doSortationDetail.createQueryBuilder();
 
     const selectColumns = [
-      'do_sortation_detail.do_sortation_detail_id AS doSortationDetailId',
-      'br.branch_name AS branchToName',
+      'do_sortation_detail.do_sortation_detail_id AS "doSortationDetailId"',
+      'br.branch_name AS "branchToName"',
     ];
 
     q.select(selectColumns)
