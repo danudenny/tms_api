@@ -360,7 +360,7 @@ export class AwbService {
     if(
       (collectArrStatus.includes(AWB_STATUS.RTN) || collectArrStatus.includes(AWB_STATUS.RTC) || collectArrStatus.includes(AWB_STATUS.RTA) ||collectArrStatus.includes(AWB_STATUS.RTW)) && !collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
       retVal = true;
-      retNote = `Resi ${awbNumber} sedang retur`;
+      retNote = `Resi ${awbNumber} retur tidak dapat di proses`;
       return [retVal, retNote]
     }
     
