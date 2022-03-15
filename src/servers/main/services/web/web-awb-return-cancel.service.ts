@@ -149,10 +149,10 @@ export class WebAwbReturnCancelService {
       payload.applyToOrionRepositoryQuery(q);
 
       q.selectRaw(
-        [`date(t1.created_time)`, 'Tanggal'],
+        [`TO_CHAR(t1.created_time, 'YYYY-MM-DD')`, 'Tanggal'],
         [`t1.awb_number`, 'Resi'],
-        [`concat(t2.nik,' - ',t2.fullname)`, 'User Update'],
-        [`concat(t3.branch_code,' - ',t3.branch_name)`, 'Cabang/ Gerai'],
+        [`t2.nik||' - '||t2.fullname`, 'User Update'],
+        [`t3.branch_code||' - '||t3.branch_name`, 'Cabang/ Gerai'],
         [`t1.notes`, 'Keterangan'],
       );
 
