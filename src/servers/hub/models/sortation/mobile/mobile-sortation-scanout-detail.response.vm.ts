@@ -1,41 +1,41 @@
-import {ApiModelProperty} from "../../../../../shared/external/nestjs-swagger";
+import {ApiModelProperty} from '../../../../../shared/external/nestjs-swagger';
 
 export class MobileSortationScanoutDetail {
   @ApiModelProperty()
-  doSortationDetailId: string
+  doSortationDetailId: string;
 
   @ApiModelProperty()
-  doSortationCode: string
+  doSortationCode: string;
 
   @ApiModelProperty()
-  doSortationTime: string
+  doSortationTime: string;
 
   @ApiModelProperty()
-  branchNameTo: string
+  branchNameTo: string;
 
   @ApiModelProperty()
-  branchAddressTo: string
+  branchAddressTo: string;
 
   @ApiModelProperty()
-  totalBag: number
+  totalBag: number;
 
   @ApiModelProperty()
-  totalBagSortir: number
+  totalBagSortir: number;
 
   @ApiModelProperty()
-  photoImgPath: string
+  photoImgPath: string;
 
   @ApiModelProperty()
-  signatureImgPath: string
+  signatureImgPath: string;
 }
 
 export class MobileSortationScanoutDetailResponseVm {
   @ApiModelProperty()
-  statusCode: number
+  statusCode: number;
 
   @ApiModelProperty()
-  message: string
+  message: string;
 
   @ApiModelProperty({type: () => [MobileSortationScanoutDetail]})
-  data: MobileSortationScanoutDetail[]
+  data: MobileSortationScanoutDetail[];
 }

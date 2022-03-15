@@ -1,6 +1,6 @@
-import {ApiModelProperty} from "../../../../../shared/external/nestjs-swagger";
+import {ApiModelProperty} from '../../../../../shared/external/nestjs-swagger';
 
 export class MobileSortationScanoutDetailPayloadVm {
   @ApiModelProperty()
-  doSortationDetailId: string
+  doSortationDetailId: string;
 }
