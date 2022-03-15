@@ -9,6 +9,7 @@ import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 import { ConfigService } from '../../../../shared/services/config.service';
 import axios from 'axios';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { WebAwbReturnCancelService } from '../../services/web/web-awb-return-cancel.service';
 import moment = require('moment');
 
 export class ReportPodService {
@@ -45,7 +46,7 @@ export class ReportPodService {
       }
 
       result['paging'] = MetaService.set(Number(page), Number(limit), total);
-      
+
       return result;
     } catch (error) {
       if (error.response) {
@@ -70,6 +71,9 @@ export class ReportPodService {
         break;
       case REPORT_TYPE.PODRETURN:
         queryParam = await this.generatePodReturQuery(payload);
+        break;
+      case REPORT_TYPE.CANCELRETURN:
+        queryParam = await WebAwbReturnCancelService.exportReturnCancelList(payload);
         break;
       default:
         RequestErrorService.throwObj(

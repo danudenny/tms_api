@@ -120,15 +120,9 @@ export class WebAwbReturnCancelService {
     return result;
   }
 
-  static async exportReturnCancelList(payload: BaseMetaPayloadVm, response) {
+  static async exportReturnCancelList(payload: BaseMetaPayloadVm) {
     try {
       const fileName = `POD_return_cancel_list${new Date().getTime()}.csv`;
-
-      response.setHeader(
-        'Content-disposition',
-        `attachment; filename=${fileName}`,
-      );
-
       payload.fieldResolverMap['awbReturnCancelId'] = 't1.id';
       payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
       payload.fieldResolverMap['awbItemId'] = 't1.awb_item_id';
@@ -166,8 +160,8 @@ export class WebAwbReturnCancelService {
       q.innerJoin(e => e.branch, 't3');
       q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-      const data = await q.exec();
-      await CsvHelper.generateCSV(response, data, fileName);
+      return q.getQuery();
+      
     } catch (err) {
       throw err;
     }
