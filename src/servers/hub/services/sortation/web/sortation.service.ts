@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import moment = require('moment');
+import { EntityManager, getManager } from 'typeorm';
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
 import { DoSortationDetail } from '../../../../../shared/orm-entity/do-sortation-detail';
+import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sortation-detail-item';
 import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 
@@ -119,4 +121,23 @@ export class SortationService {
       : null;
   }
 
+  static async createDoSortationDetailItem(
+    doSortationDetailId: string,
+    bagItemId: number,
+    isSortir: boolean,
+    userId: number,
+    transactional: EntityManager,
+  ) {
+    const dataDoSortationDetailItem = DoSortationDetailItem.create({
+      doSortationDetailId,
+      bagItemId,
+      isSortir: isSortir ? isSortir : false,
+      userIdCreated: userId,
+      createdTime: moment().toDate(),
+      userIdUpdated: userId,
+      updatedTime: moment().toDate(),
+    });
+
+    await transactional.insert(DoSortationDetailItem, dataDoSortationDetailItem);
+  }
 }

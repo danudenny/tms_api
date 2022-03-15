@@ -29,11 +29,10 @@ export class SortationScanOutController {
   }
 
   @Post('bags')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: SortationScanOutBagsResponseVm })
   public async scanOutBags(@Body() payload: SortationScanOutBagsPayloadVm) {
-    return null;
+    return SortationScanOutService.sortationScanOutBags(payload);
   }
 
   @Post('loadDoSortation')

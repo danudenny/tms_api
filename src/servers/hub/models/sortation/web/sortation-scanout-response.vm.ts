@@ -81,6 +81,9 @@ export class SortationBagDetailResponseVm {
 
   @ApiModelProperty()
   weight: number;
+
+  @ApiModelProperty()
+  message: string;
 }
 
 export class SortationScanOutBagsResponseVm extends BaseSortsationRepsonseVm {

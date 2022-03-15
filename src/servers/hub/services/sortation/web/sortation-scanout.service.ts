@@ -3,7 +3,7 @@ import moment = require('moment');
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { SortationScanOutBagsPayloadVm, SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
-import { SortationScanOutBagsResponseVm, SortationScanOutRouteResponseVm, SortationScanOutRouteVm, SortationScanOutVehicleResponseVm, SortationScanOutVehicleVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import { SortationBagDetailResponseVm, SortationScanOutBagsResponseVm, SortationScanOutRouteResponseVm, SortationScanOutRouteVm, SortationScanOutVehicleResponseVm, SortationScanOutVehicleVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { toInteger } from 'lodash';
@@ -14,6 +14,10 @@ import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
 import { SortationService } from './sortation.service';
 import { Vehicle } from '../../../../../shared/orm-entity/vehicle';
 import { Branch } from '../../../../../shared/orm-entity/branch';
+import { BagService } from '../../../../main/services/v1/bag.service';
+import { BAG_STATUS } from '../../../../../shared/constants/bag-status.constant';
+import { EntityManager, getManager } from 'typeorm';
+import { BagScanDoSortationQueueService } from '../../../../queue/services/bag-scan-do-sortation-queue.service';
 
 @Injectable()
 export class SortationScanOutService {
@@ -206,9 +210,189 @@ export class SortationScanOutService {
       const authMeta = AuthService.getAuthData();
       const permissonPayload = AuthService.getPermissionTokenPayload();
       const timeNow = moment().toDate();
+      const data = [];
 
-      return null;
+      const result = new SortationScanOutBagsResponseVm();
+      result.statusCode = HttpStatus.BAD_REQUEST;
+
+      const resultDoSortaionDetail = await DoSortationDetail.findOne({
+        where: {
+          doSortationDetailId: payload.doSortationDetailId,
+          isDeleted: false,
+        },
+      });
+
+      if (!resultDoSortaionDetail) {
+        result.message = 'Rute dengan id tersebut tidak di temukan!.';
+        return result;
+      }
+
+      const resultDoSortation =  await DoSortation.findOne({
+        where: {
+          doSortationId: resultDoSortaionDetail.doSortationId,
+          isDeleted: false,
+        },
+      });
+
+      if (!resultDoSortation) {
+        result.message = 'Surat Jalan tidak ada!.';
+        return result;
+      }
+
+      for (const bagNumber of payload.bagNumbers) {
+        const bagDetail = await BagService.validBagNumber(bagNumber);
+        if (!bagDetail) {
+          result.message = `Gabung Paket/Sortir ${bagNumber} tidak ditemukan`;
+          return result;
+        }
+
+        // pengecekan jika total bag/bagsortir sudah pernah scan, akan di cek kembali scan selanjutnya tidak boleh beda type bag
+        if (resultDoSortaionDetail.totalBag > 0 || resultDoSortaionDetail.totalBagSortir > 0) {
+          if (resultDoSortaionDetail.isSortir != (bagDetail.bag.isSortir ? bagDetail.bag.isSortir : false)) {
+            result.message = `Tipe gabung paket dengan gabung sortir tidak bisa di gabung galam 1 rute`;
+            return result;
+          }
+        }
+
+        let messageBagType: string = 'Gabung Paket';
+        if (bagDetail.bag.isSortir) {
+          messageBagType = 'Gabung Sortir';
+        }
+
+        if (BAG_STATUS.DO_HUB != bagDetail.bagItemStatusIdLast) {
+          result.message = `${messageBagType} ${bagNumber} belum di scan masuk`;
+          return result;
+        }
+
+        const branch = await Branch.findOne({
+            where: {
+              branchId: resultDoSortaionDetail.branchIdTo,
+              isDeleted: false,
+              isActive: true,
+            },
+        });
+
+        // HOLD VALIDASI KEBUTUHAN TESTING DEV
+        // if (bagDetail.bag.representativeIdTo != Number(branch.representativeId)) {
+        //   result.message = `Tujuan kota ${messageBagType} ${bagNumber} dengan kota rute tidak sama.`;
+        //   return result;
+        // }
+
+        const sortationDetailItemExist = await this.getSortationDetailItemExist(
+          bagDetail.bagItemId,
+          resultDoSortaionDetail.doSortationDetailId,
+        );
+        if (sortationDetailItemExist) {
+          result.message = `${messageBagType} ${bagNumber} sudah di scan`;
+          return result;
+        }
+
+        await getManager().transaction(async transactional => {
+          await SortationService.createDoSortationDetailItem(
+            resultDoSortaionDetail.doSortationDetailId,
+            bagDetail.bagItemId,
+            bagDetail.bag.isSortir,
+            authMeta.userId,
+            transactional,
+          );
+
+          await this.updateSortationAndSortationDetail(
+            bagDetail.bag.isSortir,
+            resultDoSortation,
+            resultDoSortaionDetail,
+            authMeta.userId,
+            transactional,
+          );
+        });
+
+        if (!bagDetail.bag.isSortir) {
+          BagScanDoSortationQueueService.perform(
+            bagDetail.bagItemId,
+            authMeta.userId,
+            permissonPayload.branchId,
+            );
+        }
+
+        const detailResponse = new SortationBagDetailResponseVm();
+        detailResponse.doSortationDetailId = resultDoSortaionDetail.doSortationDetailId;
+        detailResponse.bagItemId = bagDetail.bagItemId;
+        detailResponse.bagNumber = bagDetail.bag.bagNumber;
+        detailResponse.bagSeq = bagDetail.bagSeq;
+        detailResponse.weight = bagDetail.weight;
+        detailResponse.branchId = branch.branchId;
+        detailResponse.branchCode = branch.branchCode;
+        detailResponse.branchToName = branch.branchName;
+        detailResponse.message = `${messageBagType} dengan nomor ${bagNumber} berhasil di scan`;
+        data.push(detailResponse);
+      }
+
+      result.statusCode = HttpStatus.OK;
+      result.message = `Gabung Paket/Sortir berhasil di scan`;
+      result.data = data;
+      return result;
+  }
+
+  private static async updateSortationAndSortationDetail(
+    isSortir: boolean,
+    resultDoSortation: DoSortation,
+    resultDoSortationDetail: DoSortationDetail,
+    userId: number,
+    transactional: EntityManager,
+  ) {
+    if (isSortir) {
+      await transactional.update(DoSortation,
+        { doSortationId: resultDoSortationDetail.doSortationId},
+        {
+          totalBagSortir: resultDoSortation.totalBagSortir + 1,
+          updatedTime: moment().toDate(),
+          userIdUpdated: userId,
+        });
+
+      await transactional.update(DoSortationDetail,
+        {doSortationDetailId: resultDoSortationDetail.doSortationDetailId},
+        {
+          isSortir: true,
+          totalBagSortir: resultDoSortationDetail.totalBagSortir + 1,
+          updatedTime: moment().toDate(),
+          userIdUpdated: userId,
+        });
+    } else {
+      await transactional.update(DoSortation,
+        { doSortationId: resultDoSortationDetail.doSortationId},
+        {
+          totalBag: resultDoSortation.totalBag + 1,
+          updatedTime: moment().toDate(),
+          userIdUpdated: userId,
+        });
+      await transactional.update(DoSortationDetail,
+        {doSortationDetailId: resultDoSortationDetail.doSortationDetailId},
+        {
+          totalBag: resultDoSortationDetail.totalBag + 1,
+          updatedTime: moment().toDate(),
+          userIdUpdated: userId,
+        });
     }
+  }
+
+  private static async getSortationDetailItemExist(
+    bagItemId: number,
+    doSortationDetailId: string): Promise<any> {
+      const rawQuery = `
+          SELECT
+            dsd.do_sortation_detail_id AS "doSmdDetailId",
+            dsdi.bag_item_id AS "bagItemId"
+          FROM do_sortation_detail dsd
+          INNER JOIN do_sortation_detail_item dsdi ON dsd.do_sortation_detail_id = dsdi.do_sortation_detail_id
+            AND dsdi.bag_item_id = ${bagItemId}
+            AND dsdi.is_deleted = FALSE
+          WHERE
+            dsd.do_sortation_detail_id = '${doSortationDetailId}' AND
+            dsd.do_sortation_status_id_last != ${DO_SORTATION_STATUS.CREATED} AND
+            dsd.is_deleted = FALSE;
+        `;
+      const result = await RawQueryService.query(rawQuery);
+      return result.length > 0 ? result : null ;
+  }
 
   private static async getDataDriver(employeeDriverId: number): Promise<any> {
     const rawQueryDriver = `

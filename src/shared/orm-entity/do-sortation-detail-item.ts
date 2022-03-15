@@ -4,7 +4,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { DoSortationDetail } from './do-sortation-detail';
@@ -12,21 +12,19 @@ import { BagItem } from './bag-item';
 
 @Entity('do_sortation_detail_item', { schema: 'public' })
 export class DoSortationDetailItem extends TmsBaseEntity {
-  @PrimaryColumn({
-    type: 'uuid',
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_sortation_detail_item_id',
   })
   doSortationDetailItemId: string;
 
-  @Column({
-    nullable: true,
-    type: 'uuid',
+  @Column('character varying', {
+    nullable: false,
     name: 'do_sortation_detail_id',
   })
   doSortationDetailId: string;
 
   @Column('integer', {
-    nullable: true,
+    nullable: false,
     name: 'bag_item_id',
   })
   bagItemId: number;

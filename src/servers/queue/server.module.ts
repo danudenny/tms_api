@@ -66,6 +66,7 @@ import { UpdateHubSummaryAwbOutQueueService } from './services/update-hub-summar
 import { UpdateBranchSortirLogSummaryQueueService } from './services/update-branch-sortir-log-summary-queue.service';
 import { UpdatePackageCombineHubQueueService } from './services/update-package-combine-hub-queue.service';
 import { DoMutationQueueService } from './services/do-mutation-queue.service';
+import { BagScanDoSortationQueueService } from './services/bag-scan-do-sortation-queue.service';
 
 // #endregion import
 @Module({
@@ -210,5 +211,6 @@ export class QueueServerModule extends MultiServerAppModule
         DoPodDetailPostMetaInQueueService.boot();
       }
     }
+      BagScanDoSortationQueueService.boot();
   }
 }
