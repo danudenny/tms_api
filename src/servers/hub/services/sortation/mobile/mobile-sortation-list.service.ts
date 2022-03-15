@@ -1,61 +1,187 @@
-import { Injectable } from '@nestjs/common';
-import {AuthService} from "../../../../../shared/services/auth.service";
+import {HttpStatus, Injectable} from '@nestjs/common';
+import {AuthService} from '../../../../../shared/services/auth.service';
 import moment = require('moment');
-import {createQueryBuilder} from "typeorm";
+import {createQueryBuilder} from 'typeorm';
+import {MobileSortationScanoutDetailPayloadVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail.payload.vm';
+import {MobileSortationScanoutResponseVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-list.response.vm';
+import {MobileSortationScanoutDetailResponseVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail.response.vm';
+import {MobileSortationScanoutDetailBagPayloadVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail-bag.payload.vm';
+import {MobileSortationScanoutDetailBagResponseVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail-bag.response.vm';
 
 @Injectable()
 export class MobileSortationListService {
 
-    public static async getScanoutSortationMobileList() {
-        const authMeta = AuthService.getAuthData();
-        const paramUserId =  authMeta.userId;
-        const startDate = moment().add(-4, 'days').format('YYYY-MM-DD 00:00:00');
-        const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+    public static async getScanoutSortationMobileDetailBag(payload: MobileSortationScanoutDetailBagPayloadVm) {
+        try {
 
-        const qb = createQueryBuilder();
-        qb.addSelect('ds.do_sortation_id', 'doSortationId');
-        qb.addSelect('dsd.do_sortation_detail_id', 'doSortationDetailId');
-        qb.addSelect('dsd.do_sortation_code', 'doSortationCode');
-        qb.addSelect('b.branch_name', 'branchNameTo');
-        qb.addSelect('b.address', 'branchAddressTo');
-        qb.addSelect('ds.total_bag', 'totalBag');
-        qb.addSelect('ds.total_bag_sortir', 'totalBagSortir');
-        qb.addSelect('ds.do_sortation_time', 'doSortationTime');
-        qb.from('do_sortation', 'ds');
-        qb.innerJoin(
-            'do_sortation_detail',
-            'dsd',
-            `ds.do_sortation_id = dsd.do_sortation_id and dsd.is_deleted = false `,
-        );
-        qb.innerJoin(
-            'do_sortation_vehicle',
-            'dsv',
-            'ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false',
-        );
-        qb.innerJoin(
-            'users',
-            'u',
-            `dsv.employee_driver_id = u.employee_id and u.user_id = ${paramUserId} and u.is_deleted = false`,
-        );
-        qb.leftJoin(
-            'branch',
-            'b',
-            'dsd.branch_id_to = b.branch_id and b.is_deleted = false',
-        );
-        qb.where(
-            'ds.do_sortation_time >= :startDate',
-            {
-                startDate,
-            },
-        );
-        qb.andWhere(
-            'ds.do_sortation_time < :endDate',
-            {
-                endDate,
-            },
-        );
-        qb.andWhere('dsd.do_sortation_status_id_last not in (5000, 6000) ');
-        qb.andWhere('ds.is_deleted = false');
-        return await qb.getRawMany();
+            const qb = createQueryBuilder();
+            qb.addSelect('dsd.do_sortation_detail_id', 'doSortationDetailId');
+            qb.addSelect('b.bag_id', 'bagId');
+            qb.addSelect(`SUBSTR(CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')), 1, 10)`, 'bagNumber');
+            qb.from('do_sortation_detail_item', 'dsdi');
+            qb.innerJoin(
+              'do_sortation_detail',
+              'dsd',
+              'dsdi.do_sortation_detail_id = dsd.do_sortation_detail_id AND dsd.is_deleted = FALSE',
+            );
+            qb.innerJoin(
+              'bag_item',
+              'bi',
+              'dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE',
+            );
+            qb.innerJoin(
+              'bag',
+              'b',
+              'bi.bag_id = b.bag_id AND b.is_deleted = FALSE',
+            );
+            qb.where(
+              'dsdi.do_sortation_detail_id = :do_sortation_detail_id',
+              {
+                  do_sortation_detail_id: payload.doSortationDetailId,
+              },
+            );
+
+            qb.where(
+              'dsdi.is_sortir = :is_sortir',
+              {
+                  is_sortir: payload.isSortir,
+              },
+            );
+
+            qb.andWhere('dsdi.is_deleted = false');
+            const data = await qb.getRawMany();
+
+            const result = new MobileSortationScanoutDetailBagResponseVm();
+            result.statusCode = HttpStatus.OK;
+            result.message = 'Success get mobile sortation detail bag';
+            result.data = data;
+            return result;
+        } catch (e) {
+            throw e.error;
+        }
+    }
+
+    public static async getScanoutSortationMobileDetail(payload: MobileSortationScanoutDetailPayloadVm) {
+        try {
+            const qb = createQueryBuilder();
+            qb.addSelect('dsd.do_sortation_detail_id', 'doSortationDetailId');
+            qb.addSelect('ds.do_sortation_code', 'doSortationCode');
+            qb.addSelect('ds.do_sortation_time', 'doSortationTime');
+            qb.addSelect('b.branch_name', 'branchNameTo');
+            qb.addSelect('b.address', 'branchAddressTo');
+            qb.addSelect('ds.total_bag', 'totalBag');
+            qb.addSelect('ds.total_bag_sortir', 'totalBagSortir');
+            qb.addSelect(`(
+                    SELECT
+                        at.url
+                    FROM attachment_tms at
+                    INNER JOIN do_sortation_attachment dsda ON at.attachment_tms_id = dsda.attachment_tms_id AND dsda.attachment_type = 'photo' AND dsda.is_deleted = FALSE
+                    WHERE dsda.do_sortation_detail_id = dsd.do_sortation_detail_id
+                    ORDER BY at.created_time DESC
+                    LIMIT 1
+                )`, 'photoImgPath');
+            qb.addSelect(`(
+                    SELECT
+                        at.url
+                    FROM attachment_tms at
+                    INNER JOIN do_sortation_attachment dsda ON at.attachment_tms_id = dsda.attachment_tms_id AND dsda.attachment_type = 'signature' AND dsda.is_deleted = FALSE
+                    WHERE dsda.do_sortation_detail_id = dsd.do_sortation_detail_id
+                    ORDER BY at.created_time DESC
+                    LIMIT 1
+                )`, 'signatureImgPath');
+            qb.from('do_sortation', 'ds');
+            qb.innerJoin(
+              'do_sortation_detail',
+              'dsd',
+              `ds.do_sortation_id = dsd.do_sortation_id and dsd.do_sortation_detail_id = '${payload.doSortationDetailId}' and dsd.is_deleted = false `,
+            );
+            qb.innerJoin(
+              'do_sortation_vehicle',
+              'dsv',
+              'ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false',
+            );
+            qb.innerJoin(
+              'users',
+              'u',
+              `dsv.employee_driver_id = u.employee_id and u.is_deleted = false`,
+            );
+            qb.leftJoin(
+              'branch',
+              'b',
+              'dsd.branch_id_to = b.branch_id and b.is_deleted = false',
+            );
+            qb.andWhere('ds.is_deleted = false');
+            const data = await qb.getRawMany();
+
+            const result = new MobileSortationScanoutDetailResponseVm();
+            result.statusCode = HttpStatus.OK;
+            result.message = 'Success get mobile sortation detail';
+            result.data = data;
+            return result;
+        } catch (e) {
+            throw e.error;
+        }
+    }
+
+    public static async getScanoutSortationMobileList() {
+        try {
+            const authMeta = AuthService.getAuthData();
+            const paramUserId = authMeta.userId;
+            const startDate = moment().add(-4, 'days').format('YYYY-MM-DD 00:00:00');
+            const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+            const qb = createQueryBuilder();
+            qb.addSelect('ds.do_sortation_id', 'doSortationId');
+            qb.addSelect('dsd.do_sortation_detail_id', 'doSortationDetailId');
+            qb.addSelect('ds.do_sortation_code', 'doSortationCode');
+            qb.addSelect('b.branch_name', 'branchNameTo');
+            qb.addSelect('b.address', 'branchAddressTo');
+            qb.addSelect('ds.total_bag', 'totalBag');
+            qb.addSelect('ds.total_bag_sortir', 'totalBagSortir');
+            qb.addSelect('ds.do_sortation_time', 'doSortationTime');
+            qb.from('do_sortation', 'ds');
+            qb.innerJoin(
+              'do_sortation_detail',
+              'dsd',
+              `ds.do_sortation_id = dsd.do_sortation_id and dsd.is_deleted = false`,
+            );
+            qb.innerJoin(
+              'do_sortation_vehicle',
+              'dsv',
+              'ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false',
+            );
+            qb.innerJoin(
+              'users',
+              'u',
+              `dsv.employee_driver_id = u.employee_id and u.user_id = ${paramUserId} and u.is_deleted = false`,
+            );
+            qb.leftJoin(
+              'branch',
+              'b',
+              'dsd.branch_id_to = b.branch_id and b.is_deleted = false',
+            );
+            qb.where(
+              'ds.do_sortation_time >= :startDate',
+              {
+                  startDate,
+              },
+            );
+            qb.andWhere(
+              'ds.do_sortation_time < :endDate',
+              {
+                  endDate,
+              },
+            );
+            qb.andWhere('dsd.do_sortation_status_id_last not in (5000, 6000) ');
+            qb.andWhere('ds.is_deleted = false');
+            const data = await qb.getRawMany();
+
+            const result = new MobileSortationScanoutResponseVm();
+            result.statusCode = HttpStatus.OK;
+            result.message = 'Success get mobile sortation list';
+            result.data = data;
+            return result;
+        } catch (e) {
+            throw e.error;
+        }
     }
 }
