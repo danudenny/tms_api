@@ -512,10 +512,8 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
     payload.fieldResolverMap['userUpdatedName'] = '"userUpdatedName"';
     payload.fieldResolverMap['replacementAwbStatusLast'] = '"replacementAwbStatusLast"';
-
-    if (payload.sortBy === '') {
-      payload.sortBy = 'updatedTime';
-    }
+    payload.sortBy ="";
+    payload.page = 1;
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -530,7 +528,7 @@ export class WebAwbReturnService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.awb_return_id', 'awbReturnId'],
+      ['count(t1.awb_return_id)', 'cnt']
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
@@ -555,7 +553,8 @@ export class WebAwbReturnService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    const total = await q.countWithoutTakeAndSkip();
+    let total = await q.exec();
+    total = total[0].cnt;
 
     const result = new WebReturListResponseVm();
 
