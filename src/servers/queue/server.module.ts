@@ -154,7 +154,7 @@ export class QueueServerModule extends MultiServerAppModule
         UpsertHubSummaryAwbQueueService.boot();
         UpdateHubSummaryAwbOutQueueService.boot();
       }
-  
+
       if (serverConfig.bullCod) {
         // CodPaymentQueueService.boot();
         CodSyncTransactionQueueService.boot();
@@ -165,16 +165,17 @@ export class QueueServerModule extends MultiServerAppModule
         // NOTE: disable cron diva
         // CodCronSettlementQueueService.init();
       }
-  
+
       if (serverConfig.bullSmd) {
         // CodCronSettlementQueueService.init();
         // Titip Bull HUB
         BranchSortirLogQueueService.boot();
       }
-  
+
       if (serverConfig.bullHub) {
         UpsertHubSummaryBagSortirQueueService.boot();
         UpdateBranchSortirLogSummaryQueueService.boot();
+        BagScanDoSortationQueueService.boot();
       }
     }
 
@@ -211,6 +212,5 @@ export class QueueServerModule extends MultiServerAppModule
         DoPodDetailPostMetaInQueueService.boot();
       }
     }
-      BagScanDoSortationQueueService.boot();
   }
 }
