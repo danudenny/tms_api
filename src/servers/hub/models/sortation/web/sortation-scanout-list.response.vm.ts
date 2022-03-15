@@ -183,3 +183,64 @@ export class ScanOutSortationHistoryResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [ScanOutSortationHistoryVm] })
   data: ScanOutSortationHistoryVm[];
 }
+
+class ScanOutSortationMonitoringVm {
+  @ApiModelProperty()
+  doSortationTime: string;
+
+  @ApiModelProperty()
+  doSortationCode: string;
+
+  @ApiModelProperty()
+  branchFromName: string;
+
+  @ApiModelProperty()
+  branchToName: string;
+
+  @ApiModelProperty()
+  vehicleNumber: string;
+
+  @ApiModelProperty()
+  vehicleName: string;
+
+  @ApiModelProperty()
+  trip: number;
+
+  @ApiModelProperty()
+  sortationTrip: string;
+
+  @ApiModelProperty()
+  totalWeight: number;
+
+  @ApiModelProperty()
+  totalColly: number;
+
+  @ApiModelProperty()
+  vehicleCapacity: string;
+
+  @ApiModelProperty()
+  percentageLoad: number;
+
+  @ApiModelProperty()
+  departureDateTime: string;
+
+  @ApiModelProperty()
+  transitDateTime: string;
+
+  @ApiModelProperty()
+  arrivalDateTime: string;
+
+  @ApiModelProperty()
+  employeeDriverName: string;
+}
+
+export class ScanOutSortationMonitoringResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({ type: () => [ScanOutSortationMonitoringVm] })
+  data: ScanOutSortationMonitoringVm[];
+}

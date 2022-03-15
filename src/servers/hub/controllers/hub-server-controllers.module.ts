@@ -13,6 +13,7 @@ import { SortationScanOutController } from './sortation/web/sortation-scanout.co
 import { SortationScanOutListController } from './sortation/web/sortation-scanout-list.controller';
 import { MobileSortationController } from './sortation/mobile/mobile-sortation.controller';
 import { MobileSortationListController } from './sortation/mobile/mobile-sortation-list.controller';
+import { SortationScanOutMonitoringController } from './sortation/web/sortation-scanout-monitoring.controller';
 
 @Module({
   imports: [SharedModule, HubServerServicesModule],
@@ -25,6 +26,7 @@ import { MobileSortationListController } from './sortation/mobile/mobile-sortati
     CentralSortirController,
     LogWayzimController,
     SortationScanOutController,
+    SortationScanOutMonitoringController,
     SortationScanOutListController,
     MobileSortationController,
     MobileSortationListController,
