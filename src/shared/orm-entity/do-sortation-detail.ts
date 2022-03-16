@@ -153,7 +153,7 @@ export class DoSortationDetail extends TmsBaseEntity {
   branchFrom: Branch;
 
   @OneToOne(() => Branch)
-  @JoinColumn({ name: 'branch_id_to' })
+  @JoinColumn({ name: 'branch_id_to' , referencedColumnName: 'branchId'})
   branchTo: Branch;
 
   @ManyToOne(() => DoSortation, sortation => sortation.doSortationId)

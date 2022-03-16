@@ -99,7 +99,7 @@ export class SortationLoadDetailVm {
   branchIdTo: number;
 
   @ApiModelProperty()
-  branchIdToName: string;
+  branchToName: string;
 
   @ApiModelProperty()
   bagItems: string[];
@@ -135,4 +135,17 @@ export class SortationScanOutImageVm {
 export class SortationScanOutImageResponseVm extends BaseSortsationRepsonseVm {
   @ApiModelProperty({type: () => [SortationScanOutImageVm]})
   data: SortationScanOutImageVm[];
+}
+
+export class SortationScanOutDonedVm {
+  @ApiModelProperty()
+  doSortationId: string;
+
+  @ApiModelProperty()
+  doSortationCode: string;
+}
+
+export class SortationScanOutDoneResponseVm extends BaseSortsationRepsonseVm {
+  @ApiModelProperty({type: () => SortationScanOutDonedVm})
+  data: SortationScanOutDonedVm;
 }

@@ -71,6 +71,6 @@ export class DoSortationDetailItem extends TmsBaseEntity {
   doSortationDetail: DoSortationDetail;
 
   @OneToOne(() => BagItem)
-  @JoinColumn({ name: 'bag_item_id' })
+  @JoinColumn({ name: 'bag_item_id',  referencedColumnName: 'bagItemId'})
   bagItem: BagItem;
 }

@@ -3,8 +3,8 @@ import { ApiOkResponse, ApiUseTags } from '../../../../../shared/external/nestjs
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import { SortationScanOutBagsPayloadVm, SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
-import { SortationScanOutBagsResponseVm, SortationScanOutRouteResponseVm, SortationScanOutVehicleResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import { SortationScanOutBagsPayloadVm, SortationScanOutDonePayloadVm, SortationScanOutLoadPayloadVm, SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
+import { SortationScanOutBagsResponseVm, SortationScanOutDoneResponseVm, SortationScanOutLoadResponseVm, SortationScanOutRouteResponseVm, SortationScanOutVehicleResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import { SortationScanOutService } from '../../../services/sortation/web/sortation-scanout.service';
 
 @ApiUseTags('Scan Out Sortation')
@@ -37,14 +37,16 @@ export class SortationScanOutController {
 
   @Post('loadDoSortation')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async scanOutLoadDoSortation(@Body() payload: any) {
-    return null;
+  @ApiOkResponse({ type: SortationScanOutLoadResponseVm })
+  public async scanOutLoadDoSortation(@Body() payload: SortationScanOutLoadPayloadVm) {
+    return SortationScanOutService.sortationScanOutLoadDoSortation(payload);
   }
 
   @Post('done')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async scanOutDone(@Body() payload: any) {
-    return null;
+  @ApiOkResponse({ type: SortationScanOutDoneResponseVm })
+  public async scanOutDone(@Body() payload: SortationScanOutDonePayloadVm) {
+     return null;
   }
 
   @Delete('deleted/:id')

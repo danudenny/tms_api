@@ -42,10 +42,10 @@ export class SortationService {
     doSortationId: string,
     vehicleId: number,
     vehicleNumber: string,
+    vehicleSeq: number,
     employeeDriverId: number,
     branchIdLogin: number,
     userIdLogin: number,
-    vehicleSeq: number,
   ) {
     const dataDoSortationVehicle = DoSortationVehicle.create({
       doSortationId,
