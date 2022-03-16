@@ -29,6 +29,8 @@ import { RedisService } from '../../../../../shared/services/redis.service';
 import { AwbNotificationMailQueueService } from '../../../../queue/services/notification/awb-notification-mail-queue.service';
 import { AwbCodService } from '../../cod/awb-cod.service';
 // #endregion
+import { AwbReturnService } from '../../master/awb-return.service';
+import { AwbService } from '../../v1/awb.service';
 
 export class V2MobileSyncService {
 
@@ -37,6 +39,7 @@ export class V2MobileSyncService {
   ): Promise<MobileSyncDataResponseVm> {
     const result = new MobileSyncDataResponseVm();
     const dataItem: MobileSyncAwbVm[] = [];
+
     for (const delivery of payload.deliveries) {
       // Locking redis
       const holdRedis = await RedisService.redlock(
@@ -63,7 +66,6 @@ export class V2MobileSyncService {
         awbNumber: delivery.awbNumber,
         ...response,
       });
-
     } // endof loop
 
     result.data = dataItem;
@@ -163,6 +165,18 @@ export class V2MobileSyncService {
             }
 
             if (doPodDeliver) {
+              if (awbStatus.isReturn) {
+                const awb = await AwbService.validAwbNumber(delivery.awbNumber);
+                if (awb) {
+                  await AwbReturnService.createAwbReturn(
+                    delivery.awbNumber,
+                    awb.awbId,
+                    permissonPayload.branchId,
+                    authMeta.userId,
+                    true,
+                  );
+                }
+              }
               // TODO: need improvment
               if (awbStatus.isProblem) {
                 await transactionEntityManager.increment(
