@@ -520,7 +520,7 @@ export class MonitoringProblemListService {
     //   WHERE
     //     hsa.is_deleted = FALSE ${whereQuery ? 'AND ' + whereQuery : ''} ${problemFilter ? 'AND ' + problemFilter : ''}  ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''}
     // `;
-
+    const where = [whereQuery ? whereQuery : '', problemFilter ? problemFilter : '', whereQueryBagNumber ? 'hsa.bag_id_in IS NULL' : '', 'hsa.is_deleted = FALSE'];
     const query = `
       SELECT
         hsa.scan_date_do_hub AS "scanDate",
@@ -539,7 +539,7 @@ export class MonitoringProblemListService {
       LEFT JOIN bag_item bin ON hsa.bag_item_id_in = bin.bag_Item_id AND bin.is_deleted = FALSE
       LEFT JOIN bag bi ON bin.bag_id = bi.bag_id AND bi.is_deleted = FALSE
       WHERE
-        hsa.is_deleted = FALSE ${whereQuery ? 'AND ' + whereQuery : ''} ${problemFilter ? 'AND ' + problemFilter : ''}  ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''}
+        ${where.filter(Boolean).join(' AND ')}
     `;
 
     const queryFix = query +
@@ -553,7 +553,7 @@ export class MonitoringProblemListService {
     `;
 
     const data = await RawQueryService.query(queryFix);
-    console.log("data:", data);
+    console.log('data:', data);
     const queryCount = `SELECT
             COUNT(1) AS total
           FROM hub_summary_awb hsa
@@ -575,8 +575,8 @@ export class MonitoringProblemListService {
       do: r.doHub ? 'Yes' : 'No',
       in: r.inHub ? 'Yes' : 'No',
       out: r.outHub ? 'Yes' : 'No',
-      awbStatusName: r.awbStatusName
-    }));;
+      awbStatusName: r.awbStatusName,
+    }));
     result.paging = MetaService.set(payload.page, payload.limit, total[0].total);
 
     return result;
