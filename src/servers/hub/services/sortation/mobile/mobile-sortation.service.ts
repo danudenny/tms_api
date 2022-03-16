@@ -6,9 +6,98 @@ import moment = require('moment');
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
+import { MobileSortationDepaturePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-depature.payload.vm';
+import { MobileSortationDepatureResponseVm } from '../../../models/sortation/mobile/mobile-sortation-depature.response.vm';
 
 @Injectable()
 export class MobileSortationService {
+
+  static async scanOutMobileSortation(payload: MobileSortationDepaturePayloadVm) {
+    try {
+      const authMeta = AuthService.getAuthData();
+      const result = new MobileSortationDepatureResponseVm();
+      const timeNow = moment().toDate();
+
+      const resultDoSortation = await DoSortation.findOne({
+        where: {
+          doSortationId: payload.doSortationId,
+          isDeleted: false,
+        },
+      });
+
+      if (resultDoSortation) {
+        if (resultDoSortation.depatureDateTime) {
+          await DoSortation.update(
+            {
+              doSortationId: payload.doSortationId,
+            },
+            {
+              doSortationStatusIdLast: 3000,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            },
+          );
+        } else {
+          await DoSortation.update(
+            {
+              doSortationId: payload.doSortationId,
+            },
+            {
+              doSortationStatusIdLast: 3000,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+              depatureDateTime: moment().toDate(),
+            },
+          );
+        }
+
+        await DoSortationDetail.update({
+          doSortationId: payload.doSortationId,
+          arrivalDateTime: null,
+        }, {
+          doSortationStatusIdLast: 3000,
+          depatureDateTime: moment().toDate(),
+          latitudeDeparture: payload.latitude,
+          longitudeDeparture: payload.longitude,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        });
+
+        if (resultDoSortation.doSortationStatusIdLast != 3000) {
+          await this.createDoSortationHistory(
+            resultDoSortation.doSortationId,
+            null,
+            resultDoSortation.doSortationTime,
+            resultDoSortation.doSortationVehicleIdLast,
+            3000,
+            resultDoSortation.branchIdFrom,
+            null,
+            null,
+            null,
+            authMeta.userId,
+          );
+        }
+
+        // update status AWB & Bag queue
+
+        const data = [];
+        data.push({
+          doSortationId: resultDoSortation.doSortationId,
+          departureDateTime: resultDoSortation.doSortationTime,
+        });
+
+        result.statusCode = HttpStatus.OK;
+        result.message = 'Sortation Success Departure';
+        result.data = data;
+        return result;
+      } else {
+        throw new BadRequestException(`Can't Find  Do Sortation ID : ` + payload.doSortationId);
+      }
+    } catch (e) {
+      throw e.error;
+    }
+  }
+
   static async scanInMobileSortation(payload: MobileSortationArrivalPayloadVm) {
     try {
       const authMeta = AuthService.getAuthData();
@@ -85,10 +174,10 @@ export class MobileSortationService {
             return result;
           }
         } else {
-          throw new BadRequestException(`DO Sortation Detail Id : ` + payload.doSortationDetailId.toString() + ' Has Not Departure Date');
+          throw new BadRequestException(`DO Sortation Detail Id : ` + payload.doSortationDetailId + ' Has Not Departure Date');
         }
       } else {
-        throw new BadRequestException(`DO Sortation Detail Id : ` + payload.doSortationDetailId.toString() + ' Not Found');
+        throw new BadRequestException(`DO Sortation Detail Id : ` + payload.doSortationDetailId + ' Not Found');
       }
     } catch (e) {
       throw e.error;
@@ -117,7 +206,7 @@ export class MobileSortationService {
       branchIdTo,
       reasonId,
       reasonNote,
-      userIdCreated : userId,
+      userIdCreated: userId,
       userIdUpdated: userId,
       createdTime: moment().toDate(),
       updatedTime: moment().toDate(),
