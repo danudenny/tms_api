@@ -8,6 +8,8 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
 import { MobileSortationDepaturePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-depature.payload.vm';
 import { MobileSortationDepatureResponseVm } from '../../../models/sortation/mobile/mobile-sortation-depature.response.vm';
+import { MobileSortationEndPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-end.payload.vm';
+import { MobileSortationEndResponseVm } from '../../../models/sortation/mobile/mobile-sortation-end.response.vm';
 
 @Injectable()
 export class MobileSortationService {
@@ -92,6 +94,151 @@ export class MobileSortationService {
         return result;
       } else {
         throw new BadRequestException(`Can't Find  Do Sortation ID : ` + payload.doSortationId);
+      }
+    } catch (e) {
+      throw e.error;
+    }
+  }
+
+  static async scanInEndMobileSortation(payload: MobileSortationEndPayloadVm) {
+    try {
+      const authMeta = AuthService.getAuthData();
+      const result = new MobileSortationEndResponseVm();
+      const timeNow = moment().toDate();
+
+      const resultDoSortationDetail = await DoSortationDetail.findOne({
+        where: {
+          doSortationDetailId: payload.doSortationDetailId,
+          isDeleted: false,
+        },
+      });
+
+      if (resultDoSortationDetail) {
+        const resuktSortationDetailArrival = await DoSortationDetail.findOne({
+          where: {
+            doSortationDetailId: payload.doSortationDetailId,
+            isDeleted: false,
+            arrivalDateTime: null,
+          },
+        });
+
+        if (resuktSortationDetailArrival) {
+          await DoSortation.update({
+              doSortationId: resultDoSortationDetail.doSortationId,
+            },
+            {
+              doSortationStatusIdLast: 5000,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
+
+          await DoSortationDetail.update({
+              doSortationDetailId: payload.doSortationDetailId,
+            },
+            {
+              doSortationStatusIdLast: 5000,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
+
+          await this.createDoSortationHistory(
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            null,
+            4050,
+            null,
+            null,
+            null,
+            null,
+            authMeta.userId,
+          );
+
+          await this.createDoSortationHistory(
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            null,
+            5000,
+            null,
+            null,
+            null,
+            null,
+            authMeta.userId,
+          );
+
+        } else {
+          await DoSortation.update({
+              doSortationId: resultDoSortationDetail.doSortationId,
+            },
+            {
+              doSortationStatusIdLast: 6000,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
+
+          await DoSortationDetail.update({
+              doSortationDetailId: payload.doSortationDetailId,
+            },
+            {
+              doSortationStatusIdLast: 6000,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
+
+          await this.createDoSortationHistory(
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            null,
+            4050,
+            null,
+            null,
+            null,
+            null,
+            authMeta.userId,
+          );
+
+          await this.createDoSortationHistory(
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            null,
+            5000,
+            null,
+            null,
+            null,
+            null,
+            authMeta.userId,
+          );
+
+          await this.createDoSortationHistory(
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            null,
+            6000,
+            null,
+            null,
+            null,
+            null,
+            authMeta.userId,
+          );
+        }
+
+        const data = [];
+        data.push({
+          doSortationId: resultDoSortationDetail.doSortationId,
+          doSortationDetailId: resultDoSortationDetail.doSortationDetailId,
+          arrivalDateTime: moment().toDate(),
+        });
+        result.statusCode = HttpStatus.OK;
+        result.message = 'Sortation Success Arrival';
+        result.data = data;
+        return result;
+
+      } else {
+        throw new BadRequestException(`Can't Find  Do Sortation Detail ID : ` + payload.doSortationDetailId);
       }
     } catch (e) {
       throw e.error;

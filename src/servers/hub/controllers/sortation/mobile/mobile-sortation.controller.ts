@@ -6,6 +6,7 @@ import { PermissionTokenGuard } from '../../../../../shared/guards/permission-to
 import { MobileSortationArrivalPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-arrival.payload.vm';
 import { MobileSortationService } from '../../../services/sortation/mobile/mobile-sortation.service';
 import { MobileSortationDepaturePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-depature.payload.vm';
+import { MobileSortationEndPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-end.payload.vm';
 
 @ApiUseTags('Mobile Sortation')
 @Controller('mobile/sortation')
@@ -24,6 +25,13 @@ export class MobileSortationController {
   @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
   public async scanInMobileSortation(@Body() payload: MobileSortationArrivalPayloadVm) {
     return MobileSortationService.scanInMobileSortation(payload);
+  }
+
+  @Post('end')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard , PermissionTokenGuard)
+  public async scanInEndMobileSortation(@Body() payload: MobileSortationEndPayloadVm) {
+    return MobileSortationService.scanInEndMobileSortation(payload);
   }
 
 }
