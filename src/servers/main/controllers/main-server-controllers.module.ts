@@ -65,6 +65,7 @@ import { WebMonitoringController } from './web/web-monitoring.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
 import { V1WebAwbHighValueController } from './web/v1/web-awb-high-value.controller';
 import { V2MobileInitController } from './mobile/v2/mobile-init.controller';
+import { V3MobileInitController } from './mobile/v3/mobile-init.controller';
 import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
 import { PodProxyController } from './proxy/proxy.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
@@ -122,6 +123,7 @@ import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.contr
     DoReturnController,
     V1MobileInitController,
     V2MobileInitController,
+    V3MobileInitController,
     V1MobileSyncController,
     V2MobileSyncController,
     V1MobileAttendanceController,
