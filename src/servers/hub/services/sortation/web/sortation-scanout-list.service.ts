@@ -74,6 +74,9 @@ export class SortationScanOutListService {
         q.andWhere(where, whereParams);
       });
     }
+    if (payload.search) {
+      q.andWhere(`do_sortation.do_sortation_code LIKE :search`, { search: `%${payload.search.toUpperCase()}%` });
+    }
     q.andWhere('do_sortation.is_deleted = FALSE');
 
     // ORDER & PAGINATION
@@ -144,7 +147,7 @@ export class SortationScanOutListService {
     const isSortir: boolean = payload.isSortir;
     const page: number = 1;
     const limit: number = 5;
-    const q = this.getDoSortationDetailItemQuery(id, page, limit, isSortir);
+    const q = this.getDoSortationDetailItemQuery(id, page, limit, 'createdTime', 'desc', isSortir);
     const result = await q.getRawMany();
     return {
       statusCode: HttpStatus.OK,
@@ -169,7 +172,7 @@ export class SortationScanOutListService {
     const isSortir: boolean = isSortirFilter ? isSortirFilter.value : undefined;
     const page: number = payload.page || 1;
     const limit: number = payload.limit || 10;
-    const q = this.getDoSortationDetailItemQuery(id, page, limit, isSortir);
+    const q = this.getDoSortationDetailItemQuery(id, page, limit, payload.sortBy, payload.sortDir, isSortir);
     const [result, count] = await Promise.all([q.getRawMany(), q.getCount()]);
     const response = new ScanOutSortationBagDetailMoreResponseVm();
     response.statusCode = HttpStatus.OK;
@@ -187,6 +190,8 @@ export class SortationScanOutListService {
     doSortationDetailId: string,
     page: number = 1,
     limit: number = 5,
+    sortBy: string = '',
+    sortDir: string = '',
     isSortir?: boolean,
   ): SelectQueryBuilder<DoSortationDetailItem> {
     const q = RepositoryService.doSortationDetailItem.createQueryBuilder();
@@ -221,8 +226,15 @@ export class SortationScanOutListService {
         isSortir,
       });
     }
-
-    q.orderBy('do_sortation_detail_item.created_time', 'DESC')
+    const sortMap = {
+      createdTime: 'do_sortation_detail_item.created_time',
+      bagNumber: 'b.bag_number',
+      weight: 'bi.weight',
+      totalBagSortation: 'do_sortation.total_bag_sortir',
+    };
+    const orderBy: string = sortMap[sortBy] || sortMap.createdTime;
+    const orderDir: 'ASC' | 'DESC' = sortDir === 'asc' ? 'ASC' : 'DESC';
+    q.orderBy(orderBy, orderDir)
       .limit(limit)
       .offset((page - 1) * limit);
 
@@ -249,7 +261,7 @@ export class SortationScanOutListService {
       'bf.branch_name AS "branchFromName"',
       'bt.branch_name AS "branchToName"',
       'dss.do_sortation_status_title AS "historyStatus"',
-      `CONCAT(u.first_name, ' ', u.last_name ) AS "username"`,
+      `CONCAT(u.first_name, ' ', u.last_name) AS "username"`,
       'e.fullname AS "assigne"',
     ];
 
@@ -281,12 +293,13 @@ export class SortationScanOutListService {
     // ORDER & PAGINATION
     const sortMap = {
       createdTime: 'do_sortation_history.created_time',
-      historyDate: 'do_sortation.creatd_time',
+      historyDate: 'do_sortation_history.created_time',
       historyStatus: 'dss.do_sortation_status_title',
       branchFromName: 'bf.branch_name',
       branchToName: 'bt.branch_name',
       username: 'u.first_name',
       assigne: 'e.fullname',
+      notes: 'do_sortation_history.reason_note',
     };
     const orderBy: string = sortMap[payload.sortBy] || sortMap.createdTime;
     const orderDir: 'ASC' | 'DESC' = payload.sortDir === 'asc' ? 'ASC' : 'DESC';
