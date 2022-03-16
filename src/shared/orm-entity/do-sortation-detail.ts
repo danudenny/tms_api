@@ -15,7 +15,7 @@ import { DoSortation } from './do-sortation';
 
 @Entity('do_sortation_detail', { schema: 'public' })
 export class DoSortationDetail extends TmsBaseEntity {
- @PrimaryGeneratedColumn('uuid', {
+  @PrimaryGeneratedColumn('uuid', {
     name: 'do_sortation_detail_id',
   })
   doSortationDetailId: string;
@@ -145,7 +145,7 @@ export class DoSortationDetail extends TmsBaseEntity {
   })
   updatedTime: Date;
 
-  @OneToMany(() => DoSortationDetailItem, item => item.doSortationDetailId)
+  @OneToMany(() => DoSortationDetailItem, item => item.doSortationDetail)
   doSortationDetailItems: DoSortationDetailItem[];
 
   @OneToOne(() => Branch)
@@ -156,7 +156,7 @@ export class DoSortationDetail extends TmsBaseEntity {
   @JoinColumn({ name: 'branch_id_to' , referencedColumnName: 'branchId'})
   branchTo: Branch;
 
-  @ManyToOne(() => DoSortation, sortation => sortation.doSortationId)
-  @JoinColumn({name: 'do_sortation_id', referencedColumnName: 'doSortationId'})
+  @ManyToOne(() => DoSortation, sortation => sortation.doSortationDetails)
+  @JoinColumn({ name: 'do_sortation_id' })
   doSortation: DoSortation;
 }

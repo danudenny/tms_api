@@ -146,7 +146,7 @@ export class DoSortation extends TmsBaseEntity {
   })
   updatedTime: Date;
 
-  @OneToMany(() => DoSortationDetail, detail => detail.doSortationId)
+  @OneToMany(() => DoSortationDetail, detail => detail.doSortation)
   doSortationDetails: DoSortationDetail[];
 
   @OneToOne(() => Branch)

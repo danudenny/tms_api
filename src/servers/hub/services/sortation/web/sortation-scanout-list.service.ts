@@ -14,7 +14,7 @@ import {
   ScanOutSortationRouteDetailPayloadVm,
 } from '../../../models/sortation/web/sortation-scanout-list.payload.vm';
 import { createQueryBuilder, SelectQueryBuilder } from 'typeorm';
-import { DoSortationDetailItem } from 'src/shared/orm-entity/do-sortation-detail-item';
+import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sortation-detail-item';
 
 @Injectable()
 export class SortationScanOutListService {
@@ -75,7 +75,9 @@ export class SortationScanOutListService {
       });
     }
     if (payload.search) {
-      q.andWhere(`do_sortation.do_sortation_code LIKE :search`, { search: `%${payload.search.toUpperCase()}%` });
+      q.andWhere(`do_sortation.do_sortation_code LIKE :search`, {
+        search: `%${payload.search.toUpperCase()}%`,
+      });
     }
     q.andWhere('do_sortation.is_deleted = FALSE');
 
@@ -147,7 +149,14 @@ export class SortationScanOutListService {
     const isSortir: boolean = payload.isSortir;
     const page: number = 1;
     const limit: number = 5;
-    const q = this.getDoSortationDetailItemQuery(id, page, limit, 'createdTime', 'desc', isSortir);
+    const q = this.getDoSortationDetailItemQuery(
+      id,
+      page,
+      limit,
+      'createdTime',
+      'desc',
+      isSortir,
+    );
     const result = await q.getRawMany();
     return {
       statusCode: HttpStatus.OK,
@@ -159,20 +168,27 @@ export class SortationScanOutListService {
   static async getScanOutSortationBagDetailMore(
     payload: BaseMetaPayloadVm,
   ): Promise<ScanOutSortationBagDetailResponseVm> {
-    const idFilter = payload.filters ? payload.filters.find(
-      filter => filter.field === 'doSortationDetailId',
-    ) : null;
+    const idFilter = payload.filters
+      ? payload.filters.find(filter => filter.field === 'doSortationDetailId')
+      : null;
     if (!idFilter) {
       throw new BadRequestException('doSortationDetailId filter not found');
     }
-    const isSortirFilter = payload.filters ? payload.filters.find(
-      filter => filter.field === 'isSortir',
-    ) : undefined;
+    const isSortirFilter = payload.filters
+      ? payload.filters.find(filter => filter.field === 'isSortir')
+      : undefined;
     const id: string = idFilter.value;
     const isSortir: boolean = isSortirFilter ? isSortirFilter.value : undefined;
     const page: number = payload.page || 1;
     const limit: number = payload.limit || 10;
-    const q = this.getDoSortationDetailItemQuery(id, page, limit, payload.sortBy, payload.sortDir, isSortir);
+    const q = this.getDoSortationDetailItemQuery(
+      id,
+      page,
+      limit,
+      payload.sortBy,
+      payload.sortDir,
+      isSortir,
+    );
     const [result, count] = await Promise.all([q.getRawMany(), q.getCount()]);
     const response = new ScanOutSortationBagDetailMoreResponseVm();
     response.statusCode = HttpStatus.OK;
@@ -241,10 +257,12 @@ export class SortationScanOutListService {
     return q;
   }
 
-  static async getHistory(payload: BaseMetaPayloadVm): Promise<ScanOutSortationHistoryResponseVm> {
-    const idFilter = payload.filters ? payload.filters.find(
-      filter => filter.field === 'doSortationId',
-    ) : null;
+  static async getHistory(
+    payload: BaseMetaPayloadVm,
+  ): Promise<ScanOutSortationHistoryResponseVm> {
+    const idFilter = payload.filters
+      ? payload.filters.find(filter => filter.field === 'doSortationId')
+      : null;
     if (!idFilter) {
       throw new BadRequestException('doSortationId filter not found');
     }
@@ -266,10 +284,22 @@ export class SortationScanOutListService {
     ];
 
     q.select(selectColumns)
-      .innerJoin('do_sortation_history.doSortation', 'ds', 'ds.is_deleted = FALSE')
-      .innerJoin('do_sortation_history.branchFrom', 'bf', 'bf.is_deleted = FALSE')
+      .innerJoin(
+        'do_sortation_history.doSortation',
+        'ds',
+        'ds.is_deleted = FALSE',
+      )
+      .innerJoin(
+        'do_sortation_history.branchFrom',
+        'bf',
+        'bf.is_deleted = FALSE',
+      )
       .leftJoin('do_sortation_history.branchTo', 'bt', 'bt.is_deleted = FALSE')
-      .innerJoin('do_sortation_history.doSortationStatus', 'dss', 'dss.is_deleted = FALSE')
+      .innerJoin(
+        'do_sortation_history.doSortationStatus',
+        'dss',
+        'dss.is_deleted = FALSE',
+      )
       .innerJoin('ds.user', 'u', 'u.is_deleted = FALSE')
       .leftJoin('ds.doSortationVehicle', 'dsv', 'dsv.is_deleted = FALSE')
       .leftJoin('dsv.employee', 'e', 'e.is_deleted = FALSE');
@@ -350,13 +380,18 @@ export class SortationScanOutListService {
     ];
     q.select(selectColumns)
       .from('do_sortation', 'ds')
-      .innerJoin('branch', 'br', 'ds.branch_id_from = br.branch_id AND br.is_deleted = FALSE')
+      .innerJoin(
+        'branch',
+        'br',
+        'ds.branch_id_from = br.branch_id AND br.is_deleted = FALSE',
+      )
       .innerJoin(
         'do_sortation_status',
         'dss',
         'ds.do_sortation_status_id_last = dss.do_sortation_status_id AND dss.is_deleted = FALSE',
       )
-      .leftJoin(`(
+      .leftJoin(
+        `(
         SELECT
           do_sortation_id,
           MAX(check_point) AS max_trip
@@ -368,7 +403,8 @@ export class SortationScanOutListService {
         'trips',
         'ds.do_sortation_id = trips.do_sortation_id',
       )
-      .leftJoin(`(
+      .leftJoin(
+        `(
         SELECT
           do_sortation_id,
           SUM(dsdi.total_weight) AS t
@@ -401,7 +437,11 @@ export class SortationScanOutListService {
         'v',
         'dsv.vehicle_id = v.vehicle_id AND v.is_deleted = FALSE',
       )
-      .leftJoin('employee', 'e', 'dsv.employee_driver_id = e.employee_id AND e.is_deleted = FALSE');
+      .leftJoin(
+        'employee',
+        'e',
+        'dsv.employee_driver_id = e.employee_id AND e.is_deleted = FALSE',
+      );
 
     // WHERE CLAUSE
     let where;
@@ -414,9 +454,7 @@ export class SortationScanOutListService {
           // handles where clause for column type varchar[]
           where = `'${filter.value}' = ANY(do_sortation.branch_id_to_list)`;
         } else {
-          where = `ds.${field} ${filter.sqlOperator} :${
-            filter.field
-          }`;
+          where = `ds.${field} ${filter.sqlOperator} :${filter.field}`;
         }
         const whereParams = { [filter.field]: filter.value };
         q.andWhere(where, whereParams);

@@ -3,7 +3,7 @@ import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payloa
 import { ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import { SortationScanOutListService } from 'src/servers/hub/services/sortation/web/sortation-scanout-list.service';
+import { SortationScanOutListService } from '../../../services/sortation/web/sortation-scanout-list.service';
 
 @ApiUseTags('Scan Out Sortation Monitoring')
 @Controller('monitoring')
