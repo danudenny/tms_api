@@ -220,4 +220,17 @@ export class RedisService {
       });
     });
   }
+
+  public static async incr(key: string) {
+    return new Promise((resolve, reject) => {
+      // https://redis.io/commands/incr
+      this.client.incr(key, err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
 }
