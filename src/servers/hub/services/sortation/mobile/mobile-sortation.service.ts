@@ -10,6 +10,13 @@ import { MobileSortationDepaturePayloadVm } from '../../../models/sortation/mobi
 import { MobileSortationDepatureResponseVm } from '../../../models/sortation/mobile/mobile-sortation-depature.response.vm';
 import { MobileSortationEndPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-end.payload.vm';
 import { MobileSortationEndResponseVm } from '../../../models/sortation/mobile/mobile-sortation-end.response.vm';
+import { MobileSortationContinuePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-continue.payload.vm';
+import { MobileSortationContinueResponseVm } from '../../../models/sortation/mobile/mobile-sortation-continue.response.vm';
+import { AttachmentTms } from '../../../../../shared/orm-entity/attachment-tms';
+import { AttachmentService } from '../../../../../shared/services/attachment.service';
+import { MobileSortationUploadImageResponseVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.response.vm';
+import { DoSortationAttachment } from '../../../../../shared/orm-entity/do-sortation-attachment';
+import { MobileSortationUploadImagePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.payload.vm';
 
 @Injectable()
 export class MobileSortationService {
@@ -329,6 +336,117 @@ export class MobileSortationService {
     } catch (e) {
       throw e.error;
     }
+  }
+
+  public static async continueMobileSortation(payload: MobileSortationContinuePayloadVm) {
+    try {
+      const authMeta = AuthService.getAuthData();
+      const result = new MobileSortationContinueResponseVm();
+      const timeNow = moment().toDate();
+
+      const resultDoSortation = await DoSortation.findOne({
+        where: {
+          doSortationId: payload.doSortationId,
+          isDeleted: false,
+        },
+      });
+
+      if (resultDoSortation) {
+        await DoSortation.update({
+          doSortationId: payload.doSortationId,
+        }, {
+          doSortationStatusIdLast: 3000,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        });
+
+        await DoSortationDetail.update(
+          { doSortationId: payload.doSortationId, arrivalDateTime: null },
+          {
+            doSortationStatusIdLast: 3000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+
+        await this.createDoSortationHistory(
+          resultDoSortation.doSortationId,
+          null,
+          resultDoSortation.doSortationTime,
+          resultDoSortation.doSortationVehicleIdLast,
+          3000,
+          null,
+          null,
+          payload.reasonId,
+          null,
+          authMeta.userId,
+        );
+
+        const data = [];
+        data.push({
+          doSortationId: resultDoSortation.doSortationId,
+        });
+        result.statusCode = HttpStatus.OK;
+        result.message = 'Sortation Success Created Continue';
+        result.data = data;
+        return result;
+      } else {
+        throw new BadRequestException(`Can't Find  Do Sortation ID : ` + payload.doSortationId);
+      }
+    } catch (e) {
+      throw e.error;
+    }
+  }
+
+  public static async uploadImageMobileSortation(payload: MobileSortationUploadImagePayloadVm, file) {
+    const authMeta = AuthService.getAuthData();
+    const result = new MobileSortationUploadImageResponseVm();
+    let url = null;
+    let attachmentId = null;
+
+    let attachment = await AttachmentTms.findOne({
+      where: {
+        fileName: file.originalname,
+      },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    if (attachment) {
+      // attachment exist
+      attachmentId = attachment.attachmentTmsId;
+      url = attachment.url;
+    } else {
+      // upload image
+      const pathId = `sortation-delivery-${payload.imageType}`;
+      attachment = await AttachmentService.uploadFileBufferToS3(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        pathId,
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      }
+    }
+
+    if (attachmentId) {
+      const doSortationAttachment = await DoSortationAttachment.create();
+      doSortationAttachment.doSortationDetailId = payload.doSortationDetailId;
+      doSortationAttachment.attachmentTmsId = attachmentId;
+      doSortationAttachment.attachmentType = payload.imageType;
+
+    }
+
+    const data = [];
+    data.push({
+      url,
+      attachmentId,
+    });
+    result.statusCode = HttpStatus.OK;
+    result.message = 'Sortation upload image Continue';
+    result.data = data;
+    return result;
   }
 
   public static async createDoSortationHistory(
