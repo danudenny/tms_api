@@ -20,6 +20,7 @@ import { EntityManager, getManager, In } from 'typeorm';
 import { BagScanDoSortationQueueService } from '../../../../queue/services/bag-scan-do-sortation-queue.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sortation-detail-item';
+import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 
 @Injectable()
 export class SortationScanOutService {
@@ -297,7 +298,7 @@ export class SortationScanOutService {
             transactional,
           );
 
-          await this.updateSortationAndSortationDetail(
+          await this.updateTotalBagSortationAndSortationDetail(
             bagDetail.bag.isSortir,
             resultDoSortation,
             resultDoSortaionDetail,
@@ -330,6 +331,91 @@ export class SortationScanOutService {
       result.statusCode = HttpStatus.OK;
       result.message = `Gabung Paket/Sortir berhasil di scan`;
       result.data = data;
+      return result;
+  }
+
+  static async sortationScanOutLoadDoSortation(
+    payload: SortationScanOutLoadPayloadVm)
+    : Promise<SortationScanOutLoadResponseVm> {
+      const authMeta = AuthService.getAuthData();
+      const permissonPayload = AuthService.getPermissionTokenPayload();
+      const timeNow = moment().toDate();
+
+      const result = new SortationScanOutLoadResponseVm();
+      const data = new SortationScanOutLoadVm();
+      const resultDoSortation = await DoSortation.findOne({
+        where: {
+          doSortationId: payload.doSortationId,
+          doSortationStatusIdLast: DO_SORTATION_STATUS.CREATED,
+          branchIdFrom: permissonPayload.branchId,
+          userIdCreated: authMeta.userId,
+          isDeleted: false,
+        },
+      });
+
+      if (!resultDoSortation) {
+        throw new BadRequestException('Surat Jalan tidak valid!.');
+      }
+
+      const repo = new OrionRepositoryService(DoSortationDetail, 't1');
+      const q = repo.findAllRaw();
+      q.selectRaw(
+        ['t2.do_sortation_id', 'doSortationId'],
+        ['t2.do_sortation_code', 'doSortationCode'],
+        ['t1.do_sortation_detail_id', 'doSortationDetailId'],
+        ['t3.branch_id', 'branchIdTo'],
+        ['t3.branch_name', 'branchToName'],
+        ['t3.branch_code', 'branchCode'],
+      );
+
+      q.innerJoin(e => e.doSortation, 't2', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.innerJoin(e => e.branchTo, 't3', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.andWhere(e => e.doSortationId, w => w.equals(resultDoSortation.doSortationId));
+      q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+      const details = await q.exec();
+      data.doSortationDetails = details;
+
+      if (!data.doSortationDetails || data.doSortationDetails.length < 1) {
+        throw new BadRequestException('Surat Jalan sudah di proses');
+      }
+
+      for (const doSortationDetail of data.doSortationDetails ) {
+        const repoDetailItem = new OrionRepositoryService(DoSortationDetailItem, 't1');
+        const query = repoDetailItem.findAllRaw();
+        query.selectRaw(
+          ['SUBSTR(CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, \'0\')), 1, 10)', 'bagNumber'],
+        );
+        query.innerJoin(e => e.bagItem, 't3', j =>
+          j.andWhere(e => e.isDeleted, w => w.isFalse()),
+        );
+        query.innerJoin(e => e.bagItem.bag, 't2', j =>
+          j.andWhere(e => e.isDeleted, w => w.isFalse()),
+        );
+
+        query.andWhere(e => e.doSortationDetailId, w => w.equals(doSortationDetail.doSortationDetailId));
+        query.andWhere(e => e.isDeleted, w => w.isFalse());
+        const resultBagNumberList = await query.exec();
+
+        const bagNumberList = [];
+        for (const bagItem of resultBagNumberList) {
+          bagNumberList.push(bagItem.bagNumber);
+        }
+        doSortationDetail.bagItems = bagNumberList;
+      }
+      data.doSortationId = resultDoSortation.doSortationId;
+      data.doSortationCode = resultDoSortation.doSortationCode;
+
+      result.message = 'sucess';
+      result.statusCode = HttpStatus.OK;
+      result.data = data;
+
       return result;
   }
 
@@ -435,92 +521,93 @@ export class SortationScanOutService {
       return result;
   }
 
-  static async sortationScanOutLoadDoSortation(
-    payload: SortationScanOutLoadPayloadVm)
-    : Promise<SortationScanOutLoadResponseVm> {
-      const authMeta = AuthService.getAuthData();
-      const permissonPayload = AuthService.getPermissionTokenPayload();
-      const timeNow = moment().toDate();
+  static async sortaionScanOutDeleted(doSortationId: string) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
 
-      const result = new SortationScanOutLoadResponseVm();
-      const data = new SortationScanOutLoadVm();
-      const resultDoSortation = await DoSortation.findOne({
-        where: {
-          doSortationId: payload.doSortationId,
-          doSortationStatusIdLast: DO_SORTATION_STATUS.CREATED,
-          branchIdFrom: permissonPayload.branchId,
-          userIdCreated: authMeta.userId,
-          isDeleted: false,
-        },
-      });
-
-      if (!resultDoSortation) {
-        throw new BadRequestException('Surat Jalan tidak valid!.');
-      }
-
-      const repo = new OrionRepositoryService(DoSortationDetail, 't1');
-      const q = repo.findAllRaw();
-      q.selectRaw(
-        ['t2.do_sortation_id', 'doSortationId'],
-        ['t2.do_sortation_code', 'doSortationCode'],
-        ['t1.do_sortation_detail_id', 'doSortationDetailId'],
-        ['t3.branch_id', 'branchIdTo'],
-        ['t3.branch_name', 'branchToName'],
-        ['t3.branch_code', 'branchCode'],
-      );
-
-      q.innerJoin(e => e.doSortation, 't2', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-
-      q.innerJoin(e => e.branchTo, 't3', j =>
-        j.andWhere(e => e.isDeleted, w => w.isFalse()),
-      );
-
-      q.andWhere(e => e.doSortationId, w => w.equals(resultDoSortation.doSortationId));
-      q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-      const details = await q.exec();
-      data.doSortationDetails = details;
-
-      if (!data.doSortationDetails || data.doSortationDetails.length < 1) {
-        throw new BadRequestException('Surat Jalan sudah di proses');
-      }
-
-      for (const doSortationDetail of data.doSortationDetails ) {
-        const repoDetailItem = new OrionRepositoryService(DoSortationDetailItem, 't1');
-        const query = repoDetailItem.findAllRaw();
-        query.selectRaw(
-          ['SUBSTR(CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, \'0\')), 1, 10)', 'bagNumber'],
-        );
-        query.innerJoin(e => e.bagItem, 't3', j =>
-          j.andWhere(e => e.isDeleted, w => w.isFalse()),
-        );
-        query.innerJoin(e => e.bagItem.bag, 't2', j =>
-          j.andWhere(e => e.isDeleted, w => w.isFalse()),
-        );
-
-        query.andWhere(e => e.doSortationDetailId, w => w.equals(doSortationDetail.doSortationDetailId));
-        query.andWhere(e => e.isDeleted, w => w.isFalse());
-        const resultBagNumberList = await query.exec();
-
-        const bagNumberList = [];
-        for (const bagItem of resultBagNumberList) {
-          bagNumberList.push(bagItem.bagNumber);
-        }
-        doSortationDetail.bagItems = bagNumberList;
-      }
-      data.doSortationId = resultDoSortation.doSortationId;
-      data.doSortationCode = resultDoSortation.doSortationCode;
-
-      result.message = 'sucess';
-      result.statusCode = HttpStatus.OK;
-      result.data = data;
-
-      return result;
+    if (!doSortationId) {
+      throw new BadRequestException(`ID Surat Jalan Sortation harus di isi`);
     }
 
-  private static async updateSortationAndSortationDetail(
+    const resultDoSortaion = await DoSortation.findOne({
+      where: {
+        doSortationId,
+        isDeleted: false,
+      },
+    });
+
+    if (!resultDoSortaion) {
+      throw new BadRequestException(`ID ${doSortationId} harus di isi`);
+    }
+
+    if (![DO_SORTATION_STATUS.CREATED, DO_SORTATION_STATUS.ASSIGNED].includes(resultDoSortaion.doSortationStatusIdLast)) {
+      throw new BadRequestException(`Sortation Code ` + resultDoSortaion.doSortationCode + ` Status tidak Created / Assigned`);
+
+    }
+
+    const doSortationDetails = await DoSortationDetail.find({
+      where: {
+        doSortationId,
+        isDeleted: false,
+      },
+    });
+
+    await getManager().transaction(async transactional => {
+      await transactional.update(DoSortation,
+          { doSortationId: resultDoSortaion.doSortationId},
+          {
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+            isDeleted: true,
+          },
+      );
+
+      await transactional.update(DoSortationVehicle,
+          { doSortationId: resultDoSortaion.doSortationId},
+          {
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+            isDeleted: true,
+          },
+      );
+
+      if (doSortationDetails && doSortationDetails.length > 0) {
+        await transactional.update(DoSortationDetail,
+          { doSortationId: resultDoSortaion.doSortationId},
+          {
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+            isDeleted: true,
+          },
+        );
+
+        for (const detail of doSortationDetails) {
+          await transactional.update(DoSortationDetailItem,
+            { DoSortationDetailId: detail.doSortationDetailId},
+            {
+              userIdUpdated: authMeta.userId,
+              updatedTime: moment().toDate(),
+              isDeleted: true,
+            },
+          );
+        }
+
+        await SortationService.createDoSortationHistory(
+          resultDoSortaion.doSortationId,
+          null,
+          resultDoSortaion.doSortationVehicleIdLast,
+          resultDoSortaion.doSortationTime,
+          permissonPayload.branchId,
+          DO_SORTATION_STATUS.DELETED,
+          null,
+          authMeta.userId,
+        );
+      }
+    });
+
+  }
+
+  private static async updateTotalBagSortationAndSortationDetail(
     isSortir: boolean,
     resultDoSortation: DoSortation,
     resultDoSortationDetail: DoSortationDetail,

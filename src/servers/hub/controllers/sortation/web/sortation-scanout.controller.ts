@@ -46,7 +46,7 @@ export class SortationScanOutController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: SortationScanOutDoneResponseVm })
   public async scanOutDone(@Body() payload: SortationScanOutDonePayloadVm) {
-     return null;
+    return SortationScanOutService.sortationScanOutDone(payload);
   }
 
   @Delete('deleted/:id')
