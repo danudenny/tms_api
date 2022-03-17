@@ -68,6 +68,9 @@ module.exports = {
     baseUrl : 'http://api-internal.s.sicepat.io/core/query-service/api/v1/',
     schema: 'pod',
   },
+  exportService: {
+    baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
+  },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',

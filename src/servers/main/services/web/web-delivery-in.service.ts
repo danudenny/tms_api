@@ -713,6 +713,8 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -1462,8 +1464,6 @@ export class WebDeliveryInService {
           })
           .value();
       }
-    } else {
-      console.log('not found!');
     }
 
     // TODO: response vm ??
@@ -1786,6 +1786,7 @@ export class WebDeliveryInService {
         WHERE
         psi_bag.pod_scan_in_branch_id = '${podScanInBranchId}'
         AND psi_bag.is_deleted = false
+        AND bia.is_deleted = false
       ) p1
       FULL OUTER JOIN (
         SELECT aia.awb_number    AS awb_number,

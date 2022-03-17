@@ -135,6 +135,7 @@ export class WebAwbCountService {
           const getTotalItemAwb = await BagItemAwb.findAndCount({
             where: {
               bagItemId: bagData.bagItemId,
+              isDeleted: false,
             },
           });
           response.totalBagItem = getTotalItemAwb[1];
@@ -381,6 +382,7 @@ export class WebAwbCountService {
           const getAllBagAwb = await BagItemAwb.findAndCount({
             where: {
               bagItemId: bagData.bagItemId,
+              isDeleted: false,
             },
           });
 
