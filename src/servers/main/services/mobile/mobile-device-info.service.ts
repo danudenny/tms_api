@@ -111,6 +111,7 @@ export class MobileDeviceInfoService {
     const mobileDeviceInfoData = await MobileDeviceInfo.findOne({
       where: {
         userId: authMeta.userId,
+        imei: payload.imei,
         isDeleted: false,
       },
       order: {
@@ -127,6 +128,7 @@ export class MobileDeviceInfoService {
       data = await MobileDeviceInfo.update(
         {
           userId: mobileDeviceInfoData.userId,
+          imei: payload.imei,
         },
         {
           ...mobileDeviceinfoDto,
