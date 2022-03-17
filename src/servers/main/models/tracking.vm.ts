@@ -265,6 +265,9 @@ export class TrackingAwbResponseVm {
   @ApiModelProperty()
   isHasPhotoReturnRecevier: boolean;
 
+  @ApiModelProperty()
+  recipientAddressType: string;
+
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
 
