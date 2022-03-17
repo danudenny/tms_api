@@ -499,27 +499,47 @@ export class MonitoringProblemListService {
     const whereQueryBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagNumber, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
 
+    // const query = `
+    //   SELECT
+    //     hsa.scan_date_do_hub AS "scanDate",
+    //     hsa.awb_number AS "awbNumber",
+    //     CASE
+    //       WHEN bi.bag_number IS NOT NULL
+    //         THEN CONCAT(bi.bag_number, LPAD(bin.bag_seq::text, 3, '0'))
+    //       ELSE CONCAT(b.bag_number, LPAD(bdo.bag_seq::text, 3, '0'))
+    //     END AS "bagNumber",
+    //     CASE WHEN hsa.do_hub = TRUE THEN 'Yes' ELSE 'No' END AS "do",
+    //     CASE WHEN hsa.in_hub = TRUE THEN 'Yes' ELSE 'No' END AS "in",
+    //     CASE WHEN hsa.out_hub = TRUE THEN 'Yes' ELSE 'No' END AS "out",
+    //     hsa.note AS "awbStatusName"
+    //   FROM hub_summary_awb hsa
+    //   LEFT JOIN bag_item bdo ON hsa.bag_item_id_do = bdo.bag_Item_id AND bdo.is_deleted = FALSE
+    //   LEFT JOIN bag b ON bdo.bag_id = b.bag_id AND b.is_deleted = FALSE
+    //   LEFT JOIN bag_item bin ON hsa.bag_item_id_in = bin.bag_Item_id AND bin.is_deleted = FALSE
+    //   LEFT JOIN bag bi ON bin.bag_id = bi.bag_id AND bi.is_deleted = FALSE
+    //   WHERE
+    //     hsa.is_deleted = FALSE ${whereQuery ? 'AND ' + whereQuery : ''} ${problemFilter ? 'AND ' + problemFilter : ''}  ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''}
+    // `;
+    const where = [whereQuery ? whereQuery : '', problemFilter ? problemFilter : '', whereQueryBagNumber ? 'hsa.bag_id_in IS NULL' : '', 'hsa.is_deleted = FALSE'];
     const query = `
       SELECT
         hsa.scan_date_do_hub AS "scanDate",
         hsa.awb_number AS "awbNumber",
-        CASE
-          WHEN bi.bag_number IS NOT NULL
-            THEN CONCAT(bi.bag_number, LPAD(bin.bag_seq::text, 3, '0'))
-          ELSE CONCAT(b.bag_number, LPAD(bdo.bag_seq::text, 3, '0'))
-        END AS "bagNumber",
-        CASE WHEN hsa.do_hub = TRUE THEN 'Yes' ELSE 'No' END AS "do",
-        CASE WHEN hsa.in_hub = TRUE THEN 'Yes' ELSE 'No' END AS "in",
-        CASE WHEN hsa.out_hub = TRUE THEN 'Yes' ELSE 'No' END AS "out",
-        ast.awb_status_name AS "awbStatusName"
+        bi.bag_number AS "biBagNumber",
+        b.bag_number AS "bBagNumber",
+        bin.bag_seq AS "binBagSeq",
+        bdo.bag_seq AS "bdoBagSeq",
+        hsa.do_hub AS "doHub",
+        hsa.in_hub AS "inHub",
+        hsa.out_hub AS "outHub",
+        hsa.note AS "awbStatusName"
       FROM hub_summary_awb hsa
-      LEFT JOIN awb_status ast ON hsa.awb_status_id_last = ast.awb_status_id AND ast.is_deleted = FALSE
       LEFT JOIN bag_item bdo ON hsa.bag_item_id_do = bdo.bag_Item_id AND bdo.is_deleted = FALSE
       LEFT JOIN bag b ON bdo.bag_id = b.bag_id AND b.is_deleted = FALSE
       LEFT JOIN bag_item bin ON hsa.bag_item_id_in = bin.bag_Item_id AND bin.is_deleted = FALSE
       LEFT JOIN bag bi ON bin.bag_id = bi.bag_id AND bi.is_deleted = FALSE
       WHERE
-        hsa.is_deleted = FALSE ${whereQuery ? 'AND ' + whereQuery : ''} ${problemFilter ? 'AND ' + problemFilter : ''}  ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''}
+        ${where.filter(Boolean).join(' AND ')}
     `;
 
     const queryFix = query +
@@ -533,11 +553,30 @@ export class MonitoringProblemListService {
     `;
 
     const data = await RawQueryService.query(queryFix);
-    const total = await RawQueryService.query('SELECT COUNT(*) AS total FROM(' + query + ') n');
+    console.log('data:', data);
+    const queryCount = `SELECT
+            COUNT(1) AS total
+          FROM hub_summary_awb hsa
+          LEFT JOIN bag_item bdo ON hsa.bag_item_id_do = bdo.bag_Item_id AND bdo.is_deleted = FALSE
+          LEFT JOIN bag b ON bdo.bag_id = b.bag_id AND b.is_deleted = FALSE
+          LEFT JOIN bag_item bin ON hsa.bag_item_id_in = bin.bag_Item_id AND bin.is_deleted = FALSE
+          LEFT JOIN bag bi ON bin.bag_id = bi.bag_id AND bi.is_deleted = FALSE
+    WHERE
+        hsa.is_deleted = FALSE ${whereQuery ? 'AND ' + whereQuery : ''} ${problemFilter ? 'AND ' + problemFilter : ''}  ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''}
+`;
+    const total = await RawQueryService.query(queryCount);
 
     const result = new MonitoringHubProblemVm();
 
-    result.data = data;
+    result.data = data.map(r => ({
+      scanDate: r.scanDate,
+      awbNumber: r.awbNumber,
+      bagNumber: r.biBagNumber != null ? r.biBagNumber.toString() +  r.binBagSeq.toString().padStart(3, '0') : r.bBagNumber.toString() + r.bdoBagSeq.toString().padStart(3, '0'),
+      do: r.doHub ? 'Yes' : 'No',
+      in: r.inHub ? 'Yes' : 'No',
+      out: r.outHub ? 'Yes' : 'No',
+      awbStatusName: r.awbStatusName,
+    }));
     result.paging = MetaService.set(payload.page, payload.limit, total[0].total);
 
     return result;
@@ -555,7 +594,7 @@ export class MonitoringProblemListService {
 
     const mappingSubFilter = {
       bagNumber:  'b.bag_number',
-      bagSortir: 'b.bag_number',
+      bagSortir: 'bi.bag_number',
       bagSeq : 'bi.bag_seq',
       bagSeqSortir : 'bi.bag_seq',
       awbNumber : 'hsa.awb_number',
@@ -600,7 +639,7 @@ export class MonitoringProblemListService {
       `LEFT JOIN bag_item bi ON ${whereQueryBagSortir ? 'hsa.bag_item_id_in' : 'hsa.bag_item_id_do'} = bi.bag_item_id AND bi.is_deleted = FALSE` : ''
       }
       WHERE
-        hsa.is_deleted = FALSE ${whereSubQuery ? 'AND ' + whereSubQuery : ''} ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''}
+        ${whereSubQuery ? whereSubQuery : ''} ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''} AND hsa.is_deleted = FALSE
       GROUP BY
         hsa.scan_date_do_hub,
         hsa.branch_id
@@ -655,10 +694,17 @@ export class MonitoringProblemListService {
     for (let i = 0; i < payload.filters.length; i++) {
       const field = payload.filters[i].field;
       if (field == 'bagSortir' || field == 'bagNumber') {
-        const bagSortir = payload.filters[i].value.substr( 0 , 7);
-        const bagSeq = payload.filters[i].value.substr(7 , 10);
-        payload.filters[i].value = bagSortir;
-        payload.filters.push({field: field == 'bagSortir' ? 'bagSeqSortir' : 'bagSeq', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
+        const regEx = /((^[0-9]+[a-z]+)|(^[a-z]+[0-9]+))+[0-9a-z]+$/i;
+        const bagNumber = payload.filters[i].value;
+        if (bagNumber.match(regEx)) {
+          payload.filters[i].field = field;
+        } else {
+          const bagSortir = payload.filters[i].value.substr( 0 , 7);
+          const bagSeq = payload.filters[i].value.substr(7 , 10);
+          payload.filters[i].value = bagSortir;
+          payload.filters.push({field: field == 'bagSortir' ? 'bagSeqSortir' : 'bagSeq', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
+
+        }
       }
     }
     return payload;

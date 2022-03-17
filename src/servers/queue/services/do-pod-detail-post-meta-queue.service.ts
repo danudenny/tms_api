@@ -993,4 +993,30 @@ export class DoPodDetailPostMetaQueueService {
     return DoPodDetailPostMetaQueueService.queue.add(obj);
   }
 
+  // AWB RETURN
+  public static async createJobByAwbReturnCancel(
+    awbItemId: number,
+    awbStatusId: number,
+    branchId: number,
+    userId: number,
+    notes: string,
+  ) {
+    const noteInternal = `Paket batal Retur: Catatan : ${notes}`;
+    const notePublic = `Paket batal retur`;
+    // provide data
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.CANCEL_RETURN,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+    };
+    return DoPodDetailPostMetaQueueService.queue.add(obj);
+  }
+
 }

@@ -48,8 +48,11 @@ export class AuthV2Service {
       });
     }
 
+    await this.authService.blockProcess(username);
     // validate user password hash md5
     if (!user.validatePassword(password)) {
+      await this.authService.addBlockCounter(username);
+
       RequestErrorService.throwObj({
         message: 'global.error.LOGIN_WRONG_PASSWORD',
       });
@@ -70,6 +73,8 @@ export class AuthV2Service {
       JSON.stringify({ userId: user.userId, clientId: clientId,}),
       300,
     );
+
+    await this.authService.removeBlockCounter(username);
 
     const result = new LoginChannelOtpAddressesResponse();
     result.token = generateToken;

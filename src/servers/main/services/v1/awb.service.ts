@@ -6,6 +6,11 @@ import { AwbDeliverManualVm } from '../../models/web-awb-deliver.vm';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { In } from 'typeorm';
+import { of } from 'rxjs';
+import { includes } from 'lodash';
+import { AwbStatus } from 'src/shared/orm-entity/awb-status';
+import { hashmap } from 'aws-sdk/clients/glacier';
 
 export class AwbService {
 
@@ -277,7 +282,7 @@ export class AwbService {
   public static async isManifested(
     awbNumber: string,
     awbItemId: number,
-  ): Promise<boolean>{
+  ): Promise<boolean> {
     const query = `
       SELECT
         nostt as "awbNumber"
@@ -289,12 +294,12 @@ export class AwbService {
         1;
     `;
 
-    let rawData = await RawQueryService.queryWithParams(query,{
+    let rawData = await RawQueryService.queryWithParams(query, {
       awbNumber,
     });
 
-    if(rawData.length < 1){
-       rawData = await AwbHistory.findOne({
+    if (rawData.length < 1) {
+      rawData = await AwbHistory.findOne({
         select: ['awbHistoryId'],
         where: {
           awbItemId,
@@ -305,6 +310,61 @@ export class AwbService {
     }
 
     return rawData ? true : false;
+  }
+  
+  public static async validationContainAwBStatus(optionalManifested, awbNumber, awbItemId): Promise<[boolean, string]> {
+    let retVal = false;
+    let retNote = null;
+    let collectArrStatus = []
+    let rawData = await AwbHistory.find({
+      select: ['awbStatusId'],
+      where: {
+        awbItemId,
+        isDeleted: false,
+      }
+    })
+
+    for(let data of rawData){
+      collectArrStatus.push(parseInt(data.awbStatusId.toString()))
+    }
+
+    if(collectArrStatus.includes(AWB_STATUS.CANCEL_DLV)){
+      retVal = true
+      retNote = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
+      return [retVal, retNote]
+    }
+
+    if(!collectArrStatus.includes(AWB_STATUS.MANIFESTED) && !optionalManifested){
+      const query = `
+        SELECT
+          nostt as "awbNumber"
+        FROM
+          temp_stt
+        WHERE
+          nostt = :awbNumber
+        LIMIT
+          1;
+      `;
+
+      let rawData = await RawQueryService.queryWithParams(query, {
+        awbNumber,
+      });
+
+      if(rawData.length < 1){
+        retVal = true;
+        retNote = `Resi ${awbNumber} belum pernah di MANIFESTED`;
+        return [retVal, retNote]
+      }
+    }
+
+    if(
+      (collectArrStatus.includes(AWB_STATUS.RTN) || collectArrStatus.includes(AWB_STATUS.RTC) || collectArrStatus.includes(AWB_STATUS.RTA) ||collectArrStatus.includes(AWB_STATUS.RTW)) && !collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
+      retVal = true;
+      retNote = `Resi ${awbNumber} retur tidak dapat di proses`;
+      return [retVal, retNote]
+    }
+    
+    return [retVal, retNote];
   }
 
   // TODO: open length awb number (12 or 15 digit)

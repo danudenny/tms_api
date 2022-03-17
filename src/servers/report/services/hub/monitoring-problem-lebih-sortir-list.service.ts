@@ -472,11 +472,17 @@ export class MonitoringProblemLebihSortirListService {
       const field = payload.filters[i].field;
       const opt = payload.filters[i].operator;
       if (field == 'bagSortir' || field == 'bagNumber') {
-        const bagSortir = payload.filters[i].value.substr( 0 , 7);
-        const bagSeq = payload.filters[i].value.substr(7 , 10);
-        payload.filters[i].value = bagSortir;
-        payload.filters[i].field = 'bagSortir';
-        payload.filters.push({field: 'bagSeqSortir', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
+        const regEx = /((^[0-9]+[a-z]+)|(^[a-z]+[0-9]+))+[0-9a-z]+$/i;
+        const bagNumber = payload.filters[i].value;
+        if (bagNumber.match(regEx)) {
+          payload.filters[i].field = field;
+        } else {
+          const bagSortir = payload.filters[i].value.substr( 0 , 7);
+          const bagSeq = payload.filters[i].value.substr(7 , 10);
+          payload.filters[i].value = bagSortir;
+          payload.filters.push({field: field == 'bagSortir' ? 'bagSeqSortir' : 'bagSeq', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
+
+        }
       }
       if ((field == 'scanDate' || field == 'createdTime' || field == 'scanDateInHub')
         && (opt == 'gt' || opt == 'gte')) {
