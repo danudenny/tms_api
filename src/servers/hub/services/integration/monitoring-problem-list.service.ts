@@ -594,7 +594,7 @@ export class MonitoringProblemListService {
 
     const mappingSubFilter = {
       bagNumber:  'b.bag_number',
-      bagSortir: 'bi.bag_number',
+      bagSortir: 'b.bag_number',
       bagSeq : 'bi.bag_seq',
       bagSeqSortir : 'bi.bag_seq',
       awbNumber : 'hsa.awb_number',
