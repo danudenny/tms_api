@@ -96,3 +96,10 @@ export class PackageBackupPayloadVm {
   })
   podScanInHubId?: number;
 }
+
+export class LoadPackagesPayloadVm {
+  @ApiModelPropertyOptional({
+    default: 'BAG',
+  })
+  scanInType: string;
+}
