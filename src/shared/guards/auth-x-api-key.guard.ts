@@ -31,10 +31,17 @@ export class AuthXAPIKeyGuard implements CanActivate {
       } else {
         const expireOnSeconds = 60 * 5; // 5 minute set on redis
         const partner = await Partner.findOne({
-          apiKey: partnerToken,
+          'where': [
+            { 'apiKey': partnerToken },
+            { 'apiKeyOld': partnerToken },
+          ],
         });
         if (partner) {
           const partnerPayload = ObjectService.transformToCamelCaseKeys(partner);
+          const dateNow = new Date().getTime()/1000.0;
+          if(partnerPayload.apiKey !== partnerToken && dateNow > partnerPayload.apiKeyExpired) {
+            throw new BadRequestException('API KEY expired');
+          }
           // set data on redis
           await RedisService.setex(
             `cache:partnerToken:${partnerToken}`,
