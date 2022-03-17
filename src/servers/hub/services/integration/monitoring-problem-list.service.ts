@@ -594,7 +594,7 @@ export class MonitoringProblemListService {
 
     const mappingSubFilter = {
       bagNumber:  'b.bag_number',
-      bagSortir: 'b.bag_number',
+      bagSortir: 'bi.bag_number',
       bagSeq : 'bi.bag_seq',
       bagSeqSortir : 'bi.bag_seq',
       awbNumber : 'hsa.awb_number',
@@ -639,7 +639,7 @@ export class MonitoringProblemListService {
       `LEFT JOIN bag_item bi ON ${whereQueryBagSortir ? 'hsa.bag_item_id_in' : 'hsa.bag_item_id_do'} = bi.bag_item_id AND bi.is_deleted = FALSE` : ''
       }
       WHERE
-        hsa.is_deleted = FALSE ${whereSubQuery ? 'AND ' + whereSubQuery : ''} ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''}
+        ${whereSubQuery ? whereSubQuery : ''} ${whereQueryBagNumber ? 'AND hsa.bag_id_in IS NULL' : ''} AND hsa.is_deleted = FALSE
       GROUP BY
         hsa.scan_date_do_hub,
         hsa.branch_id
@@ -694,10 +694,17 @@ export class MonitoringProblemListService {
     for (let i = 0; i < payload.filters.length; i++) {
       const field = payload.filters[i].field;
       if (field == 'bagSortir' || field == 'bagNumber') {
-        const bagSortir = payload.filters[i].value.substr( 0 , 7);
-        const bagSeq = payload.filters[i].value.substr(7 , 10);
-        payload.filters[i].value = bagSortir;
-        payload.filters.push({field: field == 'bagSortir' ? 'bagSeqSortir' : 'bagSeq', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
+        const regEx = /((^[0-9]+[a-z]+)|(^[a-z]+[0-9]+))+[0-9a-z]+$/i;
+        const bagNumber = payload.filters[i].value;
+        if (bagNumber.match(regEx)) {
+          payload.filters[i].field = field;
+        } else {
+          const bagSortir = payload.filters[i].value.substr( 0 , 7);
+          const bagSeq = payload.filters[i].value.substr(7 , 10);
+          payload.filters[i].value = bagSortir;
+          payload.filters.push({field: field == 'bagSortir' ? 'bagSeqSortir' : 'bagSeq', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
+
+        }
       }
     }
     return payload;
