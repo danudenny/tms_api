@@ -22,7 +22,7 @@ import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sorta
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
 import { OrionRepositoryQueryService } from '../../../../../shared/services/orion-repository-query.service';
-import { DoSortationHistory } from 'src/shared/orm-entity/do-sortation-history';
+import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
 
 @Injectable()
 export class SortationScanOutListService {
