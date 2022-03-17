@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiOkResponse, ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
-import { PackagePayloadVm } from '../../models/gabungan-payload.vm';
+import { LoadPackagesPayloadVm, PackagePayloadVm } from '../../models/gabungan-payload.vm';
 import { PackageAwbResponseVm } from '../../models/gabungan.response.vm';
 import { PackageService } from '../../services/combine-package/package.services';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
@@ -30,8 +30,8 @@ export class CombinePackageController {
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PackageAwbResponseVm })
-  public async loadPackageAwb() {
+  public async loadPackageAwb(@Body() payload: LoadPackagesPayloadVm) {
     // return this.packageService.loadAwbPackage();
-    return V1PackageService.loadAwbPackage();
+    return V1PackageService.loadAwbPackage(payload);
   }
 }

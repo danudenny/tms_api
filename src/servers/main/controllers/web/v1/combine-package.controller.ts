@@ -3,7 +3,7 @@ import { ApiUseTags, ApiBearerAuth, ApiOkResponse } from '../../../../../shared/
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
-import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
+import { LoadPackagesPayloadVm, PackagePayloadVm } from '../../../models/gabungan-payload.vm';
 import { V1PackageService } from '../../../services/combine-package/v1/package.services';
 import { UnloadAwbPayloadVm, UnloadAwbResponseVm } from '../../../models/package-payload.vm';
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
@@ -26,8 +26,8 @@ export class V1CombinePackageController {
   @HttpCode(200)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: PackageAwbResponseVm })
-  public async loadPackageAwb() {
-    return V1PackageService.loadAwbPackage();
+  public async loadPackageAwb(@Body() payload: LoadPackagesPayloadVm) {
+    return V1PackageService.loadAwbPackage(payload);
   }
 
   @Post('unload/awb')
