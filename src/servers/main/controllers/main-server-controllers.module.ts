@@ -53,6 +53,7 @@ import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
 import { WebAwbFilterController } from './web/web-awb-filter.controller';
 import { WebAwbPodController } from './web/web-awb-pod.controller';
 import { WebAwbReturnController } from './web/web-awb-return.controller';
+import { WebAwbReturnCancelController } from './web/web-awb-return-cancel.controller';
 import { WebAwbUpdateStatusController } from './web/web-awb-update-status.controller';
 import { WebBagPodController } from './web/web-bag-pod.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
@@ -107,6 +108,7 @@ import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.contr
     WebAwbCountController,
     WebFirstMileController,
     WebAwbReturnController,
+    WebAwbReturnCancelController,
     ProvincesController,
     CitiesController,
     DistrictsController,
