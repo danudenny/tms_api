@@ -11,6 +11,8 @@ export abstract class DatabaseConfig {
 
   private static superAppRedShiftDbPool: Pool;
 
+  private static cronDbPool: Pool;
+
   private static podDbConnectionString = {
     user: 'spartan',
     password: '5pArtAaAn116688_6969_',
@@ -114,6 +116,22 @@ export abstract class DatabaseConfig {
       });
     }
     return this.superAppRedShiftDbPool;
+  }
+
+  public static getCronDbPool() {
+    if(!this.cronDbPool) {
+      this.cronDbPool = new Pool({
+        host: 'pgpool-primary-staging-5361beef21559214.elb.ap-southeast-1.amazonaws.com',
+        port: 54321,
+        database: 'sicepattms',
+        user: 'pgpoolpickupphp',
+        password: '8jqVTTeP7P0U2MIhLNys',
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 30000,
+      });
+    }
+    return this.cronDbPool;
   }
 
 }
