@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
+import { AttachmentTms } from './attachment-tms';
 import { TmsBaseEntity } from './tms-base';
 
 @Entity('do_sortation_attachment', { schema: 'public' })
@@ -64,4 +65,8 @@ export class DoSortationAttachment extends TmsBaseEntity {
     name: 'updated_time',
   })
   updatedTime: Date;
+
+  @OneToOne(() => AttachmentTms)
+  @JoinColumn({ name: 'attachment_tms_id' })
+  attachmentTms: AttachmentTms;
 }

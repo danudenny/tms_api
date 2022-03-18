@@ -15,7 +15,7 @@ export class SortationPrintController {
   @Get('do-sortation')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
-  public async printDoSmd(
+  public async printDoSortation(
     @Query() queryParams: PrintDoSortationPayloadQueryVm,
     @Response() res: express.Response,
   ) {

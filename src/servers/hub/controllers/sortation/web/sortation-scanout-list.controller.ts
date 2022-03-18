@@ -8,6 +8,7 @@ import {
   ScanOutSortationBagDetailPayloadVm,
   ScanOutSortationRouteDetailPayloadVm,
 } from '../../../models/sortation/web/sortation-scanout-list.payload.vm';
+import { SortationScanOutImagePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
 
 @ApiUseTags('Scan Out Sortation')
 @Controller('sortation/scanOut')
@@ -50,7 +51,7 @@ export class SortationScanOutListController {
 
   @Post('image')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public FindscanOutImage(@Body() payload: any) {
-    return null;
+  public FindscanOutImage(@Body() payload: SortationScanOutImagePayloadVm) {
+    return SortationScanOutListService.getScanOutImages(payload);
   }
 }

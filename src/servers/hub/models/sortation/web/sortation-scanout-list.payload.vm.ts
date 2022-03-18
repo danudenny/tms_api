@@ -100,3 +100,11 @@ export class ScanOutSortationBagDetailPayloadVm {
   @ApiModelPropertyOptional()
   isSortir?: boolean;
 }
+
+export class ScanOutSortationImagePayloadVm {
+  @ApiModelProperty()
+  doSortationHistoryId: string;
+
+  @ApiModelProperty()
+  doSortationStatusId: number;
+}

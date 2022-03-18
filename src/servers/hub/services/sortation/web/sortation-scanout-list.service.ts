@@ -6,6 +6,7 @@ import {
   ScanOutSortationListResponseVm,
   ScanOutSortationMonitoringResponseVm,
   ScanOutSortationRouteDetailResponseVm,
+  ScanOutSortationImageResponseVm,
 } from '../../../models/sortation/web/sortation-scanout-list.response.vm';
 import {
   BaseMetaPayloadFilterVm,
@@ -15,14 +16,17 @@ import {
 import { RepositoryService } from '../../../../../shared/services/repository.service';
 import {
   ScanOutSortationBagDetailPayloadVm,
+  ScanOutSortationImagePayloadVm,
   ScanOutSortationRouteDetailPayloadVm,
 } from '../../../models/sortation/web/sortation-scanout-list.payload.vm';
-import { createQueryBuilder, SelectQueryBuilder } from 'typeorm';
+import { createQueryBuilder } from 'typeorm';
 import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sortation-detail-item';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
 import { OrionRepositoryQueryService } from '../../../../../shared/services/orion-repository-query.service';
 import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
+import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
+import { DoSortationAttachment } from '../../../../../shared/orm-entity/do-sortation-attachment';
 
 @Injectable()
 export class SortationScanOutListService {
@@ -468,6 +472,68 @@ export class SortationScanOutListService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     return q;
+  }
+
+  public static async getScanOutImages(
+    payload: ScanOutSortationImagePayloadVm,
+  ): Promise<SortationScanOutImageResponseVm> {
+    const scanoutHistory = await DoSortationHistory.findOne(
+      {
+        doSortationHistoryId: payload.doSortationHistoryId,
+        isDeleted: false,
+      },
+      { select: ['doSortationVehicleId', 'doSortationDetailId'] },
+    );
+
+    if (!scanoutHistory) {
+      throw new BadRequestException(
+        `Sortation Scanout History Id ${
+          payload.doSortationHistoryId
+        } not found!`,
+      );
+    }
+
+    const repo = new OrionRepositoryService(DoSortationAttachment, 'dsa');
+    const q = repo.findAllRaw();
+
+    const selectColumns = [
+      ['d.do_sortation_attachment_id', 'doSortationAttachmentId'],
+      ['at.url', 'imageUrl'],
+      ['d.attachment_type', 'imageType'],
+    ];
+    q.selectRaw(...selectColumns).innerJoin(e => e.attachmentTms, 'at', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    if (payload.doSortationStatusId == DO_SORTATION_STATUS.PROBLEM) {
+      // problem
+      q.andWhere(
+        e => e.doSortationVehicleId,
+        w => w.equals(scanoutHistory.doSortationVehicleId),
+      ).andWhereRaw(`LOWER(d.attachment_type) = 'problem`);
+    } else if (
+      payload.doSortationStatusId == DO_SORTATION_STATUS.BACKUP_PROCESS
+    ) {
+      // handover
+      q.andWhere(
+        e => e.doSortationVehicleId,
+        w => w.equals(scanoutHistory.doSortationVehicleId),
+      ).andWhereRaw(`LOWER(d.attachment_type) IN ('handover', 'handover_ttd')`);
+    } else {
+      // photo
+      q.andWhere(
+        e => e.doSortationVehicleId,
+        w => w.equals(scanoutHistory.doSortationVehicleId),
+      ).andWhereRaw(`LOWER(d.attachment_type) IN ('signature', 'photo')`);
+    }
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const attachments = await q.exec();
+
+    const result = new ScanOutSortationImageResponseVm();
+    result.statusCode = HttpStatus.OK;
+    result.message = 'Sukses ambil daftar gambar';
+    result.data = attachments;
+    return result;
   }
 }
 

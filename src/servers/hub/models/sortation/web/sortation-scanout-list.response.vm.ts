@@ -244,3 +244,25 @@ export class ScanOutSortationMonitoringResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [ScanOutSortationMonitoringVm] })
   data: ScanOutSortationMonitoringVm[];
 }
+
+class ScanOutSortationImageResponse {
+  @ApiModelProperty()
+  doSortationDetailAttachmentId: string;
+
+  @ApiModelProperty()
+  imageUrl: string;
+
+  @ApiModelProperty()
+  imageType: string;
+}
+
+export class ScanOutSortationImageResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({ type: () => [ScanOutSortationImageResponse] })
+  data: ScanOutSortationImageResponse[];
+}
