@@ -114,7 +114,7 @@ export class MobileFirstMileDoPodReturnService {
     response.trouble = true;
 
     if (awb) {
-      const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, true, true);
+      const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, true, true, false);
       if (checkValidAwbStatusIdLast.isValid) {
         // Add Locking setnx redis
         const holdRedis = await RedisService.lockingWithExpire(
