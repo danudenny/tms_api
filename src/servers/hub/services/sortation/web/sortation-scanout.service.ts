@@ -426,6 +426,21 @@ export class SortationScanOutService {
       const permissonPayload = AuthService.getPermissionTokenPayload();
       const timeNow = moment().toDate();
 
+      const resultDoSortaion = await DoSortation.findOne({
+        where: {
+          doSortationId: payload.doSortationId,
+          isDeleted: false,
+        },
+      });
+
+      if (!resultDoSortaion) {
+        throw new BadRequestException(`Surat Jalan tidak ditemukan, Gagal membuat surat jalan`);
+      }
+
+      if (resultDoSortaion.doSortationStatusIdLast != DO_SORTATION_STATUS.CREATED) {
+        throw new BadRequestException(`Surat Jalan Sudah Di proses`);
+      }
+
       /* TODO::
         * Phase 2
         * validation if driver sudah berangkat harus change driver
@@ -490,13 +505,6 @@ export class SortationScanOutService {
             updatedTime: timeNow,
           },
         );
-      });
-
-      const resultDoSortaion = await DoSortation.findOne({
-        where: {
-          doSortationId: payload.doSortationId,
-          isDeleted: false,
-        },
       });
 
       await SortationService.createDoSortationHistory(
