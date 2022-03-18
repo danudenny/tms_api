@@ -51,6 +51,9 @@ export class PrintDoSortationBagDataNewDoSortationDetailBagBagItemVm {
   bagSeq: number;
 
   @ApiModelProperty()
+  isSortir: boolean;
+
+  @ApiModelProperty()
   weight: number;
 
   @ApiModelProperty()
@@ -76,6 +79,9 @@ export class PrintDoSortationDataDoSortationDetailBagVm {
 
   @ApiModelProperty()
   bagType: number;
+
+  @ApiModelProperty()
+  isSortir: boolean;
 
   @ApiModelProperty({
     type: () => PrintDoSortationBagDataNewDoSortationDetailBagBagItemVm,

@@ -22,13 +22,32 @@ export class SortationPrintService {
     const q = RepositoryService.doSortation.findOne();
     q.leftJoin(e => e.doSortationDetails, 'doSortationDetails', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.leftJoin(e => e.doSortationDetails.branchTo);
-    q.leftJoin(e => e.doSortationDetails.branchTo.representative);
-    q.leftJoin(e => e.doSortationDetails.branchTo.district);
-    q.leftJoin(e => e.doSortationDetails.branchTo.district.city);
-    q.leftJoin(e => e.doSortationDetails.doSortationDetailItems);
-    q.leftJoin(e => e.doSortationVehicle);
+    )
+      .leftJoin(e => e.doSortationDetails.branchTo, 'branchTo', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .leftJoin(
+        e => e.doSortationDetails.branchTo.representative,
+        'representative',
+        j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .leftJoin(e => e.doSortationDetails.branchTo.district, 'district', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .leftJoin(e => e.doSortationDetails.branchTo.district.city, 'city', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .leftJoin(
+        e => e.doSortationDetails.doSortationDetailItems,
+        'doSortationDetailItems',
+        j => j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .leftJoin(e => e.doSortationVehicle, 'doSortationVehicle', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .leftJoin(e => e.doSortationVehicle.employee, 'employee', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
 
     const doSortation = await q
       .select({
@@ -67,7 +86,8 @@ export class SortationPrintService {
           },
         },
       })
-      .where(e => e.doSortationId, w => w.equals(queryParams.id));
+      .where(e => e.doSortationId, w => w.equals(queryParams.id))
+      .where(e => e.isDeleted, w => w.isFalse());
 
     if (!doSortation) {
       RequestErrorService.throwObj({
@@ -118,7 +138,7 @@ export class SortationPrintService {
       const bagDataAll = await this.getBagData(payload);
       if (bagDataAll) {
         dataSortationDetailBagVm.bagItem = bagDataAll;
-        dataSortationDetailBagVm.bagType = 1;
+        dataSortationDetailBagVm.isSortir = idDetail[l].isSortir;
         dataSortationDetailsBagVm.push(dataSortationDetailBagVm);
         dataSortationDetailVm.doSortationDetailItems = dataSortationDetailsBagVm;
       }
@@ -217,8 +237,9 @@ export class SortationPrintService {
       data,
       meta,
     };
+
     const templateName = 'surat-jalan-sortation';
-    // const templateName = isEmpty ? 'surat-jalan-kosong' : 'surat-muatan-darat';
+
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
 
     PrinterService.responseForJsReport({
@@ -234,7 +255,9 @@ export class SortationPrintService {
     });
   }
 
-  public static async getBagData(payload) {
+  public static async getBagData(
+    payload,
+  ): Promise<PrintDoSortationBagDataNewDoSortationDetailBagBagItemVm> {
     const repo = new OrionRepositoryService(DoSortationDetail, 't1');
     const v = repo.findAllRaw();
 
@@ -242,18 +265,19 @@ export class SortationPrintService {
       ['t2.bag_item_id', 'bagItemId'],
       ['t1.do_sortation_detail_id', 'doSortationDetailId'],
       ['t2.bag_seq', 'bagSeq'],
+      ['t2.is_sortir', 'isSortir'],
       [`CONCAT(t2.weight::numeric(10,2))`, 'weight'],
       ['t3.bag_number', 'bagNumber'],
     );
     v.leftJoin(e => e.doSortationDetailItems.bagItem, 't2');
     v.leftJoin(e => e.doSortationDetailItems.bagItem.bag, 't3');
     v.where(e => e.doSortationDetailId, w => w.equals(payload.id));
-    // v.andWhere(e => e.doSortationDetailItems.bagType, w => w.equals(1));
+
     v.groupByRaw(`
       t2.bag_item_id,
       t3.bag_number,
       t1.do_sortation_detail_id
-      `);
+    `);
     const data = await v.exec();
 
     let result = new PrintDoSortationBagDataNewDoSortationDetailBagBagItemVm();
