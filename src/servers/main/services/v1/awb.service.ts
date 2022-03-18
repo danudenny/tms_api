@@ -321,14 +321,17 @@ export class AwbService {
       where: {
         awbItemId,
         isDeleted: false,
+      },
+      order:{
+        createdTime: 'ASC',
       }
     })
 
     let lastStatusReturn = 0;
     for(let data of rawData){
-      let status = parseInt(data.awbStatusId.toString());
+      let status = await parseInt(data.awbStatusId.toString());
       if(status == AWB_STATUS.RTN || status == AWB_STATUS.RTC || status == AWB_STATUS.RTA || status == AWB_STATUS.RTW || status == AWB_STATUS.CANCEL_RETURN){
-        lastStatusReturn = status
+        lastStatusReturn = status;
       }
 
       collectArrStatus.push(status);
