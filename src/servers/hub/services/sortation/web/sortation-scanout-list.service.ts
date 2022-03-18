@@ -476,7 +476,7 @@ export class SortationScanOutListService {
 
   public static async getScanOutImages(
     payload: ScanOutSortationImagePayloadVm,
-  ): Promise<SortationScanOutImageResponseVm> {
+  ): Promise<ScanOutSortationImageResponseVm> {
     const scanoutHistory = await DoSortationHistory.findOne(
       {
         doSortationHistoryId: payload.doSortationHistoryId,
