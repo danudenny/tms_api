@@ -324,8 +324,14 @@ export class AwbService {
       }
     })
 
+    let lastStatusReturn = 0;
     for(let data of rawData){
-      collectArrStatus.push(parseInt(data.awbStatusId.toString()))
+      let status = parseInt(data.awbStatusId.toString());
+      if(status == AWB_STATUS.RTN || status == AWB_STATUS.RTC || status == AWB_STATUS.RTA || status == AWB_STATUS.RTW || status == AWB_STATUS.CANCEL_RETURN){
+        lastStatusReturn = status
+      }
+
+      collectArrStatus.push(status);
     }
 
     if(collectArrStatus.includes(AWB_STATUS.CANCEL_DLV)){
@@ -359,10 +365,12 @@ export class AwbService {
 
     if (isReturCheck) {
       if(
-        (collectArrStatus.includes(AWB_STATUS.RTN) || collectArrStatus.includes(AWB_STATUS.RTC) || collectArrStatus.includes(AWB_STATUS.RTA) ||collectArrStatus.includes(AWB_STATUS.RTW)) && !collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
-        retVal = true;
-        retNote = `Resi ${awbNumber} retur tidak dapat di proses`;
-        return [retVal, retNote]
+        collectArrStatus.includes(AWB_STATUS.RTN) || collectArrStatus.includes(AWB_STATUS.RTC) || collectArrStatus.includes(AWB_STATUS.RTA) ||collectArrStatus.includes(AWB_STATUS.RTW) || collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
+        if(lastStatusReturn != AWB_STATUS.CANCEL_RETURN){
+          retVal = true;
+          retNote = `Resi ${awbNumber} retur tidak dapat di proses`;
+          return [retVal, retNote]
+        }
       }
     }
     
