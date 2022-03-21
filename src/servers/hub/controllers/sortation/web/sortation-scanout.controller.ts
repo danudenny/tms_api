@@ -52,7 +52,13 @@ export class SortationScanOutController {
   @Delete('deleted/:id')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async deleteDoSortation(@Param('id') doSortationId: string) {
-    return null;
+    await SortationScanOutService.sortaionScanOutDeleted(doSortationId);
+
+    return {
+      message: 'Sortation ID: ' + doSortationId + ' Deleted' ,
+      statusCode: 200,
+      data: [],
+    };
   }
 
 }

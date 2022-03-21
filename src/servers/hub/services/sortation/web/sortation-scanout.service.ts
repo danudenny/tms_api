@@ -33,7 +33,7 @@ export class SortationScanOutService {
 
       // untuk fase 2 --- START ---
       let vehicleNumber = payload.vehicleNumber;
-      let vehicleId = null;
+      let vehicleId = 1; // default vehicleId karena pada table tidak bisa null
       if (payload.vehicleId) {
         const vehicle = await Vehicle.findOne({
           where: {
@@ -548,9 +548,8 @@ export class SortationScanOutService {
       throw new BadRequestException(`ID ${doSortationId} harus di isi`);
     }
 
-    if (![DO_SORTATION_STATUS.CREATED, DO_SORTATION_STATUS.ASSIGNED].includes(resultDoSortaion.doSortationStatusIdLast)) {
+    if (![DO_SORTATION_STATUS.CREATED, DO_SORTATION_STATUS.ASSIGNED].includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
       throw new BadRequestException(`Sortation Code ` + resultDoSortaion.doSortationCode + ` Status tidak Created / Assigned`);
-
     }
 
     const doSortationDetails = await DoSortationDetail.find({
@@ -591,7 +590,7 @@ export class SortationScanOutService {
 
         for (const detail of doSortationDetails) {
           await transactional.update(DoSortationDetailItem,
-            { DoSortationDetailId: detail.doSortationDetailId},
+            { doSortationDetailId: detail.doSortationDetailId},
             {
               userIdUpdated: authMeta.userId,
               updatedTime: moment().toDate(),
