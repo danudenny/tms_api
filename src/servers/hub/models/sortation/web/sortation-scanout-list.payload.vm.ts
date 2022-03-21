@@ -98,7 +98,7 @@ export class ScanOutSortationBagDetailPayloadVm {
   doSortationDetailId: string;
 
   @ApiModelPropertyOptional()
-  isSortir?: boolean;
+  isSortir?: boolean | string;
 }
 
 export class ScanOutSortationImagePayloadVm {

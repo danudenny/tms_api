@@ -146,9 +146,12 @@ export class SortationScanOutListService {
     queryPayload.page = 1;
     queryPayload.limit = 5;
     if (payload.isSortir !== undefined) {
-      queryPayload.filters.push(
-        createFilter('isSortir', payload.isSortir, 'eq'),
-      );
+      let isSortir: boolean | string = payload.isSortir;
+      // prevents query error by boolean value
+      if (typeof isSortir === 'boolean') {
+        isSortir = isSortir ? 'true' : 'false';
+      }
+      queryPayload.filters.push(createFilter('isSortir', isSortir, 'eq'));
     }
     queryPayload.sortBy = 'createdTime';
     queryPayload.sortDir = 'desc';
