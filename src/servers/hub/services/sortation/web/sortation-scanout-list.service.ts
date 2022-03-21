@@ -71,7 +71,7 @@ export class SortationScanOutListService {
       ['bf.branch_name', 'branchFromName'],
       ['ds.branch_name_to_list', 'branchToName'],
       ['ds.total_bag', 'totalBag'],
-      ['ds.total_bag_sortir', 'totalbagSortation'],
+      ['ds.total_bag_sortir', 'totalBagSortation'],
       ['dss.do_sortation_status_title', 'doSortationStatusTitle'],
       ['e.nickname', 'nickName'],
       ['e.nik', 'nik'],
