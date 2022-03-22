@@ -2,12 +2,6 @@ import {ApiModelProperty} from '../../../../../shared/external/nestjs-swagger';
 
 export class MobileSortationScanoutDetailBag {
   @ApiModelProperty()
-  doSortationDetailId: string;
-
-  @ApiModelProperty()
-  bagId: number;
-
-  @ApiModelProperty()
   bagNumber: string;
 }
 

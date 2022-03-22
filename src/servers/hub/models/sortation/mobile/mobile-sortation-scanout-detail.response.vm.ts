@@ -27,6 +27,12 @@ export class MobileSortationScanoutDetail {
 
   @ApiModelProperty()
   signatureImgPath: string;
+
+  @ApiModelProperty()
+  bagList: [];
+
+  @ApiModelProperty()
+  bagSortirList: [];
 }
 
 export class MobileSortationScanoutDetailResponseVm {
