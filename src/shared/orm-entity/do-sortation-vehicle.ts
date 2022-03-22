@@ -16,7 +16,7 @@ export class DoSortationVehicle extends TmsBaseEntity {
   doSortationId: string;
 
   @Column('integer', {
-    nullable: false,
+    nullable: true,
     name: 'vehicle_id',
   })
   vehicleId: number;

@@ -33,7 +33,7 @@ export class SortationScanOutService {
 
       // untuk fase 2 --- START ---
       let vehicleNumber = payload.vehicleNumber;
-      let vehicleId = 1; // default vehicleId karena pada table tidak bisa null
+      let vehicleId = null; // default vehicleId
       if (payload.vehicleId) {
         const vehicle = await Vehicle.findOne({
           where: {
