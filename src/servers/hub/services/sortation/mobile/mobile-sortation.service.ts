@@ -29,6 +29,13 @@ export class MobileSortationService {
       const timeNow = moment().toDate();
 
       const resultDoSortation = await DoSortation.findOne({
+        select: [
+          'depatureDateTime',
+          'doSortationId',
+          'branchIdFrom',
+          'doSortationTime',
+          'doSortationVehicleIdLast',
+        ],
         where: {
           doSortationId: payload.doSortationId,
           isDeleted: false,
