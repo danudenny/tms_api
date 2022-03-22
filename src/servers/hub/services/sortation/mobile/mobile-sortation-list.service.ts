@@ -7,6 +7,7 @@ import {MobileSortationScanoutResponseVm} from '../../../models/sortation/mobile
 import {MobileSortationScanoutDetailResponseVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail.response.vm';
 import {MobileSortationScanoutDetailBagPayloadVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail-bag.payload.vm';
 import {MobileSortationScanoutDetailBagResponseVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail-bag.response.vm';
+import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 
 @Injectable()
 export class MobileSortationListService {
@@ -17,7 +18,9 @@ export class MobileSortationListService {
             const qb = createQueryBuilder();
             qb.addSelect('dsd.do_sortation_detail_id', 'doSortationDetailId');
             qb.addSelect('b.bag_id', 'bagId');
-            qb.addSelect(`SUBSTR(CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')), 1, 10)`, 'bagNumber');
+            qb.addSelect('b.bag_number', 'bagNumber');
+            qb.addSelect('bi.bag_seq', 'bagSeq');
+            // qb.addSelect(`SUBSTR(CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')), 1, 10)`, 'bagNumber');
             qb.from('do_sortation_detail_item', 'dsdi');
             qb.innerJoin(
               'do_sortation_detail',
@@ -40,8 +43,7 @@ export class MobileSortationListService {
                   do_sortation_detail_id: payload.doSortationDetailId,
               },
             );
-
-            qb.where(
+            qb.andWhere(
               'dsdi.is_sortir = :is_sortir',
               {
                   is_sortir: payload.isSortir,
@@ -50,11 +52,19 @@ export class MobileSortationListService {
 
             qb.andWhere('dsdi.is_deleted = false');
             const data = await qb.getRawMany();
-
+            const populateData = [];
+            data.forEach(element => {
+               const objQuery = {
+                   bagId : element.bagId,
+                   doSortationDetailId: element.doSortationDetailId,
+                   bagNumber: (element.bagNumber.length === 10) ? element.bagNumber : element.bagNumber + ('000' + element.bagSeq).slice(-3),
+               };
+               populateData.push(objQuery);
+            });
             const result = new MobileSortationScanoutDetailBagResponseVm();
             result.statusCode = HttpStatus.OK;
             result.message = 'Success get mobile sortation detail bag';
-            result.data = data;
+            result.data = populateData;
             return result;
         } catch (e) {
             throw e.error;
@@ -100,11 +110,11 @@ export class MobileSortationListService {
               'dsv',
               'ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false',
             );
-            qb.innerJoin(
-              'users',
-              'u',
-              `dsv.employee_driver_id = u.employee_id and u.is_deleted = false`,
-            );
+            // qb.innerJoin(
+            //   'users',
+            //   'u',
+            //   `dsv.employee_driver_id = u.employee_id and u.is_deleted = false`,
+            // );
             qb.leftJoin(
               'branch',
               'b',
@@ -126,7 +136,8 @@ export class MobileSortationListService {
     public static async getScanoutSortationMobileList() {
         try {
             const authMeta = AuthService.getAuthData();
-            const paramUserId = authMeta.userId;
+            const paramEmployeeId = authMeta.employeeId;
+            console.log("authMeta: ", authMeta);
             const startDate = moment().add(-4, 'days').format('YYYY-MM-DD 00:00:00');
             const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
             const qb = createQueryBuilder();
@@ -142,18 +153,18 @@ export class MobileSortationListService {
             qb.innerJoin(
               'do_sortation_detail',
               'dsd',
-              `ds.do_sortation_id = dsd.do_sortation_id and dsd.is_deleted = false`,
+              `ds.do_sortation_id = dsd.do_sortation_id and dsd.is_deleted = false and dsd.do_sortation_status_id_last not in (${DO_SORTATION_STATUS.FINISHED}, ${DO_SORTATION_STATUS.RECEIVED})`,
             );
             qb.innerJoin(
               'do_sortation_vehicle',
               'dsv',
-              'ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false',
+              `ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false and dsv.employee_driver_id = ${paramEmployeeId}`,
             );
-            qb.innerJoin(
-              'users',
-              'u',
-              `dsv.employee_driver_id = u.employee_id and u.user_id = ${paramUserId} and u.is_deleted = false`,
-            );
+            // qb.innerJoin(
+            //   'users',
+            //   'u',
+            //   `dsv.employee_driver_id = u.employee_id and u.user_id = ${paramUserId} and u.is_deleted = false`,
+            // );
             qb.leftJoin(
               'branch',
               'b',
@@ -171,7 +182,6 @@ export class MobileSortationListService {
                   endDate,
               },
             );
-            qb.andWhere('dsd.do_sortation_status_id_last not in (5000, 6000) ');
             qb.andWhere('ds.is_deleted = false');
             const data = await qb.getRawMany();
 
