@@ -462,11 +462,11 @@ export class SortationScanOutListService {
       )
       .innerJoin(e => e.doSortationDetail, 'dsd', j =>
         j
-          .andWhere(e => e.isDeleted, w => w.isFalse())
           .andWhere(
             e => e.doSortationDetailId,
             w => w.equals(doSortationDetailId),
-          ),
+          )
+          .andWhere(e => e.isDeleted, w => w.isFalse()),
       )
       .innerJoin(e => e.doSortationDetail.branchTo, 'br', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
