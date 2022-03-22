@@ -15,6 +15,7 @@ import { MobileSortationController } from './sortation/mobile/mobile-sortation.c
 import { MobileSortationListController } from './sortation/mobile/mobile-sortation-list.controller';
 import { SortationScanOutMonitoringController } from './sortation/web/sortation-scanout-monitoring.controller';
 import { SortationPrintController } from './sortation/web/sortation-scanout-print.controller';
+import { SortationL2ModuleController } from './sortation/web/sortation-l2-module.controller';
 
 @Module({
   imports: [SharedModule, HubServerServicesModule],
@@ -32,6 +33,7 @@ import { SortationPrintController } from './sortation/web/sortation-scanout-prin
     SortationPrintController,
     MobileSortationController,
     MobileSortationListController,
+    SortationL2ModuleController,
   ],
 })
 export class HubServerControllersModule {}
