@@ -246,8 +246,8 @@ export class SortationScanOutListService {
     q.selectRaw(...selectColumns)
       .innerJoin(e => e.doSortation, 'ds', j =>
         j
-          .andWhere(e => e.isDeleted, w => w.isFalse())
-          .andWhere(e => e.doSortationId, w => w.equals(idFilter.value)),
+          .andWhere(e => e.doSortationId, w => w.equals(idFilter.value))
+          .andWhere(e => e.isDeleted, w => w.isFalse()),
       )
       .innerJoin(e => e.branchFrom, 'bf', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
