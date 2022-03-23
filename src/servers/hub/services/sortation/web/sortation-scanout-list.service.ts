@@ -237,6 +237,7 @@ export class SortationScanOutListService {
       ['ds.do_sortation_code', 'doSortationCode'],
       ['bf.branch_name', 'branchFromName'],
       ['bt.branch_name', 'branchToName'],
+      ['dsh.do_sortation_status_id', 'doSortationStatusId'],
       ['dss.do_sortation_status_title', 'historyStatus'],
       [`CONCAT(u.first_name, ' ', u.last_name)`, 'username'],
       ['e.fullname', 'assigne'],

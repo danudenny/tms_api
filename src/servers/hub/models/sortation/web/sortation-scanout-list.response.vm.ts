@@ -161,6 +161,9 @@ class ScanOutSortationHistoryVm {
   historyDate: string;
 
   @ApiModelProperty()
+  doSortationStatusId: string;
+
+  @ApiModelProperty()
   historyStatus: string;
 
   @ApiModelProperty()
