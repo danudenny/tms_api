@@ -33,4 +33,10 @@ export class CheckAwbVm {
   @ApiModelProperty()
   request_time: Date;
 
+  @ApiModelProperty()
+  is_cod: Boolean;
+
+  @ApiModelProperty()
+  branch_id_lastmile: number;
+
 }

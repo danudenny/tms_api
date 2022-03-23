@@ -19,13 +19,13 @@ import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../../shared/orm-entity/bag-item-history';
 import { BagAwbDeleteHistoryInHubFromSmdQueueService } from '../../../queue/services/bag-awb-delete-history-in-hub-from-smd-queue.service';
-import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeScanDoSmdQueueService } from '../../../queue/services/bag-representative-scan-do-smd-queue.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { ScanOutSmdItemMorePayloadVm, ScanOutSmdItemPayloadVm, ScanOutSmdEmptyVehiclePayloadVm, SealChangeManualPayloadVm } from '../../models/scanout-smd.payload.vm';
 import { toInteger } from 'lodash';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { BagService } from '../../../main/services/v1/bag.service';
 
 @Injectable()
 export class ScanoutSmdService {
@@ -855,10 +855,12 @@ export class ScanoutSmdService {
         FROM bag_representative br
         INNER JOIN representative  r on br.representative_id_to = r.representative_id and r.is_deleted  = FALSE
         WHERE
-          br.bag_representative_code = '${payload.item_number}' AND
+          br.bag_representative_code = :bagRepresentativeNumber AND
           br.is_deleted = FALSE;
       `;
-    const resultDataBagRepresentative = await RawQueryService.query(rawQuery);
+      const resultDataBagRepresentative = await RawQueryService.queryWithParams(rawQuery, {
+        bagRepresentativeNumber : payload.item_number,
+      });
 
     const resultDoSmd = await DoSmd.findOne({
       where: {
@@ -1164,51 +1166,59 @@ export class ScanoutSmdService {
       }
     } else {
       // cari di bag code
-      if (payload.item_number.length == 15 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
-        const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 8 );
+      if (payload.item_number.length == 15 && payload.item_number.match(/^[A-Z0-9]{10}[0-9]{5}$/)) {
+        // const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 8 );
+        // const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
+        // const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 8 , 3);
+        // const paramSeq = await paramBagSeq * 1;
+        // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+
+        const paramBagNumberWithSeq = await payload.item_number.substr(0, payload.item_number.length - 5);
         const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
-        const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 8 , 3);
-        const paramSeq = await paramBagSeq * 1;
         const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+
+        const bagDetail = await BagService.validBagNumber(paramBagNumberWithSeq);
+        if(!bagDetail){
+          result.message = 'Bag Number Not Found';
+          return result;
+        }
+        const paramBagSeq = bagDetail.bagSeq;
+        // console.log('############# errorsmd bag15digit: ' + paramBagNumberWithSeq + ' ###### bag_detail:' + bagDetail);
+
         rawQuery = `
           SELECT
-            bi.bag_item_id,
-            b.bag_id,
-            b.representative_id_to,
-            r.representative_code,
-            bih.bag_item_status_id,
-            dsdi.do_smd_detail_id
-          FROM bag_item bi
-          INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-          LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
-          LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id in (3550, 3500) AND bih.branch_id = '${permissonPayload.branchId}'
-          LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
-            AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
+            bih.bag_item_status_id
+          FROM bag_item_history bih
           WHERE
-            b.bag_number = '${escape(paramBagNumber)}' AND
-            bi.bag_seq = '${paramSeq}' AND
-            bi.is_deleted = FALSE
-          ORDER BY b.created_time DESC
+            bih.bag_item_id = ${bagDetail.bagItemId} AND
+            bih.bag_item_status_id in ( 3550, 3500) AND
+            bih.branch_id = ${permissonPayload.branchId} AND
+            bih.is_deleted = FALSE
           LIMIT 1;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
-        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id && !resultDataBag[0].do_smd_detail_id) {
 
+        // console.log('############# errorsmd bag15digit: ' + paramBagNumberWithSeq + ' ###### resultDataBag:' + resultDataBag);
+
+        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
           rawQuery = `
             SELECT
-              do_smd_detail_id ,
-              representative_code_list,
-              total_bag
-            FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              dsd.do_smd_detail_id ,
+              dsd.representative_code_list,
+              dsd.total_bag,
+              dsdi.bag_item_id
+            FROM do_smd_detail dsd
+            LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
+              AND dsdi.bag_item_id = ${bagDetail.bagItemId}
+            , unnest(string_to_array(representative_code_list , ','))  s(code)
             where
-              s.code  = '${escape(resultDataBag[0].representative_code)}' AND
-              do_smd_id = ${payload.do_smd_id} AND
-              is_deleted = FALSE;
+              s.code  = '${escape(bagDetail.bag.refRepresentativeCode)}' AND
+              dsd.do_smd_id = ${payload.do_smd_id} AND
+              dsd.is_deleted = FALSE;
           `;
           const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
-          if (resultDataRepresentative.length > 0) {
+          if (resultDataRepresentative.length > 0 && !resultDataRepresentative[0].bag_item_id) {
             // for (let i = 0; i < resultDataBag.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
               // customer.awbStatusName = data[i].awbStatusName;
@@ -1216,8 +1226,8 @@ export class ScanoutSmdService {
               const paramDoSmdDetailItemId = await this.createDoSmdDetailItem(
                 resultDataRepresentative[0].do_smd_detail_id,
                 permissonPayload.branchId,
-                resultDataBag[0].bag_item_id,
-                resultDataBag[0].bag_id,
+                bagDetail.bagItemId,
+                bagDetail.bag.bagId,
                 null,
                 null,
                 1,
@@ -1285,9 +1295,9 @@ export class ScanoutSmdService {
                 , },
               ]);
 
-              const bagItemHistoryId = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
+              const bagItemHistoryId = await this.createBagItemHistory(Number(bagDetail.bagItemId), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
               await BagItem.update(
-                { bagItemId : resultDataBag[0].bag_item_id },
+                { bagItemId : bagDetail.bagItemId },
                 {
                   bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
                   branchIdLast: permissonPayload.branchId,
@@ -1298,7 +1308,7 @@ export class ScanoutSmdService {
               );
               // Generate history bag and its awb IN_HUB
               BagScanDoSmdQueueService.perform(
-                Number(resultDataBag[0].bag_item_id),
+                Number(bagDetail.bagItemId),
                 authMeta.userId,
                 permissonPayload.branchId,
               );
@@ -1306,8 +1316,8 @@ export class ScanoutSmdService {
               data.push({
                 do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
                 bagging_id: null,
-                bag_id: resultDataBag[0].bag_id,
-                bag_item_id: resultDataBag[0].bag_item_id,
+                bag_id: bagDetail.bag.bagId,
+                bag_item_id: bagDetail.bagItemId,
                 bag_representative_id: null,
                 bag_type: 1,
                 bag_number: payload.item_number,
@@ -1317,20 +1327,20 @@ export class ScanoutSmdService {
                 total_bagging: resultDoSmdDetail.totalBagging,
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
                 weight,
-                bag_seq: paramSeq,
-                representative_code: resultDataBag[0].representative_code,
+                bag_seq: paramBagSeq,
+                representative_code: bagDetail.bag.refRepresentativeCode,
               });
               result.statusCode = HttpStatus.OK;
               result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
               result.data = data;
               return result;
+          } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id) {
+            result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
+            return result;
           } else {
             result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
             return result;
           }
-        } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
-          result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
-          return result;
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
           result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
           return result;
@@ -1338,52 +1348,55 @@ export class ScanoutSmdService {
           result.message = `Gabung Paket ${payload.item_number} tidak ditemukan`;
           return result;
         }
-      } else if (payload.item_number.length == 10 && payload.item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
-        const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 3 );
-        // const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
-        const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 3 , 3);
-        const paramSeq = await paramBagSeq * 1;
-        // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+      } else if (payload.item_number.length == 10 && payload.item_number.match(/^[A-Z0-9]{10}$/)) {
+        // const paramBagNumber = payload.item_number.substr( 0 , (payload.item_number.length) - 3 );
+        // // const paramWeightStr = await payload.item_number.substr(payload.item_number.length - 5);
+        // const paramBagSeq = await payload.item_number.substr( (payload.item_number.length) - 3 , 3);
+        // const paramSeq = await paramBagSeq * 1;
+        // // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+
+        const bagDetail = await BagService.validBagNumber(payload.item_number);
+        if(!bagDetail){
+          result.message = 'Bag Number Not Found';
+          return result;
+        }
+        const paramBagSeq = bagDetail.bagSeq;
+
+        // console.log('############# errorsmd bag10digit: ' + payload.item_number + ' ###### bag_detail:' + bagDetail);
+
         rawQuery = `
           SELECT
-            bi.bag_item_id,
-            b.bag_id,
-            b.representative_id_to,
-            r.representative_code,
-            bih.bag_item_status_id,
-            dsdi.do_smd_detail_id,
-            bi.weight
-          FROM bag_item bi
-          INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.is_deleted = FALSE
-          LEFT JOIN representative  r on b.representative_id_to = r.representative_id and r.is_deleted  = FALSE
-          LEFT JOIN bag_item_history bih on bih.bag_item_id = bi.bag_item_id and bih.is_deleted  = FALSE
-            and bih.bag_item_status_id in( 3550, 3500) AND bih.branch_id = '${permissonPayload.branchId}'
-          LEFT JOIN do_smd_detail_item dsdi on dsdi.bag_item_id = bi.bag_item_id and dsdi.is_deleted = FALSE
-            AND dsdi.branch_id_scan = '${permissonPayload.branchId}'
+            bih.bag_item_status_id
+          FROM bag_item_history bih
           WHERE
-            b.bag_number = '${escape(paramBagNumber)}' AND
-            bi.bag_seq = '${paramSeq}' AND
-            bi.is_deleted = FALSE
-          ORDER BY b.created_time DESC
+            bih.bag_item_id = ${bagDetail.bagItemId} AND
+            bih.bag_item_status_id in ( 3550, 3500) AND
+            bih.branch_id = ${permissonPayload.branchId} AND
+            bih.is_deleted = FALSE
           LIMIT 1;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
-        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id && !resultDataBag[0].do_smd_detail_id) {
+        // console.log('############# errorsmd bag10digit: ' + payload.item_number + ' ###### resultDataBag:' + resultDataBag);
 
+        if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
           rawQuery = `
             SELECT
-              do_smd_detail_id ,
-              representative_code_list,
-              total_bag
-            FROM do_smd_detail , unnest(string_to_array(representative_code_list , ','))  s(code)
+              dsd.do_smd_detail_id ,
+              dsd.representative_code_list,
+              dsd.total_bag,
+              dsdi.bag_item_id
+            FROM do_smd_detail dsd
+            LEFT JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
+              AND dsdi.bag_item_id = ${bagDetail.bagItemId}
+            , unnest(string_to_array(representative_code_list , ','))  s(code)
             where
-              s.code  = '${escape(resultDataBag[0].representative_code)}' AND
-              do_smd_id = ${payload.do_smd_id} AND
-              is_deleted = FALSE;
+              s.code  = '${escape(bagDetail.bag.refRepresentativeCode)}' AND
+              dsd.do_smd_id = ${payload.do_smd_id} AND
+              dsd.is_deleted = FALSE;
           `;
           const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
-          if (resultDataRepresentative.length > 0) {
+          if (resultDataRepresentative.length > 0 && !resultDataRepresentative[0].bag_item_id) {
             // for (let i = 0; i < resultDataBag.length; i++) {
               // Insert Do SMD DETAIL ITEM & Update DO SMD DETAIL TOT BAGGING
               // customer.awbStatusName = data[i].awbStatusName;
@@ -1391,8 +1404,8 @@ export class ScanoutSmdService {
               const paramDoSmdDetailItemId = await this.createDoSmdDetailItem(
                 resultDataRepresentative[0].do_smd_detail_id,
                 permissonPayload.branchId,
-                resultDataBag[0].bag_item_id,
-                resultDataBag[0].bag_id,
+                bagDetail.bagItemId,
+                bagDetail.bag.bagId,
                 null,
                 null,
                 1,
@@ -1458,9 +1471,9 @@ export class ScanoutSmdService {
                   params:  { doSmdId: resultDoSmd.doSmdId }
                 , },
               ]);
-              const bagItemHistoryId = await this.createBagItemHistory(Number(resultDataBag[0].bag_item_id), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
+              const bagItemHistoryId = await this.createBagItemHistory(Number(bagDetail.bagItemId), authMeta.userId, permissonPayload.branchId, BAG_STATUS.IN_LINE_HAUL);
               await BagItem.update(
-                { bagItemId : resultDataBag[0].bag_item_id },
+                { bagItemId : bagDetail.bagItemId },
                 {
                   bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
                   branchIdLast: permissonPayload.branchId,
@@ -1471,7 +1484,7 @@ export class ScanoutSmdService {
               );
               // Generate history bag and its awb IN_HUB
               BagScanDoSmdQueueService.perform(
-                Number(resultDataBag[0].bag_item_id),
+                Number(bagDetail.bagItemId),
                 authMeta.userId,
                 permissonPayload.branchId,
               );
@@ -1479,8 +1492,8 @@ export class ScanoutSmdService {
               data.push({
                 do_smd_detail_id: resultDataRepresentative[0].do_smd_detail_id,
                 bagging_id: null,
-                bag_id: resultDataBag[0].bag_id,
-                bag_item_id: resultDataBag[0].bag_item_id,
+                bag_id: bagDetail.bag.bagId,
+                bag_item_id: bagDetail.bagItemId,
                 bag_representative_id: null,
                 bag_type: 1,
                 bag_number: payload.item_number,
@@ -1489,21 +1502,21 @@ export class ScanoutSmdService {
                 total_bag: resultDoSmdDetail.totalBag,
                 total_bagging: resultDoSmdDetail.totalBagging,
                 total_bag_representative: resultDoSmdDetail.totalBagRepresentative,
-                weight: resultDataBag[0].weight,
-                bag_seq: paramSeq,
-                representative_code: resultDataBag[0].representative_code,
+                weight: bagDetail.weight,
+                bag_seq: paramBagSeq,
+                representative_code: bagDetail.bag.refRepresentativeCode,
               });
               result.statusCode = HttpStatus.OK;
               result.message = `Gabung Paket ${payload.item_number} berhasil di scan`;
               result.data = data;
               return result;
-          } else {
+          } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id){
+            result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
+            return result;
+          }else {
             result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
             return result;
           }
-        } else if (resultDataBag.length > 0 && resultDataBag[0].do_smd_detail_id) {
-          result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
-          return result;
         } else if (resultDataBag.length > 0 && !resultDataBag[0].bag_item_status_id) {
           result.message = `Gabung Paket ${payload.item_number} belum di scan masuk`;
           return result;
@@ -2176,7 +2189,7 @@ export class ScanoutSmdService {
         SELECT
           DISTINCT dsdi.bag_item_id,
           dsdi.bag_id,
-          CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')) as bag_number_seq,
+          SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10) as bag_number_seq,
           bi.weight,
           bi.bag_seq,
           r.representative_code

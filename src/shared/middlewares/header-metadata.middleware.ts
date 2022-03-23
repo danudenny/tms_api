@@ -17,10 +17,11 @@ export class HeaderMetadataMiddleware implements NestMiddleware {
   }
 
   parseRequestIp(req: express.Request) {
-    const clientRequestIp = requestIp.getClientIp(req);
-    if (clientRequestIp) {
-      RequestContextMetadataService.setMetadata('REQUEST_IP', clientRequestIp);
-    }
+    let clientRequestIp;
+
+    clientRequestIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || "";
+    
+    RequestContextMetadataService.setMetadata('REQUEST_IP', clientRequestIp);    
   }
 
   parseRequestUserAgent(req: express.Request) {

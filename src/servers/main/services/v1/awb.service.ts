@@ -6,6 +6,11 @@ import { AwbDeliverManualVm } from '../../models/web-awb-deliver.vm';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { In } from 'typeorm';
+import { of } from 'rxjs';
+import { includes } from 'lodash';
+import { AwbStatus } from 'src/shared/orm-entity/awb-status';
+import { hashmap } from 'aws-sdk/clients/glacier';
 
 export class AwbService {
 
@@ -111,10 +116,7 @@ export class AwbService {
       awbItemAttrId: true,
       awbStatusIdLast: true,
       awbItemId: true,
-      awbItem: {
-        awbItemId: true,
-        awbId: true,
-      },
+      awbId: true,
       awbNumber: true,
       isPackageCombined: true,
       bagItemIdLast: true,
@@ -132,6 +134,7 @@ export class AwbService {
     });
     // q2.where(e => e.bagItems.bagId, w => w.equals('421862'));
     q.where(e => e.awbNumber, w => w.equals(awbNumber));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.take(1);
     return await q.exec();
   }
@@ -248,70 +251,6 @@ export class AwbService {
     return result ? result.awbStatusGroup.code : 'NoGroup';
   }
 
-  // TODO: disable update awb item attr change to trigger
-  public static async updateAwbAttr(
-    awbItemId: number,
-    status: number,
-    branchIdNext: number = null,
-  ) {
-    // // TODO: fix data user id last (from session login or params mobile sync)
-    // const authMeta = AuthService.getAuthData();
-    // const permissonPayload = AuthService.getPermissionTokenPayload();
-    // const timeNow = moment().toDate();
-
-    // // TODO: table awb attr and awb item attr
-    // // Update awb_item_attr  semua field dengan suffix _last
-
-    // const awbItemAttr = await AwbItemAttr.findOne({
-    //   where: {
-    //     awbItemId,
-    //   },
-    // });
-    // if (awbItemAttr) {
-    //   // TODO: how to update data??
-    //   // awbItemAttr.awbHistoryIdLast;
-    //   // awbItemAttr.awbStatusIdLastPublic;
-    //   awbItemAttr.awbStatusIdLast = status;
-    //   awbItemAttr.userIdLast = authMeta.userId;
-    //   awbItemAttr.branchIdLast = permissonPayload.branchId;
-    //   if (branchIdNext) {
-    //     awbItemAttr.branchIdNext = branchIdNext;
-    //   }
-    //   awbItemAttr.awbHistoryDateLast = timeNow;
-    //   awbItemAttr.updatedTime = timeNow;
-    //   await AwbItemAttr.save(awbItemAttr);
-    // }
-
-    // const awbItem = await AwbItem.findOne({
-    //   where: {
-    //     awbItemId,
-    //     isDeleted: false,
-    //   },
-    // });
-    // if (awbItem) {
-    //   // Update awb_attr  semua field dengan suffix _last
-    //   const awbAttr = await AwbAttr.findOne({
-    //     where: {
-    //       awbId: awbItem.awbId,
-    //     },
-    //   });
-    //   if (awbAttr) {
-    //     // TODO: how to update data??
-    //     // awbAttr.awbHistoryIdLast;
-    //     // awbAttr.awbStatusIdLastPublic;
-    //     await AwbAttr.update(awbAttr.awbAttrId, {
-    //       branchIdNext,
-    //       awbStatusIdLast: status,
-    //       branchIdLast: permissonPayload.branchId,
-    //       awbhistoryDateLast: timeNow,
-    //       updatedTime: timeNow,
-    //     });
-    //   }
-    // }
-
-    return true;
-  }
-
   public static async isCancelDelivery(
     awbItemId: number,
   ): Promise<boolean> {
@@ -343,7 +282,7 @@ export class AwbService {
   public static async isManifested(
     awbNumber: string,
     awbItemId: number,
-  ): Promise<boolean>{
+  ): Promise<boolean> {
     const query = `
       SELECT
         nostt as "awbNumber"
@@ -355,12 +294,12 @@ export class AwbService {
         1;
     `;
 
-    let rawData = await RawQueryService.queryWithParams(query,{
+    let rawData = await RawQueryService.queryWithParams(query, {
       awbNumber,
     });
 
-    if(rawData.length < 1){
-       rawData = await AwbHistory.findOne({
+    if (rawData.length < 1) {
+      rawData = await AwbHistory.findOne({
         select: ['awbHistoryId'],
         where: {
           awbItemId,
@@ -372,7 +311,65 @@ export class AwbService {
 
     return rawData ? true : false;
   }
+  
+  public static async validationContainAwBStatus(optionalManifested, awbNumber, awbItemId, isReturCheck): Promise<[boolean, string]> {
+    let retVal = false;
+    let retNote = null;
+    let collectArrStatus = []
+    let rawData = await AwbHistory.find({
+      select: ['awbStatusId'],
+      where: {
+        awbItemId,
+        isDeleted: false,
+      }
+    })
 
+    for(let data of rawData){
+      collectArrStatus.push(parseInt(data.awbStatusId.toString()))
+    }
+
+    if(collectArrStatus.includes(AWB_STATUS.CANCEL_DLV)){
+      retVal = true
+      retNote = `Resi ${awbNumber} telah di CANCEL oleh Partner`;
+      return [retVal, retNote]
+    }
+
+    if(!collectArrStatus.includes(AWB_STATUS.MANIFESTED) && !optionalManifested){
+      const query = `
+        SELECT
+          nostt as "awbNumber"
+        FROM
+          temp_stt
+        WHERE
+          nostt = :awbNumber
+        LIMIT
+          1;
+      `;
+
+      let rawData = await RawQueryService.queryWithParams(query, {
+        awbNumber,
+      });
+
+      if(rawData.length < 1){
+        retVal = true;
+        retNote = `Resi ${awbNumber} belum pernah di MANIFESTED`;
+        return [retVal, retNote]
+      }
+    }
+
+    if (isReturCheck) {
+      if(
+        (collectArrStatus.includes(AWB_STATUS.RTN) || collectArrStatus.includes(AWB_STATUS.RTC) || collectArrStatus.includes(AWB_STATUS.RTA) ||collectArrStatus.includes(AWB_STATUS.RTW)) && !collectArrStatus.includes(AWB_STATUS.CANCEL_RETURN)){
+        retVal = true;
+        retNote = `Resi ${awbNumber} retur tidak dapat di proses`;
+        return [retVal, retNote]
+      }
+    }
+    
+    return [retVal, retNote];
+  }
+
+  // TODO: open length awb number (12 or 15 digit)
   public static async isAwbNumberLenght(inputNumber: string): Promise<boolean> {
     const regexNumber = /^[0-9]+$/;
     return (inputNumber.length == 12 && regexNumber.test(inputNumber)) ? true : false;

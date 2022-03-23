@@ -53,6 +53,7 @@ import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
 import { WebAwbFilterController } from './web/web-awb-filter.controller';
 import { WebAwbPodController } from './web/web-awb-pod.controller';
 import { WebAwbReturnController } from './web/web-awb-return.controller';
+import { WebAwbReturnCancelController } from './web/web-awb-return-cancel.controller';
 import { WebAwbUpdateStatusController } from './web/web-awb-update-status.controller';
 import { WebBagPodController } from './web/web-bag-pod.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
@@ -65,12 +66,15 @@ import { WebMonitoringController } from './web/web-monitoring.controller';
 import { RolePodManualController } from './web/web-role-pod-manual.controller';
 import { V1WebAwbHighValueController } from './web/v1/web-awb-high-value.controller';
 import { V2MobileInitController } from './mobile/v2/mobile-init.controller';
+import { V3MobileInitController } from './mobile/v3/mobile-init.controller';
 import { EmployeePenalty  } from './web/v1/web-employee-penalty.controller';
+import { PodProxyController } from './proxy/proxy.controller';
 import { MobileDeviceInfoController } from './mobile/mobile-device-info.controller';
 import { V1WebAwbHandoverController } from './web/v1/web-awb-handover.controller';
 import { V1MobileSyncController } from './mobile/v1/mobile-sync.controller';
 import { WebDoPodReturnController } from './web/web-do-pod-return.controller';
 import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.controller';
+import { RejectPackageController } from './combine-package/reject-package.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -106,6 +110,7 @@ import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.contr
     WebAwbCountController,
     WebFirstMileController,
     WebAwbReturnController,
+    WebAwbReturnCancelController,
     ProvincesController,
     CitiesController,
     DistrictsController,
@@ -121,6 +126,7 @@ import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.contr
     DoReturnController,
     V1MobileInitController,
     V2MobileInitController,
+    V3MobileInitController,
     V1MobileSyncController,
     V2MobileSyncController,
     V1MobileAttendanceController,
@@ -143,10 +149,12 @@ import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.contr
     WebHubReportController,
     V1WebAwbHighValueController,
     EmployeePenalty,
+    PodProxyController,
     MobileDeviceInfoController,
     V1WebAwbHandoverController,
     WebDoPodReturnController,
     MobileDoPodReturnController,
+    RejectPackageController,
   ],
 })
 export class MainServerControllersModule {}

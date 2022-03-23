@@ -1,4 +1,4 @@
-import { Injectable, Param, PayloadTooLargeException, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
@@ -10,10 +10,11 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { MetaService } from '../../../../shared/services/meta.service';
 import { ListBaggingResponseVm, SmdScanBaggingResponseVm, ListDetailBaggingResponseVm, SmdScanBaggingMoreResponseVm, SmdScanBaggingDataMoreResponseVm, SmdBaggingDetailResponseVm, CreateBaggingHeaderResponseVm } from '../../models/smd-bagging-response.vm';
 import { SmdScanBaggingPayloadVm, SmdScanBaggingMorePayloadVm, InputManualDataPayloadVm, SmdBaggingDetailPayloadVm, BaggingCreateHeaderPayloadVm } from '../../models/smd-bagging-payload.vm';
-import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
+
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { CustomCounterCode } from '../../../../shared/services/custom-counter-code.service';
 import { RedisService } from '../../../../shared/services/redis.service';
+import { BagService } from '../../../main/services/v1/bag.service';
 
 @Injectable()
 export class BaggingSmdService {
@@ -157,16 +158,13 @@ export class BaggingSmdService {
     const result = new SmdScanBaggingResponseVm();
     result.status = 'error';
 
-    if (payload.bagNumber.length == 15 && payload.bagNumber.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
-    } else if (payload.bagNumber.length == 10 && payload.bagNumber.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
+    if (payload.bagNumber.length == 15 && payload.bagNumber.match(/^[A-Z0-9]{10}[0-9]{5}$/)) {
+    } else if (payload.bagNumber.length == 10 && payload.bagNumber.match(/^[A-Z0-9]{10}$/)) {
     } else {
       result.message = 'Bag number tidak valid';
       return result;
     }
-
-    const bagNumber = payload.bagNumber.substring(0, 7);
-    const bagSeq = Number(payload.bagNumber.substring(7, 10));
-    const bagNumberSeq = payload.bagNumber.substring(0, 10);
+    const bagNumberWithSeq = payload.bagNumber.substring(0, 10);
     const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
     // const weight = payload.bagNumber.substring(10);
@@ -175,7 +173,19 @@ export class BaggingSmdService {
     let baggingData = new InputManualDataPayloadVm();
     let rawQuery = '';
 
-    // cek data gabung paket
+    const bagDetail = await BagService.validBagNumber(bagNumberWithSeq);
+
+    if (!bagDetail) {
+      result.message = 'Gabung paket tidak ditemukan';
+      return result;
+    }
+
+    if(bagDetail && !bagDetail.bag.representativeIdTo){
+      result.message = 'Gabung paket tidak ada representative id';
+      return result;
+    }
+
+    // get data bagging
     const qb = createQueryBuilder();
     qb.addSelect( 'bi.bag_item_id', 'bag_item_id');
     qb.addSelect( 'bi.weight', 'weight');
@@ -195,8 +205,8 @@ export class BaggingSmdService {
     qb.leftJoin('bagging_item', 'bai', 'bai.bag_item_id = bi.bag_item_id AND bai.is_deleted = FALSE');
     qb.leftJoin('bagging', 'ba', 'ba.bagging_id = bai.bagging_id AND ba.is_deleted = FALSE');
     qb.leftJoin('bag_item_history', 'bih', 'bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE');
-    qb.andWhere(`b.bag_number = upper('${bagNumber}')`);
-    qb.andWhere(`bi.bag_seq = '${bagSeq}'`);
+    qb.andWhere(`b.bag_number = upper('${bagDetail.bag.bagNumber}')`);
+    qb.andWhere(`bi.bag_seq = '${bagDetail.bagSeq}'`);
     qb.andWhere(`b.is_deleted = FALSE`);
     qb.orderBy(`case when ba.branch_id = '${permissionPayload.branchId}' then 1 else 2 end, b.created_time`, 'DESC');
     const dataPackage = await qb.getRawOne();
@@ -334,48 +344,40 @@ export class BaggingSmdService {
       const maxBagSeq = await this.getMaxBaggingSeq(dataPackage.representative_id_to, baggingDate, permissionPayload.branchId);
       const paramBaggingCode = await CustomCounterCode.baggingCodeRandomCounter(moment().toDate());
       // Redlock for race condition
-      const cek = await RedisService.redlock(`bagNumber:${bagNumberSeq}`, 120);
-      if(cek) {
-        const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 10);
-        if (redlock) {
-          const createBagging = Bagging.create();
-          createBagging.userId = authMeta.userId.toString();
-          createBagging.representativeIdTo = representative[0].representative_id;
-          createBagging.branchId = permissionPayload.branchId.toString();
-          createBagging.totalItem = 1;
-          createBagging.totalWeight = dataPackage.weight.toString();
-          createBagging.baggingCode = paramBaggingCode;
-          createBagging.baggingDate = baggingDate;
-          createBagging.userIdCreated = authMeta.userId.toString();
-          createBagging.userIdUpdated = authMeta.userId.toString();
-          createBagging.baggingDateReal = moment().toDate();
-          createBagging.baggingSeq = maxBagSeq;
-          createBagging.createdTime = moment().toDate();
-          createBagging.updatedTime = moment().toDate();
-          await Bagging.save(createBagging, {transaction: false});
+      const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 10);
+      if (redlock) {
+        const createBagging = Bagging.create();
+        createBagging.userId = authMeta.userId.toString();
+        createBagging.representativeIdTo = representative[0].representative_id;
+        createBagging.branchId = permissionPayload.branchId.toString();
+        createBagging.totalItem = 1;
+        createBagging.totalWeight = dataPackage.weight.toString();
+        createBagging.baggingCode = paramBaggingCode;
+        createBagging.baggingDate = baggingDate;
+        createBagging.userIdCreated = authMeta.userId.toString();
+        createBagging.userIdUpdated = authMeta.userId.toString();
+        createBagging.baggingDateReal = moment().toDate();
+        createBagging.baggingSeq = maxBagSeq;
+        createBagging.createdTime = moment().toDate();
+        createBagging.updatedTime = moment().toDate();
+        await Bagging.save(createBagging, {transaction: false});
 
-          baggingId = createBagging.baggingId;
-          baggingCode = createBagging.baggingCode;
+        baggingId = createBagging.baggingId;
+        baggingCode = createBagging.baggingCode;
 
-          baggingData.bagging_id = createBagging.baggingId;
-          baggingData.bagging_code = createBagging.baggingCode;
-          baggingData.total_weight = Number(createBagging.totalWeight);
-          baggingData.total_item = Number(createBagging.totalItem);
+        baggingData.bagging_id = createBagging.baggingId;
+        baggingData.bagging_code = createBagging.baggingCode;
+        baggingData.total_weight = Number(createBagging.totalWeight);
+        baggingData.total_item = Number(createBagging.totalItem);
 
-        } else {
-          result.message = 'Data Bagging Sedang di proses, Silahkan Coba Beberapa Saat';
-          return result;
-        }
       } else {
-        const result = new SmdScanBaggingResponseVm();
-        result.status = 'failed';
-        result.message = 'Resi ' + payload.bagNumber + ' sudah di scan bagging';
+        result.message = 'Data Bagging Sedang di proses, Silahkan Coba Beberapa Saat';
         return result;
       }
     }
     const baggingItem = BaggingItem.create();
     baggingItem.baggingId = baggingId;
-    baggingItem.bagItemId = dataPackage.bag_item_id;
+    baggingItem.bagItemId = bagDetail.bagItemId.toString();
     baggingItem.userIdCreated = authMeta.userId.toString();
     baggingItem.userIdUpdated = authMeta.userId.toString();
     baggingItem.createdTime = moment().toDate();
@@ -477,7 +479,7 @@ export class BaggingSmdService {
       ['t1.bagging_item_id', 'baggingItemId'],
       ['t1.bagging_id', 'baggingId'],
       ['t1.bag_item_id', 'bagItemId'],
-      ['CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, \'0\'))', 'bagNumber'],
+      ['SUBSTR(CONCAT(t2.bag_number, LPAD(t3.bag_seq::text, 3, \'0\')), 1, 10)', 'bagNumber'],
     );
     q.innerJoin(e => e.bagItem, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -501,7 +503,7 @@ export class BaggingSmdService {
     const result = new SmdBaggingDetailResponseVm();
 
     const qb = createQueryBuilder();
-    qb.addSelect( 'CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\'))', 'bagNumber');
+    qb.addSelect( 'SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\')), 1, 10)', 'bagNumber');
     qb.addSelect( 'bi.weight', 'weight');
     qb.addSelect( 'bai.bagging_id', 'baggingId');
     qb.addSelect( 'ba.bagging_code', 'baggingCode');

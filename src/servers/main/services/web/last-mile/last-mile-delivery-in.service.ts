@@ -496,7 +496,7 @@ export class LastMileDeliveryInService {
           podScanInBranchDetailObj.podScanInBranchId = podScanInBranchId;
           podScanInBranchDetailObj.bagId = bagId;
           podScanInBranchDetailObj.bagItemId = bagItemId;
-          podScanInBranchDetailObj.awbId = awb.awbItem.awbId;
+          podScanInBranchDetailObj.awbId = awb.awbId;
           podScanInBranchDetailObj.awbItemId = awb.awbItemId;
           podScanInBranchDetailObj.awbNumber = awbNumber;
           podScanInBranchDetailObj.bagNumber = bagNumber;

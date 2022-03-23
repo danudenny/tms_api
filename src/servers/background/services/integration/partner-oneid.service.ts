@@ -129,7 +129,7 @@ export class PartnerOneidService {
     //     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     //   );
 
-    //   q2.innerJoin(e => e.awbStatusGrpDetail.awbStatusGrp, 'asg', j => 
+    //   q2.innerJoin(e => e.awbStatusGrpDetail.awbStatusGrp, 'asg', j =>
     //     j.andWhere(e => e.isDeleted, w => w.isFalse()),
     //   );
 
@@ -175,17 +175,21 @@ export class PartnerOneidService {
       const consigneePhoneStringToArray = query.consigneePhone.split(',');
 
 
-      // query base on partnerName 
+      // query base on partnerName
       // (query.partnerName) ? filter.partner_name = query.partnerName : '';
       // (query.partnerName) ? pushquery = 'AND pa.partner_name = :partner_name ' : '';
 
-      // query base on partnerId  
+      // query base on partnerId
       (query.partnerId) ? filter.partner_id = query.partnerId : '';
       (query.partnerId) ? pushquery += 'AND pa.partner_id = :partner_id ' : '';
 
+      // query base on excludePartnerId
+      (query.excludePartnerId) ? filter.exclude_partner_id = query.excludePartnerId : '';
+      (query.excludePartnerId) ? pushquery += 'AND pa.partner_id != :exclude_partner_id ' : '';
+
       // query base on resi status
-      (query.status) ? filter.awb_status_id_last = query.status : '';
-      (query.status) ? pushquery += 'AND ai.awb_status_id_last = :awb_status_id_last ' : '';
+      (query.status) ? filter.awb_status_id_last = query.status.split(',') : '';
+      (query.status) ? pushquery += 'AND ai.awb_status_id_last IN (:...awb_status_id_last) ' : '';
 
 
       // query base on consigneePhone
@@ -193,7 +197,7 @@ export class PartnerOneidService {
       (query.consigneePhone) ? pushquery += 'AND a.consignee_phone IN (:...consignee_phone)' : '';
 
 
-      // query base on awb number  
+      // query base on awb number
       (query.awbNumber) ? filter.awb_number = query.awbNumber : '';
       (query.awbNumber) ? pushquery += 'AND a.awb_number = :awb_number' : '';
 
@@ -232,7 +236,7 @@ export class PartnerOneidService {
         }
 
       }
-      // query  
+      // query
       let sql = `
       SELECT
        a.awb_id, 

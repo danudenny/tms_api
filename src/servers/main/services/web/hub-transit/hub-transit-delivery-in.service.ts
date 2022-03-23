@@ -185,7 +185,7 @@ export class HubTransitDeliveryInService {
           );
 
           const doPodDetailBag = await this.getDoPodByBagItem(item.bagItemId);
-          if(doPodDetailBag){
+          if (doPodDetailBag) {
             await getManager().transaction(async transactional => {
               await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
             });
@@ -203,7 +203,7 @@ export class HubTransitDeliveryInService {
           );
 
           const doPodDetailBag = await this.getDoPodByBagItem(item.bagItemId);
-          if(doPodDetailBag){
+          if (doPodDetailBag) {
             await getManager().transaction(async transactional => {
               await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
             });
@@ -261,12 +261,32 @@ export class HubTransitDeliveryInService {
       },
     ];
 
+    let payloadBagNumber ='0';
+
+    for (let i = 0; i < payload.filters.length; i++) {
+      if ('bagNumber' == payload.filters[i].field) {
+        payloadBagNumber = payload.filters[i].value;
+        payload.filters.splice(i, 1);
+      }
+    }
+    let bagNumber;
+    let bagSeq;
+    const bag = await BagService.validBagNumber(payloadBagNumber);
+    if (bag) {
+      bagNumber = bag.bag.bagNumber;
+      bagSeq = bag.bagSeq;
+    }
+
     const repo = new OrionRepositoryService(DropoffHub, 't1');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
+
     q.selectRaw(
-      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`,'bagNumberCode'],
+      [
+        `SUBSTRING(t2.bag_number||LPAD(t3.bag_seq::text, 3, '0'), 1, 10)`,
+        'bagNumberCode',
+      ],
       ['t2.bag_number', 'bagNumber'],
       ['t2.ref_representative_code', 'representativeCode'],
       ['t3.bag_seq', 'bagSeq'],
@@ -274,7 +294,8 @@ export class HubTransitDeliveryInService {
       ['t1.dropoff_hub_id', 'dropoffHubId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
-      [`CAST("t3"."weight" AS NUMERIC(20,2))||' Kg'`, 'weight'],
+      ['COUNT (t4.*)', 'totalAwb'],
+      [`CONCAT(CAST(t3.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
     );
 
     q.innerJoin(e => e.bag, 't2', j =>
@@ -292,56 +313,27 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    if(bagNumber && bagSeq){
+      q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
+      q.andWhere(e => e.bagItem.bagSeq, w => w.equals(bagSeq));
+    }
+
+    q.groupByRaw(`
+      t1.created_time,
+      t1.dropoff_hub_id,
+      t3.bag_seq,
+      t2.bag_number,
+      t2.ref_representative_code,
+      t3.weight,
+      t5.branch_name,
+      t6.branch_name
+    `);
 
     const query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);
-
     const result = new WebScanInHubSortListResponseVm();
-    for(let i = 0; i < data.length; i++){
-      const repoDetail = new OrionRepositoryService(DropoffHubDetail, 't1');
-      const qDetail = repoDetail.findAllRaw();
-      qDetail.andWhere(e => e.dropoffHubId, w => w.equals(data[i].dropoffHubId));
-      let queryDetail = qDetail.getQuery();
-      const dataDetail = await QueryServiceApi.executeQuery(queryDetail, false, null);
-      
-      data[i].totalAwb = dataDetail.length;
-    }
 
-    const repoCount = new OrionRepositoryService(DropoffHub, 't1');
-    const qCount = repoCount.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(qCount, false);
-    qCount.selectRaw(
-      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`,'bagNumberCode'],
-      ['t2.bag_number', 'bagNumber'],
-      ['t2.ref_representative_code', 'representativeCode'],
-      ['t3.bag_seq', 'bagSeq'],
-      ['t1.created_time', 'createdTime'],
-      ['t1.dropoff_hub_id', 'dropoffHubId'],
-      ['t5.branch_name', 'branchName'],
-      ['t6.branch_name', 'branchScanName'],
-      [`CAST("t3"."weight" AS NUMERIC(20,2))||' Kg'`, 'weight'],
-    );
-
-    qCount.innerJoin(e => e.bag, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    qCount.innerJoin(e => e.bagItem, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    qCount.innerJoin(e => e.dropoffHubDetails, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    qCount.innerJoin(e => e.bag.branch, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    qCount.innerJoin(e => e.branch, 't6', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-
-    let queryCount = await qCount.getQuery();
-    let cnt =  await QueryServiceApi.executeQuery(queryCount, true, 'bagNumberCode');
-    const total = cnt;
+    const total = 0;
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
@@ -407,6 +399,22 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     payload.fieldResolverMap['isSmd'] = 't1.is_smd';
 
+    let payloadBagNumber ='0';
+
+    for (let i = 0; i < payload.filters.length; i++) {
+      if ('bagNumber' == payload.filters[i].field) {
+        payloadBagNumber = payload.filters[i].value;
+        payload.filters.splice(i, 1);
+      }
+    }
+    let bagNumber;
+    let bagSeq;
+    const bag = await BagService.validBagNumber(payloadBagNumber);
+    if (bag) {
+      bagNumber = bag.bag.bagNumber;
+      bagSeq = bag.bagSeq;
+    }
+
     const repo = new OrionRepositoryService(DropoffHub, 't1');
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
@@ -427,10 +435,14 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    if(bagNumber && bagSeq){
+      q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
+      q.andWhere(e => e.bagItem.bagSeq, w => w.equals(bagSeq));
+    }
 
     let query = await q.getQuery();
     let data = await QueryServiceApi.executeQuery(query, false, null);
-    for(let i = 0; i < data.length; i++){
+    for (let i = 0; i < data.length; i++) {
       data[i].totalResi = data[i].totalResi;
     }
 
@@ -440,48 +452,118 @@ export class HubTransitDeliveryInService {
     return result;
   }
 
+  static async getDropOffListCount(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebScanInHubSortListResponseVm> {
+    // mapping field
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
+    payload.fieldResolverMap['branchIdScan'] = 't1.branch_id';
+    payload.fieldResolverMap['branchIdFrom'] = 't2.branch_id';
+    payload.fieldResolverMap['representativeFrom'] = 't2.ref_representative_code';
+    payload.fieldResolverMap['bagNumber'] = 't2.bag_number';
+    payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
+    payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
+    payload.fieldResolverMap['branchName'] = 't5.branch_name';
+    payload.fieldResolverMap['branchScanName'] = 't6.branch_name';
+    payload.fieldResolverMap['isSmd'] = 't1.is_smd';
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
+    }
+
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'createdTime',
+      },
+      {
+        field: 'bagNumberCode',
+      },
+    ];
+
+    const result = new WebScanInHubSortListResponseVm();
+    const repoCount = new OrionRepositoryService(DropoffHub, 't1');
+    const qCount = repoCount.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(qCount, false);
+    qCount.selectRaw(
+      [`DISTINCT t2.bag_number||LPAD(t3.bag_seq::text, 3, '0')`, 'bagNumberCode'],
+      ['t2.bag_number', 'bagNumber'],
+      ['t2.ref_representative_code', 'representativeCode'],
+      ['t3.bag_seq', 'bagSeq'],
+      ['t1.created_time', 'createdTime'],
+      ['t1.dropoff_hub_id', 'dropoffHubId'],
+      ['t5.branch_name', 'branchName'],
+      ['t6.branch_name', 'branchScanName'],
+      [`CAST("t3"."weight" AS NUMERIC(20,2))||' Kg'`, 'weight'],
+    );
+
+    qCount.innerJoin(e => e.bag, 't2', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.bagItem, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.dropoffHubDetails, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.bag.branch, 't5', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    qCount.innerJoin(e => e.branch, 't6', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    let queryCount = await qCount.getQuery();
+    let cnt = await QueryServiceApi.executeQuery(queryCount, true, 'bagNumberCode');
+    const total = cnt;
+    result.data = null;
+    result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
   private static async updateDoPodTransaction(
     doPodDetailBag: any,
     userId: number,
     timeNow: Date,
-    transactional: EntityManager){
-      doPodDetailBag.totalScanInBag += 1;
-      if (doPodDetailBag.totalScanInBag == 1) {
-        await transactional.update(
-          DoPod,
-          { doPodId: doPodDetailBag.doPodId },
-          {
-            firstDateScanIn: timeNow,
-            lastDateScanIn: timeNow,
-            totalScanInBag: doPodDetailBag.totalScanInBag,
-            updatedTime: timeNow,
-            userIdUpdated: userId,
-          },
-        );
-      }else{
-        await transactional.update(
-          DoPod,
-          { doPodId: doPodDetailBag.doPodId },
-          {
-            lastDateScanIn: timeNow,
-            totalScanInBag: doPodDetailBag.totalScanInBag,
-            updatedTime: timeNow,
-            userIdUpdated: userId,
-          },
-        );
-      }
+    transactional: EntityManager) {
+    doPodDetailBag.totalScanInBag += 1;
+    if (doPodDetailBag.totalScanInBag == 1) {
+      await transactional.update(
+        DoPod,
+        { doPodId: doPodDetailBag.doPodId },
+        {
+          firstDateScanIn: timeNow,
+          lastDateScanIn: timeNow,
+          totalScanInBag: doPodDetailBag.totalScanInBag,
+          updatedTime: timeNow,
+          userIdUpdated: userId,
+        },
+      );
+    } else {
+      await transactional.update(
+        DoPod,
+        { doPodId: doPodDetailBag.doPodId },
+        {
+          lastDateScanIn: timeNow,
+          totalScanInBag: doPodDetailBag.totalScanInBag,
+          updatedTime: timeNow,
+          userIdUpdated: userId,
+        },
+      );
+    }
   }
 
-  private static async getDoPodByBagItem(bagItemId: number){
+  private static async getDoPodByBagItem(bagItemId: number) {
     const q = createQueryBuilder();
     q.addSelect('t2.do_pod_id', 'doPodId');
     q.addSelect('t2.total_scan_in_bag', 'totalScanInBag');
     q.from('do_pod_detail_bag', 't1');
     q.innerJoin('do_pod', 't2', 't2.do_pod_id = t1.do_pod_id');
-    q.where('t1.bag_item_id = :bagItemId', {bagItemId: bagItemId});
+    q.where('t1.bag_item_id = :bagItemId', { bagItemId: bagItemId });
     q.andWhere('t1.transaction_status_id_last = 800');
     q.andWhere('t1.is_deleted = false');
-    q.orderBy('t1.created_time', 'DESC' );
+    q.orderBy('t1.created_time', 'DESC');
     q.limit(1);
     return await q.getRawOne();
   }

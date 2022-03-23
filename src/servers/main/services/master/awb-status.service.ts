@@ -92,9 +92,10 @@ export class AwbStatusService {
     awbItemAttr: AwbItemAttr,
     optionalInBranch?: Boolean,
     optionalManifested?: Boolean,
+    isReturCheck = true
   ) {
-    let message = null;
-    const isValid = false;
+    let message = `Resi ${awbItemAttr.awbNumber} tidak dapat di proses.`;
+    let isValid = false;
     if (awbItemAttr.awbStatusIdLast) {
       if (AWB_STATUS.ANT == awbItemAttr.awbStatusIdLast) {
         message = `Resi ${awbItemAttr.awbNumber} sudah di proses.`;
@@ -111,15 +112,15 @@ export class AwbStatusService {
         message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
         return { isValid, message };
       }
-      if (await AwbService.isCancelDelivery(awbItemAttr.awbItemId)) {
-        message = `Resi ${awbItemAttr.awbNumber} telah di CANCEL oleh Partner`;
-        return { isValid, message };
-      }
-      if (!optionalManifested && !await AwbService.isManifested(awbItemAttr.awbNumber, awbItemAttr.awbItemId)) {
-        message = `Resi ${awbItemAttr.awbNumber} belum pernah di MANIFESTED`;
-        return { isValid, message };
-      }
+
+      let arrRetval = await AwbService.validationContainAwBStatus(optionalManifested, awbItemAttr.awbNumber, awbItemAttr.awbItemId, isReturCheck);
+      if(arrRetval[0] == true){
+        let message = arrRetval[1]
+        return {isValid, message};
+      } 
+
+      isValid = true;
     }
-    return { isValid: true, message };
+    return { isValid, message };
   }
 }

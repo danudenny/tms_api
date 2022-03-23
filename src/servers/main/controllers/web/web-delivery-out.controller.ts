@@ -193,26 +193,17 @@ export class WebDeliveryOutController {
 
   @Post('awbList')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutAwbListResponseVm })
   public async awbList(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryOutService.findAllScanOutList(payload);
   }
 
-  @Post('deliverPartnerList')
-  @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanOutDeliverPartnerListResponseVm })
-  public async deliverPartnerList(@Body() payload: BaseMetaPayloadVm) {
-    return LastMileDeliveryService.findAllDeliverPartner(payload);
-  }
-
   @Post('deliverList')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: WebScanOutDeliverListResponseVm })
   public async deliverListOld(@Body() payload: BaseMetaPayloadVm) {
     return this.webDeliveryOutService.findAllScanOutDeliverList(payload);
@@ -237,6 +228,15 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutDeliverGroupListResponseVm })
   public async deliverGroupList(@Body() payload: BaseMetaPayloadVm) {
     return LastMileDeliveryService.findAllScanOutDeliverGroupList(payload);
+  }
+
+  @Post('deliverGroupList/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: WebScanOutDeliverGroupListResponseVm })
+  public async deliverGroupListCount(@Body() payload: BaseMetaPayloadVm) {
+    return LastMileDeliveryService.countAllScanOutDeliverGroupList(payload);
   }
 
   @Post('awbValidate')
@@ -275,6 +275,15 @@ export class WebDeliveryOutController {
     return this.webDeliveryOutService.findAllTransitList(payload);
   }
 
+  @Post('transitList/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
+  public async transitListCount(@Body() payload: WebScanOutAwbListPayloadVm) {
+    return this.webDeliveryOutService.countAllTransitList(payload);
+  }
+
   @Post('sortationHub/transitList')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -282,6 +291,15 @@ export class WebDeliveryOutController {
   @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
   public async transitListSortHub(@Body() payload: WebScanOutAwbListPayloadVm) {
     return this.webDeliveryOutService.findAllSortHubTransitList(payload);
+  }
+
+  @Post('sortationHub/transitList/count')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebScanOutTransitListResponseVm })
+  public async transitListSortHubCount(@Body() payload: WebScanOutAwbListPayloadVm) {
+    return this.webDeliveryOutService.findAllSortHubTransitListCount(payload);
   }
 
   @Post('transitListAwb')
@@ -442,6 +460,8 @@ export class WebDeliveryOutController {
   }
 
   @Get('branch/excel/export')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   public async exportExcelBranch(
     @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
@@ -465,6 +485,8 @@ export class WebDeliveryOutController {
     );
   }
   @Get('hubSortir/excel/export')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   public async exportExcelBagSortir(
     @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
@@ -476,6 +498,8 @@ export class WebDeliveryOutController {
     );
   }
   @Get('transit/excel/export')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   public async exportExcelDeliveryTransit(
     @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
@@ -487,6 +511,8 @@ export class WebDeliveryOutController {
   }
 
   @Get('deliver/excel/export')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   public async exportExcelDeliveryDeliver(
     @Query() queryParams: WebScanOutReportVm,
     @Response() serverResponse: express.Response,
@@ -498,6 +524,8 @@ export class WebDeliveryOutController {
   }
 
   @Post('bagOrderDetail/list/stream')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @HttpCode(HttpStatus.OK)
   @ResponseSerializerOptions({ disable: true })
   public async exportListAwbReturn(

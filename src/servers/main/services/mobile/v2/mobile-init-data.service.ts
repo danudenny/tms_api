@@ -262,6 +262,7 @@ export class V2MobileInitDataService {
       'COALESCE(awb_item_attr.is_high_value, pickup_request_detail.is_high_value, false)',
       'isHighValue',
     );
+    qb.addSelect('pickup_request_detail.recipient_address_type', 'recipientAddressType');
 
     qb.from('do_pod_deliver_detail', 'do_pod_deliver_detail');
     qb.innerJoin(

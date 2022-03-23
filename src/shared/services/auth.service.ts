@@ -2,7 +2,7 @@ import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TokenExpiredError } from 'jsonwebtoken';
-import { map, toInteger } from 'lodash';
+import { map } from 'lodash';
 import ms = require('ms');
 
 import { PermissionAccessResponseVM } from '../../servers/auth/models/auth.vm';
@@ -16,7 +16,6 @@ import { AuthLoginResultMetadata } from '../models/auth-login-result-metadata';
 import { GetRoleResult, UserRoleResponse } from '../models/get-role-result';
 import { Branch } from '../orm-entity/branch';
 import { User } from '../orm-entity/user';
-import { UserRole } from '../orm-entity/user-role';
 import { UserRepository } from '../orm-repository/user.repository';
 import { ConfigService } from './config.service';
 import { RequestErrorService } from './request-error.service';
@@ -50,14 +49,21 @@ export class AuthService {
     // check user present
     if (user) {
       // PinoLoggerService.log(user);
+      await this.blockProcess(username);
+
       // validate user password hash md5
       if (user.validatePassword(password)) {
         const loginResultMetadata = this.populateLoginResultMetadataByUser(
           clientId,
           user,
         );
+
+        await this.removeBlockCounter(username);
+
         return loginResultMetadata;
       } else {
+        await this.addBlockCounter(username);
+
         RequestErrorService.throwObj({
           message: 'global.error.LOGIN_WRONG_PASSWORD',
         });
@@ -65,6 +71,55 @@ export class AuthService {
     } else {
       RequestErrorService.throwObj({
         message: 'global.error.USER_NOT_FOUND',
+      });
+    }
+  }
+
+  async fetchLoginCounterKey(username: string) {
+    return `pod:login-failed-counter:${username}`;
+  }
+
+  async fetchLoginBlockKey(username: string) {
+    return `pod:login-block:${username}`;
+  }
+
+  async addBlockCounter(username: string) {
+    await RedisService.incr(
+      await this.fetchLoginCounterKey(username)
+    );
+  }
+
+  async removeBlockCounter(username: string) {
+    await RedisService.del(
+      await this.fetchLoginCounterKey(username)
+    );
+  }
+
+  /*
+    Block user for default {ttlBlock} seconds
+    Number of block retry {failedPasswordRetry} times
+  */
+  async blockProcess(username: string) {
+    const ttlBlock = 1800; //in second
+    const failedPasswordRetry = 3;
+
+    let checkBlock : any = await RedisService.ttl(await this.fetchLoginBlockKey(username));
+    
+    const failedCounter = await RedisService.get(await this.fetchLoginCounterKey(username));
+    if (failedCounter >= failedPasswordRetry) {
+      await RedisService.setex(
+        await this.fetchLoginBlockKey(username),
+        username,
+        ttlBlock,
+      );
+
+      await this.removeBlockCounter(username);
+    }
+
+    if (checkBlock > 0) {
+      checkBlock = Math.round(checkBlock/60);
+      RequestErrorService.throwObj({
+        message: `Anda sudah gagal memasukan password ${failedPasswordRetry} kali, silahkan coba kembali dalam ${checkBlock} menit`,
       });
     }
   }
@@ -184,6 +239,7 @@ export class AuthService {
       const user = await RepositoryService.user
         .loadById(authMeta.userId)
         .innerJoinAndSelect(e => e.userRoles.role.rolePermissions)
+        .andWhere(e => e.userRoles.role.rolePermissions.isDeleted, w => w.isFalse())
         .andWhere(e => e.userRoles.roleId, w => w.equals(roleId))
         .andWhere(e => e.userRoles.branchId, w => w.equals(branchId))
         .exec();
@@ -202,7 +258,7 @@ export class AuthService {
         where: {
           branchId,
           isDeleted : false,
-          isActive : true
+          isActive : true,
         },
       });
 
@@ -436,6 +492,10 @@ export class AuthService {
     }
   }
 
+  public static getRequestIP() {
+    return RequestContextMetadataService.getMetadata('REQUEST_IP');
+  }
+
   public static getPermissionToken() {
     return RequestContextMetadataService.getMetadata('PERMISSION_TOKEN');
   }
@@ -490,7 +550,7 @@ export class AuthService {
     qb.innerJoin(
       'branch',
       't3',
-      't1.branch_id = t3.branch_id AND t2.is_deleted = false',
+      't1.branch_id = t3.branch_id AND t3.is_deleted = false',
     );
     qb.where('t1.user_id = :userId', { userId });
     qb.andWhere('t1.is_deleted = false');
@@ -498,3 +558,4 @@ export class AuthService {
     return await qb.getRawMany();
   }
 }
+

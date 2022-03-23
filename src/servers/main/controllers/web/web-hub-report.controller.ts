@@ -25,13 +25,13 @@ export class WebHubReportController {
     return HubMonitoringReportService.storeHubMonitoringPayload(payloadBody);
   }
 
-  @Get('monitoring/bag-execute')
-  public async generateHubMonitoringCSV(
-    @Query() queryParams: HubMonitoringExcelExecutePayloadVm,
-    @Response() serverResponse: express.Response,
-  ) {
-    return HubMonitoringReportService.generateHubMonitoringCSV(serverResponse, queryParams);
-  }
+  // @Get('old/monitoring/bag-execute')
+  // public async generateHubMonitoringCSV(
+  //   @Query() queryParams: HubMonitoringExcelExecutePayloadVm,
+  //   @Response() serverResponse: express.Response,
+  // ) {
+  //   return HubMonitoringReportService.generateHubMonitoringCSV(serverResponse, queryParams);
+  // }
 
   @Get('monitoring/sortir-execute')
   public async generateHubMonitoringSortirCSV(

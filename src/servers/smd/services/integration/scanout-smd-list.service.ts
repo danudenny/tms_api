@@ -260,6 +260,7 @@ export class ScanoutSmdListService {
     q.groupByRaw('ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title');
     // q.andWhereRaw('ds.is_deleted = FALSE');
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isEmpty, w => w.isFalse());
     const result = {
       data: null,
       total: null,
@@ -427,7 +428,7 @@ export class ScanoutSmdListService {
         const rawQuery = `
           SELECT
             b.bag_id,
-            CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')) AS bag_number,
+            SUBSTR(CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')), 1, 10) AS bag_number,
             CONCAT(bi.weight::numeric(10,2), ' Kg') AS weight,
             r.representative_code,
             br.branch_name
@@ -643,7 +644,7 @@ export class ScanoutSmdListService {
     q.selectRaw(
       ['dsdi.do_smd_detail_id', 'do_smd_detail_id'],
       ['b.bag_id', 'bag_id'],
-      [`CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0'))`, 'bag_number'],
+      [`SUBSTR(CONCAT(b.bag_number, LPAD(CONCAT('', bi.bag_seq), 3, '0')), 1, 10)`, 'bag_number'],
       [`CONCAT(bi.weight::numeric(10,2), ' Kg')`, 'weight'],
       ['r.representative_code', 'representative_code'],
       ['br.branch_name', 'branch_name'],

@@ -5,6 +5,7 @@ import { SchedulerConfig } from '../../../../shared/orm-entity/scheduler-config'
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 
 import moment = require('moment');
+import { DatabaseConfig } from '../../config/database/db.config';
 
 @Injectable()
 export class PartnerMerchantService {
@@ -29,7 +30,8 @@ export class PartnerMerchantService {
       isReprocess = true;
     }
 
-    const data = await this.getPickupRequest(pid, isReprocess);
+    const pickupRequest = await this.getPickupRequest(pid, isReprocess);
+    const data = pickupRequest.rows;
 
     if (data) {
       let maxPid = -1;
@@ -82,26 +84,32 @@ export class PartnerMerchantService {
   }
 
   private static async getPickupRequest(pid: number, isReprocess: boolean = false): Promise<any> {
-    const select = 'pr.merchant_code, pr.pickup_request_name, pr.pickup_request_address, pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned';
+    let bindParams = [];
+    const select = 'pr.merchant_code, pr.pickup_request_name, pr.pickup_request_address, pr.pickup_request_email, pr.pickup_request_contact_no, ' +
+      'pr.partner_id, pr.location_id, pr.shop_id, branch_id_assigned';
     const select_encrypt = `
       MD5(CONCAT(
         pr.merchant_code, pr.pickup_request_name, MD5(pr.pickup_request_address), pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned
       ))
     `;
-    let endpid = pid + 5000;
+    let endpid = Number(pid) + 5000;
     let where = `
-      and w.work_order_id > :pid
-      and w.work_order_id <= :endpid
+      and w.work_order_id > $1
+      and w.work_order_id <= $2
     `;
+    bindParams.push(pid);
+    bindParams.push(endpid);
+
     let startDate = moment().format('YYYY-MM-DD 00:00:00');
     let endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
-
     if (isReprocess){
       where = `
         and w.is_reprocess_partner_merchant = true
-        and w.pickup_schedule_date_time >= :startDate
-        and w.pickup_schedule_date_time < :endDate
+        and w.pickup_schedule_date_time >= $3
+        and w.pickup_schedule_date_time < $4
       `;
+      bindParams.push(startDate);
+      bindParams.push(endDate);
     }
 
     const query = `
@@ -132,11 +140,8 @@ export class PartnerMerchantService {
       GROUP BY ` + select + `
     `;
 
-    return await RawQueryService.queryWithParams(query, {
-      pid,
-      endpid,
-      startDate,
-      endDate,
-    });
+    const pool: any = DatabaseConfig.getCronDbPool();
+    const client = await pool.connect();
+    return await client.query(query, bindParams);
   }
 }

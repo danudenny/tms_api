@@ -47,8 +47,31 @@ export class MachinePackageAwbResponseVm {
 
   @ApiModelProperty()
   no_gabung_sortir: string;
-}
 
+  @ApiModelProperty()
+  koli?: string;
+
+  @ApiModelProperty()
+  berat?: string;
+
+  @ApiModelProperty()
+  isi?: number;
+
+  @ApiModelProperty()
+  print_date?: string;
+
+  @ApiModelProperty()
+  branch_code?: string;
+
+  @ApiModelProperty()
+  branch_name?: string;
+
+  @ApiModelProperty()
+  chute_number?: string;
+
+  @ApiModelProperty()
+  branch_id_lastmile?: number;
+}
 
 export class PackageAwbResponseVm {
 
@@ -89,38 +112,38 @@ export class PackageAwbResponseVm {
   weight: number;
 }
 
-export class PackageAwbBackupResponseVm   {
-
-  @ApiModelPropertyOptional({ type: () => AwbPackageDetail })
-  data: AwbPackageDetail;
-
-  @ApiModelPropertyOptional({ type: () => [AwbPackageDetail] })
-  dataBag: AwbPackageDetail[];
-
-  @ApiModelProperty()
-  districtId: number;
-
-  @ApiModelProperty()
-  districtCode: string;
-
-  @ApiModelProperty()
-  districtName: string;
-
-  @ApiModelPropertyOptional()
-  bagItemId: number;
-
-  @ApiModelPropertyOptional()
-  bagNumber: string;
-
-  @ApiModelPropertyOptional()
-  bagSeq: number;
-
-  @ApiModelPropertyOptional()
-  bagItemWeight: number;
-
-  @ApiModelPropertyOptional()
-  podScanInHubId: string;
-
-  @ApiModelProperty()
-  isAllow: boolean;
-}
+// export class PackageAwbBackupResponseVm   {
+//
+//   @ApiModelPropertyOptional({ type: () => AwbPackageDetail })
+//   data: AwbPackageDetail;
+//
+//   @ApiModelPropertyOptional({ type: () => [AwbPackageDetail] })
+//   dataBag: AwbPackageDetail[];
+//
+//   @ApiModelProperty()
+//   districtId: number;
+//
+//   @ApiModelProperty()
+//   districtCode: string;
+//
+//   @ApiModelProperty()
+//   districtName: string;
+//
+//   @ApiModelPropertyOptional()
+//   bagItemId: number;
+//
+//   @ApiModelPropertyOptional()
+//   bagNumber: string;
+//
+//   @ApiModelPropertyOptional()
+//   bagSeq: number;
+//
+//   @ApiModelPropertyOptional()
+//   bagItemWeight: number;
+//
+//   @ApiModelPropertyOptional()
+//   podScanInHubId: string;
+//
+//   @ApiModelProperty()
+//   isAllow: boolean;
+// }

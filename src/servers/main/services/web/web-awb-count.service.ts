@@ -20,6 +20,7 @@ import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { AwbAttr } from '../../../../shared/orm-entity/awb-attr';
 import { BagItemHistoryQueueService } from '../../../queue/services/bag-item-history-queue.service';
 import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { BagService } from '../v1/bag.service';
 
 @Injectable()
 export class WebAwbCountService {
@@ -134,6 +135,7 @@ export class WebAwbCountService {
           const getTotalItemAwb = await BagItemAwb.findAndCount({
             where: {
               bagItemId: bagData.bagItemId,
+              isDeleted: false,
             },
           });
           response.totalBagItem = getTotalItemAwb[1];
@@ -336,7 +338,7 @@ export class WebAwbCountService {
 
     const representativeId = payload.representativeIdTo;
 
-    const bagData = await DeliveryService.validBagNumber(payload.bagNumber);
+    const bagData = await BagService.validBagNumber(payload.bagNumber);
 
     const response = {
       status: 'ok',
@@ -380,6 +382,7 @@ export class WebAwbCountService {
           const getAllBagAwb = await BagItemAwb.findAndCount({
             where: {
               bagItemId: bagData.bagItemId,
+              isDeleted: false,
             },
           });
 

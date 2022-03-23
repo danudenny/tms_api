@@ -2,6 +2,54 @@ import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/exte
 import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 // Payload
+export class ImageProxyUrlResponseVm{
+  @ApiModelProperty({ type: () => [ImageProxyUrlVm] })
+  data: ImageProxyUrlVm[];
+}
+
+export class ImageProxyUrlParamVm {
+  @ApiModelPropertyOptional()
+  awbNumber: string;
+
+  @ApiModelPropertyOptional()
+  doPodId: string;
+
+  @ApiModelPropertyOptional({ example: 'photo, photoCod, signature'})
+  attachmentType: string;
+
+  @ApiModelProperty({ example: 'deliver=1, return=2, manifested=3'})
+  photoType: number;
+}
+
+export class ImageProxyUrlVm {
+  @ApiModelProperty()
+  url: string;
+
+  @ApiModelProperty()
+  type: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+}
+
+export class LogActivityPayloadVm {
+  @ApiModelProperty()
+  awb_number: string;
+
+  @ApiModelProperty()
+  key: string;
+
+  @ApiModelProperty()
+  type: string;
+}
+
+export class LogActivityResponseVm {
+  @ApiModelProperty()
+  key: string;
+
+  @ApiModelProperty()
+  value: string;
+}
 
 export class TrackingAwbPayloadVm {
   @ApiModelProperty()
@@ -217,6 +265,9 @@ export class TrackingAwbResponseVm {
   @ApiModelProperty()
   isHasPhotoReturnRecevier: boolean;
 
+  @ApiModelProperty()
+  recipientAddressType: string;
+
   @ApiModelProperty({ type: () => [AwbHistoryResponseVm] })
   awbHistory: AwbHistoryResponseVm[];
 
@@ -244,6 +295,9 @@ export class BagHistoryResponseVm {
 export class TrackingBagResponseVm {
   @ApiModelProperty()
   bagNumber: string;
+
+  @ApiModelProperty()
+  bagSeq: number;
 
   @ApiModelProperty()
   weight: number;

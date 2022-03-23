@@ -23,6 +23,7 @@ import { ScanInSmdMorePayloadVm, ScanInSmdPayloadVm, ScaninDetailScanPayloadVm }
 import { getManager, createQueryBuilder, EntityManager } from 'typeorm';
 import { Todos } from '../../../../shared/orm-entity/todos';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
+import { BagService } from '../../../main/services/v1/bag.service';
 
 @Injectable()
 export class ScaninSmdService {
@@ -39,36 +40,38 @@ export class ScaninSmdService {
     result.statusCode = HttpStatus.BAD_REQUEST;
     let receivedBagCode = '';
     let receivedBagDate = '';
+    let sliceDoPodCode = 'DOP';
+    let statusItem = 4550;
 
-    if (payload.bag_item_number.length == 15 && payload.bag_item_number.match(/^[A-Z0-9]{7}[0-9]{8}$/)) {
-      const paramBagNumber = payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 8 );
+    if (payload.bag_item_number.length == 15 && payload.bag_item_number.match(/^[A-Z0-9]{10}[0-9]{5}$/)) {
       const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
-      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 8 , 3);
-      const paramSeq = await paramBagSeq * 1;
+      const paramBagNumberWithSeq = await payload.bag_item_number.substr(0, payload.bag_item_number.length - 5);
+      let paramBagSeq = '';
       let weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
       let paramBagItemId = null;
-      if (paramBagNumber == null || paramBagNumber == undefined) {
+      let paramBagNumber = '';
+      let formatedBagNumber = '';
+
+      const bagDetail = await BagService.validBagNumber(paramBagNumberWithSeq);
+
+      if (!bagDetail) {
         result.message = 'Bag Number Not Found';
         return result;
       } else {
-        const bag = await Bag.findOne({
-          select: ['bagId'],
-          where: {
-            bagNumber: paramBagNumber,
-            isDeleted: false,
-          },
-          order: {
-            createdTime: 'DESC',
-          },
-        });
+        paramBagSeq = '0'.repeat(3 - bagDetail.bagSeq.toString().length) + bagDetail.bagSeq;
+        paramBagNumber = bagDetail.bag.bagNumber;
+
+        // handle bagDetail.bag.bagNumber with 10 digit
+        formatedBagNumber = bagDetail.bag.bagNumber.length == 7 ? (bagDetail.bag.bagNumber + paramBagSeq) : bagDetail.bag.bagNumber;
 
         let paramBagId;
         let exist = false;
-        if (bag) {
-          paramBagId = bag.bagId;
+        paramBagId = bagDetail.bagId;
+        if (bagDetail.bagId) {
+          paramBagId = bagDetail.bagId;
         } else {
           paramBagId = await this.createBag(
-            paramBagNumber,
+            bagDetail.bag.bagNumber,
             authMeta.userId,
             timeNow,
           );
@@ -86,7 +89,7 @@ export class ScaninSmdService {
           LEFT JOIN users u ON u.user_id = bih.user_id AND u.is_deleted = false
           WHERE
             bi.bag_id = ${paramBagId} AND
-            bi.bag_seq = ${paramSeq} AND
+            bi.bag_seq = ${bagDetail.bagSeq} AND
             bi.is_deleted = false
         `;
         const resultData = await RawQueryService.query(rawQuery);
@@ -96,10 +99,24 @@ export class ScaninSmdService {
           const usernameScan = resultData[0].username_scan;
           paramBagItemId = resultData[0].bag_item_id;
 
+          // check smu
+          const getDoBagQuery = `select db.do_bag_code from do_bag_detail dbd inner join do_bag db on db.do_bag_id = dbd.do_bag_id AND db.is_deleted = FALSE
+                where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
+          const resultDoBag = await RawQueryService.query(getDoBagQuery);
+          console.log('resultDoBag', resultDoBag);
+          if (resultDoBag.length > 0) {
+            console.log('resultDoPodCodeQuery', resultDoBag[0]);
+            sliceDoPodCode = resultDoBag[0].do_bag_code.slice(0, 3);
+            console.log('sliceDoPodCode', sliceDoPodCode);
+            if (sliceDoPodCode === 'SGB') {
+              statusItem = 4500;
+            }
+          }
+
           if (weight == 0) { // handle error weight = 0 from request payload
             weight = parseFloat(resultData[0].weight);
           }
-          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 || resultData[0].bag_item_status_id == 1000 ) {
+          if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == statusItem || resultData[0].bag_item_status_id == 500 || resultData[0].bag_item_status_id == 1000 ) {
             // do nothing
           } else if ( resultData[0].bag_item_status_id == 3550 || resultData[0].bag_item_status_id == 3500 ) {
             errCode = errCode + 1;
@@ -153,7 +170,7 @@ export class ScaninSmdService {
                 WHERE
                   received_bag_id = ${paramReceivedBagId}
               `;
-              const updReceivedBag = await RawQueryService.query(rawQuery,null,false);
+              const updReceivedBag = await RawQueryService.query(rawQuery, null, false);
               isNew = false;
             }
           }
@@ -184,7 +201,7 @@ export class ScaninSmdService {
 
           const paramReceivedBagDetailId = await this.createReceivedBagDetail(
             paramReceivedBagId,
-            paramBagNumber,
+            formatedBagNumber,
             paramBagSeq,
             payload.bag_item_number,
             weight,
@@ -193,7 +210,7 @@ export class ScaninSmdService {
 
           if (exist == false) {
             paramBagItemId = await this.createBagItem(
-              paramSeq,
+              bagDetail.bagSeq,
               weight,
               paramBagId,
               authMeta.userId,
@@ -202,7 +219,7 @@ export class ScaninSmdService {
             await BagItem.update(
               { bagItemId : paramBagItemId },
               {
-                bagSeq: paramSeq,
+                bagSeq: bagDetail.bagSeq,
                 bagId: paramBagId,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
@@ -227,7 +244,6 @@ export class ScaninSmdService {
             { bagItemId : paramBagItemId },
             {
               bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
-              branchIdLast: permissonPayload.branchId,
               bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
               updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
@@ -262,7 +278,7 @@ export class ScaninSmdService {
         const data = [];
         data.push({
           show_number: showNumber,
-          id: paramBagNumber + paramBagSeq,
+          id: formatedBagNumber,
           received_bag_id: paramReceivedBagId,
           received_bag_code: receivedBagCode,
           received_bag_date: receivedBagDate,
@@ -277,37 +293,34 @@ export class ScaninSmdService {
         result.message = errMessage;
         return result;
       }
-    } else if (payload.bag_item_number.length == 10 && payload.bag_item_number.match(/^[A-Z0-9]{7}[0-9]{3}$/)) {
-      const paramBagNumber = (payload.bag_item_number.substr( 0 , (payload.bag_item_number.length) - 3 )).toUpperCase();
+    } else if (payload.bag_item_number.length == 10 && payload.bag_item_number.match(/^[A-Z0-9]{10}$/)) {
+      let paramBagNumber = '';
       // const paramWeightStr = await payload.bag_item_number.substr(payload.bag_item_number.length - 5);
-      const paramBagSeq = await payload.bag_item_number.substr( (payload.bag_item_number.length) - 3 , 3);
-      const paramSeq = await paramBagSeq * 1;
       // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
+      let paramBagSeq = '';
       let weight = 0;
       let paramBagItemId = null;
+      let formatedBagNumber = null;
 
-      if (paramBagNumber == null || paramBagNumber == undefined) {
+      const bagDetail = await BagService.validBagNumber(payload.bag_item_number);
+
+      if (!bagDetail) {
         result.message = 'Bag Number Not Found';
         return result;
       } else {
-        const bag = await Bag.findOne({
-          select: ['bagId'],
-          where: {
-            bagNumber: paramBagNumber,
-            isDeleted: false,
-          },
-          order: {
-            createdTime: 'DESC',
-          },
-        });
+        paramBagSeq = '0'.repeat(3 - bagDetail.bagSeq.toString().length) + bagDetail.bagSeq;
+        paramBagNumber = bagDetail.bag.bagNumber;
 
+        // handle bagDetail.bag.bagNumber with 10 digit
+        formatedBagNumber = bagDetail.bag.bagNumber.length == 7 ? (bagDetail.bag.bagNumber + paramBagSeq) : bagDetail.bag.bagNumber;
         let paramBagId;
         let exist = false;
-        if (bag) {
-          paramBagId = bag.bagId;
+
+        if (bagDetail.bagId) {
+          paramBagId = bagDetail.bagId;
         } else {
           paramBagId = await this.createBag(
-            paramBagNumber,
+            bagDetail.bag.bagNumber,
             authMeta.userId,
             timeNow,
           );
@@ -325,7 +338,7 @@ export class ScaninSmdService {
           LEFT JOIN users u ON u.user_id = bih.user_id AND u.is_deleted = false
           WHERE
             bi.bag_id = ${paramBagId} AND
-            bi.bag_seq = ${paramSeq} AND
+            bi.bag_seq = ${bagDetail.bagSeq} AND
             bi.is_deleted = false
         `;
         const resultData = await RawQueryService.query(rawQuery);
@@ -335,6 +348,20 @@ export class ScaninSmdService {
           const usernameScan = resultData[0].username_scan;
           paramBagItemId = resultData[0].bag_item_id;
           weight =  resultData[0].weight;
+
+          // check smu
+          const getDoBagQuery = `select db.do_bag_code from do_bag_detail dbd inner join do_bag db on db.do_bag_id = dbd.do_bag_id AND db.is_deleted = FALSE
+where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
+          const resultDoBag = await RawQueryService.query(getDoBagQuery);
+          console.log('resultDoBag', resultDoBag);
+          if (resultDoBag.length > 0) {
+            console.log('resultDoPodCodeQuery', resultDoBag[0]);
+            sliceDoPodCode = resultDoBag[0].do_bag_code.slice(0, 3);
+            console.log('sliceDoPodCode', sliceDoPodCode);
+            if (sliceDoPodCode === 'SGB') {
+              statusItem = 4500;
+            }
+          }
 
           if ( resultData[0].bag_item_status_id == null || resultData[0].bag_item_status_id == 4550 || resultData[0].bag_item_status_id == 500 || resultData[0].bag_item_status_id == 1000 ) {
             // do nothing
@@ -390,7 +417,7 @@ export class ScaninSmdService {
                 WHERE
                   received_bag_id = ${paramReceivedBagId}
               `;
-              const updReceivedBag = await RawQueryService.query(rawQuery,null,false);
+              const updReceivedBag = await RawQueryService.query(rawQuery, null, false);
               isNew = false;
             }
           }
@@ -421,7 +448,7 @@ export class ScaninSmdService {
 
           const paramReceivedBagDetailId = await this.createReceivedBagDetail(
             paramReceivedBagId,
-            paramBagNumber,
+            formatedBagNumber,
             paramBagSeq,
             payload.bag_item_number,
             weight,
@@ -430,7 +457,7 @@ export class ScaninSmdService {
 
           if (exist == false) {
             paramBagItemId = await this.createBagItem(
-              paramSeq,
+              bagDetail.bagSeq,
               weight,
               paramBagId,
               authMeta.userId,
@@ -439,7 +466,7 @@ export class ScaninSmdService {
             await BagItem.update(
               { bagItemId : paramBagItemId },
               {
-                bagSeq: paramSeq,
+                bagSeq: bagDetail.bagSeq,
                 bagId: paramBagId,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
@@ -464,7 +491,6 @@ export class ScaninSmdService {
             { bagItemId : paramBagItemId },
             {
               bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
-              branchIdLast: permissonPayload.branchId,
               bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
               updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
@@ -492,12 +518,12 @@ export class ScaninSmdService {
           authMeta.userId,
           permissonPayload.branchId,
         );
-        const showNumber = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ';
-        const message = paramBagNumber + paramBagSeq + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
+        const showNumber = formatedBagNumber + ' ('  + weight.toString() + ' Kg) ';
+        const message = formatedBagNumber + ' ('  + weight.toString() + ' Kg) ' + 'Scan IN berhasil';
         const data = [];
         data.push({
           show_number: showNumber,
-          id: paramBagNumber + paramBagSeq,
+          id: formatedBagNumber,
           received_bag_id: paramReceivedBagId,
           received_bag_code: receivedBagCode,
           received_bag_date: receivedBagDate,
@@ -575,9 +601,11 @@ export class ScaninSmdService {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     if (payload.bag_item_number.length > 15) {
-      const rawQueryBag = `
+      // check type surat jalan
+      const sliceSuratJalan = payload.bag_item_number.slice(0, 3);
+      let rawQueryBag = `
         SELECT
-          CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')) AS bagnumber
+          SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
         FROM do_pod_detail_bag doPodDetailBag
         INNER JOIN do_pod doPod ON doPod.do_pod_id=doPodDetailBag.do_pod_id AND (doPod.is_deleted = 'false')
         INNER JOIN bag_item bagItem ON bagItem.bag_item_id=doPodDetailBag.bag_item_id AND (bagItem.is_deleted = 'false')
@@ -589,11 +617,10 @@ export class ScaninSmdService {
           doPodDetailBag.is_deleted = false
         GROUP BY bagnumber
         `;
-      const resultDataBag = await RawQueryService.query(rawQueryBag);
 
-      const rawQueryBagScanned = `
+      let rawQueryBagScanned = `
         SELECT
-          CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')) AS bagnumber
+          SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
         FROM do_pod_detail_bag doPodDetailBag
         INNER JOIN do_pod doPod ON doPod.do_pod_id=doPodDetailBag.do_pod_id AND (doPod.is_deleted = 'false')
         INNER JOIN bag_item bagItem ON bagItem.bag_item_id=doPodDetailBag.bag_item_id AND (bagItem.is_deleted = 'false')
@@ -605,6 +632,48 @@ export class ScaninSmdService {
           doPodDetailBag.is_deleted = false
         GROUP BY bagnumber
         `;
+      // smu
+      if (sliceSuratJalan === 'SGB') {
+
+        const findDoBag = `select do_bag_id from do_bag where do_bag_code = '${payload.bag_item_number}' AND is_deleted = FALSE`;
+        const resultFindDoBag = await RawQueryService.query(findDoBag);
+
+        if (resultFindDoBag.length > 0) {
+
+          rawQueryBag = `
+            select
+              SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
+            from do_bag_detail doBagDetail
+            INNER JOIN bag_item bagItem ON bagItem.bag_item_id = doBagDetail.bag_item_id AND (bagItem.is_deleted = 'false')
+            LEFT JOIN bag bag ON bag.bag_id=bagItem.bag_id AND (bag.is_deleted = 'false')
+            LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
+            AND (bih.bag_item_status_id IN (4500, 500) OR bih.bag_item_status_id IS NULL)
+            WHERE
+              doBagDetail.do_bag_id = '${resultFindDoBag[0].do_bag_id}' AND
+              doBagDetail.is_deleted = false
+            GROUP BY bagnumber
+            `;
+
+          rawQueryBagScanned = `
+         select
+              SUBSTR(CONCAT(bag.bag_number, LPAD(bagItem.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
+            from do_bag_detail doBagDetail
+            INNER JOIN bag_item bagItem ON bagItem.bag_item_id = doBagDetail.bag_item_id AND (bagItem.is_deleted = 'false')
+            LEFT JOIN bag bag ON bag.bag_id=bagItem.bag_id AND (bag.is_deleted = 'false')
+            LEFT JOIN bag_item_history bih ON bih.bag_item_history_id = bagItem.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false
+            AND (bih.bag_item_status_id NOT IN (4500, 500) OR bih.bag_item_status_id IS NULL)
+            WHERE
+              doBagDetail.do_bag_id = '${resultFindDoBag[0].do_bag_id}' AND
+              doBagDetail.is_deleted = false
+            GROUP BY bagnumber
+        `;
+
+        } else {
+          throw new BadRequestException('Resi yang Valid tidak Ditemukan di ' + payload.bag_item_number);
+        }
+      }
+
+      const resultDataBag = await RawQueryService.query(rawQueryBag);
       const resultDataBagScanned = await RawQueryService.query(rawQueryBagScanned);
       if (resultDataBag.length > 0) {
         const data = [];
@@ -617,7 +686,7 @@ export class ScaninSmdService {
         result.data = data;
         return result;
       } else {
-        throw new BadRequestException('Resi yang Valid tidak Ditemukan di ' + payload.bag_item_number );
+        throw new BadRequestException('Resi yang Valid tidak Ditemukan di ' + payload.bag_item_number);
       }
     } else {
       throw new BadRequestException('Bag length must > 15');
@@ -633,7 +702,7 @@ export class ScaninSmdService {
 
     payload.fieldResolverMap['bagging_datetime'] =  'b.created_time';
     payload.fieldResolverMap['branch_id'] = 'bhin.branch_id';
-    payload.fieldResolverMap['bag_number_seq'] = `CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`;
+    payload.fieldResolverMap['bag_number_seq'] = `SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10)`;
     payload.fieldResolverMap['scan_in_datetime'] = 'bhin.history_date';
 
     payload.globalSearchFields = [
@@ -659,7 +728,7 @@ export class ScaninSmdService {
     q.selectRaw(
       ['b.bag_id', 'bag_id'],
       ['bi.bag_item_id', 'bag_item_id'],
-      [`CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0'))`, 'bag_number_seq'],
+      [`SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10)`, 'bag_number_seq'],
       [`TO_CHAR(b.created_time, 'dd-mm-YYYY HH24:MI:SS')`, 'bagging_datetime'],
       [`CASE
           WHEN bhin.history_date IS NULL THEN 'Belum Scan IN'
@@ -898,7 +967,7 @@ export class ScaninSmdService {
   ) {
     const dataReceivedBagDetail = ReceivedBagDetail.create({
       receivedBagId: paramReceivedBagId,
-      bagNumber: paramBagNumber + paramBagSeq,
+      bagNumber: (paramBagNumber + paramBagSeq).substring(0, 10),
       scannedBagNumber: paramBagItemNumber,
       bagWeight: paramWeight,
       userIdCreated: paramUserId,

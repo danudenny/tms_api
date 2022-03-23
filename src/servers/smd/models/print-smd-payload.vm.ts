@@ -1,4 +1,7 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import {
+  ApiModelProperty,
+  ApiModelPropertyOptional,
+} from '../../../shared/external/nestjs-swagger';
 
 export class PrintSmdPayloadVm {
   @ApiModelProperty()
@@ -87,6 +90,9 @@ export class PrintScaninDetailUserDataVm {
 export class PrintScaninDetailBranchDataVm {
   @ApiModelProperty()
   branchName: string;
+
+  @ApiModelProperty()
+  branchNameTo: string;
 }
 
 export class PrintScaninDetailVm {
@@ -112,4 +118,32 @@ export class PrintScaninDetailVm {
 export class PrintScaninVm {
   @ApiModelProperty({ type: () => PrintScaninDetailVm })
   data: PrintScaninDetailVm;
+}
+
+export class PrintSmdMutationDetail {
+  @ApiModelProperty()
+  doMutationId: string;
+
+  @ApiModelProperty()
+  doMutationCode: string;
+
+  @ApiModelProperty()
+  doMutationDate: string;
+
+  @ApiModelProperty()
+  doMutationNote: string;
+
+  @ApiModelProperty({ type: () => [PrintScaninDetailItemDataVm] })
+  doMutationBagDetail: PrintScaninDetailItemDataVm[];
+
+  @ApiModelProperty({ type: () => PrintScaninDetailUserDataVm })
+  user: PrintScaninDetailUserDataVm;
+
+  @ApiModelProperty({ type: () => PrintScaninDetailBranchDataVm })
+  branch: PrintScaninDetailBranchDataVm;
+}
+
+export class PrintSmdMutation {
+  @ApiModelProperty({ type: () => PrintSmdMutationDetail })
+  data: PrintSmdMutationDetail;
 }
