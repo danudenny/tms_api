@@ -272,6 +272,7 @@ export class SortationPrintService {
     v.leftJoin(e => e.doSortationDetailItems.bagItem, 't2');
     v.leftJoin(e => e.doSortationDetailItems.bagItem.bag, 't3');
     v.where(e => e.doSortationDetailId, w => w.equals(payload.id));
+    v.andWhere(e => e.isDeleted, w => w.isFalse());
 
     v.groupByRaw(`
       t2.bag_item_id,

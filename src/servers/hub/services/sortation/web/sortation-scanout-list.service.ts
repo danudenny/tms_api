@@ -97,6 +97,7 @@ export class SortationScanOutListService {
         `'${branchIdToFilter[0].value}' = ANY(ds.branch_id_to_list)`,
       );
     }
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const [scanOutSortations, count] = await Promise.all([
       q.exec(),
