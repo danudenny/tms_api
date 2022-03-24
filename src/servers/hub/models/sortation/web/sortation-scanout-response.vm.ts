@@ -83,6 +83,9 @@ export class SortationBagDetailResponseVm {
   weight: number;
 
   @ApiModelProperty()
+  isSortir: boolean;
+
+  @ApiModelProperty()
   message: string;
 }
 

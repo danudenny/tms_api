@@ -194,8 +194,8 @@ export class SortationScanOutService {
 
       const responseDetail = new SortationScanOutRouteVm();
       responseDetail.doSortationDetailId = doSortationDetailId;
-      responseDetail.doSortationId = resultDoSortaion.doSortationId,
-      responseDetail.doSortationCode = resultDoSortaion.doSortationCode;
+      // responseDetail.doSortationId = resultDoSortaion.doSortationId,
+      // responseDetail.doSortationCode = resultDoSortaion.doSortationCode;
       responseDetail.branchId = resultBranchTo.branchId;
       responseDetail.branchCode = resultBranchTo.branchCode;
       responseDetail.branchName = resultBranchTo.branchName;
@@ -248,41 +248,42 @@ export class SortationScanOutService {
           return result;
         }
 
+        let isSortir = false;
+        let messageBagType: string = 'Gabung Paket';
+        if (bagDetail.bag.isSortir) {
+          messageBagType = 'Gabung Sortir';
+          isSortir = true;
+
+          if (BAG_STATUS.DO_HUB != bagDetail.bagItemStatusIdLast) {
+            result.message = `${messageBagType} ${bagNumber} belum di scan masuk`;
+            return result;
+          }
+        }
+
         // pengecekan jika total bag/bagsortir sudah pernah scan, akan di cek kembali scan selanjutnya tidak boleh beda type bag
         if (resultDoSortaionDetail.totalBag > 0 || resultDoSortaionDetail.totalBagSortir > 0) {
-          if (resultDoSortaionDetail.isSortir != (bagDetail.bag.isSortir ? bagDetail.bag.isSortir : false)) {
+          if (resultDoSortaionDetail.isSortir != isSortir) {
             result.message = `Tipe gabung paket dengan gabung sortir tidak bisa di gabung galam 1 rute`;
             return result;
           }
         }
 
-        let messageBagType: string = 'Gabung Paket';
-        if (bagDetail.bag.isSortir) {
-          messageBagType = 'Gabung Sortir';
-        }
-
-        if (BAG_STATUS.DO_HUB != bagDetail.bagItemStatusIdLast) {
-          result.message = `${messageBagType} ${bagNumber} belum di scan masuk`;
-          return result;
-        }
-
-        const branch = await Branch.findOne({
-            where: {
-              branchId: resultDoSortaionDetail.branchIdTo,
-              isDeleted: false,
-              isActive: true,
-            },
-        });
-
         // HOLD VALIDASI KEBUTUHAN TESTING DEV
+        // const branch = await Branch.findOne({
+        //     where: {
+        //       branchId: resultDoSortaionDetail.branchIdTo,
+        //       isDeleted: false,
+        //       isActive: true,
+        //     },
+        // });
         // if (bagDetail.bag.representativeIdTo != Number(branch.representativeId)) {
         //   result.message = `Tujuan kota ${messageBagType} ${bagNumber} dengan kota rute tidak sama.`;
         //   return result;
         // }
 
         const sortationDetailItemExist = await this.getSortationDetailItemExist(
-          bagDetail.bagItemId,
-          resultDoSortaionDetail.doSortationDetailId,
+            bagDetail.bagItemId,
+            resultDoSortaionDetail.doSortationDetailId,
         );
         if (sortationDetailItemExist) {
           result.message = `${messageBagType} ${bagNumber} sudah di scan`;
@@ -293,13 +294,13 @@ export class SortationScanOutService {
           await SortationService.createDoSortationDetailItem(
             resultDoSortaionDetail.doSortationDetailId,
             bagDetail.bagItemId,
-            bagDetail.bag.isSortir,
+            isSortir,
             authMeta.userId,
             transactional,
           );
 
           await this.updateTotalBagSortationAndSortationDetail(
-            bagDetail.bag.isSortir,
+            isSortir,
             resultDoSortation,
             resultDoSortaionDetail,
             authMeta.userId,
@@ -307,7 +308,7 @@ export class SortationScanOutService {
           );
         });
 
-        if (!bagDetail.bag.isSortir) {
+        if (!isSortir) {
           BagScanDoSortationQueueService.perform(
             bagDetail.bagItemId,
             authMeta.userId,
@@ -318,16 +319,18 @@ export class SortationScanOutService {
         const detailResponse = new SortationBagDetailResponseVm();
         detailResponse.doSortationDetailId = resultDoSortaionDetail.doSortationDetailId;
         detailResponse.bagItemId = bagDetail.bagItemId;
-        detailResponse.bagNumber = bagDetail.bag.bagNumber;
-        detailResponse.bagSeq = bagDetail.bagSeq;
-        detailResponse.weight = bagDetail.weight;
-        detailResponse.branchId = branch.branchId;
-        detailResponse.branchCode = branch.branchCode;
-        detailResponse.branchToName = branch.branchName;
+        detailResponse.bagNumber = (bagDetail.bag.bagNumber + String(bagDetail.bagSeq).padStart(3, '0')).substring(0, 10);
+        detailResponse.isSortir = isSortir;
         detailResponse.message = `${messageBagType} dengan nomor ${bagNumber} berhasil di scan`;
+        // detailResponse.bagNumber = bagDetail.bag.bagNumber;
+        // detailResponse.bagSeq = bagDetail.bagSeq;
+        // detailResponse.weight = bagDetail.weight;
+        // detailResponse.branchId = branch.branchId;
+        // detailResponse.branchCode = branch.branchCode;
+        // detailResponse.branchToName = branch.branchName;
+
         data.push(detailResponse);
       }
-
       result.statusCode = HttpStatus.OK;
       result.message = `Gabung Paket/Sortir berhasil di scan`;
       result.data = data;
