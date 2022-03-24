@@ -192,11 +192,8 @@ export class SortationScanOutListService {
     response.message = 'Sukses ambil daftar bag';
     response.data = result;
     response.buildPagingWithPayload(payload, count);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Sukses ambil daftar bag',
-      data: result,
-    } as ScanOutSortationBagDetailMoreResponseVm;
+
+    return response;
   }
 
   static async getHistory(
