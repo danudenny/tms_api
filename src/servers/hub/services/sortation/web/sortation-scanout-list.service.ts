@@ -437,6 +437,7 @@ export class SortationScanOutListService {
       branchToName: 'br.branch_name',
       branchCode: 'br.branch_code',
       isSortir: 'dsdi.is_sortir',
+      representativeCode: 'rp.representative_code',
     };
     payload.sortBy = payload.sortBy || 'createdTime';
     const repo = new OrionRepositoryService(DoSortationDetailItem, 'dsdi');
