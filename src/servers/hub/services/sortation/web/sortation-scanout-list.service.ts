@@ -450,6 +450,7 @@ export class SortationScanOutListService {
       ['bi.weight', 'weight'],
       ['br.branch_code', 'branchCode'],
       ['br.branch_name', 'branchToName'],
+      ['rp.representative_code', 'representativeCode'],
     ];
 
     q.selectRaw(...selectColumns)
@@ -469,8 +470,10 @@ export class SortationScanOutListService {
       )
       .innerJoin(e => e.doSortationDetail.branchTo, 'br', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .innerJoin(e => e.doSortationDetail.branchTo.representative, 'rp', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
-
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     return q;

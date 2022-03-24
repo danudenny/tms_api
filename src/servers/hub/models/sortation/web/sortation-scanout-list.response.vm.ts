@@ -117,6 +117,9 @@ export class ScanOutSortationBagDetailVm {
 
   @ApiModelProperty()
   branchToName: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
 }
 
 export class ScanOutSortationBagDetailResponseVm {
