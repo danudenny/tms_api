@@ -1,0 +1,38 @@
+import {ApiBearerAuth, ApiUseTags} from '../../../../../shared/external/nestjs-swagger';
+import {Controller, Get, HttpCode, HttpStatus, Param, Query, UseGuards} from '@nestjs/common';
+import {CodReportService} from '../../../services/cod/cod-report.service';
+import {AuthenticatedGuard} from '../../../../../shared/guards/authenticated.guard';
+import {PermissionTokenGuard} from '../../../../../shared/guards/permission-token.guard';
+
+@ApiUseTags('COD Report')
+@Controller('web/v1/cod/report')
+@ApiBearerAuth()
+export class WebAwbCodReportController {
+
+  constructor(
+    private codReportService: CodReportService,
+  ) {
+  }
+
+  @Get('supplier-invoice/:supplierInvoiceId')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async fetchExportSupplierInvoice(
+    @Param('supplierInvoiceId') supplierInvoiceId: string,
+    @Query() queryParams: {
+      page: string;
+      limit: string;
+    },
+  ) {
+    let page = Number(queryParams.page);
+    let limit = Number(queryParams.limit);
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (!limit || limit < 1) {
+      limit = 10;
+    }
+    return this.codReportService.fetchReportSupplierInvoiceAwb(supplierInvoiceId, page, limit);
+  }
+}
