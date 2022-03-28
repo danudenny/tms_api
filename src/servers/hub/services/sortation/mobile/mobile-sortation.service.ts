@@ -18,6 +18,7 @@ import { MobileSortationUploadImageResponseVm } from '../../../models/sortation/
 import { DoSortationAttachment } from '../../../../../shared/orm-entity/do-sortation-attachment';
 import { MobileSortationUploadImagePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.payload.vm';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
+import { BagScanOutBranchSortirQueueService } from '../../../../queue/services/bag-scan-out-branch-sortir-queue.service';
 
 @Injectable()
 export class MobileSortationService {
@@ -95,6 +96,11 @@ export class MobileSortationService {
       }
 
       // update status AWB & Bag queue
+      BagScanOutBranchSortirQueueService.perform(
+        payload.doSortationId,
+        resultDoSortation.branchIdFrom,
+        authMeta.userId,
+      );
 
       const data = [];
       data.push({
