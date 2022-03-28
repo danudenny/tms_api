@@ -223,8 +223,8 @@ export class V1WebAwbCodService {
 
     q.innerJoin(e => e.awb, 't2', j =>
       j
-        .andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.isCod, w => w.isTrue()),
+        .andWhere(e => e.isCod, w => w.isTrue())
+        .andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.innerJoin(e => e.awb.packageType, 't5');
@@ -264,8 +264,8 @@ export class V1WebAwbCodService {
     ) {
       q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
         j
-          .andWhere(e => e.isDeleted, w => w.isFalse())
-          .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+          .andWhere(e => e.userId, w => w.equals(authMeta.userId))
+          .andWhere(e => e.isDeleted, w => w.isFalse()),
       );
     }
 
