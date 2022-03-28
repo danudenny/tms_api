@@ -28,6 +28,8 @@ import {HubSortirService} from './web/hub-transit/hub-sortir.service';
 import { SmsTrackingService } from './web/sms-tracking.service';
 import { V1WebAwbHandoverService } from './web/v1/web-awb-handover.service';
 import { GatewayService } from './proxy/gateway.service';
+import { CodReportService } from './cod/cod-report.service';
+import { RedshiftReportingService } from './report/redshift-reporting.service';
 
 @Module({
   imports: [SharedModule],
@@ -60,6 +62,8 @@ import { GatewayService } from './proxy/gateway.service';
     SmsTrackingService,
     V1WebAwbHandoverService,
     GatewayService,
+    CodReportService,
+    RedshiftReportingService,
   ],
   exports: [
     AwbStatusService,
@@ -90,6 +94,8 @@ import { GatewayService } from './proxy/gateway.service';
     SmsTrackingService,
     V1WebAwbHandoverService,
     GatewayService,
+    CodReportService,
+    RedshiftReportingService,
   ],
 })
 export class MainServerServicesModule {}
