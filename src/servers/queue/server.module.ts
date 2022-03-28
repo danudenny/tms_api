@@ -175,7 +175,6 @@ export class QueueServerModule extends MultiServerAppModule
       if (serverConfig.bullHub) {
         UpsertHubSummaryBagSortirQueueService.boot();
         UpdateBranchSortirLogSummaryQueueService.boot();
-        BagScanDoSortationQueueService.boot();
       }
     }
 
@@ -210,6 +209,7 @@ export class QueueServerModule extends MultiServerAppModule
       }
       if (serverConfig.bullHub) {
         DoPodDetailPostMetaInQueueService.boot();
+        BagScanDoSortationQueueService.boot();
       }
     }
   }
