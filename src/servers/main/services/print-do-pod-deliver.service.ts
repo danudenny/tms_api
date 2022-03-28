@@ -46,7 +46,8 @@ export class PrintDoPodDeliverService {
         },
       })
       .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
-      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse());
+      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse())
+      .orderByRaw('"do_pod_deliver_doPodDeliverDetails"."created_time"', 'DESC');
 
     if (!doPodDeliver) {
       RequestErrorService.throwObj({

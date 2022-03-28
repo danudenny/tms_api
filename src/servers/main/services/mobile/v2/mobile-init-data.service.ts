@@ -335,6 +335,7 @@ export class V2MobileInitDataService {
         },
       );
     }
+    qb.orderBy('do_pod_deliver_detail.created_time','DESC');
     return await qb.getRawMany();
   }
 
