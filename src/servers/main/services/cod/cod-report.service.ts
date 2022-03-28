@@ -17,4 +17,9 @@ export class CodReportService {
     const reportType = this.config.supplierInvoiceAwb + ':' + supplierInvoiceId;
     return this.reportingService.fetchReport(page, limit, reportType);
   }
+
+  async fetchReportAwbSummary(page: number, limit: number) {
+    const reportType = this.config.awbCodSummary;
+    return this.reportingService.fetchReport(page, limit, reportType);
+  }
 }

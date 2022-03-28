@@ -35,4 +35,25 @@ export class WebAwbCodReportController {
     }
     return this.codReportService.fetchReportSupplierInvoiceAwb(supplierInvoiceId, page, limit);
   }
+
+  @Get('awb/summary')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async fetchExportAwbCodSummary(
+    @Query() queryParams: {
+      page: string;
+      limit: string;
+    },
+  ) {
+    let page = Number(queryParams.page);
+    let limit = Number(queryParams.limit);
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (!limit || limit < 1) {
+      limit = 10;
+    }
+    return this.codReportService.fetchReportAwbSummary(page, limit);
+  }
 }
