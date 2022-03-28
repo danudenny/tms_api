@@ -39,7 +39,7 @@ export class BagScanDoSortationQueueService {
       const data = job.data;
 
       BagItemHistoryQueueService.addData(
-        data.bagItem,
+        data.bagItemId,
         BAG_STATUS.IN_HUB,
         data.branchId,
         data.userId,

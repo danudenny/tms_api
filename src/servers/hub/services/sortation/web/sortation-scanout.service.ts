@@ -253,12 +253,13 @@ export class SortationScanOutService {
         if (bagDetail.bag.isSortir) {
           messageBagType = 'Gabung Sortir';
           isSortir = true;
-
-          if (BAG_STATUS.DO_HUB != bagDetail.bagItemStatusIdLast) {
-            result.message = `${messageBagType} ${bagNumber} belum di scan masuk`;
-            return result;
-          }
         }
+
+        // pengecekan GP untuk status DO_HUB
+        // if (BAG_STATUS.DO_HUB != bagDetail.bagItemStatusIdLast) {
+          //   result.message = `${messageBagType} ${bagNumber} belum di scan masuk`;
+          //   return result;
+          // }
 
         // pengecekan jika total bag/bagsortir sudah pernah scan, akan di cek kembali scan selanjutnya tidak boleh beda type bag
         if (resultDoSortaionDetail.totalBag > 0 || resultDoSortaionDetail.totalBagSortir > 0) {
