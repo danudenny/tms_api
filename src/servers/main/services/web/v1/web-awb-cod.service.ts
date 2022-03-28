@@ -154,6 +154,35 @@ export class V1WebAwbCodService {
   ): Promise<WebAwbCodListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissionPayload = AuthService.getPermissionTokenPayload();
+
+    // validate payload
+    let trxDateGte: moment.Moment
+    let trxDateLt: moment.Moment 
+    for (let filter of payload.filters ) {
+      if (filter.field == 'transactionDate') {
+        const d = moment(filter.value, 'YYYY-MM-DD')
+        if (filter.operator == 'gte') {
+          trxDateGte = d;
+        } else {
+          trxDateLt = d;
+        }
+      }
+    }
+
+    if( trxDateLt && trxDateGte ) {
+      const diffInDays = Math.abs(trxDateLt.diff(trxDateGte, 'days')); 
+      if (diffInDays > 7) {
+        throw new BadRequestException(`transactionDate range maximum is 7 days`);
+      }
+    } else {
+      throw new BadRequestException(`transactionDate is mandatory`);
+    }
+    
+    if (payload.limit > 50) {
+      throw new BadRequestException(`limit maximum is 50`);
+    }
+
+
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
