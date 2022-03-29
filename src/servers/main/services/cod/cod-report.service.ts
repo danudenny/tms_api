@@ -2,7 +2,7 @@ import {Injectable} from '@nestjs/common';
 import {RedshiftReportingService} from '../report/redshift-reporting.service';
 import {ConfigService} from '../../../../shared/services/config.service';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { OrionRepositoryService } from 'src/shared/services/orion-repository.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { RoleGroupService } from '../../../../shared/services/role-group.service';
