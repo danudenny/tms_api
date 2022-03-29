@@ -37,6 +37,18 @@ export class WebAwbCodReportController {
     return this.codReportService.fetchReportSupplierInvoiceAwb(supplierInvoiceId, page, limit);
   }
 
+  @Post('supplier-invoice')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async generateExportSupplierInvoice(
+    @Body() payload: {
+      supplierInvoiceId: string,
+    },
+  ) {
+    return this.codReportService.generateReportSupplierInvoiceAwb(payload.supplierInvoiceId);
+  }
+
   @Get('awb/summary')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
