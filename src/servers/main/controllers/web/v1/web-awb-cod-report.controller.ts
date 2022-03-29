@@ -1,8 +1,9 @@
 import {ApiBearerAuth, ApiUseTags} from '../../../../../shared/external/nestjs-swagger';
-import {Controller, Get, HttpCode, HttpStatus, Param, Query, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards} from '@nestjs/common';
 import {CodReportService} from '../../../services/cod/cod-report.service';
 import {AuthenticatedGuard} from '../../../../../shared/guards/authenticated.guard';
 import {PermissionTokenGuard} from '../../../../../shared/guards/permission-token.guard';
+import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
 
 @ApiUseTags('COD Report')
 @Controller('web/v1/cod/report')
@@ -56,4 +57,15 @@ export class WebAwbCodReportController {
     }
     return this.codReportService.fetchReportAwbSummary(page, limit);
   }
+
+  @Post('awb/summary')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard,PermissionTokenGuard)
+  public async exportAwbSummary(
+    @Body() payload: BaseMetaPayloadVm
+  ) {
+    return this.codReportService.generateAWBSummaryReport(payload);
+  }
+
 }
