@@ -505,9 +505,9 @@ export class SortationScanOutListService {
     const q = repo.findAllRaw();
 
     const selectColumns = [
-      ['d.do_sortation_attachment_id', 'doSortationAttachmentId'],
+      ['dsa.do_sortation_attachment_id', 'doSortationAttachmentId'],
       ['at.url', 'imageUrl'],
-      ['d.attachment_type', 'imageType'],
+      ['dsa.attachment_type', 'imageType'],
     ];
     q.selectRaw(...selectColumns).innerJoin(e => e.attachmentTms, 'at', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -517,7 +517,7 @@ export class SortationScanOutListService {
       q.andWhere(
         e => e.doSortationVehicleId,
         w => w.equals(scanoutHistory.doSortationVehicleId),
-      ).andWhereRaw(`LOWER(d.attachment_type) = 'problem`);
+      ).andWhereRaw(`LOWER(dsa.attachment_type) = 'problem`);
     } else if (
       payload.doSortationStatusId == DO_SORTATION_STATUS.BACKUP_PROCESS
     ) {
@@ -525,13 +525,15 @@ export class SortationScanOutListService {
       q.andWhere(
         e => e.doSortationVehicleId,
         w => w.equals(scanoutHistory.doSortationVehicleId),
-      ).andWhereRaw(`LOWER(d.attachment_type) IN ('handover', 'handover_ttd')`);
+      ).andWhereRaw(
+        `LOWER(dsa.attachment_type) IN ('handover', 'handover_ttd')`,
+      );
     } else {
       // photo
       q.andWhere(
         e => e.doSortationVehicleId,
         w => w.equals(scanoutHistory.doSortationVehicleId),
-      ).andWhereRaw(`LOWER(d.attachment_type) IN ('signature', 'photo')`);
+      ).andWhereRaw(`LOWER(dsa.attachment_type) IN ('signature', 'photo')`);
     }
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
