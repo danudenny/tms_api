@@ -3,9 +3,8 @@ import {ConfigService} from '../../../../shared/services/config.service';
 import {AuthService} from '../../../../shared/services/auth.service';
 import axios from 'axios';
 import {MetaService} from '../../../../shared/services/meta.service';
-import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
 import moment = require('moment');
-import { RequestErrorService } from 'src/shared/services/request-error.service';
+import { RequestErrorService } from '../../../../shared/services/request-error.service';
 
 @Injectable()
 export class RedshiftReportingService {
