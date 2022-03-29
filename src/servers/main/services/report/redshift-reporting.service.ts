@@ -1,8 +1,11 @@
-import {BadRequestException, Injectable} from '@nestjs/common';
+import {BadRequestException, HttpStatus, Injectable} from '@nestjs/common';
 import {ConfigService} from '../../../../shared/services/config.service';
 import {AuthService} from '../../../../shared/services/auth.service';
 import axios from 'axios';
 import {MetaService} from '../../../../shared/services/meta.service';
+import { BaseMetaPayloadVm } from 'src/shared/models/base-meta-payload.vm';
+import moment = require('moment');
+import { RequestErrorService } from 'src/shared/services/request-error.service';
 
 @Injectable()
 export class RedshiftReportingService {
@@ -46,5 +49,50 @@ export class RedshiftReportingService {
         }
         throw err;
       });
+  }
+
+  async generateReport(reportType: string, queryParam: string) {
+    const authMeta = AuthService.getAuthMetadata();
+    const filename = `report_${reportType}_${moment().format('YYYYMMDDHHmmss')}`;
+    const url = this.config.baseUrl + this.config.path.report;
+    if (!queryParam){
+      RequestErrorService.throwObj(
+        {
+          message: 'Invalid Payload',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    //send to report service
+    const options = {
+      headers: {
+        accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      params: {
+        employee: authMeta.userId,
+      },
+    };
+
+    const qs = require('querystring');
+    const body = {
+      query_encoded: Buffer.from(queryParam).toString('base64'),
+      filename,
+      report_type: reportType,
+    };
+
+    try {
+      const response = await axios.post(
+        url,
+        qs.stringify(body),
+        options,
+      );
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        throw new BadRequestException(error.response.data);
+      }
+      throw error;
+    }
   }
 }
