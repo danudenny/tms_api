@@ -7,30 +7,70 @@ import { AwbItemAttr } from 'src/shared/orm-entity/awb-item-attr';
 import { AWB_STATUS } from 'src/shared/constants/awb-status.constant';
 import { RoleGroupService } from 'src/shared/services/role-group.service';
 import { AuthService } from 'src/shared/services/auth.service';
+import {CodTransactionDetail} from '../../../../shared/orm-entity/cod-transaction-detail';
+import {TRANSACTION_STATUS} from '../../../../shared/constants/transaction-status.constant';
 
 @Injectable()
 export class CodReportService {
 
-  private config;
+  private configReportType;
 
   constructor(
     private reportingService: RedshiftReportingService,
   ) {
-    this.config = ConfigService.get('codReportType');
+    this.configReportType = ConfigService.get('codReportType');
   }
 
   async fetchReportSupplierInvoiceAwb(supplierInvoiceId: string, page: number, limit: number) {
-    const reportType = this.config.supplierInvoiceAwb + ':' + supplierInvoiceId;
+    const reportType = this.configReportType.supplierInvoiceAwb + ':' + supplierInvoiceId;
     return this.reportingService.fetchReport(page, limit, reportType);
   }
 
+  async generateReportSupplierInvoiceAwb(supplierInvoiceId: string) {
+    const reportType = this.configReportType.supplierInvoiceAwb + ':' + supplierInvoiceId;
+    const rawQuery = this.generateQueryReportSupplierInvoiceAwb(supplierInvoiceId);
+    return this.reportingService.generateReport(reportType, rawQuery);
+  }
+
+  private generateQueryReportSupplierInvoiceAwb(supplierInvoiceId: string): string {
+    const repo = new OrionRepositoryService(CodTransactionDetail, 't1');
+    const q = repo.findAllRaw();
+
+    q.selectRaw(
+      ['t1.partner_name', 'partnerName'],
+      ['t1.awb_date', 'awbDate'],
+      ['t1.awb_number', 'awbNumber'],
+      ['t1.parcel_value', 'parcelValue'],
+      ['t1.cod_value', 'codValue'],
+      ['t1.cod_fee', 'codFee'],
+      ['t1.pod_date', 'podDate'],
+      ['t1.consignee_name', 'consigneeName'],
+      ['t1.cust_package', 'custPackage'],
+      ['t1.pickup_source', 'pickupSource'],
+      ['t1.current_position', 'currentPosition'],
+      ['t1.destination_code', 'destinationCode'],
+      ['t1.destination', 'destination'],
+      ['t1.parcel_content', 'parcelContent'],
+      ['t1.package_type', 'packageType'],
+      ['t1.parcel_note', 'parcelNote'],
+    );
+    q.where(e => e.codSupplierInvoiceId, w => w.equals(supplierInvoiceId));
+    q.andWhere(
+      e => e.supplierInvoiceStatusId,
+      w => w.equals(TRANSACTION_STATUS.DRAFT_INV),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    return q.getQuery();
+  }
+
   async fetchReportAwbSummary(page: number, limit: number) {
-    const reportType = this.config.awbCodSummary;
+    const reportType = this.configReportType.awbCodSummary;
     return this.reportingService.fetchReport(page, limit, reportType);
   }
 
  async generateAWBSummaryReport(payload:BaseMetaPayloadVm) {
-    const reportType = this.config.awbCodSummary;
+    const reportType = this.configReportType.awbCodSummary;
     const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthMetadata();
 
