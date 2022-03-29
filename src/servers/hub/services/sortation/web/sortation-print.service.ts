@@ -87,7 +87,7 @@ export class SortationPrintService {
         },
       })
       .where(e => e.doSortationId, w => w.equals(queryParams.id))
-      .where(e => e.isDeleted, w => w.isFalse());
+      .andWhere(e => e.isDeleted, w => w.isFalse());
 
     if (!doSortation) {
       RequestErrorService.throwObj({
