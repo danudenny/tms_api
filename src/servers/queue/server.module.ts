@@ -200,7 +200,6 @@ export class QueueServerModule extends MultiServerAppModule
         DoSmdPostAwbHistoryMetaQueueService.boot();
         BagScanInBranchSmdQueueService.boot();
         BagScanOutBranchSmdQueueService.boot();
-        BagScanOutBranchSortirQueueService.boot();
         BagScanDoSmdQueueService.boot();
         BagRepresentativeScanDoSmdQueueService.boot();
         BagAwbDeleteHistoryInHubFromSmdQueueService.boot();
@@ -212,6 +211,7 @@ export class QueueServerModule extends MultiServerAppModule
       if (serverConfig.bullHub) {
         DoPodDetailPostMetaInQueueService.boot();
         BagScanDoSortationQueueService.boot();
+        BagScanOutBranchSortirQueueService.boot();
       }
     }
   }
