@@ -449,7 +449,10 @@ export class SortationScanOutListService {
     const selectColumns = [
       ['dsdi.do_sortation_detail_item_id', 'doSortationDetailItemId'],
       ['dsdi.do_sortation_detail_id', 'doSortationDetailId'],
-      ['b.bag_number', 'bagNumber'],
+      [
+        `SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, \'0\')), 1, 10)`,
+        'bagNumber',
+      ],
       ['bi.weight', 'weight'],
       ['br.branch_code', 'branchCode'],
       ['br.branch_name', 'branchToName'],
@@ -505,7 +508,7 @@ export class SortationScanOutListService {
     const q = repo.findAllRaw();
 
     const selectColumns = [
-      ['dsa.do_sortation_attachment_id', 'doSortationAttachmentId'],
+      ['dsa.do_sortation_attachment_id', 'doSortationDetailAttachmentId'],
       ['at.url', 'imageUrl'],
       ['dsa.attachment_type', 'imageType'],
     ];
