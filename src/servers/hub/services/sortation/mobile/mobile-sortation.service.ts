@@ -460,7 +460,7 @@ export class MobileSortationService {
       doSortationAttachment.doSortationDetailId = payload.doSortationDetailId;
       doSortationAttachment.attachmentTmsId = attachmentId;
       doSortationAttachment.attachmentType = payload.imageType;
-
+      await DoSortationAttachment.save(doSortationAttachment);
     }
 
     const data = [];
