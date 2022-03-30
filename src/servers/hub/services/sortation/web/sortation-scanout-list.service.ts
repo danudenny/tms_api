@@ -43,6 +43,7 @@ export class SortationScanOutListService {
       totalBagSortation: 'ds.total_bag_sortir',
       branchIdFrom: 'ds.branch_id_from',
       branchIdTo: 'ds.branch_id_to',
+      branchToName: 'ds.branch_name_to_list',
       branchFromName: 'bf.branch_name',
       doSortationStatusTitle: 'dss.do_sortation_status_title',
       vehicleNumber: 'dsv.vehicle_number',
