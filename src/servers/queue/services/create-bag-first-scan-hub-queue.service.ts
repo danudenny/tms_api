@@ -182,6 +182,7 @@ export class CreateBagFirstScanHubQueueService {
             data.userId,
             data.branchId,
             moment(data.timestamp).toDate(),
+            data.note,
           );
 
           // update status awb
@@ -219,6 +220,7 @@ export class CreateBagFirstScanHubQueueService {
     userId: number,
     branchId: number,
     timestamp: Date,
+    note: string | null = null,
   ) {
     const obj = {
       bagId,
@@ -231,6 +233,7 @@ export class CreateBagFirstScanHubQueueService {
       userId,
       branchId,
       timestamp,
+      note
     };
 
     return CreateBagFirstScanHubQueueService.queue.add(obj);

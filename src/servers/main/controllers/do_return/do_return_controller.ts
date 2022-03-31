@@ -21,7 +21,8 @@ import { DoReturnDeliveryOrderCtCreateVm, DoReturnDeliveryOrderCustCreateVm, DoR
 export class DoReturnController {
   @Post('listAwb')
   @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: ReturnFindAllResponseVm })
   public async findAllByRequest(@Body() payload: BaseMetaPayloadVm ) {
     return DoReturnService.findAllByRequest(payload);
@@ -29,7 +30,8 @@ export class DoReturnController {
 
   @Post('updateStatus')
   @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async updateDoReturn(@Body() payload: DoReturnPayloadVm ) {
     return DoReturnService.updateDoReturn(payload);
@@ -53,7 +55,8 @@ export class DoReturnController {
 
   @Post('dolist/report')
   @HttpCode(HttpStatus.OK)
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: DoReturnFinenceFindAllResponseVm })
   public async findAllDoReturnReport(@Body() payload: BaseMetaPayloadVm ) {
     return DoReturnService.findAllByRequestReport(payload);
@@ -93,8 +96,8 @@ export class DoReturnController {
 
   @Post('create')
   @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: ReturnUpdateFindAllResponseVm })
   public async returnCreate(@Body() payload: ReturnCreateVm) {
     return DoReturnService.returnCreate(payload);

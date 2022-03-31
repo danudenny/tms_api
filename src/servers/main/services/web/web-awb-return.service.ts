@@ -472,8 +472,7 @@ export class WebAwbReturnService {
     q.leftJoin(e => e.returnAwb.awbStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    // q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
     const total = 0; // await q.countWithoutTakeAndSkip();
@@ -513,10 +512,8 @@ export class WebAwbReturnService {
     payload.fieldResolverMap['consignerName'] = 't7.ref_prev_customer_account_id';
     payload.fieldResolverMap['userUpdatedName'] = '"userUpdatedName"';
     payload.fieldResolverMap['replacementAwbStatusLast'] = '"replacementAwbStatusLast"';
-
-    if (payload.sortBy === '') {
-      payload.sortBy = 'updatedTime';
-    }
+    payload.sortBy ="";
+    payload.page = 1;
 
     // mapping search field and operator default ilike
     payload.globalSearchFields = [
@@ -531,7 +528,7 @@ export class WebAwbReturnService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
-      ['t1.awb_return_id', 'awbReturnId'],
+      ['count(t1.awb_return_id)', 'cnt']
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
@@ -555,11 +552,9 @@ export class WebAwbReturnService {
     q.leftJoin(e => e.returnAwb.awbStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-
-    // q.andWhere(e => e.originAwb.awbStatus.isReturn, w => w.isTrue());
-
-    // const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    let total = await q.exec();
+    total = total[0].cnt;
 
     const result = new WebReturListResponseVm();
 
@@ -640,10 +635,7 @@ export class WebAwbReturnService {
         'Content-disposition',
         `attachment; filename=${fileName}`,
       );
-      // response.writeHead(200, { 'Content-Type': 'text/csv' });
-      // response.flushHeaders();
-      // response.write(`${this.ExportHeaderReturnList.join(',')}\n`);
-
+      
       payload.fieldResolverMap['awbReturnId'] = 't1.awb_return_id';
       payload.fieldResolverMap['originAwbId'] = 't1.origin_awb_id';
       payload.fieldResolverMap['originAwbNumber'] = 't1.origin_awb_number';

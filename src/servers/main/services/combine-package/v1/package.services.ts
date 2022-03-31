@@ -1,5 +1,5 @@
 // #region import
-import _, { assign, sampleSize } from 'lodash';
+import _, { assign, sampleSize, sum } from 'lodash';
 import { createQueryBuilder, getManager } from 'typeorm';
 
 import { BadRequestException } from '@nestjs/common';
@@ -16,7 +16,8 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { BagItemHistoryQueueService } from '../../../../queue/services/bag-item-history-queue.service';
 import { CreateBagAwbScanHubQueueService } from '../../../../queue/services/create-bag-awb-scan-hub-queue.service';
 import { CreateBagFirstScanHubQueueService } from '../../../../queue/services/create-bag-first-scan-hub-queue.service';
-import { PackagePayloadVm } from '../../../models/gabungan-payload.vm';
+import { PackagePayloadVm, LoadPackagesPayloadVm } from '../../../models/gabungan-payload.vm';
+import { RejectPackagePayloadVm } from '../../../models/reject-package-payload.vm';
 import { PackageAwbResponseVm } from '../../../models/gabungan.response.vm';
 import {
   CreateBagNumberResponseVM,
@@ -35,7 +36,7 @@ export class V1PackageService {
   constructor() {}
 
   static async awbPackage(
-    payload: PackagePayloadVm,
+    payload: PackagePayloadVm | RejectPackagePayloadVm,
   ): Promise<PackageAwbResponseVm> {
     const regexNumber = /^[0-9]+$/;
     const value = payload.value;
@@ -142,16 +143,16 @@ export class V1PackageService {
     return result;
   }
 
-  static async loadAwbPackage(): Promise<PackageAwbResponseVm> {
+  static async loadAwbPackage(payload: LoadPackagesPayloadVm): Promise<PackageAwbResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const result = new PackageAwbResponseVm();
-
+    let { scanInType } = payload;
+    scanInType = scanInType ? this.getRejectScanInType(scanInType) : 'BAG',
     result.branchId = 0;
-
     const podScanInHub = await PodScanInHub.findOne({
       where: {
-        scanInType: 'BAG',
+        scanInType,
         transactionStatusId: 100,
         branchId: permissonPayload.branchId,
         userIdCreated: authMeta.userId,
@@ -209,12 +210,12 @@ export class V1PackageService {
         bagWeight = data[0].bagWeight;
         bagSeq = data[0].bagSeq;
 
-        result.bagNumber = bagNumber;
+        result.bagNumber = bagNumber.substring(0, 10);
         result.branchId = branchId;
         result.branchName = branchName;
         result.branchCode = branchCode;
         result.bagSeq = bagSeq;
-        result.bagWeight = bagWeight;
+        result.bagWeight = sum(data.map(item => Number(item.totalWeightFinalRounded)));
         result.podScanInHubId = podScanInHubId;
         result.bagItemId = bagItemId;
         result.dataBag = data;
@@ -401,9 +402,9 @@ export class V1PackageService {
     const authMeta = AuthService.getAuthData();
 
     if (!payload.bagItemId) {
-      throw new BadRequestException("payload invalid");
+      throw new BadRequestException('payload invalid');
     }
-    
+
     const podScanInHub = await PodScanInHub.findOne({
       where: { podScanInHubId: payload.podScanInHubId },
     });
@@ -610,7 +611,7 @@ export class V1PackageService {
     let randomBagNumber;
 
     await getManager().transaction(async trans => {
-      randomBagNumber = 'SS' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
+      randomBagNumber = this.getRandomBagNumber(payload);
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
         branchIdTo: branchId,
@@ -648,13 +649,13 @@ export class V1PackageService {
         isSortir: true,
       });
       bagItem = await trans.save(BagItem, bagItemDetail);
-    });//end transaction
+    }); // end transaction
 
     result.bagItemId = bagItem.bagItemId;
     // result.bagNumber = `${randomBagNumber}${bagSeq}`;
     result.bagNumber = `${randomBagNumber}`;
     result.weight = bagItem.weight;
-    result.bagSeq = 1;//new default bag seq
+    result.bagSeq = 1; // new default bag seq
 
     return result;
   }
@@ -700,9 +701,10 @@ export class V1PackageService {
         // });
 
         // #region PodScanInHub process
+        const scanInType = payload.note ? this.getRejectScanInType(payload.note) : 'BAG';
         const podScanInHub = await PodScanInHub.findOne({
           where: {
-            scanInType: 'BAG',
+            scanInType,
             transactionStatusId: 100,
             branchId: permissonPayload.branchId,
             userIdCreated: authMeta.userId,
@@ -719,7 +721,7 @@ export class V1PackageService {
           const podScanInHubData = PodScanInHub.create({
             podScanInHubId,
             branchId: permissonPayload.branchId,
-            scanInType: 'BAG',
+            scanInType,
             transactionStatusId: 100,
             userIdCreated: authMeta.userId,
             createdTime: moment().toDate(),
@@ -740,6 +742,7 @@ export class V1PackageService {
             authMeta.userId,
             permissonPayload.branchId,
             moment().toDate(),
+            payload.note,
           );
 
           // NOTE: background job for insert bag item history
@@ -782,7 +785,7 @@ export class V1PackageService {
     }
   }
 
-  private static async awbScan(payload: PackagePayloadVm): Promise<any> {
+  private static async awbScan(payload: PackagePayloadVm | RejectPackagePayloadVm): Promise<any> {
     const awbNumber = payload.value;
     const branchId: number = payload.branchId;
     const result = new Object();
@@ -837,6 +840,7 @@ export class V1PackageService {
       const bagItemAwb = await BagItemAwb.findOne({
         awbItemId: awbItemAttr.awbItemId,
         isSortir: true,
+        isDeleted: false,
       });
       if (bagItemAwb) {
         const bagItem = await BagService.getBagNumber(bagItemAwb.bagItemId);
@@ -947,6 +951,7 @@ export class V1PackageService {
           authMeta.userId,
           permissonPayload.branchId,
           moment().toDate(),
+          payload.note,
         );
         // #endregion
 
@@ -1000,5 +1005,19 @@ export class V1PackageService {
 
     const awbDetail = await qb.getRawOne();
     return awbDetail;
+  }
+
+  private static getRandomBagNumber(payload) {
+    let bagNumberPrefix = 'SS';
+    if (payload.note === 'Reject') {
+      bagNumberPrefix = 'SR';
+    } else if (payload.note === 'Irregular') {
+      bagNumberPrefix = 'SI';
+    }
+    return bagNumberPrefix + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
+  }
+
+  private static getRejectScanInType(type: string) {
+    return `BAG-${type.toUpperCase().substring(0, 2)}`;
   }
 }

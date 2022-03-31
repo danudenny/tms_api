@@ -54,6 +54,7 @@ export class AuthService {
           message: 'global.error.PASSWORD_POLICY_INVALID',
         });
       }
+      await this.blockProcess(username);
 
       // validate user password hash md5
       if (user.validatePassword(password)) {
@@ -61,8 +62,13 @@ export class AuthService {
           clientId,
           user,
         );
+
+        await this.removeBlockCounter(username);
+
         return loginResultMetadata;
       } else {
+        await this.addBlockCounter(username);
+
         RequestErrorService.throwObj({
           message: 'global.error.LOGIN_WRONG_PASSWORD',
         });
@@ -70,6 +76,55 @@ export class AuthService {
     } else {
       RequestErrorService.throwObj({
         message: 'global.error.USER_NOT_FOUND',
+      });
+    }
+  }
+
+  async fetchLoginCounterKey(username: string) {
+    return `pod:login-failed-counter:${username}`;
+  }
+
+  async fetchLoginBlockKey(username: string) {
+    return `pod:login-block:${username}`;
+  }
+
+  async addBlockCounter(username: string) {
+    await RedisService.incr(
+      await this.fetchLoginCounterKey(username)
+    );
+  }
+
+  async removeBlockCounter(username: string) {
+    await RedisService.del(
+      await this.fetchLoginCounterKey(username)
+    );
+  }
+
+  /*
+    Block user for default {ttlBlock} seconds
+    Number of block retry {failedPasswordRetry} times
+  */
+  async blockProcess(username: string) {
+    const ttlBlock = 1800; //in second
+    const failedPasswordRetry = 3;
+
+    let checkBlock : any = await RedisService.ttl(await this.fetchLoginBlockKey(username));
+    
+    const failedCounter = await RedisService.get(await this.fetchLoginCounterKey(username));
+    if (failedCounter >= failedPasswordRetry) {
+      await RedisService.setex(
+        await this.fetchLoginBlockKey(username),
+        username,
+        ttlBlock,
+      );
+
+      await this.removeBlockCounter(username);
+    }
+
+    if (checkBlock > 0) {
+      checkBlock = Math.round(checkBlock/60);
+      RequestErrorService.throwObj({
+        message: `Anda sudah gagal memasukan password ${failedPasswordRetry} kali, silahkan coba kembali dalam ${checkBlock} menit`,
       });
     }
   }

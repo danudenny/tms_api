@@ -34,6 +34,19 @@ export class Partner extends TmsBaseEntity {
   })
   apiKey: string | null;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 500,
+    name: 'api_key_old',
+  })
+  apiKeyOld: string | null;
+
+  @Column('bigint', {
+    nullable: true,
+    name: 'api_key_expired',
+  })
+  apiKeyExpired: string | null;
+
   @Column('bigint', {
     nullable: true,
     name: 'customer_account_id',
