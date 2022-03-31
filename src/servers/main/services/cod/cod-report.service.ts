@@ -139,7 +139,7 @@ export class CodReportService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     q.groupByRaw(`
-      branch.branch_id, rep.representative_id
+      branch.branch_id, rep.representative_id, rep.representative_code, branch.branch_name
     `);
 
     q.orderByRaw('SUM(cp.cod_value)', 'DESC');
