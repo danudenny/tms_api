@@ -23,19 +23,6 @@ import { PinoLoggerService } from '../../../../../shared/services/pino-logger.se
 export class V1MobileInitController {
   constructor() {}
 
-  @Post('initData')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ResponseSerializerOptions({ disable: true })
-  @ApiOkResponse({ type: MobileInitDataResponseVm })
-  public async initData(@Body() payload: MobileInitDataPayloadVm) {
-    // NOTE: optimize query change to v2
-    return V1MobileInitDataService.getInitDataByRequest(
-      payload.lastSyncDateTime,
-    );
-  }
-
   @Post('initDataLogin')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
