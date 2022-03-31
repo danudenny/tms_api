@@ -22,6 +22,9 @@ export class TrackingNoteService {
   ): Promise<TrackingNoteResponseVm> {
     const result = new TrackingNoteResponseVm();
 
+    result.message = 'API is expired';
+    return result;
+
     const locking = await RedisService.lockingWithExpire(
       `hold:trackingnote:sync`,
       'locking',
@@ -50,6 +53,9 @@ export class TrackingNoteService {
     payload: TrackingNotePayloadVm,
   ): Promise<TrackingNoteResponseVm> {
     const result = new TrackingNoteResponseVm();
+
+    result.message = 'API is expired';
+    return result;
 
     if (!Array.isArray(payload.arrAwbHistoryId)) {
       RequestErrorService.throwObj(

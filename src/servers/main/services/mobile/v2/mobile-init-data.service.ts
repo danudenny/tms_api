@@ -178,14 +178,21 @@ export class V2MobileInitDataService {
       return await q.exec();
     }
 
-    q.andWhere(e => e.isReturn, w => w.isFalse());
     q.andWhere(e => e.isProblem, w => w.isTrue());
 
-    if (Number(permissonPayload.roleId) == 50){
+    if (Number(permissonPayload.roleId) == 23){
+      q.andWhere(e => e.awbStatusId, w => w.notIn([AWB_STATUS.RTC, AWB_STATUS.RTS, AWB_STATUS.UNRTS]));
       return await q.exec();
     }
 
-    q.andWhere(e => e.awbStatusId, w => w.notIn([AWB_STATUS.RTC, AWB_STATUS.HOLD_WAITING_CUSTOMER]));
+    if (Number(permissonPayload.roleId) == 50){
+      q.andWhere(e => e.awbStatusId, w => w.notIn([AWB_STATUS.RTN, AWB_STATUS.RTS, AWB_STATUS.UNRTS]));
+      return await q.exec();
+    }
+
+    q.andWhere(e => e.isReturn, w => w.isFalse());
+
+    q.andWhere(e => e.awbStatusId, w => w.notIn([AWB_STATUS.HOLD_WAITING_CUSTOMER]));
     return await q.exec();
 
     // // NOTE: add status RTC if role Ops - Sigesit Transit
