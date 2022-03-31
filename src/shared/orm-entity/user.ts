@@ -166,4 +166,11 @@ export class User extends BaseEntity {
     // compare md5 hash password
     return hashPass === this.password;
   }
+
+  validatePasswordPolicy(passwordToValidate: string) {
+    let passwordRegex = new RegExp('(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,})');
+    
+    return passwordRegex.test(passwordToValidate);
+  }
+  
 }

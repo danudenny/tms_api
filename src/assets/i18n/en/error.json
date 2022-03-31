@@ -4,5 +4,6 @@
   "REFRESH_TOKEN_EXPIRED": "Refresh Token Expired",
   "REFRESH_TOKEN_NOT_VALID": "Refresh Token Not Valid",
   "USER_NOT_FOUND": "User Not Found",
-  "SERVER_BUSY": "the system is having problems, please try again"
+  "SERVER_BUSY": "the system is having problems, please try again",
+  "PASSWORD_POLICY_INVALID": "The password is at least 8 characters long, has number, uppercase and lowercase letter"
 }
