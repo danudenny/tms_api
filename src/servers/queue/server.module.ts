@@ -145,8 +145,6 @@ export class QueueServerModule extends MultiServerAppModule
     // init boot Queue
     if (serverConfig.enableNonPriority) {
       if (serverConfig.bullPod) {
-        BagScanOutBranchQueueService.boot();
-        BagScanOutHubQueueService.boot();
         MappingRoleQueueService.boot();
         // AwbSendPartnerQueueService.boot();
         BagDropoffHubQueueService.boot();
@@ -181,6 +179,8 @@ export class QueueServerModule extends MultiServerAppModule
 
     if (serverConfig.enablePriority) {
       if (serverConfig.bullPod) {
+        BagScanOutBranchQueueService.boot();
+        BagScanOutHubQueueService.boot();
         DoPodDetailPostMetaQueueService.boot();
         BagItemHistoryQueueService.boot();
         CreateBagFirstScanHubQueueService.boot();
