@@ -476,6 +476,11 @@ export class V1WebAwbCodService {
   static async awbCodDlvV2(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodDlvV2ListResponseVm> {
+    if (payload.limit > 50) {
+      throw new BadRequestException(`limit maximum is 50`);
+    }
+
+
     payload.fieldResolverMap['driverName'] = 't3.first_name';
     payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
@@ -487,7 +492,7 @@ export class V1WebAwbCodService {
     const repo = new OrionRepositoryService(CodPayment, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q);
+    payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
       ['t3.first_name', 'driverName'],
@@ -506,7 +511,10 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
     });
 
-    q.innerJoin(e => e.userDriver, 't3');
+    q.innerJoin(e => e.userDriver, 't3', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
     q.innerJoin(e => e.branchFinal, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
