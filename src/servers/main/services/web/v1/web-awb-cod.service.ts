@@ -476,6 +476,11 @@ export class V1WebAwbCodService {
   static async awbCodDlvV2(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodDlvV2ListResponseVm> {
+    if (payload.limit > 50) {
+      throw new BadRequestException(`limit maximum is 50`);
+    }
+
+
     payload.fieldResolverMap['driverName'] = 't3.first_name';
     payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
@@ -487,7 +492,7 @@ export class V1WebAwbCodService {
     const repo = new OrionRepositoryService(CodPayment, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q);
+    payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
       ['t3.first_name', 'driverName'],
@@ -507,6 +512,7 @@ export class V1WebAwbCodService {
     });
 
     q.innerJoin(e => e.userDriver, 't3');
+
     q.innerJoin(e => e.branchFinal, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -524,6 +530,60 @@ export class V1WebAwbCodService {
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async countAwbCodDlvV2(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebCodCountResponseVm> {
+    payload.fieldResolverMap['driverName'] = 't3.first_name';
+    payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
+    payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'driverName';
+    }
+
+    const repo = new OrionRepositoryService(CodPayment, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t3.first_name', 'driverName'],
+      ['count(t3.user_id)', 'totalResi'],
+      ['t3.user_id', 'userIdDriver'],
+      ['t4.branch_name', 'branchNameFinal'],
+      ['t4.branch_id', 'branchIdFinal'],
+    );
+
+    q.innerJoin(e => e.awbItemAttr, 't2', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
+      j.andWhere(
+        e => e.transactionStatusId,
+        w => w.equals(TRANSACTION_STATUS.DEFAULT),
+      );
+      j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
+    });
+
+    q.innerJoin(e => e.userDriver, 't3');
+
+    q.innerJoin(e => e.branchFinal, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    q.groupByRaw(
+      't3.user_id, t4.branch_id',
+    );
+
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebCodCountResponseVm();
+
+    result.total = total;
 
     return result;
   }
