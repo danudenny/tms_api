@@ -109,7 +109,7 @@ export class AuthService {
     const failedPasswordRetry = 3;
 
     let checkBlock : any = await RedisService.ttl(await this.fetchLoginBlockKey(username));
-    
+
     const failedCounter = await RedisService.get(await this.fetchLoginCounterKey(username));
     if (failedCounter >= failedPasswordRetry) {
       await RedisService.setex(
@@ -239,6 +239,7 @@ export class AuthService {
     const authMeta = AuthService.getAuthMetadata();
     const configKorwil = ConfigService.get('korwil');
     const configRetur = ConfigService.get('retur');
+    const configDriverSortation = ConfigService.get('hubSortation');
 
     if (authMeta) {
       const user = await RepositoryService.user
@@ -300,6 +301,11 @@ export class AuthService {
       if (configRetur.returnRoleId.includes(Number(roleId))) {
         result.isSigesitReturn = true;
       }
+
+      if (configDriverSortation.sortationDriverRoleId.includes(Number(roleId))) {
+        result.isSortationDriver = true;
+      }
+
       // Populate return value
       result.userId = authMeta.userId;
       result.clientId = authMeta.clientId;

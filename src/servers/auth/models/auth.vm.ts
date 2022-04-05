@@ -158,6 +158,9 @@ export class PermissionAccessResponseVM {
 
   @ApiModelProperty()
   isSigesitReturn: boolean;
+
+  @ApiModelProperty()
+  isSortationDriver: boolean;
 }
 
 export class LoginChannelOtpAddresses {
