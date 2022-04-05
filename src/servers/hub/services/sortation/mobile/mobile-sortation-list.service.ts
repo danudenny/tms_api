@@ -195,7 +195,7 @@ export class MobileSortationListService {
         qb.innerJoin(
           'do_sortation_vehicle',
           'dsv',
-          `ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false and dsv.employee_driver_id = ${paramEmployeeId}`,
+          `ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id and dsv.employee_driver_id = ${paramEmployeeId} and dsv.is_deleted = false `,
         );
         qb.leftJoin(
           'branch',
@@ -232,12 +232,12 @@ export class MobileSortationListService {
             qb.innerJoin(
               'do_sortation_detail',
               'dsd',
-              `ds.do_sortation_id = dsd.do_sortation_id and dsd.is_deleted = false and dsd.do_sortation_status_id_last not in (${DO_SORTATION_STATUS.FINISHED}, ${DO_SORTATION_STATUS.RECEIVED})`,
+              `ds.do_sortation_id = dsd.do_sortation_id and dsd.do_sortation_status_id_last not in (${DO_SORTATION_STATUS.FINISHED}, ${DO_SORTATION_STATUS.RECEIVED}) and dsd.is_deleted = false `,
             );
             qb.innerJoin(
               'do_sortation_vehicle',
               'dsv',
-              `ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false and dsv.employee_driver_id = ${paramEmployeeId}`,
+              `ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id and dsv.employee_driver_id = ${paramEmployeeId} and dsv.is_deleted = false`,
             );
             // qb.innerJoin(
             //   'users',
