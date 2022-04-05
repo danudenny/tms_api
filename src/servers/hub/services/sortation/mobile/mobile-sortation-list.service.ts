@@ -154,7 +154,7 @@ export class MobileSortationListService {
 
     public static async getScanoutSortationMobileListHistory(payload: MobileSortationScanoutListHistoryPayloadVm) {
         const authMeta = AuthService.getAuthData();
-        const paramEmployeeId =  authMeta.userId;
+        const paramEmployeeId = authMeta.employeeId;
         let dateFrom = null;
         let dateTo = null;
 
