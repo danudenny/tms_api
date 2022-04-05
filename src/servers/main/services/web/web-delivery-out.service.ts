@@ -1835,7 +1835,7 @@ export class WebDeliveryOutService {
 
     let isDoPodIdNull = true;
     for (const payloadFilter of payload.filters) {
-      if ('doPodId' == payloadFilter.field) {
+      if ('doPodId' == payloadFilter.field && payloadFilter.value) {
         isDoPodIdNull = false;
         break;
       }
