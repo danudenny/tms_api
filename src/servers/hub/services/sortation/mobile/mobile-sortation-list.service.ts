@@ -158,16 +158,16 @@ export class MobileSortationListService {
         let dateFrom = null;
         let dateTo = null;
 
-        if (payload.start_date && payload.end_date) {
-            if (moment(payload.start_date, 'ddd MMM DD YYYY', true).isValid()) {
-                dateFrom = moment(payload.start_date, 'ddd MMM DD YYYY');
-                dateTo = moment(payload.end_date, 'ddd MMM DD YYYY');
-            } else if (moment(payload.start_date, 'DD MMM YYYY', true).isValid()) {
-                dateFrom = moment(payload.start_date, 'DD MMM YYYY');
-                dateTo = moment(payload.end_date, 'DD MMM YYYY');
+        if (payload.startDate && payload.endDate) {
+            if (moment(payload.startDate, 'ddd MMM DD YYYY', true).isValid()) {
+                dateFrom = moment(payload.startDate, 'ddd MMM DD YYYY');
+                dateTo = moment(payload.endDate, 'ddd MMM DD YYYY');
+            } else if (moment(payload.startDate, 'DD MMM YYYY', true).isValid()) {
+                dateFrom = moment(payload.startDate, 'DD MMM YYYY');
+                dateTo = moment(payload.endDate, 'DD MMM YYYY');
             } else {
-                dateFrom = moment(payload.start_date);
-                dateTo = moment(payload.end_date);
+                dateFrom = moment(payload.startDate);
+                dateTo = moment(payload.endDate);
             }
         }
 
@@ -190,7 +190,7 @@ export class MobileSortationListService {
         qb.innerJoin(
           'do_sortation_detail',
           'dsd',
-          `ds.do_sortation_id = dsd.do_sortation_id and dsd.is_deleted = false and dsd.arrival_date_time >= '${startDate}' and dsd.arrival_date_time < '${endDate}'`,
+          `ds.do_sortation_id = dsd.do_sortation_id and dsd.arrival_date_time >= '${startDate}' and dsd.arrival_date_time < '${endDate}' and dsd.is_deleted = false`,
         );
         qb.innerJoin(
           'do_sortation_vehicle',
