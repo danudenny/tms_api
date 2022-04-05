@@ -8,6 +8,9 @@ import {MobileSortationScanoutDetailResponseVm} from '../../../models/sortation/
 import {MobileSortationScanoutDetailBagPayloadVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail-bag.payload.vm';
 import {MobileSortationScanoutDetailBagResponseVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail-bag.response.vm';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
+import {
+    MobileSortationScanoutListHistoryPayloadVm
+} from '../../../models/sortation/mobile/mobile-sortation-scanout-list-history.payload.vm';
 
 @Injectable()
 export class MobileSortationListService {
@@ -147,6 +150,67 @@ export class MobileSortationListService {
         } catch (e) {
             throw e.error;
         }
+    }
+
+    public static async getScanoutSortationMobileListHistory(payload: MobileSortationScanoutListHistoryPayloadVm) {
+        const authMeta = AuthService.getAuthData();
+        const paramEmployeeId =  authMeta.userId;
+        let dateFrom = null;
+        let dateTo = null;
+
+        if (payload.start_date && payload.end_date) {
+            if (moment(payload.start_date, 'ddd MMM DD YYYY', true).isValid()) {
+                dateFrom = moment(payload.start_date, 'ddd MMM DD YYYY');
+                dateTo = moment(payload.end_date, 'ddd MMM DD YYYY');
+            } else if (moment(payload.start_date, 'DD MMM YYYY', true).isValid()) {
+                dateFrom = moment(payload.start_date, 'DD MMM YYYY');
+                dateTo = moment(payload.end_date, 'DD MMM YYYY');
+            } else {
+                dateFrom = moment(payload.start_date);
+                dateTo = moment(payload.end_date);
+            }
+        }
+
+        const startDate = dateFrom
+          ? dateFrom.format('YYYY-MM-DD 00:00:00')
+          : moment().format('YYYY-MM-DD 00:00:00');
+        const endDate = dateTo
+          ? dateTo.format('YYYY-MM-DD 23:59:59')
+          : moment().format('YYYY-MM-DD 23:59:59');
+        const qb = createQueryBuilder();
+        qb.addSelect('ds.do_sortation_id', 'doSortationId');
+        qb.addSelect('dsd.do_sortation_detail_id', 'doSortationDetailId');
+        qb.addSelect('ds.do_sortation_code', 'doSortationCode');
+        qb.addSelect('b.branch_name', 'branchNameTo');
+        qb.addSelect('b.address', 'branchAddressTo');
+        qb.addSelect('ds.total_bag', 'totalBag');
+        qb.addSelect('ds.total_bag_sortir', 'totalBagSortir');
+        qb.addSelect('ds.do_sortation_time', 'doSortationTime');
+        qb.from('do_sortation', 'ds');
+        qb.innerJoin(
+          'do_sortation_detail',
+          'dsd',
+          `ds.do_sortation_id = dsd.do_sortation_id and dsd.is_deleted = false and dsd.arrival_date_time >= '${startDate}' and dsd.arrival_date_time < '${endDate}'`,
+        );
+        qb.innerJoin(
+          'do_sortation_vehicle',
+          'dsv',
+          `ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false and dsv.employee_driver_id = ${paramEmployeeId}`,
+        );
+        qb.leftJoin(
+          'branch',
+          'b',
+          'dsd.branch_id_to = b.branch_id and b.is_deleted = false',
+        );
+
+        qb.where('ds.is_deleted = false');
+        const data = await qb.getRawMany();
+
+        const result = new MobileSortationScanoutResponseVm();
+        result.statusCode = HttpStatus.OK;
+        result.message = 'Success get mobile sortation history';
+        result.data = data;
+        return result;
     }
 
     public static async getScanoutSortationMobileList() {

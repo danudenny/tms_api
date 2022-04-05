@@ -6,6 +6,9 @@ import {PermissionTokenGuard} from '../../../../../shared/guards/permission-toke
 import {MobileSortationListService} from '../../../services/sortation/mobile/mobile-sortation-list.service';
 import {MobileSortationScanoutDetailPayloadVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail.payload.vm';
 import {MobileSortationScanoutDetailBagPayloadVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail-bag.payload.vm';
+import {
+  MobileSortationScanoutListHistoryPayloadVm
+} from '../../../models/sortation/mobile/mobile-sortation-scanout-list-history.payload.vm';
 
 @ApiUseTags('Mobile Sortation List')
 @Controller('mobile/sortation')
@@ -17,6 +20,14 @@ export class MobileSortationListController {
   @ResponseSerializerOptions({ disable: true })
   public async getScanoutSortationMobileList() {
     return MobileSortationListService.getScanoutSortationMobileList();
+  }
+
+  @Post('list/history')
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ResponseSerializerOptions({ disable: true })
+  public async getScanoutSortationMobileListHistory(@Body() payload: MobileSortationScanoutListHistoryPayloadVm) {
+    return MobileSortationListService.getScanoutSortationMobileListHistory(payload);
   }
 
   @Post('detail')
