@@ -11,6 +11,9 @@ export class MobileSortationScanoutDetail {
   doSortationTime: string;
 
   @ApiModelProperty()
+  arrivalDateTime: string;
+
+  @ApiModelProperty()
   branchNameTo: string;
 
   @ApiModelProperty()
