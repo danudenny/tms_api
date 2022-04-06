@@ -146,4 +146,84 @@ export class CodReportService {
 
     return this.reportingService.generateReport(reportType, q.getQuery())
  }
+
+ async generateAwbCodTransactionDetailReport(payload: BaseMetaPayloadVm){
+   const reportType = this.configReportType.awbCodTransactionDetail;
+   const rawQuery = this.generateQueryAwbCodTransaction(payload)
+   return this.reportingService.generateReport(reportType, rawQuery)
+ }
+
+ private generateQueryAwbCodTransaction(payload: BaseMetaPayloadVm){
+
+  payload.fieldResolverMap['statusDate'] = 'ctd.pod_date';
+  payload.fieldResolverMap['manifestedDate'] = 'ctd.awb_date';
+  payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
+  payload.fieldResolverMap['partnerId'] = 'ctd.partner_id';
+  payload.fieldResolverMap['representativeId'] = 'ctd.representative_id';
+  payload.fieldResolverMap['branchIdFinal'] = 'ctd.branch_id';
+  payload.fieldResolverMap['awbStatusIdFinal'] = 'ctd.awb_status_id_final';
+  payload.fieldResolverMap['transactionStatusId'] = 'ctd.transaction_status_id';
+  payload.fieldResolverMap['userIdDriver'] = 'ude.user_id';
+  payload.fieldResolverMap['supplierInvoiceStatusId'] = 'ctd.supplier_invoice_status_id';
+
+  const repo = new OrionRepositoryService(CodTransactionDetail, 'ctd');
+  const q = repo.findAllRaw();
+
+  payload.applyToOrionRepositoryQuery(q, true);
+
+  q.selectRaw(
+    ['ctd.awb_date', 'awbDate'],
+    ['ctd.awb_number', 'awbNumber'],
+    ['ctd.cod_value', 'codValue'],
+    ['ctd.cod_fee', 'codFee'],
+    ['ctd.consignee_name', 'consigneeName'],
+    ['ctd.created_time', 'createdTime'],
+    ['ctd.current_position', 'currentPosition'],
+    ['ctd.cust_package', 'custPackage'],
+    ['ctd.destination', 'destination'],
+    ['ctd.payment_method', 'paymentMethod'],
+    ['ctd.destination_code', 'destinationCode'],
+    ['ctd.is_deleted', 'isDeleted'],
+    ['ctd.package_type', 'packageType'],
+    ['ctd.parcel_content', 'parcelContent'],
+    ['ctd.parcel_note', 'parcelNote'],
+    ['ctd.parcel_value', 'parcelValue'],
+    ['ctd.partnerId', 'partnerId'],
+    ['ctd.partner_name', 'partnerName'],
+    ['ctd.payment_service', 'paymentService'],
+    ['ctd.pickup_source', 'pickupSource'],
+    ['ctd.pod_date', 'podDate'],
+    ['ctd.transaction_status_id', 'transactionStatusId'],
+    ['ts.status_title', 'transactionStatus'],
+    ['sis.status_title', 'supplierInvoiceStatus'],
+    ['rep.representative_name', 'perwakilan'],
+    ['ctd.user_id_driver', 'userIdDriver'],
+    ['ctd.updated_time', 'updatedTime'],
+    ['ctd.user_id_updated', 'userIdUpdated'],
+    ['ude.nik', 'userIdDriverNik'],
+    ['ude.fullname', 'userIdDriverName'],
+    ['uae.nik', 'userIdUpdatedNik'],
+    ['uae.fullname', 'userIdUpdatedName'],
+    ['ctd.updated_time', 'dateUpdated'],
+  );
+
+  q.leftJoin(e => e.transactionStatus, 'ts', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
+
+  q.leftJoin(e => e.supplierInvoiceStatus, 'sis', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
+
+  q.innerJoin(e => e.userDriver.employee, 'ude');
+  q.innerJoin(e => e.userAdmin.employee, 'uae');
+
+  q.leftJoin(e => e.codTransaction.branch.representative, 'rep', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
+
+  return q.getQuery();
+ 
+  }
+
 }
