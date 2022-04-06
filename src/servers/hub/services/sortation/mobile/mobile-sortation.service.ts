@@ -19,6 +19,7 @@ import { DoSortationAttachment } from '../../../../../shared/orm-entity/do-sorta
 import { MobileSortationUploadImagePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.payload.vm';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { BagScanOutBranchSortirQueueService } from '../../../../queue/services/bag-scan-out-branch-sortir-queue.service';
+import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 
 @Injectable()
 export class MobileSortationService {
@@ -456,10 +457,39 @@ export class MobileSortationService {
     }
 
     if (attachmentId) {
+      let paramDoSortationVehicleId = '';
+      const getDoSortationCode = await DoSortationDetail.findOne({
+        select: [
+          'doSortationId',
+        ],
+        where: {
+          doSortationDetailId: payload.doSortationDetailId,
+          isDeleted: false,
+        },
+      });
+
+      if (getDoSortationCode) {
+        // get doSortationVehicleId
+        const getDoSortationVehicle = await DoSortationVehicle.findOne({
+          select: [
+            'doSortationVehicleId',
+          ],
+          where: {
+            doSortationId: getDoSortationCode.doSortationId,
+            isDeleted: false,
+          },
+        });
+
+        if (getDoSortationVehicle) {
+          paramDoSortationVehicleId = getDoSortationVehicle.doSortationVehicleId;
+        }
+      }
+
       const doSortationAttachment = await DoSortationAttachment.create();
       doSortationAttachment.doSortationDetailId = payload.doSortationDetailId;
       doSortationAttachment.attachmentTmsId = attachmentId;
       doSortationAttachment.attachmentType = payload.imageType;
+      doSortationAttachment.doSortationVehicleId = paramDoSortationVehicleId;
       await DoSortationAttachment.save(doSortationAttachment);
     }
 
