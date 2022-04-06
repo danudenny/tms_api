@@ -141,7 +141,7 @@ export class MobileSortationListService {
                 paramResult.push(obj);
             }
 
-            paramResult.push(data);
+            // paramResult.push(data);
 
             const result = new MobileSortationScanoutDetailResponseVm();
             result.statusCode = HttpStatus.OK;
