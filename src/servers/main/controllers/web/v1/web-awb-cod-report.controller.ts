@@ -80,4 +80,14 @@ export class WebAwbCodReportController {
     return this.codReportService.generateAWBSummaryReport(payload);
   }
 
+  @Post('awb/transaction-detail')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard,PermissionTokenGuard)
+  public async exportAwbCodTransactionDetail(
+    @Body() payload: BaseMetaPayloadVm
+  ) {
+    return this.codReportService.generateAwbCodTransactionDetailReport(payload);
+  }
+
 }
