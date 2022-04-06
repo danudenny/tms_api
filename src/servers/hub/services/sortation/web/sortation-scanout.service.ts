@@ -270,17 +270,17 @@ export class SortationScanOutService {
         }
 
         // HOLD VALIDASI KEBUTUHAN TESTING DEV
-        // const branch = await Branch.findOne({
-        //     where: {
-        //       branchId: resultDoSortaionDetail.branchIdTo,
-        //       isDeleted: false,
-        //       isActive: true,
-        //     },
-        // });
-        // if (bagDetail.bag.representativeIdTo != Number(branch.representativeId)) {
-        //   result.message = `Tujuan kota ${messageBagType} ${bagNumber} dengan kota rute tidak sama.`;
-        //   return result;
-        // }
+        const branch = await Branch.findOne({
+            where: {
+              branchId: resultDoSortaionDetail.branchIdTo,
+              isDeleted: false,
+              isActive: true,
+            },
+        });
+        if (bagDetail.bag.representativeIdTo != Number(branch.representativeId)) {
+          result.message = `Tujuan kota ${messageBagType} ${bagNumber} dengan kota rute tidak sama.`;
+          return result;
+        }
 
         const sortationDetailItemExist = await this.getSortationDetailItemExist(
             bagDetail.bagItemId,
