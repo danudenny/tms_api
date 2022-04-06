@@ -20,6 +20,7 @@ import { MobileSortationUploadImagePayloadVm } from '../../../models/sortation/m
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { BagScanOutBranchSortirQueueService } from '../../../../queue/services/bag-scan-out-branch-sortir-queue.service';
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
+import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 
 @Injectable()
 export class MobileSortationService {
@@ -457,39 +458,21 @@ export class MobileSortationService {
     }
 
     if (attachmentId) {
-      let paramDoSortationVehicleId = '';
-      const getDoSortationCode = await DoSortationDetail.findOne({
-        select: [
-          'doSortationId',
-        ],
-        where: {
-          doSortationDetailId: payload.doSortationDetailId,
-          isDeleted: false,
-        },
-      });
-
-      if (getDoSortationCode) {
-        // get doSortationVehicleId
-        const getDoSortationVehicle = await DoSortationVehicle.findOne({
-          select: [
-            'doSortationVehicleId',
-          ],
-          where: {
-            doSortationId: getDoSortationCode.doSortationId,
-            isDeleted: false,
-          },
-        });
-
-        if (getDoSortationVehicle) {
-          paramDoSortationVehicleId = getDoSortationVehicle.doSortationVehicleId;
-        }
-      }
-
+      const sql = ` select
+                        dsv.do_sortation_vehicle_id
+                    from
+                        do_sortation_detail dsd
+                        INNER JOIN do_sortation_vehicle dsv ON dsv.do_sortation_id = dsd.do_sortation_id
+                        AND dsv.is_deleted = false
+                    WHERE dsd.do_sortation_detail_id = '${payload.doSortationDetailId}'
+                    AND dsd.is_deleted = false
+                    limit 1`;
+      const resultData = await RawQueryService.query(sql);
       const doSortationAttachment = await DoSortationAttachment.create();
       doSortationAttachment.doSortationDetailId = payload.doSortationDetailId;
       doSortationAttachment.attachmentTmsId = attachmentId;
       doSortationAttachment.attachmentType = payload.imageType;
-      doSortationAttachment.doSortationVehicleId = paramDoSortationVehicleId;
+      doSortationAttachment.doSortationVehicleId = resultData[0].do_sortation_vehicle_id;
       await DoSortationAttachment.save(doSortationAttachment);
     }
 
