@@ -3,6 +3,7 @@ import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { PrintDoPodDeliverDataVm } from '../models/print-do-pod-deliver.vm';
 import { PrinterService } from '../../../shared/services/printer.service';
+import { OrderManualHelper } from '../../../shared/helpers/order-manual-helpers';
 import express = require('express');
 import moment = require('moment');
 
@@ -43,11 +44,11 @@ export class PrintDoPodDeliverService {
               totalWeight: true,
             },
           },
+          createdTime : true,
         },
       })
       .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
-      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse())
-      .orderByRaw('"do_pod_deliver_doPodDeliverDetails"."created_time"', 'ASC');
+      .andWhere(e => e.doPodDeliverDetails.isDeleted, w => w.isFalse());
 
     if (!doPodDeliver) {
       RequestErrorService.throwObj({
@@ -135,6 +136,7 @@ export class PrintDoPodDeliverService {
     }
     totalWeight = Math.round(totalWeight * 100)/100;
 
+    data.doPodDeliverDetails = await data.doPodDeliverDetails.sort( await OrderManualHelper.orderManual('createdTime', 'asc'))
     return this.printDoPodDeliver(
       res,
       data,

@@ -11,6 +11,7 @@ import {
     MobileInitDataResponseVm, MobileInitDataDeliveryV2ResponseVm, MobileInitDataResponseV2Vm,
 } from '../../../models/mobile-init-data-response.vm';
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
+import { OrderManualHelper } from '../../../../../shared/helpers/order-manual-helpers';
 
 export class V2MobileInitDataService {
 
@@ -263,6 +264,7 @@ export class V2MobileInitDataService {
       'isHighValue',
     );
     qb.addSelect('pickup_request_detail.recipient_address_type', 'recipientAddressType');
+    qb.addSelect('do_pod_deliver_detail.created_time', 'createdTime')
 
     qb.from('do_pod_deliver_detail', 'do_pod_deliver_detail');
     qb.innerJoin(
@@ -335,8 +337,10 @@ export class V2MobileInitDataService {
         },
       );
     }
-    qb.orderBy('do_pod_deliver_detail.created_time','ASC');
-    return await qb.getRawMany();
+    let data = await qb.getRawMany();
+    data = await data.sort(await OrderManualHelper.orderManual('createdTime', 'asc'));
+    await data.forEach(function(v){delete v.createdTime});
+    return data;
   }
 
   private static async getStatusCheckIn(
