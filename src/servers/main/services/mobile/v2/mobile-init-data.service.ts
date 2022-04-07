@@ -339,7 +339,6 @@ export class V2MobileInitDataService {
     }
     let data = await qb.getRawMany();
     data = await data.sort(await OrderManualHelper.orderManual('createdTime', 'asc'));
-    await data.forEach(function(v){delete v.createdTime});
     return data;
   }
 
