@@ -41,175 +41,180 @@ export class CodFirstTransactionQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(async job => {
-      const data = job.data;
-      let isValidData = true;
-      // let isNewData = false;
-
-      console.log('#### JOB ID  ::: ', job.id);
-      console.log(
-        '##################### SYNC DATA AWB NUMBER ::: ',
-        data.awbNumber,
-      );
-
-      let transactionDetail: CodTransactionDetail;
-      const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
-        'master',
-      );
       try {
-        transactionDetail = await getConnection()
-          .createQueryBuilder(CodTransactionDetail, 'ctd')
-          .setQueryRunner(masterTransactionDetailQueryRunner)
-          .where('ctd.awbItemId = :awbItemId AND ctd.isDeleted = false', {
-            awbItemId: data.awbItemId,
-          })
-          .getOne();
-      } finally {
-        await masterTransactionDetailQueryRunner.release();
-      }
+        const data = job.data;
+        let isValidData = true;
+        // let isNewData = false;
 
-      // Handle first awb scan
-      // only transaction
-      if (transactionDetail && data.codTransactionId) {
-        await CodTransactionDetail.update(
-          {
-            awbItemId: data.awbItemId,
-          },
-          {
-            codTransactionId: data.codTransactionId,
-            transactionStatusId: data.transactionStatusId,
-            updatedTime: data.timestamp,
-          },
+        console.log('#### JOB ID  ::: ', job.id);
+        console.log(
+          '##################### SYNC DATA AWB NUMBER ::: ',
+          data.awbNumber,
         );
-      } else {
-        const codDetail = await this.dataTransaction(data.awbItemId);
-        if (codDetail) {
-          // manipulation data
-          const weightRounded =
-            codDetail.weightRealRounded > 0
-              ? codDetail.weightRealRounded
-              : codDetail.weightFinalRounded;
-          const percentFee = 1; // set on config COD
-          const codFee = (Number(codDetail.codValue) * percentFee) / 100;
-          // Create data Cod Transaction Detail
-          const transactionStatusId = data.transactionStatusId
-            ? Number(data.transactionStatusId)
-            : TRANSACTION_STATUS.TRM;
-          const supplierInvoiceStatusId = data.supplierInvoiceStatusId
-            ? Number(data.supplierInvoiceStatusId)
-            : null;
-          const newTransactionDetail = CodTransactionDetail.create({
-            codTransactionId: data.codTransactionId,
-            transactionStatusId,
-            supplierInvoiceStatusId,
-            codSupplierInvoiceId: data.codSupplierInvoiceId,
-            branchId: Number(data.branchId),
-            userIdDriver: Number(data.userIdDriver),
 
-            paymentMethod: data.paymentMethod,
-            paymentService: data.paymentService,
-            noReference: data.noReference,
+        let transactionDetail: CodTransactionDetail;
+        const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
+          'master',
+        );
+        try {
+          transactionDetail = await getConnection()
+            .createQueryBuilder(CodTransactionDetail, 'ctd')
+            .setQueryRunner(masterTransactionDetailQueryRunner)
+            .where('ctd.awbItemId = :awbItemId AND ctd.isDeleted = false', {
+              awbItemId: data.awbItemId,
+            })
+            .getOne();
+        } finally {
+          await masterTransactionDetailQueryRunner.release();
+        }
 
-            awbItemId: Number(codDetail.awbItemId),
-            awbNumber: codDetail.awbNumber,
-            awbDate: codDetail.awbDate,
-            podDate: codDetail.podDate,
-            codValue: codDetail.codValue,
-            parcelValue: codDetail.parcelValue,
-            weightRounded,
-            codFee,
-            pickupSourceId: codDetail.pickupSourceId,
-            pickupSource: codDetail.pickupSource,
-            currentPositionId: codDetail.currentPositionId,
-            currentPosition: codDetail.currentPosition,
-            destinationCode: codDetail.destinationCode,
-            destinationId: codDetail.destinationId,
-            destination: codDetail.destination,
-
-            consigneeName: codDetail.consigneeName,
-            partnerId: codDetail.partnerId,
-            partnerName: codDetail.partnerName,
-            custPackage: codDetail.custPackage,
-            packageTypeId: Number(codDetail.packageTypeId),
-            packageTypeCode: codDetail.packageTypeCode,
-            packageType: codDetail.packageTypeName,
-            parcelContent: codDetail.parcelContent,
-            parcelNote: codDetail.parcelNote,
-            userIdCreated: Number(data.userId),
-            userIdUpdated: Number(data.userId),
-            createdTime: moment(data.timestamp).toDate(),
-            updatedTime: moment(data.timestamp).toDate(),
-          });
-          transactionDetail = await CodTransactionDetail.save(
-            newTransactionDetail,
+        // Handle first awb scan
+        // only transaction
+        if (transactionDetail && data.codTransactionId) {
+          await CodTransactionDetail.update(
+            {
+              awbItemId: data.awbItemId,
+            },
+            {
+              codTransactionId: data.codTransactionId,
+              transactionStatusId: data.transactionStatusId,
+              updatedTime: data.timestamp,
+            },
           );
-          // isNewData = true; // flag for insert data mongo
-          // sync first data to mongo
-          const newMongo = await this.insertMongo(transactionDetail);
-          console.log(' ############ NEW DATA MONGO :: ', newMongo);
         } else {
-          isValidData = false;
-          console.error('## Data COD Transaction :: Not Found !!! :: ', data);
+          const codDetail = await this.dataTransaction(data.awbItemId);
+          if (codDetail) {
+            // manipulation data
+            const weightRounded =
+              codDetail.weightRealRounded > 0
+                ? codDetail.weightRealRounded
+                : codDetail.weightFinalRounded;
+            const percentFee = 1; // set on config COD
+            const codFee = (Number(codDetail.codValue) * percentFee) / 100;
+            // Create data Cod Transaction Detail
+            const transactionStatusId = data.transactionStatusId
+              ? Number(data.transactionStatusId)
+              : TRANSACTION_STATUS.TRM;
+            const supplierInvoiceStatusId = data.supplierInvoiceStatusId
+              ? Number(data.supplierInvoiceStatusId)
+              : null;
+            const newTransactionDetail = CodTransactionDetail.create({
+              codTransactionId: data.codTransactionId,
+              transactionStatusId,
+              supplierInvoiceStatusId,
+              codSupplierInvoiceId: data.codSupplierInvoiceId,
+              branchId: Number(data.branchId),
+              userIdDriver: Number(data.userIdDriver),
+
+              paymentMethod: data.paymentMethod,
+              paymentService: data.paymentService,
+              noReference: data.noReference,
+
+              awbItemId: Number(codDetail.awbItemId),
+              awbNumber: codDetail.awbNumber,
+              awbDate: codDetail.awbDate,
+              podDate: codDetail.podDate,
+              codValue: codDetail.codValue,
+              parcelValue: codDetail.parcelValue,
+              weightRounded,
+              codFee,
+              pickupSourceId: codDetail.pickupSourceId,
+              pickupSource: codDetail.pickupSource,
+              currentPositionId: codDetail.currentPositionId,
+              currentPosition: codDetail.currentPosition,
+              destinationCode: codDetail.destinationCode,
+              destinationId: codDetail.destinationId,
+              destination: codDetail.destination,
+
+              consigneeName: codDetail.consigneeName,
+              partnerId: codDetail.partnerId,
+              partnerName: codDetail.partnerName,
+              custPackage: codDetail.custPackage,
+              packageTypeId: Number(codDetail.packageTypeId),
+              packageTypeCode: codDetail.packageTypeCode,
+              packageType: codDetail.packageTypeName,
+              parcelContent: codDetail.parcelContent,
+              parcelNote: codDetail.parcelNote,
+              userIdCreated: Number(data.userId),
+              userIdUpdated: Number(data.userId),
+              createdTime: moment(data.timestamp).toDate(),
+              updatedTime: moment(data.timestamp).toDate(),
+            });
+            transactionDetail = await CodTransactionDetail.save(
+              newTransactionDetail,
+            );
+            // isNewData = true; // flag for insert data mongo
+            // sync first data to mongo
+            const newMongo = await this.insertMongo(transactionDetail);
+            console.log(' ############ NEW DATA MONGO :: ', newMongo);
+          } else {
+            isValidData = false;
+            console.error('## Data COD Transaction :: Not Found !!! :: ', data);
+          }
         }
-      }
 
-      // transaction history
-      if (isValidData) {
-        if (data.supplierInvoiceStatusId) {
-          // supplier invoice status
-          const historyInvoice = CodTransactionHistory.create({
-            awbItemId: data.awbItemId,
-            awbNumber: data.awbNumber,
-            transactionDate: data.timestamp,
-            transactionStatusId: data.supplierInvoiceStatusId,
-            branchId: data.branchId,
-            userIdCreated: data.userId,
-            userIdUpdated: data.userId,
-            createdTime: data.timestamp,
-            updatedTime: data.timestamp,
-          });
-          await CodTransactionHistory.insert(historyInvoice);
-        } else {
-          // create transaction history
-          const historyDriver = CodTransactionHistory.create({
-            awbItemId: data.awbItemId,
-            awbNumber: data.awbNumber,
-            transactionDate: moment(data.timestamp)
-              .add(-1, 'minute')
-              .toDate(),
-            transactionStatusId: TRANSACTION_STATUS.SIGESIT,
-            branchId: data.branchId,
-            userIdCreated: data.userId,
-            userIdUpdated: data.userId,
-            createdTime: data.timestamp,
-            updatedTime: data.timestamp,
-          });
-          await CodTransactionHistory.insert(historyDriver);
+        // transaction history
+        if (isValidData) {
+          if (data.supplierInvoiceStatusId) {
+            // supplier invoice status
+            const historyInvoice = CodTransactionHistory.create({
+              awbItemId: data.awbItemId,
+              awbNumber: data.awbNumber,
+              transactionDate: data.timestamp,
+              transactionStatusId: data.supplierInvoiceStatusId,
+              branchId: data.branchId,
+              userIdCreated: data.userId,
+              userIdUpdated: data.userId,
+              createdTime: data.timestamp,
+              updatedTime: data.timestamp,
+            });
+            await CodTransactionHistory.insert(historyInvoice);
+          } else {
+            // create transaction history
+            const historyDriver = CodTransactionHistory.create({
+              awbItemId: data.awbItemId,
+              awbNumber: data.awbNumber,
+              transactionDate: moment(data.timestamp)
+                .add(-1, 'minute')
+                .toDate(),
+              transactionStatusId: TRANSACTION_STATUS.SIGESIT,
+              branchId: data.branchId,
+              userIdCreated: data.userId,
+              userIdUpdated: data.userId,
+              createdTime: data.timestamp,
+              updatedTime: data.timestamp,
+            });
+            await CodTransactionHistory.insert(historyDriver);
 
-          const historyBranch = CodTransactionHistory.create({
-            awbItemId: data.awbItemId,
-            awbNumber: data.awbNumber,
-            transactionDate: data.timestamp,
-            transactionStatusId: TRANSACTION_STATUS.TRM,
-            branchId: data.branchId,
-            userIdCreated: data.userId,
-            userIdUpdated: data.userId,
-            createdTime: data.timestamp,
-            updatedTime: data.timestamp,
-          });
-          await CodTransactionHistory.insert(historyBranch);
+            const historyBranch = CodTransactionHistory.create({
+              awbItemId: data.awbItemId,
+              awbNumber: data.awbNumber,
+              transactionDate: data.timestamp,
+              transactionStatusId: TRANSACTION_STATUS.TRM,
+              branchId: data.branchId,
+              userIdCreated: data.userId,
+              userIdUpdated: data.userId,
+              createdTime: data.timestamp,
+              updatedTime: data.timestamp,
+            });
+            await CodTransactionHistory.insert(historyBranch);
+          }
         }
-      }
 
-      // console.log(' ### SYNC DATA MONGO :: NEW DATA ', isNewData);
-      // if (isNewData) {
-      //   // sync first data to mongo
-      //   // const newMongo = await this.insertMongo(transactionDetail);
-      //   CodSyncTransactionQueueService.perform(
-      //     data.awbNumber,
-      //     data.timestamp,
-      //   );
-      // }
-      return true;
+        // console.log(' ### SYNC DATA MONGO :: NEW DATA ', isNewData);
+        // if (isNewData) {
+        //   // sync first data to mongo
+        //   // const newMongo = await this.insertMongo(transactionDetail);
+        //   CodSyncTransactionQueueService.perform(
+        //     data.awbNumber,
+        //     data.timestamp,
+        //   );
+        // }
+        return true;
+      } catch (error) {
+        console.error(`[cod-first-transaction-queue] `, error);
+        throw error;
+      }
     });
 
     this.queue.on('completed', () => {

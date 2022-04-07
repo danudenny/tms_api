@@ -16,6 +16,7 @@ import {
     AwbPatchStatusPayloadVm, AwbPatchStatusSuccessResponseVm,
 } from '../../models/awb/awb-patch-status.vm';
 import moment = require('moment');
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
 
 // ref: https://orkhan.gitbook.io/typeorm/docs/insert-query-builder
 export class AwbPatchStatusService {
@@ -100,7 +101,7 @@ export class AwbPatchStatusService {
 
   static async patchDataTable(payload: any): Promise<AwbPatchDataSuccessResponseVm> {
     // validation table has retention
-    const validTable = ['awb', 'awb_item_attr'];
+    const validTable = ['awb', 'awb_item_attr', 'awb_item'];
     if (!payload.table && !validTable.includes(payload.table)) {
       throw new BadRequestException('Nama Table tidak valid!, [awb, awb_item_attr]');
     }
@@ -116,6 +117,10 @@ export class AwbPatchStatusService {
         response = await this.patchAwb(payload.data);
         break;
 
+      case 'awb_item':
+        response = await this.patchAwbItem(payload.data);
+        break;
+        
       case 'awb_item_attr':
         response = await this.patchAwbItemAttr(payload.data);
         break;
@@ -129,6 +134,53 @@ export class AwbPatchStatusService {
     result.message = `Success Insert ${response.totalSuccess} Resi`;
     result.status = 200;
     return result;
+  }
+
+  private static async patchAwbItem(data: any): Promise<any> { 
+    const errorMsg = [];
+    let totalSuccess = 0;
+    const timeNow = moment().toDate();
+    try {
+      for (const item of data) {
+        let message = null;
+        // transform to camelcase
+        const newItem = mapKeys(item, function(value, key) {
+          return camelCase(key);
+        });
+
+        // process
+        const awbItem = AwbItem.create(newItem);
+        // force timestamp
+        awbItem.createdTime = timeNow;
+        awbItem.updatedTime = timeNow;
+
+        // must have PK
+        if (awbItem.awbItemId) {
+          const exist = await AwbItem.findOne({awbItemId: awbItem.awbItemId}, {select: ['awbItemId']});
+          if (!exist) {
+            await getConnection()
+              .createQueryBuilder()
+              .insert()
+              .into(AwbItem)
+              .values(awbItem)
+              .returning('')
+              .execute();
+            totalSuccess += 1;
+          } else {
+            message = 'Data awb item sudah ada!';
+          }
+        } else {
+          message = 'Data awb item tidak valid, mesti ada PK!';
+        }
+
+        if (message) {
+          errorMsg.push(message);
+        }
+      } // end of for
+      return { errorMsg, totalSuccess };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   private static async patchAwb(data: any): Promise<any> {

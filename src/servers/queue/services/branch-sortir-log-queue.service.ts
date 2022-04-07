@@ -34,23 +34,29 @@ export class BranchSortirLogQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
       console.log('### CREATE BRANCH SORTIR LOG QUEUE ID =========', job.id);
-      const data = job.data;
+      try {
+        const data = job.data;
 
-      const branchSortirLogDetail = BranchSortirLogDetail.create({
-        scanDate: moment(data.scanDate).format('YYYY-MM-DD 00:00:00'),
-        branchId: data.branchId,
-        awbNumber: data.awbNumber,
-        noChute: data.noChute,
-        branchIdLastmile: data.branchIdLastmile,
-        isCod: data.isCod,
-        isSucceed: data.state == 0 ? true : false,
-        reason: data.message,
-        userIdCreated: data.userId,
-        userIdUpdated: data.userId,
-        updatedTime: moment().toDate(),
-        createdTime: moment().toDate(),
-      });
-      return BranchSortirLogDetail.save(branchSortirLogDetail);
+        const branchSortirLogDetail = BranchSortirLogDetail.create({
+          scanDate: moment(data.scanDate).format('YYYY-MM-DD 00:00:00'),
+          branchId: data.branchId,
+          awbNumber: data.awbNumber,
+          noChute: data.noChute,
+          branchIdLastmile: data.branchIdLastmile,
+          isCod: data.isCod,
+          isSucceed: data.state == 0 ? true : false,
+          reason: data.message,
+          userIdCreated: data.userId,
+          userIdUpdated: data.userId,
+          updatedTime: moment().toDate(),
+          createdTime: moment().toDate(),
+        });
+        return BranchSortirLogDetail.save(branchSortirLogDetail);
+      } catch (error) {
+        console.error(`[branch-sortir-log-queue] `, error);
+        throw error;
+      }
+      
     });
 
     this.queue.on('completed', job => {

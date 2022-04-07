@@ -37,86 +37,91 @@ export class CodUpdateTransactionQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(async job => {
-      const data = job.data;
-
-      let dataTransaction: CodTransactionDetail[];
-      const masterDataTransactionQueryRunner = getConnection().createQueryRunner(
-        'master',
-      );
       try {
-        dataTransaction = await getConnection()
-          .createQueryBuilder(CodTransactionDetail, 'ctd')
-          .setQueryRunner(masterDataTransactionQueryRunner)
-          .select([
-            'ctd.awbNumber',
-            'ctd.awbItemId',
-          ])
-          .where(
-            'ctd.codTransactionId = :codTransactionId AND ctd.isDeleted = false',
-            { codTransactionId: data.codTransactionId },
-          )
-          .getMany();
-      } finally {
-        await masterDataTransactionQueryRunner.release();
-      }
-      console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
+        const data = job.data;
 
-      if (dataTransaction.length) {
-        for (const item of dataTransaction) {
-          // update awb_item_attr transaction status 3500
-          if (Number(data.transactionStatusId) == TRANSACTION_STATUS.TRF) {
-            await AwbItemAttr.update(
-              { awbItemId: item.awbItemId },
-              {
-                transactionStatusId: TRANSACTION_STATUS.TRF,
-              },
+        let dataTransaction: CodTransactionDetail[];
+        const masterDataTransactionQueryRunner = getConnection().createQueryRunner(
+          'master',
+        );
+        try {
+          dataTransaction = await getConnection()
+            .createQueryBuilder(CodTransactionDetail, 'ctd')
+            .setQueryRunner(masterDataTransactionQueryRunner)
+            .select([
+              'ctd.awbNumber',
+              'ctd.awbItemId',
+            ])
+            .where(
+              'ctd.codTransactionId = :codTransactionId AND ctd.isDeleted = false',
+              { codTransactionId: data.codTransactionId },
+            )
+            .getMany();
+        } finally {
+          await masterDataTransactionQueryRunner.release();
+        }
+        console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
+
+        if (dataTransaction.length) {
+          for (const item of dataTransaction) {
+            // update awb_item_attr transaction status 3500
+            if (Number(data.transactionStatusId) == TRANSACTION_STATUS.TRF) {
+              await AwbItemAttr.update(
+                { awbItemId: item.awbItemId },
+                {
+                  transactionStatusId: TRANSACTION_STATUS.TRF,
+                },
+              );
+            }
+
+            CodTransactionHistoryQueueService.perform(
+              item.awbItemId,
+              item.awbNumber,
+              data.transactionStatusId,
+              data.branchId,
+              data.userId,
+              data.timestamp,
             );
-          }
+          } // end of looping
+        }
 
-          CodTransactionHistoryQueueService.perform(
-            item.awbItemId,
-            item.awbNumber,
-            data.transactionStatusId,
-            data.branchId,
-            data.userId,
-            data.timestamp,
-          );
-        } // end of looping
-      }
-
-      // get config mongodb
-      const collection = await MongoDbConfig.getDbSicepatCod(
-        'transaction_detail',
-      );
-      // Update data mongo
-      // Get user updated
-      const userUpdated = await User.findOne({
-        select: ['userId', 'firstName', 'username'],
-        where: {
-          userId: Number(data.userId),
-        },
-        cache: true,
-      });
-      // query store the search condition
-      const query = { codTransactionId: data.codTransactionId };
-      // data stores the updated value
-      const dataUpdate = {
-        $set: {
-          transactionStatusId: Number(data.transactionStatusId),
-          userIdUpdated: Number(data.userId),
-          updatedTime: moment(data.timestamp).toDate(),
-          adminName: userUpdated.firstName,
-          nikAdmin: userUpdated.username,
-        },
-      };
-      try {
-        console.log('## Update MongoDb :: ', dataUpdate);
-        const updateMongo = await collection.updateMany(query, dataUpdate);
+        // get config mongodb
+        const collection = await MongoDbConfig.getDbSicepatCod(
+          'transaction_detail',
+        );
+        // Update data mongo
+        // Get user updated
+        const userUpdated = await User.findOne({
+          select: ['userId', 'firstName', 'username'],
+          where: {
+            userId: Number(data.userId),
+          },
+          cache: true,
+        });
+        // query store the search condition
+        const query = { codTransactionId: data.codTransactionId };
+        // data stores the updated value
+        const dataUpdate = {
+          $set: {
+            transactionStatusId: Number(data.transactionStatusId),
+            userIdUpdated: Number(data.userId),
+            updatedTime: moment(data.timestamp).toDate(),
+            adminName: userUpdated.firstName,
+            nikAdmin: userUpdated.username,
+          },
+        };
+        try {
+          console.log('## Update MongoDb :: ', dataUpdate);
+          const updateMongo = await collection.updateMany(query, dataUpdate);
+        } catch (error) {
+          console.error(error);
+          throw error;
+        }
+        return true;
       } catch (error) {
-        console.error(error);
+        console.error(`[cod-update-transaction-queue] `, error);
         throw error;
       }
-      return true;
     });
 
     this.queue.on('completed', job => {

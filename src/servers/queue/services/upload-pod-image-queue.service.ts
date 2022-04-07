@@ -34,35 +34,40 @@ export class UploadImagePodQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      const data = job.data;
-      // find data and get awb number
-      const deliver = await DoPodDeliverDetail.findOne({
-        select: ['doPodDeliverDetailId', 'awbNumber'],
-        where: {
-          doPodDeliverDetailId: data.doPodDeliverDetailId,
-          isDeleted: false,
-        },
-      });
+      try {
+        const data = job.data;
+        // find data and get awb number
+        const deliver = await DoPodDeliverDetail.findOne({
+          select: ['doPodDeliverDetailId', 'awbNumber'],
+          where: {
+            doPodDeliverDetailId: data.doPodDeliverDetailId,
+            isDeleted: false,
+          },
+        });
 
-      if (deliver) {
-        const awsKey = `attachments/${data.imageType}POD/${
-          deliver.awbNumber
-        }`;
-        // upload image S3 from url image
-        const response = await AwsS3Service.uploadFromUrl(
-          data.pathUrl,
-          awsKey,
-        );
+        if (deliver) {
+          const awsKey = `attachments/${data.imageType}POD/${
+            deliver.awbNumber
+          }`;
+          // upload image S3 from url image
+          const response = await AwsS3Service.uploadFromUrl(
+            data.pathUrl,
+            awsKey,
+          );
 
-        if (response) {
-          // TODO: update flag data DoPodDeliverDetail
-          console.log('### Upload S3 with KEY : ', response.awsKey);
-        } else {
-          console.log('### Upload Response Error');
+          if (response) {
+            // TODO: update flag data DoPodDeliverDetail
+            console.log('### Upload S3 with KEY : ', response.awsKey);
+          } else {
+            console.log('### Upload Response Error');
+          }
         }
-      }
 
-      return true;
+        return true;
+      } catch (error) {
+        console.error(`[upload-pod-image-queue] `, error);
+        throw error;
+      }
     });
 
     this.queue.on('completed', job => {

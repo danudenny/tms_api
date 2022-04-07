@@ -40,20 +40,26 @@ export class UpdatePackageCombineHubQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      const data = job.data;
-      // update awb_item_attr
-      await AwbItemAttr.update(
-        { awbItemAttrId: data.awbItemAttrId },
-        {
-          bagItemIdLast: data.bagItemId,
-          isPackageCombined: true,
-          // updatedTime: dateNow,
-          // awbStatusIdLast: 4500,
-          // userIdLast: data.userId,
-        },
-      );
+      try {
+        const data = job.data;
+        // update awb_item_attr
+        await AwbItemAttr.update(
+          { awbItemAttrId: data.awbItemAttrId },
+          {
+            bagItemIdLast: data.bagItemId,
+            isPackageCombined: true,
+            // updatedTime: dateNow,
+            // awbStatusIdLast: 4500,
+            // userIdLast: data.userId,
+          },
+        );
 
-      return true;
+        return true;
+      } catch (error) {
+        console.error(`[update-package-combine-hub-queue] `, error);
+        throw error;
+      }
+      
     });
 
     this.queue.on('completed', () => {

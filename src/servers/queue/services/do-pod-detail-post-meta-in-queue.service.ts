@@ -33,47 +33,53 @@ export class DoPodDetailPostMetaInQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(10, async job => {
-      const data = job.data;
-      // Logger.log('### JOB ID =========', job.id);
-      // await getManager().transaction(async transactionalEntityManager => {
+      try {
+        const data = job.data;
+        // Logger.log('### JOB ID =========', job.id);
+        // await getManager().transaction(async transactionalEntityManager => {
 
-        // NOTE: get awb_ite_attr and update awb_history_id
-        const awbItemAttr = await AwbItemAttr.findOne({
-          where: {
-            awbItemId: data.awbItemId,
-            isDeleted: false,
-          },
-        });
-        // TODO: to be fixed create data awb history
-        if (awbItemAttr) {
-          // NOTE: Insert Data awb history
-          const awbHistory = AwbHistory.create({
-            awbItemId: data.awbItemId,
-            refAwbNumber: awbItemAttr.awbNumber,
-            userId: data.userId,
-            branchId: data.branchId,
-            employeeIdDriver: data.employeeIdDriver,
-            historyDate: data.timestamp,
-            awbStatusId: data.awbStatusId,
-            awbHistoryIdPrev: awbItemAttr.awbHistoryIdLast,
-            userIdCreated: data.userIdCreated,
-            userIdUpdated: data.userIdUpdated,
-            noteInternal: data.noteInternal,
-            notePublic: data.notePublic,
-            receiverName: data.receiverName,
-            awbNote: data.awbNote,
-            branchIdNext: data.branchIdNext,
-            latitude: data.latitude,
-            longitude: data.longitude,
-            reasonId: data.reasonId,
-            reasonName: data.reasonName,
-            location: data.location,
+          // NOTE: get awb_ite_attr and update awb_history_id
+          const awbItemAttr = await AwbItemAttr.findOne({
+            where: {
+              awbItemId: data.awbItemId,
+              isDeleted: false,
+            },
           });
-          await AwbHistory.insert(awbHistory);
-          // await transactionalEntityManager.insert(AwbHistory, awbHistory);
-          // });
-        }
-      // }); // end transaction
+          // TODO: to be fixed create data awb history
+          if (awbItemAttr) {
+            // NOTE: Insert Data awb history
+            const awbHistory = AwbHistory.create({
+              awbItemId: data.awbItemId,
+              refAwbNumber: awbItemAttr.awbNumber,
+              userId: data.userId,
+              branchId: data.branchId,
+              employeeIdDriver: data.employeeIdDriver,
+              historyDate: data.timestamp,
+              awbStatusId: data.awbStatusId,
+              awbHistoryIdPrev: awbItemAttr.awbHistoryIdLast,
+              userIdCreated: data.userIdCreated,
+              userIdUpdated: data.userIdUpdated,
+              noteInternal: data.noteInternal,
+              notePublic: data.notePublic,
+              receiverName: data.receiverName,
+              awbNote: data.awbNote,
+              branchIdNext: data.branchIdNext,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              reasonId: data.reasonId,
+              reasonName: data.reasonName,
+              location: data.location,
+            });
+            await AwbHistory.insert(awbHistory);
+            // await transactionalEntityManager.insert(AwbHistory, awbHistory);
+            // });
+          }
+        // }); // end transaction
+      } catch (error) {
+        console.error(`[awb-history-post-meta] `, error);
+        throw error;
+      }
+      
 
     });
 
