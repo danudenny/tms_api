@@ -33,6 +33,7 @@ export class CodExportMongoQueueService {
           await V1WebReportCodService.printCodSupplierInvoice(filter, uuid);
         }
       } catch (error) {
+        console.error(`[cod-export-mongo-queue] `, error);
         throw (error);
       }
 

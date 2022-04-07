@@ -33,7 +33,8 @@ export class DoPodDetailPostMetaQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(10, async job => {
-      const data = job.data;
+      try {
+        const data = job.data;
       // Logger.log('### JOB ID =========', job.id);
       // await getManager().transaction(async transactionalEntityManager => {
 
@@ -79,6 +80,10 @@ export class DoPodDetailPostMetaQueueService {
           // });
         }
       // }); // end transaction
+      } catch (error) {
+        console.error(`[awb-history-post-meta] `, error);
+        throw error;
+      }
 
     });
 

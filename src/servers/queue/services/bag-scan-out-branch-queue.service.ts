@@ -37,85 +37,92 @@ export class BagScanOutBranchQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      // await getManager().transaction(async transactionalEntityManager => {
-      // }); // end transaction
-      console.log('### SCAN OUT BRANCH JOB ID =========', job.id);
-      const data = job.data;
+      try {
+        // await getManager().transaction(async transactionalEntityManager => {
+        // }); // end transaction
+        console.log('### SCAN OUT BRANCH JOB ID =========', job.id);
+        const data = job.data;
 
-      const bagItemsAwb = await BagItemAwb.find({
-        where: {
-          bagItemId: data.bagItemId,
-          isDeleted: false,
-        },
-      });
-      // TODO: raw query select insert into
-      // 1. insert table doPOdDetail ??
-      // 2. update table awbItemAttr ??
-      // 3. insert table AwbHistory ??
-      if (bagItemsAwb && bagItemsAwb.length) {
-        let employeeIdDriver = null;
-        let employeeNameDriver = '';
-        const userDriverRepo = await SharedService.getDataUserEmployee(
-          data.userIdDriver,
-        );
-        if (userDriverRepo) {
-          employeeIdDriver = userDriverRepo.employeeId;
-          employeeNameDriver = userDriverRepo.employee.employeeName;
-        }
-        let branchName = 'Kantor Pusat';
-        let cityName = 'Jakarta';
-        let branchNameNext = '';
-
-        const branch = await SharedService.getDataBranchCity(data.branchId);
-        if (branch) {
-          branchName = branch.branchName;
-          cityName = branch.district ? branch.district.city.cityName : '';
-        }
-        // branch next
-        if (data.branchIdNext) {
-          const branchNext = await SharedService.getDataBranchCity(
-              data.branchIdNext,
-            );
-          if (branchNext) {
-            branchNameNext = branchNext.branchName;
+        const bagItemsAwb = await BagItemAwb.find({
+          where: {
+            bagItemId: data.bagItemId,
+            isDeleted: false,
+          },
+        });
+        // TODO: raw query select insert into
+        // 1. insert table doPOdDetail ??
+        // 2. update table awbItemAttr ??
+        // 3. insert table AwbHistory ??
+        if (bagItemsAwb && bagItemsAwb.length) {
+          let employeeIdDriver = null;
+          let employeeNameDriver = '';
+          const userDriverRepo = await SharedService.getDataUserEmployee(
+            data.userIdDriver,
+          );
+          if (userDriverRepo) {
+            employeeIdDriver = userDriverRepo.employeeId;
+            employeeNameDriver = userDriverRepo.employee.employeeName;
           }
-        }
+          let branchName = 'Kantor Pusat';
+          let cityName = 'Jakarta';
+          let branchNameNext = '';
 
-        for (const itemAwb of bagItemsAwb) {
-          if (itemAwb.awbItemId) {
-            const doPodDetail = DoPodDetail.create();
-            doPodDetail.doPodId = data.doPodId;
-            doPodDetail.awbItemId = itemAwb.awbItemId;
-            doPodDetail.awbNumber = itemAwb.awbNumber;
-            doPodDetail.bagNumber = data.bagNumber;
-            doPodDetail.bagId = data.bagId;
-            doPodDetail.bagItemId = data.bagItemId;
-            doPodDetail.isScanOut = true;
-            doPodDetail.scanOutType = 'bag';
-            doPodDetail.transactionStatusIdLast = 800; // OUT_BRANCH
-            doPodDetail.userIdUpdated = data.userId;
-            doPodDetail.userIdCreated = data.userId;
-            await DoPodDetail.insert(doPodDetail);
-
-            // NOTE: queue bull
-            DoPodDetailPostMetaQueueService.createJobByScanOutBag(
-              itemAwb.awbItemId,
-              data.branchId,
-              data.userId,
-              employeeIdDriver,
-              employeeNameDriver,
-              AWB_STATUS.OUT_BRANCH,
-              branchName,
-              cityName,
-              data.branchIdNext,
-              branchNameNext,
-            );
+          const branch = await SharedService.getDataBranchCity(data.branchId);
+          if (branch) {
+            branchName = branch.branchName;
+            cityName = branch.district ? branch.district.city.cityName : '';
           }
+          // branch next
+          if (data.branchIdNext) {
+            const branchNext = await SharedService.getDataBranchCity(
+                data.branchIdNext,
+              );
+            if (branchNext) {
+              branchNameNext = branchNext.branchName;
+            }
+          }
+
+          for (const itemAwb of bagItemsAwb) {
+            if (itemAwb.awbItemId) {
+              const doPodDetail = DoPodDetail.create();
+              doPodDetail.doPodId = data.doPodId;
+              doPodDetail.awbItemId = itemAwb.awbItemId;
+              doPodDetail.awbNumber = itemAwb.awbNumber;
+              doPodDetail.bagNumber = data.bagNumber;
+              doPodDetail.bagId = data.bagId;
+              doPodDetail.bagItemId = data.bagItemId;
+              doPodDetail.isScanOut = true;
+              doPodDetail.scanOutType = 'bag';
+              doPodDetail.transactionStatusIdLast = 800; // OUT_BRANCH
+              doPodDetail.userIdUpdated = data.userId;
+              doPodDetail.userIdCreated = data.userId;
+              await DoPodDetail.insert(doPodDetail);
+
+              // NOTE: queue bull
+              DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+                itemAwb.awbItemId,
+                data.branchId,
+                data.userId,
+                employeeIdDriver,
+                employeeNameDriver,
+                AWB_STATUS.OUT_BRANCH,
+                branchName,
+                cityName,
+                data.branchIdNext,
+                branchNameNext,
+              );
+            }
+          }
+        } else {
+          console.log('### Data Bag Item Awb :: Not Found!!');
         }
-      } else {
-        console.log('### Data Bag Item Awb :: Not Found!!');
+        return true;
+      } catch (error) {
+        console.error(`[bag-scan-out-branch-queue] `, error);
+        throw error;
       }
-      return true;
+
+      
     });
 
     this.queue.on('completed', job => {

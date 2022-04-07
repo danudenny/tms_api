@@ -31,28 +31,34 @@ export class BagItemHistoryQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      // await getManager().transaction(async transactionalEntityManager => {
-      // }); // end transaction
-      const data = job.data;
+      try {
+        // await getManager().transaction(async transactionalEntityManager => {
+        // }); // end transaction
+        const data = job.data;
 
-      if (data.bagItemId) {
-        const bagItemHistory = BagItemHistory.create();
-        bagItemHistory.branchId = data.branchId;
-        bagItemHistory.userId = data.userId;
-        bagItemHistory.bagItemId = data.bagItemId;
-        bagItemHistory.bagItemStatusId = data.bagItemStatusId;
-        bagItemHistory.historyDate = data.timestamp;
-        bagItemHistory.userIdCreated = data.userId;
-        bagItemHistory.userIdUpdated = data.userId;
-        await BagItemHistory.insert(bagItemHistory);
+        if (data.bagItemId) {
+          const bagItemHistory = BagItemHistory.create();
+          bagItemHistory.branchId = data.branchId;
+          bagItemHistory.userId = data.userId;
+          bagItemHistory.bagItemId = data.bagItemId;
+          bagItemHistory.bagItemStatusId = data.bagItemStatusId;
+          bagItemHistory.historyDate = data.timestamp;
+          bagItemHistory.userIdCreated = data.userId;
+          bagItemHistory.userIdUpdated = data.userId;
+          await BagItemHistory.insert(bagItemHistory);
 
-        // await BagItem.update({ bagItemId: data.bagItemId }, {
-        //   bagItemStatusIdLast: data.bagItemStatusId,
-        //   bagItemHistoryId: Number(bagItemHistory.bagItemHistoryId),
-        //   branchIdLast: data.branchId,
-        // });
-        return true;
+          // await BagItem.update({ bagItemId: data.bagItemId }, {
+          //   bagItemStatusIdLast: data.bagItemStatusId,
+          //   bagItemHistoryId: Number(bagItemHistory.bagItemHistoryId),
+          //   branchIdLast: data.branchId,
+          // });
+          return true;
+        }
+      } catch (error) {
+        console.error(`[bag-item-history-queue] `, error);
+        throw error;
       }
+      
     });
 
     this.queue.on('completed', job => {

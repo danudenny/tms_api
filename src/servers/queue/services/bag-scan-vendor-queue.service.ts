@@ -43,105 +43,110 @@ export class BagScanVendorQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      // await getManager().transaction(async transactionalEntityManager => {
-      // }); // end transaction
-      console.log('### SCAN DO SMD VENDOR BAG JOB ID =========', job.id);
-      const data = job.data;
-      const tempAwb = [];
-      const tempBag = [];
+      try {
+        // await getManager().transaction(async transactionalEntityManager => {
+        // }); // end transaction
+        console.log('### SCAN DO SMD VENDOR BAG JOB ID =========', job.id);
+        const data = job.data;
+        const tempAwb = [];
+        const tempBag = [];
 
-      const bagItemsAwb = await BagItemAwb.find({
-        where: {
-          bagItemId: data.bagItemId ? Number(data.bagItemId) : In(data.arrBagItemId),
-          isDeleted: false,
-        },
-      });
+        const bagItemsAwb = await BagItemAwb.find({
+          where: {
+            bagItemId: data.bagItemId ? Number(data.bagItemId) : In(data.arrBagItemId),
+            isDeleted: false,
+          },
+        });
 
-      // UPDATE HISTORY BAG IF REQUESTED
-      if (data.isUpdatedHistoryBag) {
-        let bagItemIds = null;
-        if (data.bagItemId) {
-          bagItemIds = [data.bagItemId];
-        } else {
-          bagItemIds = data.arrBagItemId;
-        }
-        for (const bagItemIdEach of bagItemIds) {
-          if (tempBag.includes(bagItemIdEach)) {
-            continue;
+        // UPDATE HISTORY BAG IF REQUESTED
+        if (data.isUpdatedHistoryBag) {
+          let bagItemIds = null;
+          if (data.bagItemId) {
+            bagItemIds = [data.bagItemId];
+          } else {
+            bagItemIds = data.arrBagItemId;
           }
-          tempBag.push(bagItemIdEach);
-          const resultbagItemHistory = BagItemHistory.create();
-          resultbagItemHistory.bagItemId = bagItemIdEach.toString();
-          resultbagItemHistory.userId = data.userId.toString();
-          resultbagItemHistory.branchId = data.branchId.toString();
-          resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_LINE_HAUL.toString();
-          resultbagItemHistory.userIdCreated = data.userId;
-          resultbagItemHistory.createdTime = moment().toDate();
-          resultbagItemHistory.userIdUpdated = data.userId;
-          resultbagItemHistory.updatedTime = moment().toDate();
+          for (const bagItemIdEach of bagItemIds) {
+            if (tempBag.includes(bagItemIdEach)) {
+              continue;
+            }
+            tempBag.push(bagItemIdEach);
+            const resultbagItemHistory = BagItemHistory.create();
+            resultbagItemHistory.bagItemId = bagItemIdEach.toString();
+            resultbagItemHistory.userId = data.userId.toString();
+            resultbagItemHistory.branchId = data.branchId.toString();
+            resultbagItemHistory.historyDate = moment().toDate();
+            resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_LINE_HAUL.toString();
+            resultbagItemHistory.userIdCreated = data.userId;
+            resultbagItemHistory.createdTime = moment().toDate();
+            resultbagItemHistory.userIdUpdated = data.userId;
+            resultbagItemHistory.updatedTime = moment().toDate();
 
-          const resultbagItemOutHistory = BagItemHistory.create();
-          resultbagItemOutHistory.bagItemId = bagItemIdEach.toString();
-          resultbagItemOutHistory.userId = data.userId.toString();
-          resultbagItemOutHistory.branchId = data.branchId.toString();
-          resultbagItemOutHistory.historyDate = moment().add(1, 'minutes').toDate();
-          resultbagItemOutHistory.bagItemStatusId = BAG_STATUS.OUT_LINE_HAUL.toString();
-          resultbagItemOutHistory.userIdCreated = data.userId;
-          resultbagItemOutHistory.createdTime = moment().add(1, 'minutes').toDate();
-          resultbagItemOutHistory.userIdUpdated = data.userId;
-          resultbagItemOutHistory.updatedTime = moment().add(1, 'minutes').toDate();
+            const resultbagItemOutHistory = BagItemHistory.create();
+            resultbagItemOutHistory.bagItemId = bagItemIdEach.toString();
+            resultbagItemOutHistory.userId = data.userId.toString();
+            resultbagItemOutHistory.branchId = data.branchId.toString();
+            resultbagItemOutHistory.historyDate = moment().add(1, 'minutes').toDate();
+            resultbagItemOutHistory.bagItemStatusId = BAG_STATUS.OUT_LINE_HAUL.toString();
+            resultbagItemOutHistory.userIdCreated = data.userId;
+            resultbagItemOutHistory.createdTime = moment().add(1, 'minutes').toDate();
+            resultbagItemOutHistory.userIdUpdated = data.userId;
+            resultbagItemOutHistory.updatedTime = moment().add(1, 'minutes').toDate();
 
-          await getManager().transaction(async transactionalEntityManager => {
-            await transactionalEntityManager.insert(BagItemHistory, resultbagItemHistory);
-            await transactionalEntityManager.insert(BagItemHistory, resultbagItemOutHistory);
-            await transactionalEntityManager.update(BagItem,
-              { bagItemId : bagItemIdEach },
-              {
-                bagItemHistoryId: Number(resultbagItemOutHistory.bagItemHistoryId),
-                updatedTime: moment().add(1, 'minutes').toDate(),
-              },
-            );
-          });
-        }
-      }
-
-      if (bagItemsAwb && bagItemsAwb.length) {
-
-        for (const itemAwb of bagItemsAwb) {
-          if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
-            // handle duplicate awb item id
-            tempAwb.push(itemAwb.awbItemId);
-
-            DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
-              Number(itemAwb.awbItemId),
-              Number(data.branchId),
-              Number(data.userId),
-              AWB_STATUS.IN_LINE_HAUL,
-              data.vendorName,
-            );
-
-            DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
-              Number(itemAwb.awbItemId),
-              Number(data.branchId),
-              Number(data.userId),
-              AWB_STATUS.OUT_LINE_HAUL,
-              data.vendorName,
-              moment().add(1, 'minutes').toDate(),
-            );
-
-            // Update Internal Process Type
-            await AwbItemAttr.update(
-              { awbItemId : itemAwb.awbItemId },
-              {
-                internalProcessType: 'DARAT_MP',
-                updatedTime:  moment().add(1, 'minutes').toDate(),
-              },
-            );
+            await getManager().transaction(async transactionalEntityManager => {
+              await transactionalEntityManager.insert(BagItemHistory, resultbagItemHistory);
+              await transactionalEntityManager.insert(BagItemHistory, resultbagItemOutHistory);
+              await transactionalEntityManager.update(BagItem,
+                { bagItemId : bagItemIdEach },
+                {
+                  bagItemHistoryId: Number(resultbagItemOutHistory.bagItemHistoryId),
+                  updatedTime: moment().add(1, 'minutes').toDate(),
+                },
+              );
+            });
           }
         }
+
+        if (bagItemsAwb && bagItemsAwb.length) {
+
+          for (const itemAwb of bagItemsAwb) {
+            if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
+              // handle duplicate awb item id
+              tempAwb.push(itemAwb.awbItemId);
+
+              DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
+                Number(itemAwb.awbItemId),
+                Number(data.branchId),
+                Number(data.userId),
+                AWB_STATUS.IN_LINE_HAUL,
+                data.vendorName,
+              );
+
+              DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
+                Number(itemAwb.awbItemId),
+                Number(data.branchId),
+                Number(data.userId),
+                AWB_STATUS.OUT_LINE_HAUL,
+                data.vendorName,
+                moment().add(1, 'minutes').toDate(),
+              );
+
+              // Update Internal Process Type
+              await AwbItemAttr.update(
+                { awbItemId : itemAwb.awbItemId },
+                {
+                  internalProcessType: 'DARAT_MP',
+                  updatedTime:  moment().add(1, 'minutes').toDate(),
+                },
+              );
+            }
+          }
+        }
+        return true;
+      } catch (error) {
+        console.error(`[bag-scan-vendor-queue] `, error);
+        throw error;
       }
-      return true;
     });
 
     this.queue.on('completed', job => {

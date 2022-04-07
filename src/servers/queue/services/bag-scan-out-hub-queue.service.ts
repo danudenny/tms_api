@@ -42,119 +42,125 @@ export class BagScanOutHubQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      await getManager().transaction(async transactionalEntityManager => {
-        console.log('### SCAN OUT HUB JOB ID =========', job.id);
-        const data = job.data;
-
-        const dateNow = moment().toDate();
-        const bagItemsAwb = await BagItemAwb.find({
-          where: {
-            bagItemId: data.bagItemId,
-            isDeleted: false,
-          },
-        });
-        // TODO: raw query select insert into
-        // 1. insert table doPOdDetail ??
-        // 2. update table awbItemAttr ??
-        // 3. insert table AwbHistory ??
-        if (bagItemsAwb && bagItemsAwb.length) {
-          let employeeIdDriver = null;
-          let employeeNameDriver = '';
-          const userDriverRepo = await SharedService.getDataUserEmployee(
-            data.userIdDriver,
-          );
-          if (userDriverRepo) {
-            employeeIdDriver = userDriverRepo.employeeId;
-            employeeNameDriver = userDriverRepo.employee.employeeName;
-          }
-          let branchName = 'Kantor Pusat';
-          let cityName = 'Jakarta';
-          let branchNameNext = 'Pluit';
-
-          const branch = await SharedService.getDataBranchCity(data.branchId);
-          if (branch) {
-            branchName = branch.branchName;
-            cityName = branch.district ? branch.district.city.cityName : '';
-          }
-          // branch next
-          if (data.branchIdNext) {
-            const branchNext = await SharedService.getDataBranchCity(
-                data.branchIdNext,
-              );
-            if (branchNext) {
-              branchNameNext = branchNext.branchName;
+      try {
+        await getManager().transaction(async transactionalEntityManager => {
+          console.log('### SCAN OUT HUB JOB ID =========', job.id);
+          const data = job.data;
+  
+          const dateNow = moment().toDate();
+          const bagItemsAwb = await BagItemAwb.find({
+            where: {
+              bagItemId: data.bagItemId,
+              isDeleted: false,
+            },
+          });
+          // TODO: raw query select insert into
+          // 1. insert table doPOdDetail ??
+          // 2. update table awbItemAttr ??
+          // 3. insert table AwbHistory ??
+          if (bagItemsAwb && bagItemsAwb.length) {
+            let employeeIdDriver = null;
+            let employeeNameDriver = '';
+            const userDriverRepo = await SharedService.getDataUserEmployee(
+              data.userIdDriver,
+            );
+            if (userDriverRepo) {
+              employeeIdDriver = userDriverRepo.employeeId;
+              employeeNameDriver = userDriverRepo.employee.employeeName;
             }
-          }
-
-          for (const itemAwb of bagItemsAwb) {
-            if (itemAwb.awbItemId) {
-              const doPodDetail = DoPodDetail.create();
-              doPodDetail.doPodId = data.doPodId;
-              doPodDetail.awbItemId = itemAwb.awbItemId;
-              doPodDetail.awbNumber = itemAwb.awbNumber;
-              doPodDetail.bagNumber = data.bagNumber;
-              doPodDetail.bagId = data.bagId;
-              doPodDetail.bagItemId = data.bagItemId;
-              doPodDetail.isScanOut = true;
-              doPodDetail.scanOutType = 'bag';
-              doPodDetail.transactionStatusIdLast = 300; // OUT_HUB
-              doPodDetail.userIdUpdated = data.userId;
-              doPodDetail.userIdCreated = data.userId;
-              await transactionalEntityManager.insert(DoPodDetail, doPodDetail);
-
-              // await transactionalEntityManager.update(
-              //   HubSummaryAwb,
-              // {
-              //   awbNumber: itemAwb.awbNumber,
-              //   branchId: data.branchId,
-              // },
-              // {
-              //   scanDateOutHub: dateNow,
-              //   outHub: true,
-              //   userIdUpdated: data.userId,
-              //   updatedTime: data.timestamp,
-              // });
-
-              UpdateHubSummaryAwbOutQueueService.perform(
-                data.branchId,
-                itemAwb.awbNumber,
-                data.userId,
-              );
-
-              // TODO: if isTransit auto IN
-              if (data.doPodType == 3020) {
-                // INSERT history IN_HUB awb
-                const obj = await this.getObjectDataInHub(itemAwb.awbItemId, data.branchId, data.userId);
-                const awbHistory = await this.getAwbHistory(obj);
-
-                if (awbHistory) {
-                  await transactionalEntityManager.insert(AwbHistory, awbHistory);
-                } else {
-                  continue;
-                }
+            let branchName = 'Kantor Pusat';
+            let cityName = 'Jakarta';
+            let branchNameNext = 'Pluit';
+  
+            const branch = await SharedService.getDataBranchCity(data.branchId);
+            if (branch) {
+              branchName = branch.branchName;
+              cityName = branch.district ? branch.district.city.cityName : '';
+            }
+            // branch next
+            if (data.branchIdNext) {
+              const branchNext = await SharedService.getDataBranchCity(
+                  data.branchIdNext,
+                );
+              if (branchNext) {
+                branchNameNext = branchNext.branchName;
               }
-
-              // NOTE: queue bull OUT HUB
-              DoPodDetailPostMetaQueueService.createJobByScanOutBag(
-                itemAwb.awbItemId,
-                data.branchId,
-                data.userId,
-                employeeIdDriver,
-                employeeNameDriver,
-                AWB_STATUS.OUT_HUB,
-                branchName,
-                cityName,
-                data.branchIdNext,
-                branchNameNext,
-                1,
-              );
             }
+  
+            for (const itemAwb of bagItemsAwb) {
+              if (itemAwb.awbItemId) {
+                const doPodDetail = DoPodDetail.create();
+                doPodDetail.doPodId = data.doPodId;
+                doPodDetail.awbItemId = itemAwb.awbItemId;
+                doPodDetail.awbNumber = itemAwb.awbNumber;
+                doPodDetail.bagNumber = data.bagNumber;
+                doPodDetail.bagId = data.bagId;
+                doPodDetail.bagItemId = data.bagItemId;
+                doPodDetail.isScanOut = true;
+                doPodDetail.scanOutType = 'bag';
+                doPodDetail.transactionStatusIdLast = 300; // OUT_HUB
+                doPodDetail.userIdUpdated = data.userId;
+                doPodDetail.userIdCreated = data.userId;
+                await transactionalEntityManager.insert(DoPodDetail, doPodDetail);
+  
+                // await transactionalEntityManager.update(
+                //   HubSummaryAwb,
+                // {
+                //   awbNumber: itemAwb.awbNumber,
+                //   branchId: data.branchId,
+                // },
+                // {
+                //   scanDateOutHub: dateNow,
+                //   outHub: true,
+                //   userIdUpdated: data.userId,
+                //   updatedTime: data.timestamp,
+                // });
+  
+                UpdateHubSummaryAwbOutQueueService.perform(
+                  data.branchId,
+                  itemAwb.awbNumber,
+                  data.userId,
+                );
+  
+                // TODO: if isTransit auto IN
+                if (data.doPodType == 3020) {
+                  // INSERT history IN_HUB awb
+                  const obj = await this.getObjectDataInHub(itemAwb.awbItemId, data.branchId, data.userId);
+                  const awbHistory = await this.getAwbHistory(obj);
+  
+                  if (awbHistory) {
+                    await transactionalEntityManager.insert(AwbHistory, awbHistory);
+                  } else {
+                    continue;
+                  }
+                }
+  
+                // NOTE: queue bull OUT HUB
+                DoPodDetailPostMetaQueueService.createJobByScanOutBag(
+                  itemAwb.awbItemId,
+                  data.branchId,
+                  data.userId,
+                  employeeIdDriver,
+                  employeeNameDriver,
+                  AWB_STATUS.OUT_HUB,
+                  branchName,
+                  cityName,
+                  data.branchIdNext,
+                  branchNameNext,
+                  1,
+                );
+              }
+            }
+          } else {
+            console.log('### Data Bag Item Awb :: Not Found!!');
           }
-        } else {
-          console.log('### Data Bag Item Awb :: Not Found!!');
-        }
-      }); // end transaction
-      return true;
+        }); // end transaction
+        return true;
+      } catch (error) {
+        console.error(`[bag-scan-out-hub-queue] `, error);
+        throw error;
+      }
+      
     });
 
     this.queue.on('completed', job => {

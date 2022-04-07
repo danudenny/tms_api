@@ -41,59 +41,64 @@ export class BagScanDoSmdQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      // await getManager().transaction(async transactionalEntityManager => {
-      // }); // end transaction
-      console.log('### SCAN DO SMD JOB ID =========', job.id);
-      const data = job.data;
-      const tempAwb = [];
+      try {
+        // await getManager().transaction(async transactionalEntityManager => {
+        // }); // end transaction
+        console.log('### SCAN DO SMD JOB ID =========', job.id);
+        const data = job.data;
+        const tempAwb = [];
 
-      const bagItemsAwb = await BagItemAwb.find({
-        where: {
-          bagItemId: data.bagItemId ? Number(data.bagItemId) : In(data.arrBagItemId),
-          isDeleted: false,
-        },
-      });
+        const bagItemsAwb = await BagItemAwb.find({
+          where: {
+            bagItemId: data.bagItemId ? Number(data.bagItemId) : In(data.arrBagItemId),
+            isDeleted: false,
+          },
+        });
 
-      // UPDATE HISTORY BAG IF REQUESTED
-      if (data.isUpdatedHistoryBag) {
-        let bagItemIds = null;
-        if (data.bagItemId) {
-          bagItemIds = [data.bagItemId];
-        } else {
-          bagItemIds = data.arrBagItemId;
-        }
-        for (const bagItemIdEach of bagItemIds) {
-          const resultbagItemHistory = BagItemHistory.create();
-          resultbagItemHistory.bagItemId = bagItemIdEach.toString();
-          resultbagItemHistory.userId = data.userId.toString();
-          resultbagItemHistory.branchId = data.branchId.toString();
-          resultbagItemHistory.historyDate = moment().toDate();
-          resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_LINE_HAUL.toString();
-          resultbagItemHistory.userIdCreated = data.userId;
-          resultbagItemHistory.createdTime = moment().toDate();
-          resultbagItemHistory.userIdUpdated = data.userId;
-          resultbagItemHistory.updatedTime = moment().toDate();
-          await BagItemHistory.insert(resultbagItemHistory);
-        }
-      }
-
-      if (bagItemsAwb && bagItemsAwb.length) {
-
-        for (const itemAwb of bagItemsAwb) {
-          if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
-            // handle duplicate awb item id
-            tempAwb.push(itemAwb.awbItemId);
-
-            DoSmdPostAwbHistoryMetaQueueService.createJobByScanDoSmd(
-              Number(itemAwb.awbItemId),
-              Number(data.branchId),
-              Number(data.userId),
-              AWB_STATUS.IN_LINE_HAUL,
-            );
+        // UPDATE HISTORY BAG IF REQUESTED
+        if (data.isUpdatedHistoryBag) {
+          let bagItemIds = null;
+          if (data.bagItemId) {
+            bagItemIds = [data.bagItemId];
+          } else {
+            bagItemIds = data.arrBagItemId;
+          }
+          for (const bagItemIdEach of bagItemIds) {
+            const resultbagItemHistory = BagItemHistory.create();
+            resultbagItemHistory.bagItemId = bagItemIdEach.toString();
+            resultbagItemHistory.userId = data.userId.toString();
+            resultbagItemHistory.branchId = data.branchId.toString();
+            resultbagItemHistory.historyDate = moment().toDate();
+            resultbagItemHistory.bagItemStatusId = BAG_STATUS.IN_LINE_HAUL.toString();
+            resultbagItemHistory.userIdCreated = data.userId;
+            resultbagItemHistory.createdTime = moment().toDate();
+            resultbagItemHistory.userIdUpdated = data.userId;
+            resultbagItemHistory.updatedTime = moment().toDate();
+            await BagItemHistory.insert(resultbagItemHistory);
           }
         }
+
+        if (bagItemsAwb && bagItemsAwb.length) {
+
+          for (const itemAwb of bagItemsAwb) {
+            if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
+              // handle duplicate awb item id
+              tempAwb.push(itemAwb.awbItemId);
+
+              DoSmdPostAwbHistoryMetaQueueService.createJobByScanDoSmd(
+                Number(itemAwb.awbItemId),
+                Number(data.branchId),
+                Number(data.userId),
+                AWB_STATUS.IN_LINE_HAUL,
+              );
+            }
+          }
+        }
+        return true;
+      } catch (error) {
+        console.error(`[bag-scan-do-smd-queue] `, error);
+        throw error;
       }
-      return true;
     });
 
     this.queue.on('completed', job => {
