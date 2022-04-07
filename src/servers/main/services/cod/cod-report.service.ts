@@ -34,35 +34,36 @@ export class CodReportService {
   }
 
   private generateQueryReportSupplierInvoiceAwb(supplierInvoiceId: string): string {
-    const repo = new OrionRepositoryService(CodTransactionDetail, 't1');
-    const q = repo.findAllRaw();
-
-    q.selectRaw(
-      ['t1.partner_name', 'partnerName'],
-      ['t1.awb_date', 'awbDate'],
-      ['t1.awb_number', 'awbNumber'],
-      ['t1.parcel_value', 'parcelValue'],
-      ['t1.cod_value', 'codValue'],
-      ['t1.cod_fee', 'codFee'],
-      ['t1.pod_date', 'podDate'],
-      ['t1.consignee_name', 'consigneeName'],
-      ['t1.cust_package', 'custPackage'],
-      ['t1.pickup_source', 'pickupSource'],
-      ['t1.current_position', 'currentPosition'],
-      ['t1.destination_code', 'destinationCode'],
-      ['t1.destination', 'destination'],
-      ['t1.parcel_content', 'parcelContent'],
-      ['t1.package_type', 'packageType'],
-      ['t1.parcel_note', 'parcelNote'],
-    );
-    q.where(e => e.codSupplierInvoiceId, w => w.equals(supplierInvoiceId));
-    q.andWhere(
-      e => e.supplierInvoiceStatusId,
-      w => w.equals(TRANSACTION_STATUS.DRAFT_INV),
-    );
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    return q.getQuery();
+    const query = `SELECT 
+                    t1.partner_name AS "partner name", 
+                    t1.awb_date AS "awb date", 
+                    t1.awb_number AS "awb", 
+                    t1.parcel_value AS "package amount",
+                    t1.cod_value AS "cod amount",
+                    t1.cod_fee AS "cod fee",
+                    t1.cod_value AS "amount transfer",
+                    t1.pod_date AS "pod datetime",
+                    t1.consignee_name AS "recipient",
+                    'DRAFT INVOICE' AS "Status internal",
+                    'DLV' AS "Tracking Status",
+                    t1.cust_package AS "cust package",
+                    t1.pickup_source AS "pickup source",
+                    t1.current_position AS "current position",
+                    t1.destination_code AS "destination code",
+                    t1.destination AS "destination",
+                    t1.parcel_content AS "package detail",
+                    t1.package_type AS "services",
+                    t1.parcel_note AS "note" 
+                  FROM 
+                    cod_transaction_detail AS t1 
+                  WHERE 
+                    t1.cod_supplier_invoice_id = '${supplierInvoiceId}' 
+                  AND 
+                    t1.supplier_invoice_status_id = ${TRANSACTION_STATUS.DRAFT_INV}  
+                  AND 
+                    t1.is_deleted = false 
+                  `;
+    return query;
   }
 
   async fetchReportAwbSummary(page: number, limit: number) {
