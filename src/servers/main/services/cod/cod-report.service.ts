@@ -150,6 +150,7 @@ export class CodReportService {
  async generateAwbCodTransactionDetailReport(payload: BaseMetaPayloadVm){
    const reportType = this.configReportType.awbCodTransactionDetail;
    const rawQuery = this.generateQueryAwbCodTransaction(payload)
+
    return this.reportingService.generateReport(reportType, rawQuery)
  }
 
@@ -172,39 +173,41 @@ export class CodReportService {
   payload.applyToOrionRepositoryQuery(q, true);
 
   q.selectRaw(
+    ['ctd.partner_name', 'partnerName'],
     ['ctd.awb_date', 'awbDate'],
     ['ctd.awb_number', 'awbNumber'],
+    ['ctd.parcel_value', 'packageAmount'],
     ['ctd.cod_value', 'codValue'],
     ['ctd.cod_fee', 'codFee'],
-    ['ctd.consignee_name', 'consigneeName'],
-    ['ctd.created_time', 'createdTime'],
-    ['ctd.current_position', 'currentPosition'],
-    ['ctd.cust_package', 'custPackage'],
-    ['ctd.destination', 'destination'],
-    ['ctd.payment_method', 'paymentMethod'],
-    ['ctd.destination_code', 'destinationCode'],
-    ['ctd.is_deleted', 'isDeleted'],
-    ['ctd.package_type', 'packageType'],
-    ['ctd.parcel_content', 'parcelContent'],
-    ['ctd.parcel_note', 'parcelNote'],
-    ['ctd.parcel_value', 'parcelValue'],
-    ['ctd.partnerId', 'partnerId'],
-    ['ctd.partner_name', 'partnerName'],
-    ['ctd.payment_service', 'paymentService'],
-    ['ctd.pickup_source', 'pickupSource'],
+    ['ctd.cod_value', 'amountTransfer'],
     ['ctd.pod_date', 'podDate'],
-    ['ctd.transaction_status_id', 'transactionStatusId'],
+    ['ctd.consignee_name', 'penerima'],
+    ['ctd.payment_method', 'paymentMethod'],
     ['ts.status_title', 'transactionStatus'],
+    ['as.awb_status_name' , 'trackingStatus'],
     ['sis.status_title', 'supplierInvoiceStatus'],
-    ['rep.representative_name', 'perwakilan'],
-    ['ctd.user_id_driver', 'userIdDriver'],
-    ['ctd.updated_time', 'updatedTime'],
-    ['ctd.user_id_updated', 'userIdUpdated'],
-    ['ude.nik', 'userIdDriverNik'],
-    ['ude.fullname', 'userIdDriverName'],
-    ['uae.nik', 'userIdUpdatedNik'],
-    ['uae.fullname', 'userIdUpdatedName'],
+    ['ctd.cust_package', 'custPackage'],
+    ['ctd.pickup_source', 'pickupSource'],
+    ['ctd.current_position','currentPosition'],
+    ['ctd.destination_code', 'destinationCode'],
+    ['ctd.destination', 'destination'],
+    ['rep.representative_code', 'perwakilan'],
+    ['concat(ude.nik, " ", ude.fullname)', 'sigesit'],
+    ['ctd.parcel_content', 'packageDetail'],
+    ['ctd.package_type', 'services'],
+    ['ctd.parcel_note', 'receiverRemark'],
     ['ctd.updated_time', 'dateUpdated'],
+    ['concat(uae.nik, " ", uae.fullname)', 'userUpdated'],
+  );
+
+
+  q.leftJoin(e => e.awbItemAttr, 'aia', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
+
+ 
+  q.leftJoin(e => e.transactionAwb, 'ts', j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()),
   );
 
   q.leftJoin(e => e.transactionStatus, 'ts', j =>
@@ -217,7 +220,8 @@ export class CodReportService {
 
   q.innerJoin(e => e.userDriver.employee, 'ude');
   q.innerJoin(e => e.userAdmin.employee, 'uae');
-
+  q.leftJoin(e => e.awbItemAttr.awbStatus, 'as');
+  
   q.leftJoin(e => e.codTransaction.branch.representative, 'rep', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()),
   );
