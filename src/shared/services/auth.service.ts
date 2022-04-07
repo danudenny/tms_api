@@ -287,6 +287,7 @@ export class AuthService {
       result.isPalkur = false;
       result.isSmd = false;
       result.isSigesitReturn = false;
+      result.isSortationDriver = false;
 
       // Role Id Korwil (38, 155), role Id palkur (40, 41), korwil HRD 154
       if (configKorwil.korwilRoleId.includes(Number(roleId)) || roleId == configKorwil.korwilHrdRoleId) {
