@@ -36,7 +36,7 @@ export class CodTransactionHistoryQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-
+    try {
       const data = job.data;
       if (data.awbItemId) {
         const historyInvoice = CodTransactionHistory.create({
@@ -113,6 +113,11 @@ export class CodTransactionHistoryQueueService {
 
         return true;
       }
+    } catch (error) {
+      console.error(`[cod-transaction-history-queue] `, error);
+      throw error;
+    }
+      
     });
 
     this.queue.on('completed', job => {

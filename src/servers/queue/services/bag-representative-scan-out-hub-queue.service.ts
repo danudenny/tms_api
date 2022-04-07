@@ -45,88 +45,93 @@ export class BagRepresentativeScanOutHubQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      // await getManager().transaction(async transactionalEntityManager => {
-      // }); // end transaction
-      console.log('### SCAN BAG REPRESENTATIVE DO SMD JOB ID =========', job.id);
-      const data = job.data;
-      const tempAwb = [];
+      try {
+        // await getManager().transaction(async transactionalEntityManager => {
+        // }); // end transaction
+        console.log('### SCAN BAG REPRESENTATIVE DO SMD JOB ID =========', job.id);
+        const data = job.data;
+        const tempAwb = [];
 
-      const rawQuery = `
-          SELECT
-            bri.awb_item_id
-          FROM bag_representative_item bri
-          where
-            bri.bag_representative_id  = '${data.bagRepresentativeId}' AND
-            bri.is_deleted = FALSE;
-        `;
-      const resultDataRepresentative = await RawQueryService.query(rawQuery);
+        const rawQuery = `
+            SELECT
+              bri.awb_item_id
+            FROM bag_representative_item bri
+            where
+              bri.bag_representative_id  = '${data.bagRepresentativeId}' AND
+              bri.is_deleted = FALSE;
+          `;
+        const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
-      // TO DO:
-      // 1. add history bag representative
-      // 2. add history awb OUT_HUB
+        // TO DO:
+        // 1. add history bag representative
+        // 2. add history awb OUT_HUB
 
-      const historyBag = BagRepresentativeHistory.create();
-      historyBag.bagRepresentativeCode = data.bagRepresentativeCode;
-      historyBag.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
-      historyBag.bagRepresentativeId = data.bagRepresentativeId;
-      historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.IN_LINE_HAUL.toString();
-      historyBag.branchId = data.branchId;
-      historyBag.representativeIdTo = data.representativeIdTo;
-      historyBag.totalItem = data.totalItem;
-      historyBag.totalWeight = data.totalWeight;
-      historyBag.userIdCreated = data.userId;
-      historyBag.createdTime = moment().toDate();
-      historyBag.userIdUpdated = data.userId;
-      historyBag.updatedTime = moment().toDate();
-      await BagRepresentativeHistory.insert(historyBag);
+        const historyBag = BagRepresentativeHistory.create();
+        historyBag.bagRepresentativeCode = data.bagRepresentativeCode;
+        historyBag.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
+        historyBag.bagRepresentativeId = data.bagRepresentativeId;
+        historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.IN_LINE_HAUL.toString();
+        historyBag.branchId = data.branchId;
+        historyBag.representativeIdTo = data.representativeIdTo;
+        historyBag.totalItem = data.totalItem;
+        historyBag.totalWeight = data.totalWeight;
+        historyBag.userIdCreated = data.userId;
+        historyBag.createdTime = moment().toDate();
+        historyBag.userIdUpdated = data.userId;
+        historyBag.updatedTime = moment().toDate();
+        await BagRepresentativeHistory.insert(historyBag);
 
-      const historyBagOut = BagRepresentativeHistory.create();
-      historyBagOut.bagRepresentativeCode = data.bagRepresentativeCode;
-      historyBagOut.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
-      historyBagOut.bagRepresentativeId = data.bagRepresentativeId;
-      historyBagOut.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL.toString();
-      historyBagOut.branchId = data.branchId;
-      historyBagOut.representativeIdTo = data.representativeIdTo;
-      historyBagOut.totalItem = data.totalItem;
-      historyBagOut.totalWeight = data.totalWeight;
-      historyBagOut.userIdCreated = data.userId;
-      historyBagOut.createdTime = moment().add(1, 'minutes').toDate();
-      historyBagOut.userIdUpdated = data.userId;
-      historyBagOut.updatedTime = moment().add(1, 'minutes').toDate();
-      await BagRepresentativeHistory.insert(historyBagOut);
+        const historyBagOut = BagRepresentativeHistory.create();
+        historyBagOut.bagRepresentativeCode = data.bagRepresentativeCode;
+        historyBagOut.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
+        historyBagOut.bagRepresentativeId = data.bagRepresentativeId;
+        historyBagOut.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL.toString();
+        historyBagOut.branchId = data.branchId;
+        historyBagOut.representativeIdTo = data.representativeIdTo;
+        historyBagOut.totalItem = data.totalItem;
+        historyBagOut.totalWeight = data.totalWeight;
+        historyBagOut.userIdCreated = data.userId;
+        historyBagOut.createdTime = moment().add(1, 'minutes').toDate();
+        historyBagOut.userIdUpdated = data.userId;
+        historyBagOut.updatedTime = moment().add(1, 'minutes').toDate();
+        await BagRepresentativeHistory.insert(historyBagOut);
 
-      for (const item of resultDataRepresentative) {
-        if (item.awb_item_id && !tempAwb.includes(item.awb_item_id)) {
-          // handle duplicate awb item id
-          tempAwb.push(item.awb_item_id);
+        for (const item of resultDataRepresentative) {
+          if (item.awb_item_id && !tempAwb.includes(item.awb_item_id)) {
+            // handle duplicate awb item id
+            tempAwb.push(item.awb_item_id);
 
-          DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
-            Number(item.awb_item_id),
-            Number(data.branchId),
-            Number(data.userId),
-            AWB_STATUS.IN_LINE_HAUL,
-            data.vendorName,
-          );
-          DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
-            Number(item.awb_item_id),
-            Number(data.branchId),
-            Number(data.userId),
-            AWB_STATUS.OUT_LINE_HAUL,
-            data.vendorName,
-            moment().add(1, 'minutes').toDate(),
-          );
-            // Update Internal Process Type
-            //
-          await AwbItemAttr.update(
-            { awbItemId : item.awb_item_id },
-            {
-              internalProcessType: 'DARAT_MP',
-              updatedTime:  moment().add(1, 'minutes').toDate(),
-            },
-          );
+            DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
+              Number(item.awb_item_id),
+              Number(data.branchId),
+              Number(data.userId),
+              AWB_STATUS.IN_LINE_HAUL,
+              data.vendorName,
+            );
+            DoSmdPostAwbHistoryMetaQueueService.createJobByVendorSmd(
+              Number(item.awb_item_id),
+              Number(data.branchId),
+              Number(data.userId),
+              AWB_STATUS.OUT_LINE_HAUL,
+              data.vendorName,
+              moment().add(1, 'minutes').toDate(),
+            );
+              // Update Internal Process Type
+              //
+            await AwbItemAttr.update(
+              { awbItemId : item.awb_item_id },
+              {
+                internalProcessType: 'DARAT_MP',
+                updatedTime:  moment().add(1, 'minutes').toDate(),
+              },
+            );
+          }
         }
+        return true;
+      } catch (error) {
+        console.error(`[bag-representative-scan-out-hub-queue] `, error);
+        throw error;
       }
-      return true;
     });
 
     this.queue.on('completed', job => {

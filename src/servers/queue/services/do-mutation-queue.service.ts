@@ -36,84 +36,90 @@ export class DoMutationQueueService {
 
   public static boot() {
     this.queue.process(5, async job => {
-      const { bagItemId, userId, branchId, branchIdTo } = job.data;
-      await getManager().transaction(async transactionalEntityManager => {
-        // get awb
-        const bagItemsAwb = await BagItemAwb.find({
-          where: {
-            bagItemId,
-            isDeleted: false,
-          },
-        });
-        let branchName = 'Kantor Pusat';
-        const branch = await SharedService.getDataBranchCity(branchId);
-        if (branch) {
-          branchName = branch.branchName;
-        }
-        const tempAwb = [];
-        const promises = [];
-        const now = moment().toDate();
-        const nextMinute = moment()
-          .add(1, 'minutes')
-          .toDate();
-        for (const bagItemAwb of bagItemsAwb) {
-          if (bagItemAwb.awbItemId && !tempAwb.includes(bagItemAwb.awbItemId)) {
-            tempAwb.push(bagItemAwb.awbItemId);
-            const awbItemAttr = await AwbItemAttr.findOne({
-              where: {
-                awbItemId: bagItemAwb.awbItemId,
-                isDeleted: false,
-              },
-            });
-            if (awbItemAttr) {
-              promises.push(
-                DoMutationQueueService.insertAwbHistory({
-                  bagItemAwb,
-                  awbItemAttr,
-                  userId,
-                  branchId,
-                  now,
-                  nextMinute,
-                  branchName,
-                  branch,
-                  branchIdTo,
-                }),
-              );
+      try {
+        const { bagItemId, userId, branchId, branchIdTo } = job.data;
+        await getManager().transaction(async transactionalEntityManager => {
+          // get awb
+          const bagItemsAwb = await BagItemAwb.find({
+            where: {
+              bagItemId,
+              isDeleted: false,
+            },
+          });
+          let branchName = 'Kantor Pusat';
+          const branch = await SharedService.getDataBranchCity(branchId);
+          if (branch) {
+            branchName = branch.branchName;
+          }
+          const tempAwb = [];
+          const promises = [];
+          const now = moment().toDate();
+          const nextMinute = moment()
+            .add(1, 'minutes')
+            .toDate();
+          for (const bagItemAwb of bagItemsAwb) {
+            if (bagItemAwb.awbItemId && !tempAwb.includes(bagItemAwb.awbItemId)) {
+              tempAwb.push(bagItemAwb.awbItemId);
+              const awbItemAttr = await AwbItemAttr.findOne({
+                where: {
+                  awbItemId: bagItemAwb.awbItemId,
+                  isDeleted: false,
+                },
+              });
+              if (awbItemAttr) {
+                promises.push(
+                  DoMutationQueueService.insertAwbHistory({
+                    bagItemAwb,
+                    awbItemAttr,
+                    userId,
+                    branchId,
+                    now,
+                    nextMinute,
+                    branchName,
+                    branch,
+                    branchIdTo,
+                  }),
+                );
+              }
             }
           }
-        }
-        await Promise.all(promises);
+          await Promise.all(promises);
 
-        // insert history in line haul
-        const inHistory = BagItemHistory.create();
-        inHistory.bagItemId = bagItemId.toString();
-        inHistory.userId = userId;
-        inHistory.branchId = branchId;
-        inHistory.historyDate = now;
-        inHistory.bagItemStatusId = BAG_STATUS.IN_LINE_HAUL.toString();
-        inHistory.userIdCreated = userId;
-        inHistory.userIdUpdated = userId;
-        inHistory.createdTime = now;
-        inHistory.updatedTime = now;
-        await BagItemHistory.insert(inHistory);
-        // insert history out line haul
-        const outHistory = { ...inHistory } as BagItemHistory;
-        outHistory.bagItemStatusId = BAG_STATUS.OUT_LINE_HAUL.toString();
-        outHistory.historyDate = nextMinute;
-        outHistory.createdTime = nextMinute;
-        outHistory.updatedTime = nextMinute;
-        await BagItemHistory.insert(outHistory);
-        await BagItem.update(
-          { bagItemId, isDeleted: false },
-          {
-            bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
-            bagItemHistoryId: Number(outHistory.bagItemHistoryId),
-            userIdUpdated: userId,
-            updatedTime: nextMinute,
-          },
-        );
-      }); // end transaction
-      return true;
+          // insert history in line haul
+          const inHistory = BagItemHistory.create();
+          inHistory.bagItemId = bagItemId.toString();
+          inHistory.userId = userId;
+          inHistory.branchId = branchId;
+          inHistory.historyDate = now;
+          inHistory.bagItemStatusId = BAG_STATUS.IN_LINE_HAUL.toString();
+          inHistory.userIdCreated = userId;
+          inHistory.userIdUpdated = userId;
+          inHistory.createdTime = now;
+          inHistory.updatedTime = now;
+          await BagItemHistory.insert(inHistory);
+          // insert history out line haul
+          const outHistory = { ...inHistory } as BagItemHistory;
+          outHistory.bagItemStatusId = BAG_STATUS.OUT_LINE_HAUL.toString();
+          outHistory.historyDate = nextMinute;
+          outHistory.createdTime = nextMinute;
+          outHistory.updatedTime = nextMinute;
+          await BagItemHistory.insert(outHistory);
+          await BagItem.update(
+            { bagItemId, isDeleted: false },
+            {
+              bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
+              bagItemHistoryId: Number(outHistory.bagItemHistoryId),
+              userIdUpdated: userId,
+              updatedTime: nextMinute,
+            },
+          );
+        }); // end transaction
+        return true;
+      } catch (error) {
+        console.error(`[do-mutation-queue] `, error);
+        throw error;
+      }
+      
     });
 
     this.queue.on('completed', job => {

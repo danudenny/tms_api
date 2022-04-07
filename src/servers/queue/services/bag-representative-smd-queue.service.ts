@@ -35,26 +35,32 @@ export class BagRepresentativeSmdQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      // await getManager().transaction(async transactionalEntityManager => {
-      // }); // end transaction
-      console.log('### BAG REPRESENTATIVE SMD JOB ID =========', job.id);
-      const data = job.data;
-      
-      const awbHistory = AwbHistory.create();
-      awbHistory.awbItemId = data.awbItemId;
-      awbHistory.branchId = data.branchId.toString();
-      awbHistory.refAwbNumber = data.refAwbNumber;
-      awbHistory.historyDate = moment().toDate();
-      awbHistory.awbStatusId = AWB_STATUS.IN_SORTIR;
-      awbHistory.userId= data.userId;
-      awbHistory.noteInternal= data.noteInternal;
-      awbHistory.userIdCreated = Number(data.userId);
-      awbHistory.createdTime = moment().toDate();
-      awbHistory.userIdUpdated = Number(data.userId);
-      awbHistory.updatedTime = moment().toDate();
-      await AwbHistory.insert(awbHistory);
+      try {
+        // await getManager().transaction(async transactionalEntityManager => {
+        // }); // end transaction
+        console.log('### BAG REPRESENTATIVE SMD JOB ID =========', job.id);
+        const data = job.data;
+        
+        const awbHistory = AwbHistory.create();
+        awbHistory.awbItemId = data.awbItemId;
+        awbHistory.branchId = data.branchId.toString();
+        awbHistory.refAwbNumber = data.refAwbNumber;
+        awbHistory.historyDate = moment().toDate();
+        awbHistory.awbStatusId = AWB_STATUS.IN_SORTIR;
+        awbHistory.userId= data.userId;
+        awbHistory.noteInternal= data.noteInternal;
+        awbHistory.userIdCreated = Number(data.userId);
+        awbHistory.createdTime = moment().toDate();
+        awbHistory.userIdUpdated = Number(data.userId);
+        awbHistory.updatedTime = moment().toDate();
+        await AwbHistory.insert(awbHistory);
 
-      return true;
+        return true;
+      } catch (error) {
+        console.error(`[bag-representative-smd-queue] `, error);
+        throw error;
+      }
+      
     });
 
     this.queue.on('completed', job => {

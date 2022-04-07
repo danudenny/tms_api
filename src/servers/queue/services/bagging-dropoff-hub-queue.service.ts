@@ -36,56 +36,61 @@ export class BaggingDropoffHubQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      console.log('### SCAN DROP OFF HUB BAGGING JOB ID =========', job.id);
-      const data = job.data;
+      try {
+        console.log('### SCAN DROP OFF HUB BAGGING JOB ID =========', job.id);
+        const data = job.data;
 
-      const bagItemsAwb = await BagItemAwb.find({
-        where: {
-          bagItemId: data.bagItemId,
-          isDeleted: false,
-        },
-      });
+        const bagItemsAwb = await BagItemAwb.find({
+          where: {
+            bagItemId: data.bagItemId,
+            isDeleted: false,
+          },
+        });
 
-      if (bagItemsAwb && bagItemsAwb.length) {
-        for (const itemAwb of bagItemsAwb) {
-          if (itemAwb.awbItemId) {
-            // find awb where awb_item_id
-            const awbItem = await AwbItem.findOne({
-              where: {
-                awbItemId: itemAwb.awbItemId,
-                isDeleted: false,
-              },
-            });
-            if (awbItem) {
-              // create dropoffDetailBagging
-              // =============================================================
-              const dropoffDetailBagging = DropoffHubDetailBagging.create();
-              dropoffDetailBagging.dropoffHubBaggingId = data.dropoffHubBaggingId;
-              dropoffDetailBagging.branchId = data.branchId;
-              dropoffDetailBagging.awbId = awbItem.awbId;
-              dropoffDetailBagging.awbItemId = itemAwb.awbItemId;
-              dropoffDetailBagging.awbNumber = itemAwb.awbNumber;
-              dropoffDetailBagging.userIdCreated = data.userId;
-              dropoffDetailBagging.userIdUpdated = data.userId;
-              dropoffDetailBagging.createdTime = data.timestamp;
-              dropoffDetailBagging.updatedTime = data.timestamp;
-              await DropoffHubDetailBagging.save(dropoffDetailBagging);
+        if (bagItemsAwb && bagItemsAwb.length) {
+          for (const itemAwb of bagItemsAwb) {
+            if (itemAwb.awbItemId) {
+              // find awb where awb_item_id
+              const awbItem = await AwbItem.findOne({
+                where: {
+                  awbItemId: itemAwb.awbItemId,
+                  isDeleted: false,
+                },
+              });
+              if (awbItem) {
+                // create dropoffDetailBagging
+                // =============================================================
+                const dropoffDetailBagging = DropoffHubDetailBagging.create();
+                dropoffDetailBagging.dropoffHubBaggingId = data.dropoffHubBaggingId;
+                dropoffDetailBagging.branchId = data.branchId;
+                dropoffDetailBagging.awbId = awbItem.awbId;
+                dropoffDetailBagging.awbItemId = itemAwb.awbItemId;
+                dropoffDetailBagging.awbNumber = itemAwb.awbNumber;
+                dropoffDetailBagging.userIdCreated = data.userId;
+                dropoffDetailBagging.userIdUpdated = data.userId;
+                dropoffDetailBagging.createdTime = data.timestamp;
+                dropoffDetailBagging.updatedTime = data.timestamp;
+                await DropoffHubDetailBagging.save(dropoffDetailBagging);
 
-              // NOTE: queue by Bull
-              // add awb history with background process
-              DoPodDetailPostMetaQueueService.createJobByDropoffBag(
-                itemAwb.awbItemId,
-                data.branchId,
-                data.userId,
-                data.isSmd,
-              );
+                // NOTE: queue by Bull
+                // add awb history with background process
+                DoPodDetailPostMetaQueueService.createJobByDropoffBag(
+                  itemAwb.awbItemId,
+                  data.branchId,
+                  data.userId,
+                  data.isSmd,
+                );
+              }
             }
-          }
-        } // end of loop
-      } else {
-        console.log('### Data Bag Item Awb :: Not Found!!');
+          } // end of loop
+        } else {
+          console.log('### Data Bag Item Awb :: Not Found!!');
+        }
+        return true;
+      } catch (error) {
+        console.error(`[bagging-dropoff-hub-queue] `, error);
+        throw error;
       }
-      return true;
     });
 
     this.queue.on('completed', job => {

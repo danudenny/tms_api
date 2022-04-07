@@ -39,8 +39,13 @@ export class MappingRoleQueueService {
 
       const data = job.data;
 
-      for (const user of data.users) {
-        MasterDataService.insertUserRole(user.userid, user.branchidlast, user.branchidnew, data.payload, data.mode);
+      try {
+        for (const user of data.users) {
+          MasterDataService.insertUserRole(user.userid, user.branchidlast, user.branchidnew, data.payload, data.mode);
+        }
+      } catch (error) {
+        console.error(`[mapping-role-queue] `, error);
+        throw error;
       }
 
       return true;

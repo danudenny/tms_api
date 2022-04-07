@@ -38,96 +38,102 @@ export class CodTransferTransactionQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(async job => {
-      const data = job.data;
-
-      console.log('#### JOB ID  ::: ', job.id);
-      console.log(
-        '##################### SYNC DATA AWB NUMBER - cod transaction detail ::: ',
-        data.awbNumber,
-      );
-
-      let transactionDetail: CodTransactionDetail;
-      const masterQueryRunner = getConnection().createQueryRunner('master');
       try {
-        transactionDetail = await getConnection()
-          .createQueryBuilder(CodTransactionDetail, 'ctd')
-          .setQueryRunner(masterQueryRunner)
-          .where('ctd.awbItemId = :awbItemId AND ctd.isDeleted = false', {
-            awbItemId: data.awbItemId,
-          })
-          .getOne();
-      } finally {
-        await masterQueryRunner.release();
-      }
+        const data = job.data;
 
-      // Handle first awb scan
-      // only transaction
-      if (transactionDetail && data.codTransactionId) {
-        const codDetail = await this.dataTransaction(data.awbItemId);
-        if (codDetail) {
-          // manipulation data
-          const weightRounded =
-            codDetail.weightRealRounded > 0
-              ? codDetail.weightRealRounded
-              : codDetail.weightFinalRounded;
-          const percentFee = 1; // set on config COD
-          const codFee = (Number(codDetail.codValue) * percentFee) / 100;
+        console.log('#### JOB ID  ::: ', job.id);
+        console.log(
+          '##################### SYNC DATA AWB NUMBER - cod transaction detail ::: ',
+          data.awbNumber,
+        );
 
-          const supplierInvoiceStatusId = data.supplierInvoiceStatusId
-            ? Number(data.supplierInvoiceStatusId)
-            : null;
-
-          await CodTransactionDetail.update(
-            {
+        let transactionDetail: CodTransactionDetail;
+        const masterQueryRunner = getConnection().createQueryRunner('master');
+        try {
+          transactionDetail = await getConnection()
+            .createQueryBuilder(CodTransactionDetail, 'ctd')
+            .setQueryRunner(masterQueryRunner)
+            .where('ctd.awbItemId = :awbItemId AND ctd.isDeleted = false', {
               awbItemId: data.awbItemId,
-            },
-            {
-              codTransactionId: data.codTransactionId,
-              supplierInvoiceStatusId,
-              codSupplierInvoiceId: data.codSupplierInvoiceId,
-              transactionStatusId: Number(data.transactionStatusId),
-
-              paymentService: data.paymentService,
-              noReference: data.noReference,
-
-              awbDate: codDetail.awbDate,
-              podDate: codDetail.podDate,
-              codValue: codDetail.codValue,
-              parcelValue: codDetail.parcelValue,
-              weightRounded,
-              codFee,
-              pickupSourceId: codDetail.pickupSourceId,
-              pickupSource: codDetail.pickupSource,
-              currentPositionId: codDetail.currentPositionId,
-              currentPosition: codDetail.currentPosition,
-              destinationCode: codDetail.destinationCode,
-              destinationId: codDetail.destinationId,
-              destination: codDetail.destination,
-
-              consigneeName: codDetail.consigneeName,
-              partnerId: codDetail.partnerId,
-              partnerName: codDetail.partnerName,
-              custPackage: codDetail.custPackage,
-              packageTypeId: Number(codDetail.packageTypeId),
-              packageTypeCode: codDetail.packageTypeCode,
-              packageType: codDetail.packageTypeName,
-              parcelContent: codDetail.parcelContent,
-              parcelNote: codDetail.parcelNote,
-              userIdUpdated: Number(data.userId),
-              updatedTime: data.timestamp,
-            },
-          );
-
-          // sync first data to mongo
-          const newMongo = await this.insertMongo(transactionDetail);
-          console.log(' ############ NEW DATA MONGO :: ', newMongo);
-        } else {
-          console.error('## Data COD Transaction :: Not Found !!! :: ', data);
-          // TODO: insert awb trouble
+            })
+            .getOne();
+        } finally {
+          await masterQueryRunner.release();
         }
-      }
 
-      return true;
+        // Handle first awb scan
+        // only transaction
+        if (transactionDetail && data.codTransactionId) {
+          const codDetail = await this.dataTransaction(data.awbItemId);
+          if (codDetail) {
+            // manipulation data
+            const weightRounded =
+              codDetail.weightRealRounded > 0
+                ? codDetail.weightRealRounded
+                : codDetail.weightFinalRounded;
+            const percentFee = 1; // set on config COD
+            const codFee = (Number(codDetail.codValue) * percentFee) / 100;
+
+            const supplierInvoiceStatusId = data.supplierInvoiceStatusId
+              ? Number(data.supplierInvoiceStatusId)
+              : null;
+
+            await CodTransactionDetail.update(
+              {
+                awbItemId: data.awbItemId,
+              },
+              {
+                codTransactionId: data.codTransactionId,
+                supplierInvoiceStatusId,
+                codSupplierInvoiceId: data.codSupplierInvoiceId,
+                transactionStatusId: Number(data.transactionStatusId),
+
+                paymentService: data.paymentService,
+                noReference: data.noReference,
+
+                awbDate: codDetail.awbDate,
+                podDate: codDetail.podDate,
+                codValue: codDetail.codValue,
+                parcelValue: codDetail.parcelValue,
+                weightRounded,
+                codFee,
+                pickupSourceId: codDetail.pickupSourceId,
+                pickupSource: codDetail.pickupSource,
+                currentPositionId: codDetail.currentPositionId,
+                currentPosition: codDetail.currentPosition,
+                destinationCode: codDetail.destinationCode,
+                destinationId: codDetail.destinationId,
+                destination: codDetail.destination,
+
+                consigneeName: codDetail.consigneeName,
+                partnerId: codDetail.partnerId,
+                partnerName: codDetail.partnerName,
+                custPackage: codDetail.custPackage,
+                packageTypeId: Number(codDetail.packageTypeId),
+                packageTypeCode: codDetail.packageTypeCode,
+                packageType: codDetail.packageTypeName,
+                parcelContent: codDetail.parcelContent,
+                parcelNote: codDetail.parcelNote,
+                userIdUpdated: Number(data.userId),
+                updatedTime: data.timestamp,
+              },
+            );
+
+            // sync first data to mongo
+            const newMongo = await this.insertMongo(transactionDetail);
+            console.log(' ############ NEW DATA MONGO :: ', newMongo);
+          } else {
+            console.error('## Data COD Transaction :: Not Found !!! :: ', data);
+            // TODO: insert awb trouble
+          }
+        }
+
+        return true;
+      } catch (error) {
+        console.error(`[cod-transfer-transaction-queue] `, error);
+        throw error;
+      }
+      
     });
 
     this.queue.on('completed', () => {
