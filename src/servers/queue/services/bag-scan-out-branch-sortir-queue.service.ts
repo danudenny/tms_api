@@ -57,7 +57,7 @@ export class BagScanOutBranchSortirQueueService {
         INNER JOIN branch b ON b.branch_id = dsd.branch_id_to AND b.is_deleted = FALSE
         LEFT JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE
         LEFT JOIN bag_item_history bih1 ON bih1.bag_item_id = bi.bag_item_id AND bih1.is_deleted = FALSE AND bih1.branch_id = '${data.branchId}' AND bih1.bag_item_status_id = '${BAG_STATUS.OUT_HUB}'
-        WHERE dsd.do_sortation_id = ${data.doSortationId} AND dsd.is_deleted = FALSE
+        WHERE dsd.do_sortation_id = '${data.doSortationId}' AND dsd.is_deleted = FALSE
         ORDER BY CASE WHEN bih.bag_item_status_id = ${BAG_STATUS.OUT_HUB} THEN 1 ELSE 2 END, bih.history_date DESC
       `);
 
@@ -67,7 +67,7 @@ export class BagScanOutBranchSortirQueueService {
           e.fullname AS employee_name_driver
         FROM do_sortation_vehicle dsv
         INNER JOIN employee e ON e.employee_id = dsv.employee_driver_id AND e.is_deleted =  FALSE
-        WHERE dsv.do_sortation_id = ${data.doSortationId} AND dsv.is_deleted = FALSE
+        WHERE dsv.do_sortation_id = '${data.doSortationId}' AND dsv.is_deleted = FALSE
         LIMIT 1
       `);
 
