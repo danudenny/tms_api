@@ -263,7 +263,7 @@ export class MobileSortationService {
         arrivalDateTime: moment().toDate(),
       });
       result.statusCode = HttpStatus.OK;
-      result.message = 'Sortation Success Arrival';
+      result.message = 'Sortation Success Finished';
       result.data = data;
       return result;
     } else {

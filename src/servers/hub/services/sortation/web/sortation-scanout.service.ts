@@ -742,7 +742,7 @@ export class SortationScanOutService {
         },
       });
       if (!resultDoSortationDetail) {
-        throw new BadRequestException(`Driver tidak bisa di assign, karena SMD ID : ` + dataDriver.do_sortation_id + ` beda cabang.`);
+        throw new BadRequestException(`Driver tidak bisa di assign, karena Sortation ID : ` + dataDriver.do_sortation_id + ` beda cabang.`);
       }
     }
   }
