@@ -3,7 +3,7 @@ import {Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuar
 import {CodReportService} from '../../../services/cod/cod-report.service';
 import {AuthenticatedGuard} from '../../../../../shared/guards/authenticated.guard';
 import {PermissionTokenGuard} from '../../../../../shared/guards/permission-token.guard';
-import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { BaseMetaPayloadVm, ReportBaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('COD Report')
 @Controller('web/v1/cod/report')
@@ -80,4 +80,34 @@ export class WebAwbCodReportController {
     return this.codReportService.generateAWBSummaryReport(payload);
   }
 
+  @Get('cod-fee')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async getReportCODFee(
+    @Query() queryParams: {
+      page: string;
+      limit: string;
+    },
+  ) {
+    let page = Number(queryParams.page);
+    let limit = Number(queryParams.limit);
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (!limit || limit < 1) {
+      limit = 10;
+    }
+
+  }
+
+  @Post('cod-fee')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async genereateReportCODFee(
+    @Body() payload: ReportBaseMetaPayloadVm,
+  ) {
+
+  }
 }
