@@ -42,7 +42,7 @@ export class CodReportService {
   async generateReportCODFee(payload: ReportBaseMetaPayloadVm) {
     const reportType = this.configReportType.supplierInvoiceFee;
     const rawQuery = this.generateQueryReportCODFee(payload.filters);
-
+    
     return this.reportingService.generateReport(reportType, rawQuery);
   }
 
@@ -50,19 +50,14 @@ export class CodReportService {
     let queryParam = "";
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment
-          .utc(moment.utc(filter.value)
-          .format('YYYY-MM-DD 00:00:00'))
-          .toString();
-        queryParam +=  `AND ctd.updated_time >= ${d} `;
+        queryParam +=  `AND ctd.updated_time >= Date('${filter.value} 00:00:00') `;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment
-          .utc(moment.utc(filter.value).add(1, 'days')
-          .format('YYYY-MM-DD 00:00:00'))
-          .toString();
-        queryParam +=  `AND ctd.updated_time < ${d} `; 
+          .utc(filter.value).add(1, 'days')
+          .format('YYYY-MM-DD')
+        queryParam +=  `AND ctd.updated_time < Date('${d} 00:00:00') `; 
       }
 
       if (filter.field == 'supplier' && filter.value) {

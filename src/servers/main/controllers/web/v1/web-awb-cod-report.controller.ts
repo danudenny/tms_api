@@ -99,6 +99,7 @@ export class WebAwbCodReportController {
       limit = 10;
     }
 
+    return this.codReportService.fetchReportCODFee(page, limit);
   }
 
   @Post('cod-fee')
@@ -108,6 +109,6 @@ export class WebAwbCodReportController {
   public async genereateReportCODFee(
     @Body() payload: ReportBaseMetaPayloadVm,
   ) {
-
+    return this.codReportService.generateReportCODFee(payload);
   }
 }
