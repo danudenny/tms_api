@@ -45,6 +45,7 @@ export class CodSqlExportMongoQueueService {
           await V1WebReportSqlCodService.printCodSupplierInvoice(filter, uuid);
         }
       } catch (error) {
+        console.error(`[cod-export-sql-mongo-queue] `, error);
         throw (error);
       }
 

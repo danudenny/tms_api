@@ -42,55 +42,60 @@ export class BagRepresentativeScanDoSmdQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      // await getManager().transaction(async transactionalEntityManager => {
-      // }); // end transaction
-      console.log('### SCAN BAG REPRESENTATIVE DO SMD JOB ID =========', job.id);
-      const data = job.data;
-      const tempAwb = [];
+      try {
+        // await getManager().transaction(async transactionalEntityManager => {
+        // }); // end transaction
+        console.log('### SCAN BAG REPRESENTATIVE DO SMD JOB ID =========', job.id);
+        const data = job.data;
+        const tempAwb = [];
 
-      const rawQuery = `
-          SELECT
-            bri.awb_item_id
-          FROM bag_representative_item bri
-          where
-            bri.bag_representative_id  = '${data.bagRepresentativeId}' AND
-            bri.is_deleted = FALSE;
-        `;
-      const resultDataRepresentative = await RawQueryService.query(rawQuery);
+        const rawQuery = `
+            SELECT
+              bri.awb_item_id
+            FROM bag_representative_item bri
+            where
+              bri.bag_representative_id  = '${data.bagRepresentativeId}' AND
+              bri.is_deleted = FALSE;
+          `;
+        const resultDataRepresentative = await RawQueryService.query(rawQuery);
 
-      // TO DO:
-      // 1. add history bag representative
-      // 2. add history awb IN_HUB
+        // TO DO:
+        // 1. add history bag representative
+        // 2. add history awb IN_HUB
 
-      const historyBag = BagRepresentativeHistory.create();
-      historyBag.bagRepresentativeCode = data.bagRepresentativeCode;
-      historyBag.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
-      historyBag.bagRepresentativeId = data.bagRepresentativeId;
-      historyBag.bagRepresentativeStatusIdLast = '3050';
-      historyBag.branchId = data.branchId;
-      historyBag.representativeIdTo = data.representativeIdTo;
-      historyBag.totalItem = data.totalItem;
-      historyBag.totalWeight = data.totalWeight;
-      historyBag.userIdCreated = data.userId;
-      historyBag.createdTime = moment().toDate();
-      historyBag.userIdUpdated = data.userId;
-      historyBag.updatedTime = moment().toDate();
-      await BagRepresentativeHistory.insert(historyBag);
+        const historyBag = BagRepresentativeHistory.create();
+        historyBag.bagRepresentativeCode = data.bagRepresentativeCode;
+        historyBag.bagRepresentativeDate = moment(data.bagRepresentativeDate).toDate();
+        historyBag.bagRepresentativeId = data.bagRepresentativeId;
+        historyBag.bagRepresentativeStatusIdLast = '3050';
+        historyBag.branchId = data.branchId;
+        historyBag.representativeIdTo = data.representativeIdTo;
+        historyBag.totalItem = data.totalItem;
+        historyBag.totalWeight = data.totalWeight;
+        historyBag.userIdCreated = data.userId;
+        historyBag.createdTime = moment().toDate();
+        historyBag.userIdUpdated = data.userId;
+        historyBag.updatedTime = moment().toDate();
+        await BagRepresentativeHistory.insert(historyBag);
 
-      for (const item of resultDataRepresentative) {
-        if (item.awb_item_id && !tempAwb.includes(item.awb_item_id)) {
-          // handle duplicate awb item id
-          tempAwb.push(item.awb_item_id);
+        for (const item of resultDataRepresentative) {
+          if (item.awb_item_id && !tempAwb.includes(item.awb_item_id)) {
+            // handle duplicate awb item id
+            tempAwb.push(item.awb_item_id);
 
-          DoSmdPostAwbHistoryMetaQueueService.createJobByScanDoSmd(
-            Number(item.awb_item_id),
-            Number(data.branchId),
-            Number(data.userId),
-            AWB_STATUS.IN_LINE_HAUL,
-          );
+            DoSmdPostAwbHistoryMetaQueueService.createJobByScanDoSmd(
+              Number(item.awb_item_id),
+              Number(data.branchId),
+              Number(data.userId),
+              AWB_STATUS.IN_LINE_HAUL,
+            );
+          }
         }
+        return true;
+      } catch (error) {
+        console.error(`[bag-representative-scan-do-smd-queue] `, error);
+        throw error;
       }
-      return true;
     });
 
     this.queue.on('completed', job => {

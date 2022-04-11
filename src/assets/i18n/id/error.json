@@ -4,5 +4,6 @@
   "REFRESH_TOKEN_EXPIRED": "Refresh token expired",
   "REFRESH_TOKEN_NOT_VALID": "Refresh token tidak valid",
   "USER_NOT_FOUND": "User tidak ditemukan",
-  "SERVER_BUSY": "sistem sedang bermasalah, silahkan coba lagi"
+  "SERVER_BUSY": "sistem sedang bermasalah, silahkan coba lagi",
+  "PASSWORD_POLICY_INVALID": "Password minimal 8 karakter, dengan angka, huruf kecil, dan huruf besar"
 }

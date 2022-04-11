@@ -19,19 +19,6 @@ import { V2MobileInitDataService } from '../../../services/mobile/v2/mobile-init
 export class V2MobileInitController {
   constructor() {}
 
-  @Post('initData')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @ResponseSerializerOptions({ disable: true })
-  @ApiOkResponse({ type: MobileInitDataResponseV2Vm })
-  public async initData(@Body() payload: MobileInitDataPayloadVm) {
-    // NOTE: optimize query add response v2
-    return V2MobileInitDataService.getInitDataByRequest(
-      payload.lastSyncDateTime,
-    );
-  }
-
   @Post('initDataDelivery')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

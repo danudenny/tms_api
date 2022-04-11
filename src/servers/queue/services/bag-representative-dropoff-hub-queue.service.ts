@@ -38,48 +38,53 @@ export class BagRepresentativeDropoffHubQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      console.log('### SCAN DROP OFF HUB BAG REPRESENTATIVE JOB ID =========', job.id);
-      const data = job.data;
+      try {
+        console.log('### SCAN DROP OFF HUB BAG REPRESENTATIVE JOB ID =========', job.id);
+        const data = job.data;
 
-      const bagRepresentativeItem = await BagRepresentativeItem.find({
-        where: {
-          bagRepresentativeId: data.bagRepresentativeId,
-          isDeleted: false,
-        },
-      });
+        const bagRepresentativeItem = await BagRepresentativeItem.find({
+          where: {
+            bagRepresentativeId: data.bagRepresentativeId,
+            isDeleted: false,
+          },
+        });
 
-      if (bagRepresentativeItem && bagRepresentativeItem.length) {
-        for (const itemRepresentative of bagRepresentativeItem) {
-          if (itemRepresentative.awbItemId) {
+        if (bagRepresentativeItem && bagRepresentativeItem.length) {
+          for (const itemRepresentative of bagRepresentativeItem) {
+            if (itemRepresentative.awbItemId) {
 
-            // create dropoffDetailBagging
-            // =============================================================
-            const dropoffDetailBagRepresentative = DropoffHubDetailBagRepresentative.create();
-            dropoffDetailBagRepresentative.dropoffHubBagRepresentativeId = data.dropoffHubBagRepresentativeId;
-            dropoffDetailBagRepresentative.branchId = data.branchId;
-            dropoffDetailBagRepresentative.awbId = itemRepresentative.awbId;
-            dropoffDetailBagRepresentative.awbItemId = itemRepresentative.awbItemId;
-            dropoffDetailBagRepresentative.awbNumber = itemRepresentative.refAwbNumber;
-            dropoffDetailBagRepresentative.userIdCreated = data.userId;
-            dropoffDetailBagRepresentative.userIdUpdated = data.userId;
-            dropoffDetailBagRepresentative.createdTime = data.timestamp;
-            dropoffDetailBagRepresentative.updatedTime = data.timestamp;
-            await DropoffHubDetailBagRepresentative.insert(dropoffDetailBagRepresentative);
+              // create dropoffDetailBagging
+              // =============================================================
+              const dropoffDetailBagRepresentative = DropoffHubDetailBagRepresentative.create();
+              dropoffDetailBagRepresentative.dropoffHubBagRepresentativeId = data.dropoffHubBagRepresentativeId;
+              dropoffDetailBagRepresentative.branchId = data.branchId;
+              dropoffDetailBagRepresentative.awbId = itemRepresentative.awbId;
+              dropoffDetailBagRepresentative.awbItemId = itemRepresentative.awbItemId;
+              dropoffDetailBagRepresentative.awbNumber = itemRepresentative.refAwbNumber;
+              dropoffDetailBagRepresentative.userIdCreated = data.userId;
+              dropoffDetailBagRepresentative.userIdUpdated = data.userId;
+              dropoffDetailBagRepresentative.createdTime = data.timestamp;
+              dropoffDetailBagRepresentative.updatedTime = data.timestamp;
+              await DropoffHubDetailBagRepresentative.insert(dropoffDetailBagRepresentative);
 
-            // NOTE: queue by Bull
-            // add awb history with background process
-            DoPodDetailPostMetaQueueService.createJobByDropoffBag(
-              itemRepresentative.awbItemId,
-              data.branchId,
-              data.userId,
-              data.isSmd,
-            );
-          }
-        } // End Of Loop
-      } else {
-        console.log('### Data Bag Item Representative :: Not Found!!');
+              // NOTE: queue by Bull
+              // add awb history with background process
+              DoPodDetailPostMetaQueueService.createJobByDropoffBag(
+                itemRepresentative.awbItemId,
+                data.branchId,
+                data.userId,
+                data.isSmd,
+              );
+            }
+          } // End Of Loop
+        } else {
+          console.log('### Data Bag Item Representative :: Not Found!!');
+        }
+        return true;
+      } catch (error) {
+        console.error(`[bag-representative-dropoff-hub-queue] `, error);
+        throw error;
       }
-      return true;
     });
 
     this.queue.on('completed', job => {

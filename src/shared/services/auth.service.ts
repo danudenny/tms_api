@@ -49,6 +49,11 @@ export class AuthService {
     // check user present
     if (user) {
       // PinoLoggerService.log(user);
+      if (!user.validatePasswordPolicy(password)) {
+        RequestErrorService.throwObj({
+          message: 'global.error.PASSWORD_POLICY_INVALID',
+        });
+      }
       await this.blockProcess(username);
 
       // validate user password hash md5

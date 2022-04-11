@@ -43,96 +43,101 @@ export class BagScanOutBranchSmdQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      // await getManager().transaction(async transactionalEntityManager => {
-      // }); // end transaction
-      console.log('### SCAN OUT BRANCH SMD JOB ID =========', job.id);
-      const data = job.data;
-      let employeeIdDriver = null;
-      let employeeNameDriver = '';
+      try {
+        // await getManager().transaction(async transactionalEntityManager => {
+        // }); // end transaction
+        console.log('### SCAN OUT BRANCH SMD JOB ID =========', job.id);
+        const data = job.data;
+        let employeeIdDriver = null;
+        let employeeNameDriver = '';
 
-      const resultBagItemBranch = await RawQueryService.query(`
-        SELECT
-          bi.bag_item_id,
-          b.branch_id AS branch_id_to,
-          b.branch_name AS branch_name_to,
-          bih.bag_item_status_id,
-          bih1.branch_id
-        FROM do_smd_detail dsd
-        INNER JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
-        INNER JOIN bag_item bi ON dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE
-        INNER JOIN bag bag ON bag.bag_id = bi.bag_id AND bag.is_deleted = FALSE
-        INNER JOIN branch b ON b.branch_id = dsd.branch_id_to AND b.is_deleted = FALSE
-        LEFT JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE
-        LEFT JOIN bag_item_history bih1 ON bih1.bag_item_id = bi.bag_item_id AND bih1.is_deleted = FALSE
-          AND bih1.branch_id = '${data.branchId}' AND bih1.bag_item_status_id = '${BAG_STATUS.OUT_LINE_HAUL}'
-        WHERE dsd.do_smd_id = ${data.doSmdId} AND dsd.is_deleted = FALSE
-        ORDER BY CASE WHEN bih.bag_item_status_id = ${BAG_STATUS.OUT_LINE_HAUL} THEN 1 ELSE 2 END, bih.history_date DESC;` ,
-      );
+        const resultBagItemBranch = await RawQueryService.query(`
+          SELECT
+            bi.bag_item_id,
+            b.branch_id AS branch_id_to,
+            b.branch_name AS branch_name_to,
+            bih.bag_item_status_id,
+            bih1.branch_id
+          FROM do_smd_detail dsd
+          INNER JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
+          INNER JOIN bag_item bi ON dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE
+          INNER JOIN bag bag ON bag.bag_id = bi.bag_id AND bag.is_deleted = FALSE
+          INNER JOIN branch b ON b.branch_id = dsd.branch_id_to AND b.is_deleted = FALSE
+          LEFT JOIN bag_item_history bih ON bih.bag_item_id = bi.bag_item_id AND bih.is_deleted = FALSE
+          LEFT JOIN bag_item_history bih1 ON bih1.bag_item_id = bi.bag_item_id AND bih1.is_deleted = FALSE
+            AND bih1.branch_id = '${data.branchId}' AND bih1.bag_item_status_id = '${BAG_STATUS.OUT_LINE_HAUL}'
+          WHERE dsd.do_smd_id = ${data.doSmdId} AND dsd.is_deleted = FALSE
+          ORDER BY CASE WHEN bih.bag_item_status_id = ${BAG_STATUS.OUT_LINE_HAUL} THEN 1 ELSE 2 END, bih.history_date DESC;` ,
+        );
 
-      const resultBagRepresentative = await RawQueryService.query(`
-        SELECT
-          bri.awb_item_id,
-          b.branch_id AS branch_id_to,
-          b.branch_name AS branch_name_to,
-          brh.bag_representative_status_id_last,
-          br.bag_representative_code,
-          br.bag_representative_date,
-          br.bag_representative_id,
-          br.representative_id_to,
-          br.total_item,
-          br.total_weight
-        FROM do_smd_detail dsd
-        INNER JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
-        INNER JOIN bag_representative br ON br.bag_representative_id = dsdi.bag_representative_id AND br.is_deleted = FALSE
-        INNER JOIN branch b ON b.branch_id = dsd.branch_id_to AND b.is_deleted = FALSE
-        INNER JOIN bag_representative_item bri ON bri.bag_representative_id = dsdi.bag_representative_id AND bri.is_deleted = FALSE
-        INNER JOIN awb awb ON awb.awb_id = bri.awb_id AND awb.is_deleted = FALSE
-        LEFT JOIN bag_representative_history brh ON brh.bag_representative_id = br.bag_representative_id AND brh.is_deleted = FALSE
-        WHERE dsd.do_smd_id = ${data.doSmdId} AND dsd.is_deleted = FALSE
-        ORDER BY brh.created_time DESC;` ,
-      );
+        const resultBagRepresentative = await RawQueryService.query(`
+          SELECT
+            bri.awb_item_id,
+            b.branch_id AS branch_id_to,
+            b.branch_name AS branch_name_to,
+            brh.bag_representative_status_id_last,
+            br.bag_representative_code,
+            br.bag_representative_date,
+            br.bag_representative_id,
+            br.representative_id_to,
+            br.total_item,
+            br.total_weight
+          FROM do_smd_detail dsd
+          INNER JOIN do_smd_detail_item dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = FALSE
+          INNER JOIN bag_representative br ON br.bag_representative_id = dsdi.bag_representative_id AND br.is_deleted = FALSE
+          INNER JOIN branch b ON b.branch_id = dsd.branch_id_to AND b.is_deleted = FALSE
+          INNER JOIN bag_representative_item bri ON bri.bag_representative_id = dsdi.bag_representative_id AND bri.is_deleted = FALSE
+          INNER JOIN awb awb ON awb.awb_id = bri.awb_id AND awb.is_deleted = FALSE
+          LEFT JOIN bag_representative_history brh ON brh.bag_representative_id = br.bag_representative_id AND brh.is_deleted = FALSE
+          WHERE dsd.do_smd_id = ${data.doSmdId} AND dsd.is_deleted = FALSE
+          ORDER BY brh.created_time DESC;` ,
+        );
 
-      const resultDriver = await RawQueryService.query(`
-        SELECT
-          e.employee_id AS employee_id_driver,
-          e.fullname AS employee_name_driver
-        FROM do_smd_vehicle dsv
-        INNER JOIN employee e ON e.employee_id = dsv.employee_id_driver AND e.is_deleted =  FALSE
-        WHERE dsv.do_smd_id = ${data.doSmdId} AND dsv.is_deleted = FALSE
-        LIMIT 1;` ,
-      );
+        const resultDriver = await RawQueryService.query(`
+          SELECT
+            e.employee_id AS employee_id_driver,
+            e.fullname AS employee_name_driver
+          FROM do_smd_vehicle dsv
+          INNER JOIN employee e ON e.employee_id = dsv.employee_id_driver AND e.is_deleted =  FALSE
+          WHERE dsv.do_smd_id = ${data.doSmdId} AND dsv.is_deleted = FALSE
+          LIMIT 1;` ,
+        );
 
-      if (resultDriver.length > 0) {
-        employeeIdDriver = resultDriver[0].employee_id_driver;
-        employeeNameDriver = resultDriver[0].employee_name_driver;
+        if (resultDriver.length > 0) {
+          employeeIdDriver = resultDriver[0].employee_id_driver;
+          employeeNameDriver = resultDriver[0].employee_name_driver;
+        }
+        let branchName = 'Kantor Pusat';
+        let cityName = 'Jakarta';
+
+        const branch = await SharedService.getDataBranchCity(data.branchId);
+        if (branch) {
+          branchName = branch.branchName;
+          cityName = branch.district ? branch.district.city.cityName : '';
+        }
+
+        await this.createHistoryCombinePackageAwb(
+          data,
+          resultBagItemBranch,
+          employeeIdDriver,
+          employeeNameDriver,
+          branchName,
+          cityName,
+        );
+
+        await this.createHistoryBagRepresentativeAwb(
+          data,
+          resultBagRepresentative,
+          employeeIdDriver,
+          employeeNameDriver,
+          branchName,
+          cityName,
+        );
+        return true;
+      } catch (error) {
+        console.error(`[bag-scan-out-branch-smd-queue] `, error);
+        throw error;
       }
-      let branchName = 'Kantor Pusat';
-      let cityName = 'Jakarta';
-
-      const branch = await SharedService.getDataBranchCity(data.branchId);
-      if (branch) {
-        branchName = branch.branchName;
-        cityName = branch.district ? branch.district.city.cityName : '';
-      }
-
-      await this.createHistoryCombinePackageAwb(
-        data,
-        resultBagItemBranch,
-        employeeIdDriver,
-        employeeNameDriver,
-        branchName,
-        cityName,
-      );
-
-      await this.createHistoryBagRepresentativeAwb(
-        data,
-        resultBagRepresentative,
-        employeeIdDriver,
-        employeeNameDriver,
-        branchName,
-        cityName,
-      );
-      return true;
     });
 
     this.queue.on('completed', job => {

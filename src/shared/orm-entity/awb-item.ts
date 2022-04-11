@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, OneToOne } from 'typeorm';
+import { BaseEntity, Column, Entity, Index, JoinColumn, ManyToOne, OneToOne, PrimaryColumn } from 'typeorm';
 
 import { Awb } from './awb';
 import { AwbItemAttr } from './awb-item-attr';
@@ -9,7 +9,7 @@ import { AwbStatus } from './awb-status';
 @Index('awb_item_awb_id_idx', ['awbId', 'isDeleted'])
 @Index('awb_item_is_deleted_idx', ['isDeleted'])
 export class AwbItem extends BaseEntity {
-  @PrimaryGeneratedColumn({
+  @PrimaryColumn({
     type: 'bigint',
     name: 'awb_item_id',
   })
