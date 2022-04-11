@@ -290,7 +290,7 @@ export class HubTransitDeliveryInService {
       ['t2.bag_number', 'bagNumber'],
       ['t2.ref_representative_code', 'representativeCode'],
       ['t3.bag_seq', 'bagSeq'],
-      ['t1.created_time', 'createdTime'],
+      [`t1.created_time - INTERVAL '7 HOUR'`, 'createdTime'],
       ['t1.dropoff_hub_id', 'dropoffHubId'],
       ['t5.branch_name', 'branchName'],
       ['t6.branch_name', 'branchScanName'],
