@@ -61,26 +61,26 @@ export class CodReportService {
       }
 
       if (filter.field == 'supplier' && filter.value) {
-        queryParam += `ctd.partner_id = ${filter.value} `;
+        queryParam += `AND ctd.partner_id = ${filter.value} `;
       }
 
       if (filter.field == 'awbStatus' && filter.value) {
-        queryParam += `ctd.supplier_invoice_status_id = ${filter.value} `;
+        queryParam += `AND ctd.supplier_invoice_status_id = ${filter.value} `;
       }
 
       if (filter.field == 'branchLast' && filter.value) {
-        queryParam += `ctd.branch_id = ${filter.value} `;
+        queryParam += `AND ctd.branch_id = ${filter.value} `;
       }
       if (filter.field == 'transactionStatus' && filter.value) {
-        queryParam += `ctd.transaction_status_id = ${filter.value} `;
+        queryParam += `AND ctd.transaction_status_id = ${filter.value} `;
       }
 
       if (filter.field == 'sigesit' && filter.value) {
-        queryParam += `ctd.user_id_driver = ${filter.value} `;
+        queryParam += `AND ctd.user_id_driver = ${filter.value} `;
       }
     }
 
-    queryParam += "AND ctd.supplier_invoice_status_id = 45000";
+    queryParam += "AND ctd.supplier_invoice_status_id = 45000 AND ctd.is_deleted = false";
 
     const query = `SELECT 
         ctd.partner_name AS "partner", 
