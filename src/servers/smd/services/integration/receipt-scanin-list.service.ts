@@ -9,7 +9,10 @@ import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { ScanInSmdDetailResponseVm } from '../../models/scanin-smd-list.response.vm';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { ReceivedBag } from '../../../../shared/orm-entity/received-bag';
-import { ReceiptScaninListResponseVm, ReceiptScaninDetailListResponseVm } from '../../models/receipt-scanin-list.response.vm';
+import {
+  ReceiptScaninListResponseVm,
+  ReceiptScaninDetailListResponseVm,
+} from '../../models/receipt-scanin-list.response.vm';
 import { ReceivedBagDetail } from '../../../../shared/orm-entity/received-bag-detail';
 
 @Injectable()
@@ -17,7 +20,6 @@ export class ReceiptScaninListService {
   static async findReceiptScanInList(
     payload: BaseMetaPayloadVm,
   ): Promise<ReceiptScaninListResponseVm> {
-
     payload.fieldResolverMap['receivedBagId'] = 'rb.received_bag_id';
     payload.fieldResolverMap['receivedBagCode'] = 'rb.received_bag_code';
     payload.fieldResolverMap['branchId'] = 'b.branch_id';
@@ -67,6 +69,23 @@ export class ReceiptScaninListService {
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
+    if (data) {
+      const detailRepo = new OrionRepositoryService(ReceivedBagDetail, 'rbd');
+      const counts: Array<{ count: string }> = await Promise.all(
+        data.map(rb =>
+          detailRepo
+            .findOneRaw()
+            .selectRaw(['COUNT(rbd.received_bag_id)', 'count'])
+            .andWhere(e => e.receivedBagId, w => w.equals(rb.receivedBagId))
+            .andWhere(e => e.isDeleted, w => w.isFalse())
+            .exec(),
+        ),
+      );
+      data.forEach(
+        (rb, i) => (rb.totalBagNumber = parseInt(counts[i].count, 10)),
+      );
+    }
+
     const result = new ReceiptScaninListResponseVm();
 
     result.data = data;
@@ -79,7 +98,8 @@ export class ReceiptScaninListService {
     payload: BaseMetaPayloadVm,
   ): Promise<ReceiptScaninDetailListResponseVm> {
     payload.fieldResolverMap['receivedBagId'] = 'rbd.received_bag_id';
-    payload.fieldResolverMap['receivedBagDetailId'] = 'rbd.received_bag_detail_id';
+    payload.fieldResolverMap['receivedBagDetailId'] =
+      'rbd.received_bag_detail_id';
     payload.fieldResolverMap['bagNumber'] = 'rbd.bag_number';
 
     payload.globalSearchFields = [
