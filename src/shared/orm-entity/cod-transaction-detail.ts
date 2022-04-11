@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   JoinColumn,
   ManyToOne,
+  OneToOne,
 } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { CodTransaction } from './cod-transaction';
@@ -12,6 +13,7 @@ import { TransactionStatus } from './transaction-status';
 import { CodSupplierInvoice } from './cod-supplier-invoice';
 import { ColumnNumericTransformer } from './column-numeric-transformer';
 import { User } from './user';
+import { AwbItemAttr } from './awb-item-attr';
 
 @Entity('cod_transaction_detail', { schema: 'public' })
 export class CodTransactionDetail extends TmsBaseEntity {
@@ -311,4 +313,8 @@ export class CodTransactionDetail extends TmsBaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_driver' })
   userDriver: User;
+
+  @OneToOne(() => AwbItemAttr)
+  @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
+  awbItemAttr: AwbItemAttr;
 }
