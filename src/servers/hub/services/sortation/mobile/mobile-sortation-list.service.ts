@@ -85,8 +85,8 @@ export class MobileSortationListService {
             qb.addSelect('ds.do_sortation_time', 'doSortationTime');
             qb.addSelect('b.branch_name', 'branchNameTo');
             qb.addSelect('b.address', 'branchAddressTo');
-            qb.addSelect('ds.total_bag', 'totalBag');
-            qb.addSelect('ds.total_bag_sortir', 'totalBagSortir');
+            qb.addSelect('dsd.total_bag', 'totalBag');
+            qb.addSelect('dsd.total_bag_sortir', 'totalBagSortir');
             qb.addSelect('dsd.arrival_date_time', 'arrivalDateTime');
             qb.addSelect(`(
                     SELECT
