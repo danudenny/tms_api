@@ -1,7 +1,7 @@
 import {Injectable} from '@nestjs/common';
 import {RedshiftReportingService} from '../report/redshift-reporting.service';
 import {ConfigService} from '../../../../shared/services/config.service';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { BaseMetaPayloadVm, ReportBaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
@@ -9,6 +9,7 @@ import { RoleGroupService } from '../../../../shared/services/role-group.service
 import { AuthService } from '../../../../shared/services/auth.service';
 import {CodTransactionDetail} from '../../../../shared/orm-entity/cod-transaction-detail';
 import {TRANSACTION_STATUS} from '../../../../shared/constants/transaction-status.constant';
+import * as moment from 'moment';
 
 @Injectable()
 export class CodReportService {
@@ -68,6 +69,7 @@ export class CodReportService {
     const reportType = this.configReportType.awbCodSummary;
     return this.reportingService.fetchReport(page, limit, reportType);
   }
+
 
  async generateAWBSummaryReport(payload:BaseMetaPayloadVm) {
     const reportType = this.configReportType.awbCodSummary;
@@ -147,86 +149,124 @@ export class CodReportService {
     return this.reportingService.generateReport(reportType, q.getQuery())
  }
 
- async generateAwbCodTransactionDetailReport(payload: BaseMetaPayloadVm){
+ async generateAwbCodTransactionDetailReport(payload: ReportBaseMetaPayloadVm){
    const reportType = this.configReportType.awbCodTransactionDetail;
    const rawQuery = this.generateQueryAwbCodTransaction(payload)
-
+  console.log(rawQuery)
    return this.reportingService.generateReport(reportType, rawQuery)
  }
 
- private generateQueryAwbCodTransaction(payload: BaseMetaPayloadVm){
+ async fetchReportAwbTransactionDetail(page: number, limit: number) {
+  const reportType = this.configReportType.awbCodTransactionDetail;
+  return this.reportingService.fetchReport(page, limit, reportType);
+}
 
-  payload.fieldResolverMap['statusDate'] = 'ctd.pod_date';
-  payload.fieldResolverMap['manifestedDate'] = 'ctd.awb_date';
-  payload.fieldResolverMap['transactionDate'] = 'ctd.updated_time';
-  payload.fieldResolverMap['partnerId'] = 'ctd.partner_id';
-  payload.fieldResolverMap['representativeId'] = 'ctd.representative_id';
-  payload.fieldResolverMap['branchIdFinal'] = 'ctd.branch_id';
-  payload.fieldResolverMap['awbStatusIdFinal'] = 'ctd.awb_status_id_final';
-  payload.fieldResolverMap['transactionStatusId'] = 'ctd.transaction_status_id';
-  payload.fieldResolverMap['userIdDriver'] = 'ude.user_id';
-  payload.fieldResolverMap['supplierInvoiceStatusId'] = 'ctd.supplier_invoice_status_id';
+ private generateQueryAwbCodTransaction(payload: ReportBaseMetaPayloadVm){
 
-  const repo = new OrionRepositoryService(CodTransactionDetail, 'ctd');
-  const q = repo.findAllRaw();
+  let queryParam = "";
+  for (const filter of payload.filters){
+    if (filter.field == 'periodStart' && filter.value){
+      queryParam +=  `AND ctd.pod_date >= Date('${filter.value} 00:00:00') `;
+    }
+    if (filter.field == 'periodEnd' && filter.value){
+      const d = moment
+        .utc(filter.value).add(1, 'days')
+        .format('YYYY-MM-DD')
+      queryParam +=  `AND ctd.pod_date < Date('${d} 00:00:00') `;
+    }
 
-  payload.applyToOrionRepositoryQuery(q, true);
+    if (filter.field == 'transactionStart' && filter.value) {
+      queryParam +=  `AND ctd.updated_time >= Date('${filter.value} 00:00:00') `;
+    }
 
-  q.selectRaw(
-    ['ctd.partner_name', 'partnerName'],
-    ['ctd.awb_date', 'awbDate'],
-    ['ctd.awb_number', 'awbNumber'],
-    ['ctd.parcel_value', 'packageAmount'],
-    ['ctd.cod_value', 'codValue'],
-    ['ctd.cod_fee', 'codFee'],
-    ['ctd.cod_value', 'amountTransfer'],
-    ['ctd.pod_date', 'podDate'],
-    ['ctd.consignee_name', 'penerima'],
-    ['ctd.payment_method', 'paymentMethod'],
-    ['ts.status_title', 'transactionStatus'],
-    ['as.awb_status_name' , 'trackingStatus'],
-    ['sis.status_title', 'supplierInvoiceStatus'],
-    ['ctd.cust_package', 'custPackage'],
-    ['ctd.pickup_source', 'pickupSource'],
-    ['ctd.current_position','currentPosition'],
-    ['ctd.destination_code', 'destinationCode'],
-    ['ctd.destination', 'destination'],
-    ['rep.representative_code', 'perwakilan'],
-    ['concat(ude.nik, " ", ude.fullname)', 'sigesit'],
-    ['ctd.parcel_content', 'packageDetail'],
-    ['ctd.package_type', 'services'],
-    ['ctd.parcel_note', 'receiverRemark'],
-    ['ctd.updated_time', 'dateUpdated'],
-    ['concat(uae.nik, " ", uae.fullname)', 'userUpdated'],
-  );
+    if (filter.field == 'transactionEnd' && filter.value) {
+      const d = moment
+        .utc(filter.value).add(1, 'days')
+        .format('YYYY-MM-DD')
+      queryParam +=  `AND ctd.updated_time < Date('${d} 00:00:00') `;
+    }
 
+    if (filter.field == 'manifestedStart' && filter.value) {
+      queryParam +=  `AND ctd.awb_date >= Date('${filter.value} 00:00:00') `;
+    }
 
-  q.leftJoin(e => e.awbItemAttr, 'aia', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  );
+    if (filter.field == 'manifestedEnd' && filter.value) {
+      const d = moment
+      .utc(filter.value).add(1, 'days')
+      .format('YYYY-MM-DD')
+    queryParam +=  `AND ctd.awb_date < Date('${d} 00:00:00') `;
+    }
 
- 
-  q.leftJoin(e => e.transactionAwb, 'ts', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  );
+    if (filter.field == 'partnerId' && filter.value) {
+      queryParam += `AND ctd.partner_id = ${filter.value} `;
+    }
+    if (filter.field == 'representativeId' && filter.value) {
+      queryParam += `AND ctd.representative_id = ${filter.value} `;
+    }
+    if (filter.field == 'branchIdFinal' && filter.value) {
+      queryParam += `AND ctd.branch_id = ${filter.value} `;
+    }
+    if (filter.field == 'awbStatusIdFinal' && filter.value) {
+      queryParam += `AND aia.awb_status_id_final = ${filter.value} `;
+    }
+    if (filter.field == 'transactionStatusId' && filter.value) {
+      queryParam += `AND ctd.transaction_status_id = ${filter.value} `;
+    }
+    if (filter.field == 'sigesit' && filter.value) {
+      queryParam += `AND ude.user_id = ${filter.value} `;
+    }
+    if (filter.field == 'supplierInvoiceStatusId' && filter.value) {
+      queryParam += `AND ctd.supplier_invoice_status_id = ${filter.value} `;
+    }
+  }
 
-  q.leftJoin(e => e.transactionStatus, 'ts', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  );
+  const query = `SELECT
+    ctd.partner_name AS "Partner Name",
+    ctd.awb_date AS "Awb Date",
+    ctd.awb_number AS "Awb Number",
+    ctd.parcel_value AS "Package Amount",
+    ctd.cod_value AS "COD Value",
+    ctd.cod_fee AS "COD Fee",
+    ctd.cod_value AS "Amount Transafer",
+    ctd.pod_date AS "POD Date",
+    ctd.consignee_name AS "Penerima",
+    ctd.payment_method AS "Payment Method",
+    sis.status_title AS "Transaction Status",
+    aws.awb_status_name AS "Tracking Status",
+    sisinv.status_title AS "Supplier Invoice Status",
+    ctd.cust_package AS "Cust Package",
+    ctd.pickup_source AS "Pickup Source",
+    ctd.current_position AS "Current Position",
+    ctd.destination_code AS "Destination Code",
+    ctd.destination AS "Destination",
+    rep.representative_code AS "Perwakilan",
+    CONCAT(ude.nik+' ', ude.fullname) AS "Sigesit",
+    ctd.parcel_content AS "Package Detail",
+    ctd.package_type AS "Services",
+    ctd.parcel_note AS "Receiver Remark",
+    ctd.updated_time AS "Date Updated",
+    CONCAT(uae.nik+' ', uae.fullname) AS "User Updated"
+  FROM
+    "public"."cod_transaction_detail" "ctd"
+  LEFT JOIN "public"."awb_item_attr" "aia" ON "aia"."awb_item_id" = "ctd"."awb_item_id"
+    AND ("aia"."is_deleted" = 'false')
+  LEFT JOIN "public"."transaction_status" "sisinv" ON "sisinv"."transaction_status_id" = "ctd"."supplier_invoice_status_id"
+  LEFT JOIN "public"."transaction_status" "sis" ON "sis"."transaction_status_id" = "ctd"."transaction_status_id"
+  LEFT JOIN "public"."awb_status" "aws" ON "aws"."awb_status_id" = "aia"."awb_status_id_last"
+  INNER JOIN "public"."users" "ctd_userDriver" ON "ctd_userDriver"."user_id" = "ctd"."user_id_driver"
+  INNER JOIN "public"."employee" "ude" ON "ude"."employee_id" = "ctd_userDriver"."employee_id"
+  INNER JOIN "public"."users" "ctd_userAdmin" ON "ctd_userAdmin"."user_id" = "ctd"."user_id_updated"
+  INNER JOIN "public"."employee" "uae" ON "uae"."employee_id" = "ctd_userAdmin"."employee_id"
+  INNER JOIN "public"."cod_transaction" "ctd_codTransaction" ON "ctd_codTransaction"."cod_transaction_id" = "ctd"."cod_transaction_id"
+  INNER JOIN "public"."branch" "ctd_codTransaction_branch" ON "ctd_codTransaction_branch"."branch_id" = "ctd_codTransaction"."branch_id"
+  INNER JOIN "public"."representative" "rep" ON "rep"."representative_id" = "ctd_codTransaction_branch"."representative_id"
+    AND ("rep"."is_deleted" = 'false')
+  WHERE 
+    TRUE 
+    ${queryParam}
+  `;
 
-  q.leftJoin(e => e.supplierInvoiceStatus, 'sis', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  );
-
-  q.innerJoin(e => e.userDriver.employee, 'ude');
-  q.innerJoin(e => e.userAdmin.employee, 'uae');
-  q.leftJoin(e => e.awbItemAttr.awbStatus, 'as');
-  
-  q.leftJoin(e => e.codTransaction.branch.representative, 'rep', j =>
-    j.andWhere(e => e.isDeleted, w => w.isFalse()),
-  );
-
-  return q.getQuery();
+  return query;
  
   }
 
