@@ -99,7 +99,7 @@ export class BagScanOutBranchSmdQueueService {
             e.fullname AS employee_name_driver
           FROM do_smd_vehicle dsv
           INNER JOIN employee e ON e.employee_id = dsv.employee_id_driver AND e.is_deleted =  FALSE
-          WHERE dsv.do_smd_id = ${data.doSmdId} AND dsv.is_deleted = FALSE
+          WHERE dsv.do_smd_id = ${data.doSmdId} AND dsv.is_deleted = FALSE AND dsv.is_active = TRUE
           LIMIT 1;` ,
         );
 
