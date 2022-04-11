@@ -1009,8 +1009,8 @@ export class WebDeliveryOutService {
     }
 
     let timeFrom = null;
-    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
-    for (let data of payload.filters) {
+    const timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format('YYYY-MM-DD'));
+    for (const data of payload.filters) {
       if (data.field == 'createdTime') {
         if (data.operator == 'gte') {
           timeFrom = data.value;
@@ -1066,7 +1066,7 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
       j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
       j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
-    }
+    },
     );
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -1216,8 +1216,8 @@ export class WebDeliveryOutService {
     }
 
     let timeFrom = null;
-    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
-    for (let data of payload.filters) {
+    const timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format('YYYY-MM-DD'));
+    for (const data of payload.filters) {
       if (data.field == 'createdTime') {
         if (data.operator == 'gte') {
           timeFrom = data.value;
@@ -1262,7 +1262,7 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
       j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
       j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
-    }
+    },
     );
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -1276,7 +1276,6 @@ export class WebDeliveryOutService {
 
     q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
-
 
     q.groupByRaw('t1.do_pod_id, t2.fullname, t5.partner_logistic_id, t3.branch_name');
     const data = await q.exec();
@@ -1312,8 +1311,8 @@ export class WebDeliveryOutService {
     }
 
     let timeFrom = null;
-    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
-    for (let data of payload.filters) {
+    const timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format('YYYY-MM-DD'));
+    for (const data of payload.filters) {
       if (data.field == 'createdTime') {
         if (data.operator == 'gte') {
           timeFrom = data.value;
@@ -1358,7 +1357,7 @@ export class WebDeliveryOutService {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
       j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
       j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
-    }
+    },
     );
     q.innerJoin(e => e.branchTo, 't3', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -1372,7 +1371,6 @@ export class WebDeliveryOutService {
 
     q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_HUB_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
-
 
     q.groupByRaw('t1.do_pod_id, t2.fullname, t5.partner_logistic_id, t3.branch_name');
     const data = null;
@@ -1835,6 +1833,14 @@ export class WebDeliveryOutService {
       },
     ];
 
+    let isDoPodIdNull = true;
+    for (const payloadFilter of payload.filters) {
+      if ('doPodId' == payloadFilter.field && payloadFilter.value) {
+        isDoPodIdNull = false;
+        break;
+      }
+    }
+
     const repo = new OrionRepositoryService(DoPodDetailBag, 't1');
     const q = repo.findAllRaw();
 
@@ -1842,7 +1848,7 @@ export class WebDeliveryOutService {
 
     q.selectRaw(
       [`SUBSTR(CONCAT(t3.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`,
-        'bagNumber',],
+        'bagNumber'],
       ['t1.created_time', 'createdTime'],
       ['COUNT (t4.*)', 'totalAwb'],
       ['t5.representative_code', 'representativeIdTo'],
@@ -1870,11 +1876,14 @@ export class WebDeliveryOutService {
       't1.do_pod_id, t1.created_time, t3.bag_number, t2.bag_seq, t2.weight, t5.representative_name, t5.representative_code, t6.branch_name',
     );
 
-    const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+    let data = [];
+    let total = 0;
+    if (!isDoPodIdNull) {
+      data = await q.exec();
+      total = await q.countWithoutTakeAndSkip();
+    }
 
     const result = new WebDeliveryListResponseVm();
-
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
 
@@ -2227,12 +2236,12 @@ export class WebDeliveryOutService {
     temp = await q.getRawMany();
 
     let id = '';
-    temp.map(function (item) {
+    temp.map(function(item) {
       id += id ? ',\'' + item.doPodDeliverId + '\'' : '\'' + item.doPodDeliverId + '\'';
     });
 
     if (!id) {
-      throw new BadRequestException("payload invalid");
+      throw new BadRequestException('payload invalid');
     }
 
     const qq = createQueryBuilder();

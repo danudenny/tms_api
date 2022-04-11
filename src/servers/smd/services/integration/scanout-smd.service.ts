@@ -46,10 +46,11 @@ export class ScanoutSmdService {
       FROM do_smd_vehicle dsv
       INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000 AND ds.is_deleted = FALSE
       WHERE
-        dsv.created_time >= '${moment().subtract(30,'days').format('YYYY-MM-DD 00:00:00')}' AND 
-        dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND  
+        dsv.created_time >= '${moment().subtract(30, 'days').format('YYYY-MM-DD 00:00:00')}' AND
+        dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND
         dsv.employee_id_driver = ${payload.employee_id_driver} AND
-        dsv.is_deleted = FALSE;
+        dsv.is_active = TRUE AND
+        dsv.is_deleted = FALSE
     `;
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
     for (const dataDriver of resultDataDriver) {
@@ -96,7 +97,6 @@ export class ScanoutSmdService {
         }
       }
     }
-
 
     // if (resultDataDriver.length > 0) {
     //   // Cek Status OTW
@@ -214,7 +214,7 @@ export class ScanoutSmdService {
       where: {
         branchId: payload.branch_id,
         isDeleted : false,
-        isActive : true
+        isActive : true,
       },
     });
     if (resultbranchTo) {
@@ -227,8 +227,8 @@ export class ScanoutSmdService {
         FROM do_smd_vehicle dsv
         INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000 AND ds.is_deleted = FALSE
         WHERE
-          dsv.created_time >= '${moment().subtract(30,'days').format('YYYY-MM-DD 00:00:00')}' AND 
-          dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND  
+          dsv.created_time >= '${moment().subtract(30, 'days').format('YYYY-MM-DD 00:00:00')}' AND
+          dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND
           dsv.employee_id_driver = ${payload.employee_id_driver} AND
           dsv.is_deleted = FALSE;
       `;
@@ -410,7 +410,7 @@ export class ScanoutSmdService {
         where: {
           branchCode: payload.branch_code,
           isDeleted : false,
-          isActive : true
+          isActive : true,
         },
       });
 
@@ -566,7 +566,7 @@ export class ScanoutSmdService {
         where: {
           branchCode: payload.branch_code,
           isDeleted : false,
-          isActive : true
+          isActive : true,
         },
       });
 
@@ -858,7 +858,7 @@ export class ScanoutSmdService {
           br.bag_representative_code = :bagRepresentativeNumber AND
           br.is_deleted = FALSE;
       `;
-      const resultDataBagRepresentative = await RawQueryService.queryWithParams(rawQuery, {
+    const resultDataBagRepresentative = await RawQueryService.queryWithParams(rawQuery, {
         bagRepresentativeNumber : payload.item_number,
       });
 
@@ -1178,7 +1178,7 @@ export class ScanoutSmdService {
         const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
 
         const bagDetail = await BagService.validBagNumber(paramBagNumberWithSeq);
-        if(!bagDetail){
+        if (!bagDetail) {
           result.message = 'Bag Number Not Found';
           return result;
         }
@@ -1356,7 +1356,7 @@ export class ScanoutSmdService {
         // // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
 
         const bagDetail = await BagService.validBagNumber(payload.item_number);
-        if(!bagDetail){
+        if (!bagDetail) {
           result.message = 'Bag Number Not Found';
           return result;
         }
@@ -1510,10 +1510,10 @@ export class ScanoutSmdService {
               result.message = `Gabung Paket ${payload.item_number} berhasil di scan`;
               result.data = data;
               return result;
-          } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id){
+          } else if (resultDataRepresentative.length > 0 && resultDataRepresentative[0].bag_item_id) {
             result.message = `Gabung Paket ${payload.item_number} sudah di scan`;
             return result;
-          }else {
+          } else {
             result.message = 'Tujuan Gabung Paket tidak cocok dengan perwakilan SMD';
             return result;
           }
@@ -1628,7 +1628,7 @@ export class ScanoutSmdService {
       FROM do_smd_vehicle dsv
       INNER JOIN do_smd ds ON dsv.do_smd_id = ds.do_smd_id AND ds.is_deleted = FALSE AND do_smd_status_id_last = 3000
       WHERE
-        dsv.employee_id_driver = ${payload.employee_id_driver} AND dsv.is_deleted = FALSE
+        dsv.employee_id_driver = ${payload.employee_id_driver} AND dsv.is_active = TRUE AND dsv.is_deleted = FALSE
     `;
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
 
