@@ -52,7 +52,8 @@ export class ScanoutSmdCityService {
           dsv.created_time >= '${moment().subtract(30,'days').format('YYYY-MM-DD 00:00:00')}' AND 
           dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND  
           dsv.employee_id_driver = ${payload.employee_id_driver} AND
-          dsv.is_deleted = FALSE;
+          dsv.is_deleted = FALSE AND
+          dsv.is_active = TRUE;
       `;
       const resultDataDriver = await RawQueryService.query(rawQueryDriver);
       for (const dataDriver of resultDataDriver) {

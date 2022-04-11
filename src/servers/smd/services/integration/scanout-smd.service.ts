@@ -49,7 +49,8 @@ export class ScanoutSmdService {
         dsv.created_time >= '${moment().subtract(30,'days').format('YYYY-MM-DD 00:00:00')}' AND 
         dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND  
         dsv.employee_id_driver = ${payload.employee_id_driver} AND
-        dsv.is_deleted = FALSE;
+        dsv.is_deleted = FALSE AND
+        dsv.is_active = TRUE;
     `;
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
     for (const dataDriver of resultDataDriver) {
@@ -1628,7 +1629,7 @@ export class ScanoutSmdService {
       FROM do_smd_vehicle dsv
       INNER JOIN do_smd ds ON dsv.do_smd_id = ds.do_smd_id AND ds.is_deleted = FALSE AND do_smd_status_id_last = 3000
       WHERE
-        dsv.employee_id_driver = ${payload.employee_id_driver} AND dsv.is_deleted = FALSE
+        dsv.employee_id_driver = ${payload.employee_id_driver} AND dsv.is_deleted = FALSE AND dsv.is_active = TRUE
     `;
     const resultDataDriver = await RawQueryService.query(rawQueryDriver);
 
