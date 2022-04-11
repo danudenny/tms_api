@@ -9,13 +9,13 @@ import {MobileSortationScanoutDetailBagPayloadVm} from '../../../models/sortatio
 import {MobileSortationScanoutDetailBagResponseVm} from '../../../models/sortation/mobile/mobile-sortation-scanout-detail-bag.response.vm';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import {
-    MobileSortationScanoutListHistoryPayloadVm
+    MobileSortationScanoutListHistoryPayloadVm,
 } from '../../../models/sortation/mobile/mobile-sortation-scanout-list-history.payload.vm';
 
 @Injectable()
 export class MobileSortationListService {
 
-    public static async getDataBag(doSortationDetailId : string, isSortir: boolean) {
+    public static async getDataBag(doSortationDetailId: string, isSortir: boolean) {
         const qb = createQueryBuilder();
         qb.addSelect('dsd.do_sortation_detail_id', 'doSortationDetailId');
         qb.addSelect('b.bag_id', 'bagId');
@@ -226,8 +226,8 @@ export class MobileSortationListService {
             qb.addSelect('ds.do_sortation_code', 'doSortationCode');
             qb.addSelect('b.branch_name', 'branchNameTo');
             qb.addSelect('b.address', 'branchAddressTo');
-            qb.addSelect('ds.total_bag', 'totalBag');
-            qb.addSelect('ds.total_bag_sortir', 'totalBagSortir');
+            qb.addSelect('dsd.total_bag', 'totalBag');
+            qb.addSelect('dsd.total_bag_sortir', 'totalBagSortir');
             qb.addSelect('ds.do_sortation_time', 'doSortationTime');
             qb.from('do_sortation', 'ds');
             qb.innerJoin(
