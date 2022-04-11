@@ -10,6 +10,7 @@ import { MonitoringHubProblemVm, MonitoringHubProblemLebihSortirVm } from '../..
 import { HubMonitoringService } from '../../../hub/services/integration/hub-monitoring.service';
 import { MonitoringProblemListService } from './monitoring-problem-list.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { BagService } from '../../../main/services/v1/bag.service';
 
 @Injectable()
 export class MonitoringProblemLebihSortirListService {
@@ -17,7 +18,7 @@ export class MonitoringProblemLebihSortirListService {
   static async getAwbtotalLebihSortir(
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringHubProblemLebihSortirVm> {
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
 
     // Mapping order by key
     const mappingSortBy = {
@@ -66,7 +67,7 @@ export class MonitoringProblemLebihSortirListService {
       sortByRaw = mappingSortBy[payload.sortBy];
     }
     payload.sortBy = '';
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
     let sql = `SELECT a.scan_date_in_hub as "scanDateInHub", c.city_id as "cityId", c.city_name as "cityName", a.branch_id as "branchId", b.branch_code as "branchCode", b.branch_name as "branchName", a.total as "lebihSortir", count(*) OVER() AS "fullCount"`;
     sql = sql + ` FROM ( SELECT hsa.scan_date_in_hub, hsa.branch_id, count(hsa.awb_number) as total FROM hub_summary_awb hsa`;
     if (whereQuery.includes('f.bag_seq') || whereQuery.includes('g.bag_number')) {
@@ -104,7 +105,7 @@ export class MonitoringProblemLebihSortirListService {
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringHubProblemVm> {
     const statusProblemStr = (await MonitoringProblemListService.getListStatusAwbProblem()).join(',');
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
 
     // Mapping order by key
     const mappingSortBy = {
@@ -191,7 +192,7 @@ export class MonitoringProblemLebihSortirListService {
   ): Promise<MonitoringHubProblemVm> {
     const statusProblemStr = (await MonitoringProblemListService.getListStatusAwbProblem()).join(',');
 
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
 
     // Mapping order by key
     const mappingSortBy = {
@@ -351,7 +352,7 @@ export class MonitoringProblemLebihSortirListService {
   static async getAwbtotalLebihSortirOld(
     payload: BaseMetaPayloadVm,
   ): Promise<MonitoringHubProblemLebihSortirVm> {
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
 
     // Mapping order by key
     const mappingSortBy = {
@@ -401,7 +402,7 @@ export class MonitoringProblemLebihSortirListService {
     }
     payload.sortBy = '';
 
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
 
     const repo = new OrionRepositoryService(Bag, 'bag');
     const q = repo.findAllRaw();
@@ -465,23 +466,22 @@ export class MonitoringProblemLebihSortirListService {
     return result;
   }
 
-  static formatPayloadFiltersAwbProblem(payload: BaseMetaPayloadVm) {
+  static async formatPayloadFiltersAwbProblem(payload: BaseMetaPayloadVm) {
 
     // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < payload.filters.length; i++) {
       const field = payload.filters[i].field;
       const opt = payload.filters[i].operator;
       if (field == 'bagSortir' || field == 'bagNumber') {
-        const regEx = /((^[0-9]+[a-z]+)|(^[a-z]+[0-9]+))+[0-9a-z]+$/i;
         const bagNumber = payload.filters[i].value;
-        if (bagNumber.match(regEx)) {
+        const checkBagNumber = await BagService.validBagNumber(bagNumber);
+        payload.filters[i].value = checkBagNumber.bag.bagNumber;
+        // console.log("checkBagNumber: ", checkBagNumber);
+        if (checkBagNumber.bag.bagNumber.length === 10) {
           payload.filters[i].field = field;
         } else {
-          const bagSortir = payload.filters[i].value.substr( 0 , 7);
-          const bagSeq = payload.filters[i].value.substr(7 , 10);
-          payload.filters[i].value = bagSortir;
+          const bagSeq = checkBagNumber.bagSeq;
           payload.filters.push({field: field == 'bagSortir' ? 'bagSeqSortir' : 'bagSeq', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
-
         }
       }
       if ((field == 'scanDate' || field == 'createdTime' || field == 'scanDateInHub')

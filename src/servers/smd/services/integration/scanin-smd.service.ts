@@ -632,6 +632,36 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
           doPodDetailBag.is_deleted = false
         GROUP BY bagnumber
         `;
+      // smd
+      if (sliceSuratJalan === 'DMD') {
+        rawQueryBag = `
+          SELECT
+            SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
+          FROM do_smd as ds
+          INNER JOIN do_smd_detail as dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = false
+          INNER JOIN do_smd_detail_item as dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = false
+          INNER JOIN bag_item as bi ON bi.bag_item_id=dsdi.bag_item_id AND bi.is_deleted = false
+          INNER JOIN bag as b ON b.bag_id= bi.bag_id AND b.is_deleted = false
+          LEFT JOIN bag_item_history as bih ON bih.bag_item_history_id = bi.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false AND (bih.bag_item_status_id = 4550 OR bih.bag_item_status_id = 500)
+          WHERE ds.do_smd_code = '${payload.bag_item_number}'
+          AND ds.is_deleted = false
+          GROUP BY bagnumber;
+        `;
+        rawQueryBagScanned = `
+          SELECT
+            SUBSTR(CONCAT(b.bag_number, LPAD(bi.bag_seq::text, 3, '0')), 1, 10) AS bagnumber
+          FROM do_smd as ds
+          INNER JOIN do_smd_detail as dsd ON dsd.do_smd_id = ds.do_smd_id AND dsd.is_deleted = false
+          INNER JOIN do_smd_detail_item as dsdi ON dsdi.do_smd_detail_id = dsd.do_smd_detail_id AND dsdi.is_deleted = false
+          INNER JOIN bag_item as bi ON bi.bag_item_id=dsdi.bag_item_id AND bi.is_deleted = false
+          INNER JOIN bag as b ON b.bag_id= bi.bag_id AND b.is_deleted = false
+          LEFT JOIN bag_item_history as bih ON bih.bag_item_history_id = bi.bag_item_history_id AND bih.branch_id = ${permissonPayload.branchId} AND bih.is_deleted = false AND (bih.bag_item_status_id <> 4550 OR bih.bag_item_status_id <> 500)
+          WHERE ds.do_smd_code = '${payload.bag_item_number}'
+          AND ds.is_deleted = false
+          GROUP BY bagnumber
+        `;
+
+      }
       // smu
       if (sliceSuratJalan === 'SGB') {
 

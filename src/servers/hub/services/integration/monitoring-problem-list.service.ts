@@ -8,6 +8,7 @@ import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { HubMonitoringService } from '../../../main/services/web/hub-transit/hub-monitoring.service';
 import { DropoffHub } from '../../../../shared/orm-entity/dropoff_hub';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { BagService } from '../../../main/services/v1/bag.service';
 
 @Injectable()
 export class MonitoringProblemListService {
@@ -20,7 +21,7 @@ export class MonitoringProblemListService {
     const statusProblemStr = (await this.getListStatusAwbProblem()).join(',');
     const paramPage = payload.page;
     const paramLimit = payload.limit;
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
 
     // Mapping order by key
     const mappingSortBy = {
@@ -242,7 +243,7 @@ export class MonitoringProblemListService {
   ): Promise<MonitoringHubTotalProblemVm> {
     const statusProblemStr = (await this.getListStatusAwbProblem()).join(',');
 
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
 
     // Mapping order by key
     const mappingSortBy = {
@@ -494,7 +495,7 @@ export class MonitoringProblemListService {
       bagNumber : 'b.bag_number',
     };
 
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
 
     const whereQueryBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagNumber, true);
     const whereQuery = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingFilter, true);
@@ -553,7 +554,6 @@ export class MonitoringProblemListService {
     `;
 
     const data = await RawQueryService.query(queryFix);
-    console.log('data:', data);
     const queryCount = `SELECT
             COUNT(1) AS total
           FROM hub_summary_awb hsa
@@ -616,7 +616,7 @@ export class MonitoringProblemListService {
       cityId : 'c.city_id',
     };
 
-    payload = this.formatPayloadFiltersAwbProblem(payload);
+    payload = await this.formatPayloadFiltersAwbProblem(payload);
 
     const whereQueryBagSortir = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagSortir, true);
     const whereQueryBagNumber = await HubMonitoringService.orionFilterToQueryRaw(payload.filters, mappingBagNumber, true);
@@ -688,22 +688,20 @@ export class MonitoringProblemListService {
     return result;
   }
 
-  static formatPayloadFiltersAwbProblem(payload: BaseMetaPayloadVm) {
+  static async formatPayloadFiltersAwbProblem(payload: BaseMetaPayloadVm) {
 
     // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < payload.filters.length; i++) {
       const field = payload.filters[i].field;
       if (field == 'bagSortir' || field == 'bagNumber') {
-        const regEx = /((^[0-9]+[a-z]+)|(^[a-z]+[0-9]+))+[0-9a-z]+$/i;
         const bagNumber = payload.filters[i].value;
-        if (bagNumber.match(regEx)) {
+        const checkBagNumber = await BagService.validBagNumber(bagNumber);
+        payload.filters[i].value = checkBagNumber.bag.bagNumber;
+        if (checkBagNumber.bag.bagNumber.length === 10) {
           payload.filters[i].field = field;
         } else {
-          const bagSortir = payload.filters[i].value.substr( 0 , 7);
-          const bagSeq = payload.filters[i].value.substr(7 , 10);
-          payload.filters[i].value = bagSortir;
+          const bagSeq = checkBagNumber.bagSeq;
           payload.filters.push({field: field == 'bagSortir' ? 'bagSeqSortir' : 'bagSeq', operator: 'eq', value: bagSeq} as BaseMetaPayloadFilterVm);
-
         }
       }
     }
