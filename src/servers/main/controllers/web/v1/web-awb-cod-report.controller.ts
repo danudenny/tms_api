@@ -109,6 +109,40 @@ export class WebAwbCodReportController {
     if (!limit || limit < 1) {
       limit = 10;
     }
-    return this.codReportService.fetchReportAwbTransactionDetail(page, limit);}
+    return this.codReportService.fetchReportAwbTransactionDetail(page, limit);
+  
+  }
+  
+  @Get('cod-fee')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async getReportCODFee(
+    @Query() queryParams: {
+      page: string;
+      limit: string;
+    },
+  ) {
+    let page = Number(queryParams.page);
+    let limit = Number(queryParams.limit);
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (!limit || limit < 1) {
+      limit = 10;
+    }
 
+
+    return this.codReportService.fetchReportCODFee(page, limit);
+  }
+
+  @Post('cod-fee')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async genereateReportCODFee(
+    @Body() payload: ReportBaseMetaPayloadVm,
+  ) {
+    return this.codReportService.generateReportCODFee(payload);
+  }
 }
