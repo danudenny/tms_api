@@ -827,12 +827,25 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     q.andWhereRaw('bhin.bag_item_status_id in( 3550, 3500)');
 
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+
+    const q2 = repo.createQueryBuilder();
+    q2.select('COUNT(b.bag_id)');
+    q2.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND (bi.is_deleted = FALSE)');
+    q2.leftJoin('branch', 'br', 'br.branch_id = b.branch_id AND (br.is_deleted = FALSE)');
+    q2.leftJoin('bag_item_history', 'bhin', 'bhin.bag_item_id = bi.bag_item_id AND bhin.is_deleted = FALSE');
+    q2.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND (r.is_deleted = FALSE)');
+    q2.leftJoin('branch', 'bb', 'bhin.branch_id=bb.branch_id and bb.is_deleted = FALSE');
+    q2.leftJoin('users', 'u', 'u.user_id=bhin.user_id_updated and u.is_deleted = FALSE');
+    q2.andWhere('b.is_deleted = FALSE');
+    q2.andWhere('bhin.bag_item_status_id in( 3550, 3500)');
+    payload.applyFiltersToQueryBuilder(q2);
+
+    const total = await q2.execute();
 
     const result = new ScanInListResponseVm();
 
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+    result.paging = MetaService.set(payload.page, payload.limit, Number(total[0].count));
 
     return result;
 
