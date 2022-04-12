@@ -135,8 +135,7 @@ export class PrintDoPodDeliverService {
       });
     }
     totalWeight = Math.round(totalWeight * 100)/100;
-
-    data.doPodDeliverDetails = await data.doPodDeliverDetails.sort( await OrderManualHelper.orderManual('createdTime', 'asc'))
+    
     return this.printDoPodDeliver(
       res,
       data,
