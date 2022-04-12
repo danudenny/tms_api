@@ -30,6 +30,7 @@ export class PrintDoPodDeliverService {
         },
         doPodDeliverDetails: {
           doPodDeliverDetailId: true, // needs to be selected due to do_pod_deliver_detail relations are being included
+          createdTime : true,
           awbItem: {
             awbItemId: true, // needs to be selected due to awb_item relations are being included
             awb: {
@@ -44,7 +45,6 @@ export class PrintDoPodDeliverService {
               totalWeight: true,
             },
           },
-          createdTime : true,
         },
       })
       .where(e => e.doPodDeliverId, w => w.equals(queryParams.id))
@@ -56,6 +56,8 @@ export class PrintDoPodDeliverService {
       });
     }
 
+    doPodDeliver.doPodDeliverDetails = await doPodDeliver.doPodDeliverDetails.sort( await OrderManualHelper.orderManual('createdTime', 'asc'))
+    
     this.printDoPodDeliverAndQueryMeta(
       res,
       doPodDeliver as any,
@@ -135,7 +137,7 @@ export class PrintDoPodDeliverService {
       });
     }
     totalWeight = Math.round(totalWeight * 100)/100;
-    
+
     return this.printDoPodDeliver(
       res,
       data,
