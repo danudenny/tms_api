@@ -24,6 +24,9 @@ export class MobileSortationScanoutList {
 
   @ApiModelProperty()
   doSortationTime: string;
+
+  @ApiModelProperty()
+  arrivalDateTime: string;
 }
 
 export class MobileSortationScanoutResponseVm {
