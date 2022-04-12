@@ -80,7 +80,7 @@ export class WebAwbCodReportController {
     return this.codReportService.generateAWBSummaryReport(payload);
   }
 
-  @Post('awb/transaction-detail')
+  @Post('awb-transaction')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard,PermissionTokenGuard)
@@ -91,7 +91,7 @@ export class WebAwbCodReportController {
   }
 
 
-  @Get('awb/transaction-detail')
+  @Get('awb-transaction')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard,PermissionTokenGuard)

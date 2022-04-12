@@ -247,14 +247,14 @@ export class CodReportService {
  }
 
  async generateAwbCodTransactionDetailReport(payload: ReportBaseMetaPayloadVm){
-   const reportType = this.configReportType.awbCodTransactionDetail;
+   const reportType = this.configReportType.codNonFee;
    const rawQuery = this.generateQueryAwbCodTransaction(payload)
-  console.log(rawQuery)
+
    return this.reportingService.generateReport(reportType, rawQuery)
  }
 
  async fetchReportAwbTransactionDetail(page: number, limit: number) {
-  const reportType = this.configReportType.awbCodTransactionDetail;
+  const reportType = this.configReportType.codNonFee;
   return this.reportingService.fetchReport(page, limit, reportType);
 }
 
@@ -316,6 +316,7 @@ export class CodReportService {
       queryParam += `AND ctd.supplier_invoice_status_id = ${filter.value} `;
     }
   }
+  queryParam += 'AND ctd.is_deleted = false';
 
   const query = `SELECT
     ctd.partner_name AS "Partner Name",
