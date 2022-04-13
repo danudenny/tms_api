@@ -553,7 +553,6 @@ export class MonitoringProblemListService {
     `;
 
     const data = await RawQueryService.query(queryFix);
-    // console.log('data:', data);
     const queryCount = `SELECT
             COUNT(1) AS total
           FROM hub_summary_awb hsa

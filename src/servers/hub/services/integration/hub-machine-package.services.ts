@@ -173,7 +173,6 @@ export class HubMachineService {
     cacheKey: string,
     api: string,
   ): Promise<MachinePackageResponseVm> {
-    // console.log('payload data', payload);
 
     const generateErrorResult = (message: string): MachinePackageResponseVm => {
       const errResult = new MachinePackageResponseVm();
@@ -286,8 +285,6 @@ export class HubMachineService {
         return createBagResult;
       });
 
-      // console.log('trxResults', trxResults);
-
       // get print sticker
       const [{ cnt: bagItemAwbsTotal }] = await RawQueryService.exec(
         `SELECT COUNT(1) as cnt FROM bag_item_awb WHERE bag_item_id=:bagItemId`,
@@ -342,7 +339,7 @@ export class HubMachineService {
           );
         }
       } catch (error) {
-        // console.log(error);
+      
         PinoLoggerService.log(error);
       }
 
