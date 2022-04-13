@@ -50,32 +50,37 @@ export class CodReportService {
     let queryParam = "";
     for (const filter of filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        queryParam +=  `AND ctd.updated_time >= Date('${filter.value} 00:00:00') `;
+        const d = moment
+          .utc(filter.value)
+          .format('YYYY-MM-DD 00:00:00');
+        
+        queryParam +=  `AND ctd.updated_time >= Date('${d}') `;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment
           .utc(filter.value).add(1, 'days')
-          .format('YYYY-MM-DD')
-        queryParam +=  `AND ctd.updated_time < Date('${d} 00:00:00') `; 
+          .format('YYYY-MM-DD 00:00:00')
+        queryParam +=  `AND ctd.updated_time < Date('${d}') `; 
       }
 
-      if (filter.field == 'supplier' && filter.value) {
+      if (filter.field == 'supplier' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.partner_id = ${filter.value} `;
       }
 
-      if (filter.field == 'awbStatus' && filter.value) {
+      if (filter.field == 'awbStatus' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.supplier_invoice_status_id = ${filter.value} `;
       }
 
-      if (filter.field == 'branchLast' && filter.value) {
+      if (filter.field == 'branchLast' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.branch_id = ${filter.value} `;
       }
-      if (filter.field == 'transactionStatus' && filter.value) {
+      
+      if (filter.field == 'transactionStatus' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.transaction_status_id = ${filter.value} `;
       }
 
-      if (filter.field == 'sigesit' && filter.value) {
+      if (filter.field == 'sigesit' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.user_id_driver = ${filter.value} `;
       }
     }
@@ -246,4 +251,11 @@ export class CodReportService {
 
     return this.reportingService.generateReport(reportType, q.getQuery())
  }
+
+  isNumber(value: string | number): boolean {
+   return ((value != null) &&
+           (value !== '') &&
+           !isNaN(Number(value.toString())));
+  }
+
 }
