@@ -268,56 +268,65 @@ export class CodReportService {
   let queryParam = "";
   for (const filter of payload.filters){
     if (filter.field == 'periodStart' && filter.value){
-      queryParam +=  `AND ctd.pod_date >= Date('${filter.value} 00:00:00') `;
+      const d = moment
+      .utc(filter.value)
+      .format('YYYY-MM-DD 00:00:00')
+      queryParam +=  `AND ctd.pod_date >= Date('${d}') `;
     }
     if (filter.field == 'periodEnd' && filter.value){
       const d = moment
         .utc(filter.value).add(1, 'days')
-        .format('YYYY-MM-DD')
-      queryParam +=  `AND ctd.pod_date < Date('${d} 00:00:00') `;
+        .format('YYYY-MM-DD 00:00:00')
+      queryParam +=  `AND ctd.pod_date < Date('${d}') `;
     }
 
     if (filter.field == 'transactionStart' && filter.value) {
-      queryParam +=  `AND ctd.updated_time >= Date('${filter.value} 00:00:00') `;
+      const d = moment
+      .utc(filter.value)
+      .format('YYYY-MM-DD 00:00:00')
+      queryParam +=  `AND ctd.updated_time >= Date('${d}') `;
     }
 
     if (filter.field == 'transactionEnd' && filter.value) {
       const d = moment
         .utc(filter.value).add(1, 'days')
-        .format('YYYY-MM-DD')
-      queryParam +=  `AND ctd.updated_time < Date('${d} 00:00:00') `;
+        .format('YYYY-MM-DD 00:00:00')
+      queryParam +=  `AND ctd.updated_time < Date('${d}') `;
     }
 
     if (filter.field == 'manifestedStart' && filter.value) {
-      queryParam +=  `AND ctd.awb_date >= Date('${filter.value} 00:00:00') `;
+      const d = moment
+        .utc(filter.value)
+        .format('YYYY-MM-DD 00:00:00')
+      queryParam +=  `AND ctd.awb_date >= Date('${d}') `;
     }
 
     if (filter.field == 'manifestedEnd' && filter.value) {
       const d = moment
       .utc(filter.value).add(1, 'days')
-      .format('YYYY-MM-DD')
-    queryParam +=  `AND ctd.awb_date < Date('${d} 00:00:00') `;
+      .format('YYYY-MM-DD 00:00:00')
+    queryParam +=  `AND ctd.awb_date < Date('${d}') `;
     }
 
-    if (filter.field == 'partnerId' && filter.value) {
-      queryParam += `AND ctd.partner_id = ${filter.value} `;
+    if (filter.field == 'partnerId' && filter.value && this.isNumber(filter.value)) {
+      queryParam += `AND ctd.partner_id = ${filter.value } `;
     }
-    if (filter.field == 'representativeId' && filter.value) {
+    if (filter.field == 'representativeId' && filter.value && this.isNumber(filter.value)) {
       queryParam += `AND ctd.representative_id = ${filter.value} `;
     }
-    if (filter.field == 'branchIdFinal' && filter.value) {
+    if (filter.field == 'branchIdFinal' && filter.value && this.isNumber(filter.value)) {
       queryParam += `AND ctd.branch_id = ${filter.value} `;
     }
-    if (filter.field == 'awbStatusIdFinal' && filter.value) {
+    if (filter.field == 'awbStatusIdFinal' && filter.value && this.isNumber(filter.value)) {
       queryParam += `AND aia.awb_status_id_final = ${filter.value} `;
     }
-    if (filter.field == 'transactionStatusId' && filter.value) {
+    if (filter.field == 'transactionStatusId' && filter.value && this.isNumber(filter.value)) {
       queryParam += `AND ctd.transaction_status_id = ${filter.value} `;
     }
-    if (filter.field == 'sigesit' && filter.value) {
+    if (filter.field == 'sigesit' && filter.value && this.isNumber(filter.value)) {
       queryParam += `AND ude.user_id = ${filter.value} `;
     }
-    if (filter.field == 'supplierInvoiceStatusId' && filter.value) {
+    if (filter.field == 'supplierInvoiceStatusId' && filter.value && this.isNumber(filter.value)) {
       queryParam += `AND ctd.supplier_invoice_status_id = ${filter.value} `;
     }
   }
