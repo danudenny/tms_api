@@ -162,5 +162,6 @@ module.exports = {
     isBypass: false,
     bypassCode: "815413",
     checkingConfig: true,
+    disableChannel: "sms|wa"
   },
 };

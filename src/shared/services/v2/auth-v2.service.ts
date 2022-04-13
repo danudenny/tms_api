@@ -345,7 +345,7 @@ export class AuthV2Service {
       const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
       loginChannelOtpAddresses.channel = address.channel;
       loginChannelOtpAddresses.address = SharedService.maskString(address.address, '+', '4', '4');
-      loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
+      loginChannelOtpAddresses.enable = ConfigService.get('svcOtp.disableChannel').includes(address.channel) ? false : true;
 
       addresses.push({ ...loginChannelOtpAddresses });
     }
