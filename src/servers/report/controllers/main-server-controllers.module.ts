@@ -14,6 +14,7 @@ import { HubMonitoringReportController } from './pod/hub-monitoring-report.contr
 import { ScanoutWebReportController } from './pod/scanout-web-report.controller';
 import { ScaninWebDeliveryReportController } from './pod/scanin-web-delivery-report.controller';
 import { AwbPatchStatusController } from './awb-patch-status.controller';
+import { PatchStatusController } from './patch-status.controller';
 import { MonitoringProblemLebihSortirListController } from './hub/monitoring-problem-lebih-sortir-list.controller';
 import { SmdBagCityReportController } from './smd/smd-bag-city-report.controller';
 import { TrackingDeliveryOutController } from './pod/tracking-delivery-out.controller';
@@ -34,6 +35,7 @@ import { CodTransactionController } from './cod/transaction-patch.controller';
     SmdScaninReportController,
     SmdScanoutReportController,
     AwbPatchStatusController,
+    PatchStatusController,
     CodTransactionController,
     MonitoringProblemLebihSortirListController,
     SmdBagCityReportController,
