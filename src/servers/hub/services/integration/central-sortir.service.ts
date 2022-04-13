@@ -18,7 +18,6 @@ export class CentralSortirService {
   static async getListMesinSortirReporting(query: CentralSortirListPayloadVm): Promise<any> {
     try {
       const offset = Number(query.page - 1) * Number(query.limit);
-      console.log('offset', offset);
       const url = `${this.baseUrlInternal}/v1/reporting/report`;
       const authMeta = AuthService.getAuthData();
       const options = {
