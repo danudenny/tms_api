@@ -3,6 +3,7 @@ import { RepositoryService } from '../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../shared/services/request-error.service';
 import { PrintDoPodDeliverDataVm } from '../models/print-do-pod-deliver.vm';
 import { PrinterService } from '../../../shared/services/printer.service';
+import { OrderManualHelper } from '../../../shared/helpers/order-manual-helpers';
 import express = require('express');
 import moment = require('moment');
 
@@ -29,6 +30,7 @@ export class PrintDoPodDeliverService {
         },
         doPodDeliverDetails: {
           doPodDeliverDetailId: true, // needs to be selected due to do_pod_deliver_detail relations are being included
+          createdTime : true,
           awbItem: {
             awbItemId: true, // needs to be selected due to awb_item relations are being included
             awb: {
@@ -54,6 +56,8 @@ export class PrintDoPodDeliverService {
       });
     }
 
+    doPodDeliver.doPodDeliverDetails = await doPodDeliver.doPodDeliverDetails.sort( await OrderManualHelper.orderManual('createdTime', 'asc'))
+    
     this.printDoPodDeliverAndQueryMeta(
       res,
       doPodDeliver as any,
