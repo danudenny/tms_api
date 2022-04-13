@@ -80,6 +80,39 @@ export class WebAwbCodReportController {
     return this.codReportService.generateAWBSummaryReport(payload);
   }
 
+  @Post('awb-transaction')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard,PermissionTokenGuard)
+  public async exportAwbCodTransactionDetail(
+    @Body() payload: ReportBaseMetaPayloadVm
+  ) {
+    return this.codReportService.generateAwbCodTransactionDetailReport(payload);
+  }
+
+
+  @Get('awb-transaction')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard,PermissionTokenGuard)
+  public async fetchAwbCodTransactionDetail(
+    @Query() queryParams: {
+      page: string;
+      limit: string;
+    },
+  ) {
+    let page = Number(queryParams.page);
+    let limit = Number(queryParams.limit);
+    if (!page || page < 1) {
+      page = 1;
+    }
+    if (!limit || limit < 1) {
+      limit = 10;
+    }
+    return this.codReportService.fetchReportAwbTransactionDetail(page, limit);
+  
+  }
+  
   @Get('cod-fee')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -98,6 +131,7 @@ export class WebAwbCodReportController {
     if (!limit || limit < 1) {
       limit = 10;
     }
+
 
     return this.codReportService.fetchReportCODFee(page, limit);
   }

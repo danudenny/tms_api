@@ -140,6 +140,7 @@ module.exports = {
   codReportType: {
     supplierInvoiceAwb: 'cod-supplier-invoice-awb',
     awbCodSummary: 'awb-cod-summary',
+    codNonFee: 'cod-non-fee',
     supplierInvoiceFee: 'cod-supplier-invoice-fee',
   },
   korwil: {
