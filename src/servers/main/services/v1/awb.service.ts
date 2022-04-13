@@ -6,11 +6,6 @@ import { AwbDeliverManualVm } from '../../models/web-awb-deliver.vm';
 import { AwbHistory } from '../../../../shared/orm-entity/awb-history';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
-import { In } from 'typeorm';
-import { of } from 'rxjs';
-import { includes } from 'lodash';
-import { AwbStatus } from 'src/shared/orm-entity/awb-status';
-import { hashmap } from 'aws-sdk/clients/glacier';
 
 export class AwbService {
 
