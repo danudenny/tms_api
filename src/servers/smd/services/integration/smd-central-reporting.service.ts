@@ -100,15 +100,13 @@ export class SmdCentralReportingService {
         }
         if (type === 'smd_vendor') {
           let vendor = 'Semua_Vendor';
-          // console.log("payload.vendorName", payload.vendorName);
+    
           if (payload.vendorName !== '') {
-            // console.log('masuk if vendor');
             vendor = payload.vendorName;
             vendor = vendor.replace(/ /g, '_');
           }
 
           branchName = branchName + '_vendor_' + vendor ;
-          // console.log('branchName', branchName);
         }
       }
 
@@ -159,7 +157,6 @@ export class SmdCentralReportingService {
 
     query =  query + `ORDER BY t1.created_time DESC`;
 
-    // console.log(query);
     return Buffer.from(query).toString('base64');
   }
 
@@ -192,7 +189,6 @@ export class SmdCentralReportingService {
     if (payload.branchId !== null && payload.branchId !== 0) {
       query = query + `AND dsd.branch_id_to = '${payload.branchId}' \n`;
     }
-    // console.log(query);
     return Buffer.from(query).toString('base64');
   }
 
@@ -227,8 +223,7 @@ export class SmdCentralReportingService {
 
     query = query + ` ORDER BY ds.do_smd_time DESC`;
 
-    // console.log(query);
-
+  
     return Buffer.from(query).toString('base64');
   }
 
@@ -262,7 +257,6 @@ export class SmdCentralReportingService {
       t2.representative_name \n
 ORDER BY t1.created_time DESC`;
 
-    // console.log(query);
     return Buffer.from(query).toString('base64');
   }
 
@@ -371,7 +365,6 @@ ORDER BY t1.created_time DESC`;
       query = query + `WHERE (ds.is_intercity != 1) \n`;
     }
     query = query + `ORDER BY ds.departure_date_time DESC`;
-    // console.log('query', query);
     return Buffer.from(query).toString('base64');
   }
 
