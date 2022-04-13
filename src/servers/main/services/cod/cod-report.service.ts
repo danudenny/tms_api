@@ -324,19 +324,19 @@ export class CodReportService {
   queryParam += 'AND ctd.is_deleted = false';
 
   const query = `SELECT
-    ctd.partner_name AS "Partner Name",
+    ctd.partner_name AS "Partner",
     ctd.awb_date AS "Awb Date",
-    ctd.awb_number AS "Awb Number",
+    ctd.awb_number AS "Awb",
     ctd.parcel_value AS "Package Amount",
-    ctd.cod_value AS "COD Value",
+    ctd.cod_value AS "COD Amount",
     ctd.cod_fee AS "COD Fee",
     ctd.cod_value AS "Amount Transafer",
-    ctd.pod_date AS "POD Date",
-    ctd.consignee_name AS "Penerima",
-    ctd.payment_method AS "Payment Method",
-    sis.status_title AS "Transaction Status",
+    ctd.pod_date AS "POD Datetime",
+    ctd.consignee_name AS "Recipient",
+    ctd.payment_method AS "Tipe Pembayaran",
+    sis.status_title AS "Status Internal",
     aws.awb_status_name AS "Tracking Status",
-    sisinv.status_title AS "Supplier Invoice Status",
+    sisinv.status_title AS "Status Invoice",
     ctd.cust_package AS "Cust Package",
     ctd.pickup_source AS "Pickup Source",
     ctd.current_position AS "Current Position",
@@ -346,7 +346,7 @@ export class CodReportService {
     CONCAT(ude.nik+' ', ude.fullname) AS "Sigesit",
     ctd.parcel_content AS "Package Detail",
     ctd.package_type AS "Services",
-    ctd.parcel_note AS "Receiver Remark",
+    ctd.parcel_note AS "Notes",
     ctd.updated_time AS "Date Updated",
     CONCAT(uae.nik+' ', uae.fullname) AS "User Updated"
   FROM
