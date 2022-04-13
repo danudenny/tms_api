@@ -73,8 +73,6 @@ export class CentralSortirService {
         }
       }
 
-      // console.log('branchName', branchName);
-
       const filename = `reporting_mesin_sortir_${prefixIsSuccess}_${payload.startDate}_${payload.endDate}_${moment().format('YYYYMMDDHHmmss')}|${branchName}`;
       const url = `${this.baseUrlInternal}/v1/reporting/report`;
       const options = {
@@ -126,7 +124,7 @@ export class CentralSortirService {
         query = query + ` AND b.branch_id = '${payload.branchId}' `;
       }
     }
-    // console.log('query', query);
+
     return Buffer.from(query).toString('base64');
 
   }
