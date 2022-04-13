@@ -134,13 +134,13 @@ export class SmdHubService {
             // NOTE:
             // refactor send to background job for loop awb
             // update status DO_HUB (12600: drop off hub)
-            console.log('### SMD HUB SERVICE DROP OFF HUB QUEUE');
+            /*console.log('### SMD HUB SERVICE DROP OFF HUB QUEUE');
             console.log('### SMD HUB SERVICE dropoffHub =========', dropoffHub);
             console.log('### SMD HUB SERVICE bagData =========', bagData);
             console.log('### SMD HUB SERVICE userId =========', authMeta.userId);
             console.log('### SMD HUB SERVICE branchId =========', permissonPayload.branchId);
             console.log('### SMD HUB SERVICE isSmd =========', isSmd);
-            console.log('### SMD HUB SERVICE bagItem =========', bagItem);
+            console.log('### SMD HUB SERVICE bagItem =========', bagItem);*/
             BagDropoffHubQueueService.perform(
               dropoffHub.dropoffHubId,
               bagData.bagItemId,
@@ -148,7 +148,7 @@ export class SmdHubService {
               permissonPayload.branchId,
               isSmd,
             );
-            console.log('### SMD HUB SERVICE END DROP OFF HUB QUEUE');
+            // console.log('### SMD HUB SERVICE END DROP OFF HUB QUEUE');
 
             // update first scan in do pod =====================================
             // TODO: need refactoring code
