@@ -108,7 +108,7 @@ export class SmdCentralReportingService {
           }
 
           branchName = branchName + '_vendor_' + vendor ;
-          console.log('branchName', branchName);
+          // console.log('branchName', branchName);
         }
       }
 
@@ -159,7 +159,7 @@ export class SmdCentralReportingService {
 
     query =  query + `ORDER BY t1.created_time DESC`;
 
-    console.log(query);
+    // console.log(query);
     return Buffer.from(query).toString('base64');
   }
 
@@ -192,7 +192,7 @@ export class SmdCentralReportingService {
     if (payload.branchId !== null && payload.branchId !== 0) {
       query = query + `AND dsd.branch_id_to = '${payload.branchId}' \n`;
     }
-    console.log(query);
+    // console.log(query);
     return Buffer.from(query).toString('base64');
   }
 
@@ -227,7 +227,7 @@ export class SmdCentralReportingService {
 
     query = query + ` ORDER BY ds.do_smd_time DESC`;
 
-    console.log(query);
+    // console.log(query);
 
     return Buffer.from(query).toString('base64');
   }
@@ -262,7 +262,7 @@ export class SmdCentralReportingService {
       t2.representative_name \n
 ORDER BY t1.created_time DESC`;
 
-    console.log(query);
+    // console.log(query);
     return Buffer.from(query).toString('base64');
   }
 
@@ -371,7 +371,7 @@ ORDER BY t1.created_time DESC`;
       query = query + `WHERE (ds.is_intercity != 1) \n`;
     }
     query = query + `ORDER BY ds.departure_date_time DESC`;
-    console.log('query', query);
+    // console.log('query', query);
     return Buffer.from(query).toString('base64');
   }
 
