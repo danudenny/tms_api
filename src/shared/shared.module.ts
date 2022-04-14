@@ -37,6 +37,7 @@ import { SlackModule } from 'nestjs-slack';
     OrmRepositoryModule,
     ServicesModule,
     TypeOrmModule,
+    SlackModule,
   ],
 })
 export class SharedModule implements OnModuleInit {

@@ -4,9 +4,12 @@ import fclone from 'fclone';
 
 import { ErrorParserService } from '../services/error-parser.service';
 import { PinoLoggerService } from '../services/pino-logger.service';
+import { SlackService } from 'nestjs-slack';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+  constructor(private slackService: SlackService) {}
+
   catch(exception: any, host: ArgumentsHost) {
 
     const ctx = host.switchToHttp();
@@ -31,6 +34,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
           host,
         );
         PinoLoggerService.error('#### All Exception Filter : ', exception);
+        
+        this.slackService.sendText(`Error ${status}: ${exception}`);
       } else {
         PinoLoggerService.warn('#### All Exception Filter, Error Response : ', requestErrorResponse);
       }
