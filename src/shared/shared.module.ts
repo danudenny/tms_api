@@ -10,7 +10,7 @@ import { OrmRepositoryModule } from './orm-repository/orm-repository.module';
 import { BootService } from './services/boot.service';
 import { ServicesModule } from './services/services.module';
 import { SharedInjectorService } from './services/shared-injector.service';
-
+import { SlackModule } from 'nestjs-slack';
 @Module({
   imports: [
     GuardsModule,
@@ -21,6 +21,12 @@ import { SharedInjectorService } from './services/shared-injector.service';
     ServicesModule,
     TypeOrmModule.forRoot({
       keepConnectionAlive: true,
+    }),
+    SlackModule.forRoot({
+      type : 'webhook',
+      webhookOptions: {
+        url: 'https://hooks.slack.com/services/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',
+      },
     }),
   ],
   exports: [
