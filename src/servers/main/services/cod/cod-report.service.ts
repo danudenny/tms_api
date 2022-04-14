@@ -312,7 +312,7 @@ export class CodReportService {
       queryParam += `AND ctd.partner_id = ${filter.value } `;
     }
     if (filter.field == 'representativeId' && filter.value && this.isNumber(filter.value)) {
-      queryParam += `AND ctd.representative_id = ${filter.value} `;
+      queryParam += `AND ctd_branch.representative_id = ${filter.value} `;
     }
     if (filter.field == 'branchIdFinal' && filter.value && this.isNumber(filter.value)) {
       queryParam += `AND ctd.branch_id = ${filter.value} `;
@@ -369,9 +369,8 @@ export class CodReportService {
   INNER JOIN "public"."employee" "ude" ON "ude"."employee_id" = "ctd_userDriver"."employee_id"
   INNER JOIN "public"."users" "ctd_userAdmin" ON "ctd_userAdmin"."user_id" = "ctd"."user_id_updated"
   INNER JOIN "public"."employee" "uae" ON "uae"."employee_id" = "ctd_userAdmin"."employee_id"
-  INNER JOIN "public"."cod_transaction" "ctd_codTransaction" ON "ctd_codTransaction"."cod_transaction_id" = "ctd"."cod_transaction_id"
-  INNER JOIN "public"."branch" "ctd_codTransaction_branch" ON "ctd_codTransaction_branch"."branch_id" = "ctd_codTransaction"."branch_id"
-  INNER JOIN "public"."representative" "rep" ON "rep"."representative_id" = "ctd_codTransaction_branch"."representative_id"
+  INNER JOIN "public"."branch" "ctd_branch" ON "ctd_branch"."branch_id" = "aia"."branch_id_last"
+  INNER JOIN "public"."representative" "rep" ON "rep"."representative_id" = "ctd_branch"."representative_id"
     AND ("rep"."is_deleted" = 'false')
   WHERE 
     TRUE 
