@@ -54,6 +54,7 @@ import { WebAwbFilterController } from './web/web-awb-filter.controller';
 import { WebAwbPodController } from './web/web-awb-pod.controller';
 import { WebAwbReturnController } from './web/web-awb-return.controller';
 import { WebAwbReturnCancelController } from './web/web-awb-return-cancel.controller';
+import { WebLastMileUploadController } from './web/web-last-mile-upload.controller';
 import { WebAwbUpdateStatusController } from './web/web-awb-update-status.controller';
 import { WebBagPodController } from './web/web-bag-pod.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
@@ -111,6 +112,7 @@ import { RejectPackageController } from './combine-package/reject-package.contro
     WebFirstMileController,
     WebAwbReturnController,
     WebAwbReturnCancelController,
+    WebLastMileUploadController,
     ProvincesController,
     CitiesController,
     DistrictsController,
