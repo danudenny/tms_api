@@ -1,5 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
+import { AttachmentTms } from './attachment-tms';
 
 @Entity('pod_awb_attachment', { schema: 'public' })
 export class PodAwbAttachment extends TmsBaseEntity {
@@ -39,4 +40,9 @@ export class PodAwbAttachment extends TmsBaseEntity {
     name: 'photo_type',
   })
   photoType: string | null;
+
+  // relation model
+  @OneToOne(() => AttachmentTms)
+  @JoinColumn({ name: 'attachment_tms_id', referencedColumnName: 'attachmentTmsId' })
+  attachment: AttachmentTms;
 }

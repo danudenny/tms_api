@@ -40,6 +40,8 @@ import { ConfigService } from '../../../../../shared/services/config.service';
 import { PHOTO_TYPE } from '../../../../../shared/constants/photo-type.constant';
 import { DoPodDeliverAttachment } from '../../../../../shared/orm-entity/do_pod_deliver_attachment';
 import { DoPodReturnDetailService } from '../../master/do-pod-return-detail.service';
+import { PodAttachment } from '../../../../../shared/services/pod-attachment';
+import { OrderManualHelper } from '../../../../../shared/helpers/order-manual-helpers';
 import axiosist from 'axiosist';
 import axios from 'axios';
 
@@ -194,6 +196,7 @@ export class V1WebTrackingService {
     qq.addSelect('attachments.url', 'url');
     qq.addSelect('dpda.type', 'type');
     qq.addSelect('dpdd.awb_number', 'awbNumber');
+    qq.addSelect('attachments.createdTime', 'createdTime');
     qq.from('do_pod_deliver_attachment', 'dpda');
     qq.innerJoin(
       'do_pod_deliver_detail',
@@ -219,9 +222,21 @@ export class V1WebTrackingService {
     qq.limit(3); // only get 3 data file (photo, signature, photoCod)
 
     const result = new PhotoResponseVm();
-    result.data = await qq.getRawMany();
+    
+    //get data from pod attachment
+    let data = await qq.getRawMany();
+    let dataAttachment = await PodAttachment.findAttachment(data[0].awbNumber);
+    result.data = await data.concat(dataAttachment);
+    result.data = await result.data.sort(await OrderManualHelper.orderManual('createdTime', 'desc'));
+    let tampungType = [];
+
     for(let i = 0; i < result.data.length; i++){
-      result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+      if(!tampungType.includes(result.data[i].type)){
+        tampungType.push(result.data[i].type);
+        result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+      }else{
+        delete result.data[i];
+      }
     }
     return result;
   }
