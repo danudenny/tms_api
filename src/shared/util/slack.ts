@@ -14,18 +14,19 @@ export class SlackUtil {
     return ConfigService.get('slack.tokenSlack');
   }
 
-  public static async sendMessage(channel: string,
+  public static async sendMessage(
+    channel: string,
     text: string,
     stack?: string,
     fields?: any,
   ) {
     let url = `${this.slackURL}/${this.tokenSlack}`;
-    text = `[${process.env.NODE_ENV}] : ${text}`
+    text = `[${process.env.NODE_ENV}] : ${text}`;
     const options = {
       headers: {
-        'accept': 'application/json',
+        accept: 'application/json',
         'Content-Type': 'application/json',
-      }
+      },
     };
 
     if (stack) {
@@ -35,7 +36,6 @@ export class SlackUtil {
     let fieldObj: string;
     if (fields) {
       fieldObj = JSON.stringify(fields);
-​
       fieldObj = '```' + fieldObj + '```';
     }
 
@@ -59,12 +59,12 @@ export class SlackUtil {
         },
       ],
     };
-    
+
     try {
       let sendMessage = await axios.post(url, body, options);
       return sendMessage;
     } catch (err) {
-      console.log('error at slack service sending message : ', err.message)
+      console.log('error at slack service sending message : ', err.message);
     }
   }
 }
