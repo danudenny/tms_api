@@ -78,10 +78,14 @@ export class SharedService {
   }
 
   static maskEmail(email: string) {
-    const regex = new RegExp(`^([^@]{2})([^@]+)([^@]{2}@)`);
-
-    return email.replace(regex, function(match, p, p1, p2) {
+    const regexPrefix = new RegExp(`^([^@]{2})([^@]+)([^@]{2}@)`);
+    const prefixEmail = email.replace(regexPrefix, function(match, p, p1, p2) {
       return p + "*".repeat(p1.length) + p2;
+    })
+
+    const regexSuffix = new RegExp(`^([^@]+)(@[^@]{2})([^@]+)([^@]{2})`);
+    return prefixEmail.replace(regexSuffix, function(match, p, p1, p2, p3) {
+      return p + p1 + "*".repeat(p2.length) + p3;
     })
   }
 
