@@ -23,6 +23,8 @@ import {
 } from '../../../models/tracking.vm';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import { PodAttachment } from '../../../../../shared/services/pod-attachment';
+import { OrderManualHelper } from '../../../../../shared/helpers/order-manual-helpers';
 import { DoPodDetail } from '../../../../../shared/orm-entity/do-pod-detail';
 import { PhotoDetailVm } from '../../../models/bag-order-response.vm';
 import { PhotoResponseVm } from '../../../models/bag-order-detail-response.vm';
@@ -40,8 +42,6 @@ import { ConfigService } from '../../../../../shared/services/config.service';
 import { PHOTO_TYPE } from '../../../../../shared/constants/photo-type.constant';
 import { DoPodDeliverAttachment } from '../../../../../shared/orm-entity/do_pod_deliver_attachment';
 import { DoPodReturnDetailService } from '../../master/do-pod-return-detail.service';
-import { PodAttachment } from '../../../../../shared/services/pod-attachment';
-import { OrderManualHelper } from '../../../../../shared/helpers/order-manual-helpers';
 import axiosist from 'axiosist';
 import axios from 'axios';
 
@@ -222,7 +222,7 @@ export class V1WebTrackingService {
     qq.limit(3); // only get 3 data file (photo, signature, photoCod)
 
     const result = new PhotoResponseVm();
-    
+
     //get data from pod attachment
     let data = await qq.getRawMany();
     let dataAttachment = await PodAttachment.findAttachment(data[0].awbNumber);
