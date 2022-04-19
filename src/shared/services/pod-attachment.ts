@@ -1,6 +1,7 @@
 import { PodAwbAttachment } from '../../shared/orm-entity/pod-awb-attachment';
 import { PodWebAttachmentModel } from '../../shared/models/pod-web-attachment.model';
 import { OrionRepositoryService } from '../../shared/services/orion-repository.service';
+import { ImgProxyHelper } from '../../shared/helpers/imgproxy-helper'
 import { getManager } from 'typeorm';
 import moment = require('moment');
 import { OrderManualHelper } from '../helpers/order-manual-helpers';
@@ -66,7 +67,12 @@ export class PodAttachment {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     let data = await q.exec();
-    data = await data.sort(await OrderManualHelper.orderManual('createdTime', 'desc'))
+    data = await data.sort(await OrderManualHelper.orderManual('createdTime', 'desc'));
+
+    for(let i = 0; i < data.length; i++){
+      data[i].url = ImgProxyHelper.sicepatProxyUrl(data[i].url);
+    }
+
     return data;
   }
 }

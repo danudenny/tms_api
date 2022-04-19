@@ -222,7 +222,12 @@ export class V1WebTrackingService {
     qq.limit(3); // only get 3 data file (photo, signature, photoCod)
 
     const result = new PhotoResponseVm();
-    result.data = await qq.getRawMany();    
+    result.data = await qq.getRawMany();
+
+    for(let i = 0; i < result.data.length; i++){
+      result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+    }
+        
     return result;
   }
 
@@ -334,22 +339,26 @@ export class V1WebTrackingService {
           result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
         }
       }else{
-        let photoDetail = await new PhotoDetailVm();
-        photoDetail.doPodDeliverDetailId = payload.doPodDeliverDetailId
-        let dataPhoto = await this.getPhotoDetail(photoDetail);
-        let dataAttachment = await PodAttachment.findAttachment(payload.awbNumber);
-        let data = await dataPhoto.data.concat(dataAttachment);
-        result.data = await data.sort(await OrderManualHelper.orderManual('createdTime', 'desc'));
-        let tampungType = [];
-
-        for(let i = 0; i < result.data.length; i++){
-          if(!tampungType.includes(result.data[i].type)){
-            tampungType.push(result.data[i].type);
-            result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
-          }else{
-            delete result.data[i];
+        if(payload.doPodDeliverDetailId){
+          let photoDetail = await new PhotoDetailVm();
+          photoDetail.doPodDeliverDetailId = payload.doPodDeliverDetailId
+          let dataPhoto = await this.getPhotoDetail(photoDetail);
+          let dataAttachment = await PodAttachment.findAttachment(payload.awbNumber);
+          let data = await dataPhoto.data.concat(dataAttachment);
+          result.data = await data.sort(await OrderManualHelper.orderManual('createdTime', 'desc'));
+          let tampungType = [];
+          for(let i = 0; i < result.data.length; i++){
+            if(!tampungType.includes(result.data[i].type)){
+              tampungType.push(result.data[i].type);
+            }else{
+              delete result.data[i];
+            }
           }
+
+        }else{
+          result.data = await PodAttachment.findAttachment(payload.awbNumber);
         }
+
         return result;
       }
     }
