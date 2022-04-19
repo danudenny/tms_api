@@ -34,9 +34,7 @@ export class PodAttachment {
       });
     } else {
       await getManager().transaction(async transactional => {
-        const uuidv1 = require('uuid/v1');
         const dataInsert = PodAwbAttachment.create();
-        dataInsert.id = uuidv1();
         dataInsert.awbItemId = data.awbItemId;
         dataInsert.awbNumber = data.awbNumber;
         dataInsert.attachmentTmsId = data.attachmentTmsId;
