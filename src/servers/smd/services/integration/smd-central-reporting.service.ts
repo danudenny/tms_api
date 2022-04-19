@@ -326,7 +326,9 @@ ORDER BY t1.created_time DESC`;
   ds.total_colly AS total_colly, \n
   COALESCE(ds.total_weight::integer, 0) AS aktual_berat, \n
   COALESCE(ds.vehicle_capacity::integer, 0) AS kapasitas, \n
-  COALESCE((total_weight / vehicle_capacity::integer) * 100, 0.00) AS load \n  
+  COALESCE((total_weight / vehicle_capacity::integer) * 100, 0.00) AS load, \n
+  ds.representative_code as perwakilan_tujuan 
+   \n  
     FROM ( \n
     SELECT ds.trip AS trip, \n 
     ds.do_smd_code, \n
@@ -352,12 +354,16 @@ ORDER BY t1.created_time DESC`;
     v.vehicle_capacity AS vehicle_capacity, \n 
     ds.departure_date_time AS departure_date_time, \n 
     ds.transit_date_time AS transit_date_time, \n
-    ds.arrival_date_time AS arrival_date_time \n
+    ds.arrival_date_time AS arrival_date_time, \n
+    r.representative_code as representative_code \n
   FROM public.do_smd ds \n
   INNER JOIN public.do_smd_vehicle dsv ON ds.vehicle_id_last = dsv.do_smd_vehicle_id and dsv.is_deleted = false \n   
   LEFT JOIN public.branch bf ON ds.branch_id = bf.branch_id and bf.is_deleted = false \n 
   LEFT JOIN public.vehicle v ON dsv.vehicle_number = v.vehicle_number and v.is_deleted = false \n   
   LEFT JOIN public.employee e ON dsv.employee_id_driver = e.employee_id and e.is_deleted = false \n
+  INNER JOIN "public"."do_smd_detail" dsd2 ON dsd2.do_smd_id = ds.do_smd_id and dsd2.is_deleted = false \n
+  INNER JOIN "public"."branch" b ON b.branch_id = dsd2.branch_id_to and b.is_deleted = false \n
+  INNER JOIN "public"."representative" r ON r.representative_id = b.representative_id and r.is_deleted = false\n
   WHERE ( \n
     ds.departure_date_time >= '${moment(payload.startDate).format('YYYY-MM-DD 00:00:00')}' \n 
     AND ds.departure_date_time < '${moment(payload.endDate).format('YYYY-MM-DD 00:00:00')}' \n
