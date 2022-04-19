@@ -82,6 +82,7 @@ export class MonitoringSmdServices {
       .addSelect(`ds.employee_driver_name`, 'employee_driver_name')
       .addSelect(`ds.is_intercity`, 'is_intercity')
       .addSelect(`ds.do_smd_intercity`, 'do_smd_intercity')
+      .addSelect(`ds.representative_code`, 'representative_code')
       .from(subQuery => {
         subQuery
           .select('ds.do_smd_code')
@@ -122,6 +123,7 @@ export class MonitoringSmdServices {
           .addSelect(`ds.departure_date_time`, 'departure_date_time')
           .addSelect(`ds.transit_date_time`, 'transit_date_time')
           .addSelect(`ds.arrival_date_time`, 'arrival_date_time')
+          .addSelect(`rd.representative_code`, 'representative_code')
           .from('do_smd', 'ds')
           .innerJoin(
             'do_smd_vehicle',
@@ -142,6 +144,18 @@ export class MonitoringSmdServices {
             'employee',
             'e',
             'dsv.employee_id_driver = e.employee_id and e.is_deleted = false',
+          )
+          .innerJoin('do_smd_detail',
+            'dot',
+            'dot.do_smd_id = ds.do_smd_id'
+          )
+          .innerJoin('branch',
+            'bd',
+            'bd.branch_id = dot.branch_id_to'
+          )
+          .innerJoin('representative',
+            'rd',
+            'rd.representative_id = bd.representative_id'
           );
 
         payload.applyFiltersToQueryBuilder(subQuery, ['departure_date_time']);
