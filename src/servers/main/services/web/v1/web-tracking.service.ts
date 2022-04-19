@@ -196,7 +196,7 @@ export class V1WebTrackingService {
     qq.addSelect('attachments.url', 'url');
     qq.addSelect('dpda.type', 'type');
     qq.addSelect('dpdd.awb_number', 'awbNumber');
-    qq.addSelect('attachments.createdTime', 'createdTime');
+    qq.addSelect('attachments.created_time', 'createdTime');
     qq.from('do_pod_deliver_attachment', 'dpda');
     qq.innerJoin(
       'do_pod_deliver_detail',
@@ -222,22 +222,7 @@ export class V1WebTrackingService {
     qq.limit(3); // only get 3 data file (photo, signature, photoCod)
 
     const result = new PhotoResponseVm();
-
-    //get data from pod attachment
-    let data = await qq.getRawMany();
-    let dataAttachment = await PodAttachment.findAttachment(data[0].awbNumber);
-    result.data = await data.concat(dataAttachment);
-    result.data = await result.data.sort(await OrderManualHelper.orderManual('createdTime', 'desc'));
-    let tampungType = [];
-
-    for(let i = 0; i < result.data.length; i++){
-      if(!tampungType.includes(result.data[i].type)){
-        tampungType.push(result.data[i].type);
-        result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
-      }else{
-        delete result.data[i];
-      }
-    }
+    result.data = await qq.getRawMany();    
     return result;
   }
 
@@ -343,11 +328,30 @@ export class V1WebTrackingService {
     }
 
     if(PHOTO_TYPE.RETURN == payload.photoType){
-      result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodId, payload.attachmentType);
-      for(let i = 0; i < result.data.length; i++){
-        result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+      if(payload.doPodId){
+        result.data = await DoPodReturnDetailService.getPhotoDetail(payload.doPodId, payload.attachmentType);
+        for(let i = 0; i < result.data.length; i++){
+          result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+        }
+      }else{
+        let photoDetail = await new PhotoDetailVm();
+        photoDetail.doPodDeliverDetailId = payload.doPodDeliverDetailId
+        let dataPhoto = await this.getPhotoDetail(photoDetail);
+        let dataAttachment = await PodAttachment.findAttachment(payload.awbNumber);
+        let data = await dataPhoto.data.concat(dataAttachment);
+        result.data = await data.sort(await OrderManualHelper.orderManual('createdTime', 'desc'));
+        let tampungType = [];
+
+        for(let i = 0; i < result.data.length; i++){
+          if(!tampungType.includes(result.data[i].type)){
+            tampungType.push(result.data[i].type);
+            result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+          }else{
+            delete result.data[i];
+          }
+        }
+        return result;
       }
-      return result;
     }
 
     if(PHOTO_TYPE.DELIVER == payload.photoType){

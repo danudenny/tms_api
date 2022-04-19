@@ -1,27 +1,17 @@
 import { WebLastMileUploadResponseVm } from '../../models/web-last-mile-upload-response.vm';
 import { WebLastMileUploadPayloadVm } from '../../models/web-last-mile-upload-payload.vm';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { AttachmentTms } from '../../../../shared/orm-entity/attachment-tms';
 import { AttachmentService } from '../../../../shared/services/attachment.service';
 
 export class WebLastMileUploadService {
   static async uploadFile(payload : WebLastMileUploadPayloadVm, file): Promise<WebLastMileUploadResponseVm>{
     const result = new WebLastMileUploadResponseVm();
+    const uuidv1 = require('uuid/v1');
+    let uuidGen = uuidv1();
     let attachmentId = null;
-
-    let attachment = await AttachmentTms.findOne({
-      where: {
-        fileName: file.originalname,
-      }
-    });
-
-    if (attachment) {
-      attachmentId = attachment.attachmentTmsId;
-      result.message = 'ok'
-      result.status = 'success';
-    }else{
-      const pathId = `tms-delivery-${payload.photoType}`;
-      attachment = await AttachmentService.uploadFileBufferToS3(
+    let ext = await file.originalname.split('.').pop();
+    file.originalname = await uuidGen+'.'+ext;
+    const pathId = `tms-delivery-${payload.photoType}`;
+      let attachment = await AttachmentService.uploadFileBufferToS3(
         file.buffer,
         file.originalname,
         file.mimetype,
@@ -37,7 +27,6 @@ export class WebLastMileUploadService {
         result.message = 'Gambar gagal upload'
         result.status = 'error';
       }
-    }
 
     result.attachmentTmsId = attachmentId;
     return result;

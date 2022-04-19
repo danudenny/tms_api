@@ -10,7 +10,7 @@ export class PodAttachment {
     const timeNow = moment().toDate();
     let dataAttachment = await PodAwbAttachment.findOne({
       where: {
-        awbNumber: data.awbNumber,
+        awbItemId: data.awbItemId,
         awbStatusId: data.awbStatusId,
         isDeleted: false
       }
@@ -28,8 +28,6 @@ export class PodAttachment {
             attachmentTmsId: data.attachmentTmsId,
             awbStatusId: data.awbStatusId,
             photoType: data.photoType,
-            userIdUpdated: data.userIdUpdated,
-            updatedTime : timeNow,
           }
         );
       });
@@ -43,10 +41,6 @@ export class PodAttachment {
         dataInsert.attachmentTmsId = data.attachmentTmsId;
         dataInsert.awbStatusId = data.awbStatusId;
         dataInsert.photoType = data.photoType;
-        dataInsert.createdTime = timeNow;
-        dataInsert.userIdCreated = data.userIdCreated;
-        dataInsert.updatedTime = timeNow;
-        dataInsert.userIdUpdated = data.userIdUpdated;
         dataInsert.isDeleted = false;
         await transactional.insert(PodAwbAttachment, dataInsert);
       });
