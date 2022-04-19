@@ -326,8 +326,8 @@ ORDER BY t1.created_time DESC`;
   ds.total_colly AS total_colly, \n
   COALESCE(ds.total_weight::integer, 0) AS aktual_berat, \n
   COALESCE(ds.vehicle_capacity::integer, 0) AS kapasitas, \n
-  COALESCE((total_weight / vehicle_capacity::integer) * 100, 0.00) AS load,
-  ds.representative_code as perwakilan_tujuan \n
+  COALESCE((total_weight / vehicle_capacity::integer) * 100, 0.00) AS load, \n
+  ds.representative_code as perwakilan_tujuan 
    \n  
     FROM ( \n
     SELECT ds.trip AS trip, \n 
