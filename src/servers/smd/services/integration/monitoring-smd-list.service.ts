@@ -147,15 +147,15 @@ export class MonitoringSmdServices {
           )
           .innerJoin('do_smd_detail',
             'dot',
-            'dot.do_smd_id = ds.do_smd_id'
+            'dot.do_smd_id = ds.do_smd_id and dot.is_deleted = false'
           )
           .innerJoin('branch',
             'bd',
-            'bd.branch_id = dot.branch_id_to'
+            'bd.branch_id = dot.branch_id_to and bd.is_deleted = false'
           )
           .innerJoin('representative',
             'rd',
-            'rd.representative_id = bd.representative_id'
+            'rd.representative_id = bd.representative_id and rd.is_deleted = false'
           );
 
         payload.applyFiltersToQueryBuilder(subQuery, ['departure_date_time']);
