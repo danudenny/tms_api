@@ -52,14 +52,14 @@ export class CodReportService {
           .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00');
         
-        queryParam +=  `AND ctd.updated_time >= Date('${d}') `;
+        queryParam +=  `AND ctd.updated_time >= '${d}' `;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment
           .utc(filter.value).add(1, 'days')
           .format('YYYY-MM-DD 00:00:00')
-        queryParam +=  `AND ctd.updated_time < Date('${d}') `; 
+        queryParam +=  `AND ctd.updated_time < '${d}' `; 
       }
 
       if (filter.field == 'supplier' && filter.value && this.isNumber(filter.value)) {
@@ -271,41 +271,41 @@ export class CodReportService {
       const d = moment
       .utc(filter.value)
       .format('YYYY-MM-DD 00:00:00')
-      queryParam +=  `AND ctd.pod_date >= Date('${d}') `;
+      queryParam +=  `AND ctd.pod_date >= '${d}' `;
     }
     if (filter.field == 'periodEnd' && filter.value){
       const d = moment
         .utc(filter.value).add(1, 'days')
         .format('YYYY-MM-DD 00:00:00')
-      queryParam +=  `AND ctd.pod_date < Date('${d}') `;
+      queryParam +=  `AND ctd.pod_date < '${d}' `;
     }
 
     if (filter.field == 'transactionStart' && filter.value) {
       const d = moment
       .utc(filter.value)
       .format('YYYY-MM-DD 00:00:00')
-      queryParam +=  `AND ctd.updated_time >= Date('${d}') `;
+      queryParam +=  `AND ctd.updated_time >= '${d}' `;
     }
 
     if (filter.field == 'transactionEnd' && filter.value) {
       const d = moment
         .utc(filter.value).add(1, 'days')
         .format('YYYY-MM-DD 00:00:00')
-      queryParam +=  `AND ctd.updated_time < Date('${d}') `;
+      queryParam +=  `AND ctd.updated_time < '${d}' `;
     }
 
     if (filter.field == 'manifestedStart' && filter.value) {
       const d = moment
         .utc(filter.value)
         .format('YYYY-MM-DD 00:00:00')
-      queryParam +=  `AND ctd.awb_date >= Date('${d}') `;
+      queryParam +=  `AND ctd.awb_date >= '${d}' `;
     }
 
     if (filter.field == 'manifestedEnd' && filter.value) {
       const d = moment
-      .utc(filter.value).add(1, 'days')
-      .format('YYYY-MM-DD 00:00:00')
-    queryParam +=  `AND ctd.awb_date < Date('${d}') `;
+        .utc(filter.value).add(1, 'days')
+        .format('YYYY-MM-DD 00:00:00')
+      queryParam +=  `AND ctd.awb_date < '${d}' `;
     }
 
     if (filter.field == 'partnerId' && filter.value && this.isNumber(filter.value)) {
