@@ -278,9 +278,9 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.userDriver, 't4');
+    q.leftJoin(e => e.userDriver, 't4');
 
-    q.innerJoin(e => e.branchFinal, 't12', j =>
+    q.leftJoin(e => e.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -426,9 +426,9 @@ export class V1WebAwbCodService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.userDriver, 't4');
+    q.leftJoin(e => e.userDriver, 't4');
 
-    q.innerJoin(e => e.branchFinal, 't12', j =>
+    q.leftJoin(e => e.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
