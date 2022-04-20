@@ -13,6 +13,7 @@ import moment = require('moment');
 import { DoSortationDetail } from '../../../../../shared/orm-entity/do-sortation-detail';
 import { MobileSortationService } from '../mobile/mobile-sortation.service';
 
+
 @Injectable()
 export class SortationL2ModuleService {
   public static async finishManualSortation(payload: SortationL2ModuleFinishManualPayloadVm) {
@@ -23,7 +24,7 @@ export class SortationL2ModuleService {
       where: {
         doSortationCode: payload.doSortationCode,
         isDeleted: false,
-        doSortationStatusIdLast: Not(6000),
+        doSortationStatusIdLast: Not(DO_SORTATION_STATUS.FINISHED),
       },
     });
 

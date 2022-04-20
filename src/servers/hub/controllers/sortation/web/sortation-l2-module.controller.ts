@@ -26,6 +26,6 @@ export class SortationL2ModuleController {
   @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async finishManualSortation(@Body() payload: SortationL2ModuleFinishManualPayloadVm) {
-
+    return SortationL2ModuleService.finishManualSortation(payload);
   }
 }
