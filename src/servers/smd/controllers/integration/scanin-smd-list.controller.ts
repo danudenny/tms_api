@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards, Delete, Param, Query, Get, Response } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards, Delete, Param, Query, Get, Response, BadRequestException } from '@nestjs/common';
 import express = require('express');
 
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
@@ -20,7 +20,8 @@ export class ScanInSmdListController {
   @Post('scanIn/list')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async FindscanInList(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
-    return ScaninSmdListService.findScanInList(payload);
+    // return ScaninSmdListService.findScanInList(payload);
+    throw new Error;
   }
 
   @Post('scanIn/detailBag')
