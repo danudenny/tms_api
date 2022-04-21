@@ -7,6 +7,7 @@ import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import { SharedService } from '../../../shared/services/shared.service';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 export class DoSmdPostAwbHistoryMetaQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-history-post-meta', {
@@ -31,7 +32,7 @@ export class DoSmdPostAwbHistoryMetaQueueService {
     this.queue.process(10, async job => {
       try {
         const data = job.data;
-        Logger.log('### JOB ID =========', job.id);
+        PinoLoggerService.log(`### JOB ID ========= ${job.id}`);
         // await getManager().transaction(async transactionalEntityManager => {
           // NOTE: get awb_ite_attr and update awb_history_id
           const awbItemAttr = await AwbItemAttr.findOne({
@@ -85,11 +86,11 @@ export class DoSmdPostAwbHistoryMetaQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      Logger.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      Logger.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

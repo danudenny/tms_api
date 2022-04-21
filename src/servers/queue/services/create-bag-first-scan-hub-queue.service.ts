@@ -11,6 +11,7 @@ import moment = require('moment');
 import * as _ from 'lodash';
 import { UpsertHubSummaryBagSortirQueueService } from './upsert-hub-summary-bag-sortir-queue.service';
 import { UpdatePackageCombineHubQueueService } from './update-package-combine-hub-queue.service';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -51,7 +52,7 @@ export class CreateBagFirstScanHubQueueService {
         });
 
         if (!awbItemAttr) {
-          console.error('## Gab Sortir :: Not Found Awb Number :: ', data);
+          console.error('[create-bag-first-scan-hub-queue] ## Gab Sortir :: Not Found Awb Number :: ', data);
           throw new Error(data);
         }
 
@@ -173,7 +174,7 @@ export class CreateBagFirstScanHubQueueService {
             //
             // await transactional.query(upsertRawHubSummaryAwbSql);
 
-            console.log('### CREATE BAG FIRST SCAN HUB ========= UPSERT HUB SUMMARY BAG SORTIR');
+            PinoLoggerService.log('### CREATE BAG FIRST SCAN HUB ========= UPSERT HUB SUMMARY BAG SORTIR');
             UpsertHubSummaryBagSortirQueueService.perform(
               data.bagId,
               data.bagItemId,
@@ -211,7 +212,7 @@ export class CreateBagFirstScanHubQueueService {
     });
 
     this.queue.on('cleaned', function (job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

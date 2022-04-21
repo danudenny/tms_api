@@ -3,6 +3,7 @@ import { ConfigService } from '../../../shared/services/config.service';
 import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { QueueBullBoard } from './queue-bull-board';
 import { BagItem } from '../../../shared/orm-entity/bag-item';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -64,11 +65,11 @@ export class BagItemHistoryQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

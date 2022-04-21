@@ -2,6 +2,7 @@ import { getManager } from 'typeorm';
 import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import moment= require('moment');
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -85,11 +86,11 @@ export class UpsertHubSummaryBagSortirQueueService {
                             values ('${escape(data.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${data.awbItemId}, ${note}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
                             ON CONFLICT (awb_number,branch_id) DO
                             UPDATE SET in_hub = true, scan_date_in_hub = '${dateNow}', bag_item_id_in = ${data.bagItemId}, bag_id_in = ${data.bagId}, note=${note}, user_id_updated=${data.userId}, updated_time='${dateNow}';`;
-          console.log('### UPSERT IN HUB SUMMARY QUERY =========', upsertRawHubSummaryAwbSql);
+          PinoLoggerService.log(`### UPSERT IN HUB SUMMARY QUERY ========= ${upsertRawHubSummaryAwbSql}`);
           await transactional.query(upsertRawHubSummaryAwbSql);
         });
       } catch (error) {
-        console.error('### ERROR UPSERT', error);
+        console.error('[upsert-hub-summary-bag-sortir-queue] ### ERROR UPSERT', error);
       }
       return true;
     });
@@ -100,7 +101,7 @@ export class UpsertHubSummaryBagSortirQueueService {
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 
