@@ -9,9 +9,7 @@ import { SlackUtil } from '../util/slack';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-
   catch(exception: any, host: ArgumentsHost) {
-
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<express.Response>();
     const request = ctx.getRequest();
@@ -28,17 +26,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       // NOTE: detail error stack only fatal status
       const fatalStatus = [500, 501, 502, 503, 504, 505];
       if (fatalStatus.includes(status)) {
-        requestErrorResponse = ErrorParserService.parseRequestErrorFromExceptionAndArgumentsHost(
-          exception,
-          host,
-        );
+        requestErrorResponse = ErrorParserService.parseRequestErrorFromExceptionAndArgumentsHost(exception, host);
         PinoLoggerService.error('#### All Exception Filter : ', exception);
-        
         const payloadBody = request.body;
         const fullUrl = request.protocol + '://' + request.headers.host + request.url;
-        SlackUtil.sendMessage(ConfigService.get('slackchannel.errorCode'), `#### All Exception Filter : ${exception}`, fullUrl, payloadBody);
-      
-      } else {  
+        SlackUtil.sendMessage(
+          ConfigService.get('slackchannel.errorCode'),
+          `#### All Exception Filter : ${exception}`,
+          fullUrl,
+          payloadBody,
+        );
+      } else {
         PinoLoggerService.warn('#### All Exception Filter, Error Response : ', requestErrorResponse);
       }
       const finalRequestErrorResponse = fclone(requestErrorResponse);
