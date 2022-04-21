@@ -22,10 +22,9 @@ export class TmsBaseEntity extends BaseActionEntity {
   })
   userIdUpdated: number;
 
-  @Column('character varying', {
+  @Column('timestamp without time zone', {
     nullable: false,
     name: 'updated_time',
-    transformer: new ColumnDateTransformer(),
   })
   updatedTime: Date;
 
