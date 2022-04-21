@@ -127,6 +127,10 @@ export class MasterDataService {
 
   static async userPassword(payload: UserPasswordPayloadVm){
     const result = new UserPasswordResponseVm();
+
+    result.message = 'API is expired';
+    return result;
+
     result.code = HttpStatus.OK;
     result.message = 'Success';
 
@@ -437,6 +441,10 @@ export class MasterDataService {
 
   static async updatePhone(payload: EmployeePhonePayloadVm){
     const result = new EmployeePhoneResponseVm();
+
+    result.message = 'API is expired';
+    return result;
+
     result.code = HttpStatus.OK;
     result.message = 'Success';
     result.clearCacheMobile = 'Failed';
