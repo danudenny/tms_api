@@ -1,6 +1,7 @@
 import { BeforeInsert, BeforeUpdate, Column } from 'typeorm';
 
 import { BaseActionEntity } from './base-action';
+import { ColumnDateTransformer } from './column-date-transformer';
 
 export class TmsBaseEntity extends BaseActionEntity {
   @Column('bigint', {
@@ -21,9 +22,10 @@ export class TmsBaseEntity extends BaseActionEntity {
   })
   userIdUpdated: number;
 
-  @Column('timestamp without time zone', {
+  @Column('character varying', {
     nullable: false,
     name: 'updated_time',
+    transformer: new ColumnDateTransformer(),
   })
   updatedTime: Date;
 

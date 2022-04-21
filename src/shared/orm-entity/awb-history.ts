@@ -159,12 +159,6 @@ export class AwbHistory extends TmsBaseEntity {
   })
   userIdUpdated: number;
 
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
-
   @Column('boolean', {
     nullable: false,
     default: () => 'false',
