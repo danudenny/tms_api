@@ -5,6 +5,7 @@ import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
 import { User } from '../../../../shared/orm-entity/user';
 import moment = require('moment');
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -123,11 +124,11 @@ export class CodTransactionHistoryQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

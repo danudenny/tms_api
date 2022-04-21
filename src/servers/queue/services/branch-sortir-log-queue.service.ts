@@ -2,6 +2,7 @@ import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import { BranchSortirLogDetail } from '../../../shared/orm-entity/branch-sortir-log-detail';
 import moment= require('moment');
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -33,7 +34,7 @@ export class BranchSortirLogQueueService {
   public static boot() {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
-      console.log('### CREATE BRANCH SORTIR LOG QUEUE ID =========', job.id);
+      PinoLoggerService.log(`### CREATE BRANCH SORTIR LOG QUEUE ID ========= ${job.id}`);
       try {
         const data = job.data;
 
@@ -62,11 +63,11 @@ export class BranchSortirLogQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

@@ -171,8 +171,10 @@ module.exports = {
   svcOtp: {
     baseUrl: 'http://api-internal.sicepat.io/core/authsvc',
     otpRequiredUrl: 'https://sms-otp.s3.ap-southeast-1.amazonaws.com/otp_config_prod.json',
+    sortChannel: 'sms,wa,email', //no space
     isBypass: false,
     bypassCode: "815413",
-    checkingConfig: false,
+    checkingConfig: true,
+    disableChannel: "wa"
   },
 };

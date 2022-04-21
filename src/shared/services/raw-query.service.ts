@@ -1,6 +1,7 @@
 import { getManager } from 'typeorm';
 import { MetaService } from './meta.service';
 import { BadRequestException } from '@nestjs/common';
+import { PinoLoggerService } from './pino-logger.service';
 
 export class RawQueryService {
 
@@ -22,6 +23,7 @@ export class RawQueryService {
     try {
       if (slaveMode) {
         queryRunner = this.manager.connection.createQueryRunner('slave');
+        // PinoLoggerService.log(queryRunner.driver.slaves[0]);
         if (queryRunner && queryRunner.isReleased) {
           throw new BadRequestException(
             'Database connection provided by a query runner was already released',

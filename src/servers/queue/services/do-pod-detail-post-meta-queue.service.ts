@@ -11,6 +11,7 @@ import { QueueBullBoard } from './queue-bull-board';
 import { User } from '../../../shared/orm-entity/user';
 import { Reason } from '../../../shared/orm-entity/reason';
 import { SharedService } from '../../../shared/services/shared.service';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 export class DoPodDetailPostMetaQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-history-post-meta', {
@@ -90,11 +91,11 @@ export class DoPodDetailPostMetaQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 
