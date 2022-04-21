@@ -32,6 +32,7 @@ export class MobileDeviceInfoService {
     payload.fieldResolverMap['userId'] = 'users.user_id';
     payload.fieldResolverMap['branchId'] = 'branch.branch_id';
     payload.fieldResolverMap['dateTime'] = 'mobile_device_info.date_time';
+    payload.fieldResolverMap['userName'] = 'users.username';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'dateTime';
