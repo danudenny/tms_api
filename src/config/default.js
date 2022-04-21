@@ -99,7 +99,7 @@ module.exports = {
     authKey: '5a71a345b4eaa9d23b4d4c745e7785e9',
   },
   slackchannel:{
-    errorCode: '#alert-tms',
+    errorCode: '#staging-alert-tms',
   },
   slack :{
     baseUrl : 'https://hooks.slack.com/services/',
