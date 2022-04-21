@@ -349,7 +349,7 @@ export class AuthV2Service {
       loginChannelOtpAddresses.address = address.channel == 'email' ? 
         SharedService.maskEmail(address.address) : 
         SharedService.maskString(address.address, '+', '4', '4');
-      loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
+      loginChannelOtpAddresses.enable = ConfigService.get('svcOtp.disableChannel').includes(address.channel) ? false : true;
 
       //Add sort mechanism
       if (sortChannel.includes(address.channel)) {
