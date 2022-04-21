@@ -20,8 +20,7 @@ export class ScanInSmdListController {
   @Post('scanIn/list')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async FindscanInList(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
-    // return ScaninSmdListService.findScanInList(payload);
-    throw new Error;
+    return ScaninSmdListService.findScanInList(payload);
   }
 
   @Post('scanIn/detailBag')
