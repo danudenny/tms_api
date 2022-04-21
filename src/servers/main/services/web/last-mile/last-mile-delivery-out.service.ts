@@ -459,22 +459,19 @@ export class LastMileDeliveryOutService {
                   select: ['awbNumber'],
                   where: {
                     awbItemId: awb.awbItemId,
-                    awbStatusIdLast: AWB_STATUS.ANT,
                     isDeleted: false,
                   },
                 });
                 if (dataSpk.length) {
-                  transactionManager.update(
+                  await transactionManager.update(
                     DoPodDeliverDetail,
                     {
                       awbItemId: awb.awbItemId,
-                      awbStatusIdLast: AWB_STATUS.ANT,
                       isDeleted: false,
                     },
                     {
                       isDeleted: true,
                       userIdUpdated: authMeta.userId,
-                      updatedTime: moment().toDate(),
                     },
                   );
                 }
