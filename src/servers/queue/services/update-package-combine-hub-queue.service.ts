@@ -9,6 +9,7 @@ import { QueueBullBoard } from './queue-bull-board';
 import {HubSummaryAwb} from '../../../shared/orm-entity/hub-summary-awb';
 import moment= require('moment');
 import { UpsertHubSummaryBagSortirQueueService } from './upsert-hub-summary-bag-sortir-queue.service';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -68,7 +69,7 @@ export class UpdatePackageCombineHubQueueService {
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

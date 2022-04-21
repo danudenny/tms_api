@@ -10,6 +10,7 @@ import { MongoDbConfig } from '../../config/database/mongodb.config';
 import moment = require('moment');
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -46,11 +47,8 @@ export class CodFirstTransactionQueueService {
         let isValidData = true;
         // let isNewData = false;
 
-        console.log('#### JOB ID  ::: ', job.id);
-        console.log(
-          '##################### SYNC DATA AWB NUMBER ::: ',
-          data.awbNumber,
-        );
+        PinoLoggerService.log(`#### JOB ID  ::: ${job.id}`);
+        PinoLoggerService.log(`##################### SYNC DATA AWB NUMBER ::: ${data.awbNumber}`);
 
         let transactionDetail: CodTransactionDetail;
         const masterTransactionDetailQueryRunner = getConnection().createQueryRunner(
@@ -146,10 +144,10 @@ export class CodFirstTransactionQueueService {
             // isNewData = true; // flag for insert data mongo
             // sync first data to mongo
             const newMongo = await this.insertMongo(transactionDetail);
-            console.log(' ############ NEW DATA MONGO :: ', newMongo);
+            PinoLoggerService.log(' ############ NEW DATA MONGO :: ', newMongo);
           } else {
             isValidData = false;
-            console.error('## Data COD Transaction :: Not Found !!! :: ', data);
+            console.error('[cod-first-transaction-queue] ## Data COD Transaction :: Not Found !!! :: ', data);
           }
         }
 
@@ -223,7 +221,7 @@ export class CodFirstTransactionQueueService {
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

@@ -7,6 +7,7 @@ import { CodTransactionHistoryQueueService } from './cod-transaction-history-que
 import moment = require('moment');
 import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
 import { getConnection } from 'typeorm';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 
 export class CodUpdateSupplierInvoiceQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -69,10 +70,10 @@ export class CodUpdateSupplierInvoiceQueueService {
             },
           };
           try {
-            console.log('## Update MongoDb :: ', dataUpdate);
+            PinoLoggerService.log(`## Update MongoDb :: ${dataUpdate}`);
             await collection.updateMany(query, dataUpdate);
           } catch (error) {
-            console.error(error);
+            console.error("[cod-update-supplier-invoice-queue] ", error);
             throw error;
           }
         } else {
@@ -105,7 +106,7 @@ export class CodUpdateSupplierInvoiceQueueService {
         }
 
         if (dataTransaction && dataTransaction.length) {
-          console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
+          PinoLoggerService.log(`##### TOTAL DATA Transaction :: ${dataTransaction.length}`);
           // object update for draft invoice
           const objUpdate = {
             codSupplierInvoiceId: data.codSupplierInvoiceId,
@@ -154,11 +155,11 @@ export class CodUpdateSupplierInvoiceQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

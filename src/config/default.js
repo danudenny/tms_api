@@ -131,6 +131,18 @@ module.exports = {
       },
     }
   },
+  reportingService: {
+    baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service', //https://swagger.s.sicepat.tech/operation/reporting-service
+    path: {
+      report: '/v1/reporting/report',
+    }
+  },
+  codReportType: {
+    supplierInvoiceAwb: 'cod-supplier-invoice-awb',
+    awbCodSummary: 'awb-cod-summary',
+    codNonFee: 'cod-non-fee',
+    supplierInvoiceFee: 'cod-supplier-invoice-fee',
+  },
   korwil: {
     korwilRoleId: [38, 155],
     smdRoleId: 117,
@@ -159,6 +171,7 @@ module.exports = {
   svcOtp: {
     baseUrl: 'http://api-internal.s.sicepat.io/authsvc',
     otpRequiredUrl: 'https://sms-otp.s3.ap-southeast-1.amazonaws.com/otp_config.json',
+    sortChannel: 'wa,email,sms', //no space
     isBypass: false,
     bypassCode: "815413",
     checkingConfig: true,

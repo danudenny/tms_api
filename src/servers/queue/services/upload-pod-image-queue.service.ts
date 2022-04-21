@@ -3,6 +3,7 @@ import { ConfigService } from '../../../shared/services/config.service';
 import { QueueBullBoard } from './queue-bull-board';
 import { DoPodDeliverDetail } from '../../../shared/orm-entity/do-pod-deliver-detail';
 import { AwsS3Service } from '../../../shared/services/aws-s3.service';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -57,9 +58,9 @@ export class UploadImagePodQueueService {
 
           if (response) {
             // TODO: update flag data DoPodDeliverDetail
-            console.log('### Upload S3 with KEY : ', response.awsKey);
+            PinoLoggerService.log(`### Upload S3 with KEY : ${response.awsKey}`);
           } else {
-            console.log('### Upload Response Error');
+            PinoLoggerService.log('### Upload Response Error');
           }
         }
 
@@ -73,11 +74,11 @@ export class UploadImagePodQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

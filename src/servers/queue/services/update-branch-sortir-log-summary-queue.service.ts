@@ -3,6 +3,7 @@ import { ConfigService } from '../../../shared/services/config.service';
 import moment = require('moment');
 import { BranchSortirLogSummary } from '../../../shared/orm-entity/branch-sortir-log-summary';
 import { getManager } from 'typeorm';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 export class UpdateBranchSortirLogSummaryQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -29,16 +30,16 @@ export class UpdateBranchSortirLogSummaryQueueService {
     this.queue.process(5, async job => {
       const data = job.data;
       try {
-        console.log('Update Seal Number Branch Sortir Log Process');
+        PinoLoggerService.log('Update Seal Number Branch Sortir Log Process');
         await getManager().transaction(async transactionManager => {
           await transactionManager.update(BranchSortirLogSummary, {
             awbNumber: data.awbNumber,
             branchId: data.branchId,
           }, { sealNumber: data.sealNumber, updatedTime: data.timestamp});
         });
-        console.log('End Update Seal Number Branch Sortir Log Process');
+        PinoLoggerService.log('End Update Seal Number Branch Sortir Log Process');
       } catch (error) {
-        console.error('### ERROR UPDATE SEAL NUMBER BRANCH SORTIR LOG', error);
+        console.error('[update-branch-sortir-log-summary-queue] ### ERROR UPDATE SEAL NUMBER BRANCH SORTIR LOG', error);
       }
       return true;
     });
@@ -49,7 +50,7 @@ export class UpdateBranchSortirLogSummaryQueueService {
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

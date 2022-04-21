@@ -6,6 +6,7 @@ import { DoPodDetail } from '../../../shared/orm-entity/do-pod-detail';
 import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue.service';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { SharedService } from '../../../shared/services/shared.service';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -40,7 +41,7 @@ export class BagScanOutBranchQueueService {
       try {
         // await getManager().transaction(async transactionalEntityManager => {
         // }); // end transaction
-        console.log('### SCAN OUT BRANCH JOB ID =========', job.id);
+        PinoLoggerService.log(`### SCAN OUT BRANCH JOB ID ========= ${job.id}`);
         const data = job.data;
 
         const bagItemsAwb = await BagItemAwb.find({
@@ -128,11 +129,11 @@ export class BagScanOutBranchQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

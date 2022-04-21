@@ -9,6 +9,7 @@ import { SharedService } from '../../../shared/services/shared.service';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
 import {AwbHistory} from '../../../shared/orm-entity/awb-history';
 import {AwbItemAttr} from '../../../shared/orm-entity/awb-item-attr';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -44,7 +45,7 @@ export class BagScanInBranchSmdQueueService {
       try {
         // await getManager().transaction(async transactionalEntityManager => {
         // }); // end transaction
-        console.log('### SCAN IN BRANCH SMD JOB ID =========', job.id);
+        PinoLoggerService.log(`### SCAN IN BRANCH SMD JOB ID ========= ${job.id}`);
         const data = job.data;
 
         const bagItemsAwb = await BagItemAwb.find({
@@ -103,7 +104,7 @@ export class BagScanInBranchSmdQueueService {
             }
           }
         } else {
-          console.log('### Data Bag Item Awb :: Not Found!!');
+          console.log('[bag-scan-in-branch-smd-queue] ### Data Bag Item Awb :: Not Found!!');
         }
         return true;
       } catch (error) {
@@ -116,11 +117,11 @@ export class BagScanInBranchSmdQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

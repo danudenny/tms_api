@@ -13,6 +13,7 @@ import {BagRepresentativeHistory} from '../../../shared/orm-entity/bag-represent
 import {BAG_REPRESENTATIVE_STATUS} from '../../../shared/constants/bag-representative-status.constant';
 import { Awb } from '../../../shared/orm-entity/awb';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -48,7 +49,7 @@ export class BagRepresentativeScanOutHubQueueService {
       try {
         // await getManager().transaction(async transactionalEntityManager => {
         // }); // end transaction
-        console.log('### SCAN BAG REPRESENTATIVE DO SMD JOB ID =========', job.id);
+        PinoLoggerService.log(`### SCAN BAG REPRESENTATIVE DO SMD JOB ID ========= ${job.id}`);
         const data = job.data;
         const tempAwb = [];
 
@@ -137,11 +138,11 @@ export class BagRepresentativeScanOutHubQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

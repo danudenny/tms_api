@@ -10,6 +10,7 @@ import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { SharedService } from '../../../shared/services/shared.service';
 import { BagItem } from '../../../shared/orm-entity/bag-item';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // Update bag item status after confirming do mutation
 export class DoMutationQueueService {
@@ -125,11 +126,11 @@ export class DoMutationQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 
