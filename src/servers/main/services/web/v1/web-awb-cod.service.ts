@@ -154,6 +154,35 @@ export class V1WebAwbCodService {
   ): Promise<WebAwbCodListResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissionPayload = AuthService.getPermissionTokenPayload();
+
+    // validate payload
+    let trxDateGte: moment.Moment
+    let trxDateLt: moment.Moment 
+    for (let filter of payload.filters ) {
+      if (filter.field == 'transactionDate') {
+        const d = moment(filter.value, 'YYYY-MM-DD')
+        if (filter.operator == 'gte') {
+          trxDateGte = d;
+        } else {
+          trxDateLt = d;
+        }
+      }
+    }
+
+    if( trxDateLt && trxDateGte ) {
+      const diffInDays = Math.abs(trxDateLt.diff(trxDateGte, 'days')); 
+      if (diffInDays > 7) {
+        throw new BadRequestException(`transactionDate range maximum is 7 days`);
+      }
+    } else {
+      throw new BadRequestException(`transactionDate is mandatory`);
+    }
+    
+    if (payload.limit > 50) {
+      throw new BadRequestException(`limit maximum is 50`);
+    }
+
+
     // mapping field
     payload.fieldResolverMap['awbNumber'] = 't1.awb_number';
     payload.fieldResolverMap['codValue'] = 't2.total_cod_value';
@@ -187,7 +216,7 @@ export class V1WebAwbCodService {
       payload.sortBy = 'transactionDate';
     }
 
-    const repo = new OrionRepositoryService(AwbItemAttr, 't1');
+    const repo = new OrionRepositoryService(CodPayment, 't8');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -220,38 +249,38 @@ export class V1WebAwbCodService {
       ['coalesce(t8.branch_id, t1.branch_id_last)', 'branchIdCopy'],
       ['coalesce(t12.branch_name, t6.branch_name)', 'branchNameCopy'],
     );
+    
+    q.innerJoin(e => e.awbItemAttr, 't1', j => 
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
+    );
 
-    q.innerJoin(e => e.awb, 't2', j =>
+    q.innerJoin(e => e.awbItemAttr.awb, 't2', j =>
       j
-        .andWhere(e => e.isDeleted, w => w.isFalse())
-        .andWhere(e => e.isCod, w => w.isTrue()),
+        .andWhere(e => e.isCod, w => w.isTrue())
+        .andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awb.packageType, 't5');
+    q.innerJoin(e => e.awbItemAttr.awb.packageType, 't5');
 
-    q.innerJoin(e => e.branchLast, 't6', j =>
+    q.innerJoin(e => e.awbItemAttr.branchLast, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatus, 't7', j =>
+    q.innerJoin(e => e.awbItemAttr.awbStatus, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.codPayment, 't8', j =>
+    q.innerJoin(e => e.awbItemAttr.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.awbStatusFinal, 't11', j =>
+    q.innerJoin(e => e.awbItemAttr.transactionStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.transactionStatus, 't9', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.leftJoin(e => e.userDriver, 't4');
 
-    q.leftJoin(e => e.codPayment.userDriver, 't4');
-
-    q.leftJoin(e => e.codPayment.branchFinal, 't12', j =>
+    q.leftJoin(e => e.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -262,10 +291,10 @@ export class V1WebAwbCodService {
         permissionPayload.isHeadOffice,
       )
     ) {
-      q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
+      q.innerJoin(e => e.codUserToBranch, 't10', j =>
         j
-          .andWhere(e => e.isDeleted, w => w.isFalse())
-          .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
+          .andWhere(e => e.userId, w => w.equals(authMeta.userId))
+          .andWhere(e => e.isDeleted, w => w.isFalse()),
       );
     }
 
@@ -276,7 +305,7 @@ export class V1WebAwbCodService {
       )
     ) {
       q.andWhere(
-        e => e.codPayment.branchId,
+        e => e.branchId,
         w => w.equals(permissionPayload.branchId),
       );
     }
@@ -337,7 +366,7 @@ export class V1WebAwbCodService {
       payload.sortBy = 'transactionDate';
     }
 
-    const repo = new OrionRepositoryService(AwbItemAttr, 't1');
+    const repo = new OrionRepositoryService(CodPayment, 't8');
     const q = repo.findAllRaw();
 
     payload.applyToOrionRepositoryQuery(q, true);
@@ -369,37 +398,37 @@ export class V1WebAwbCodService {
       ['t9.status_title', 'transactionStatusName'],
     );
 
-    q.innerJoin(e => e.awb, 't2', j =>
+    q.innerJoin(e => e.awbItemAttr, 't1', j => 
+      j.andWhere(e => e.isDeleted, w => w.isFalse())
+    );
+
+    q.innerJoin(e => e.awbItemAttr.awb, 't2', j =>
       j
         .andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.isCod, w => w.isTrue()),
     );
 
-    q.innerJoin(e => e.awb.packageType, 't5');
+    q.innerJoin(e => e.awbItemAttr.awb.packageType, 't5');
 
-    q.innerJoin(e => e.branchLast, 't6', j =>
+    q.innerJoin(e => e.awbItemAttr.branchLast, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.awbStatus, 't7', j =>
+    q.innerJoin(e => e.awbItemAttr.awbStatus, 't7', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.codPayment, 't8', j =>
+    q.innerJoin(e => e.awbItemAttr.awbStatusFinal, 't11', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.awbStatusFinal, 't11', j =>
+    q.innerJoin(e => e.awbItemAttr.transactionStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.leftJoin(e => e.transactionStatus, 't9', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.leftJoin(e => e.userDriver, 't4');
 
-    q.leftJoin(e => e.codPayment.userDriver, 't4');
-
-    q.leftJoin(e => e.codPayment.branchFinal, 't12', j =>
+    q.leftJoin(e => e.branchFinal, 't12', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
@@ -410,7 +439,7 @@ export class V1WebAwbCodService {
         permissionPayload.isHeadOffice,
       )
     ) {
-      q.innerJoin(e => e.codPayment.codUserToBranch, 't10', j =>
+      q.innerJoin(e => e.codUserToBranch, 't10', j =>
         j
           .andWhere(e => e.isDeleted, w => w.isFalse())
           .andWhere(e => e.userId, w => w.equals(authMeta.userId)),
@@ -424,7 +453,7 @@ export class V1WebAwbCodService {
       )
     ) {
       q.andWhere(
-        e => e.codPayment.branchId,
+        e => e.branchId,
         w => w.equals(permissionPayload.branchId),
       );
     }
@@ -447,6 +476,11 @@ export class V1WebAwbCodService {
   static async awbCodDlvV2(
     payload: BaseMetaPayloadVm,
   ): Promise<WebAwbCodDlvV2ListResponseVm> {
+    if (payload.limit > 50) {
+      throw new BadRequestException(`limit maximum is 50`);
+    }
+
+
     payload.fieldResolverMap['driverName'] = 't3.first_name';
     payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
     payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
@@ -458,7 +492,7 @@ export class V1WebAwbCodService {
     const repo = new OrionRepositoryService(CodPayment, 't1');
     const q = repo.findAllRaw();
 
-    payload.applyToOrionRepositoryQuery(q);
+    payload.applyToOrionRepositoryQuery(q, true);
 
     q.selectRaw(
       ['t3.first_name', 'driverName'],
@@ -478,6 +512,7 @@ export class V1WebAwbCodService {
     });
 
     q.innerJoin(e => e.userDriver, 't3');
+
     q.innerJoin(e => e.branchFinal, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -495,6 +530,60 @@ export class V1WebAwbCodService {
 
     result.data = data;
     result.paging = MetaService.set(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async countAwbCodDlvV2(
+    payload: BaseMetaPayloadVm,
+  ): Promise<WebCodCountResponseVm> {
+    payload.fieldResolverMap['driverName'] = 't3.first_name';
+    payload.fieldResolverMap['branchNameFinal'] = 't4.branch_name';
+    payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'driverName';
+    }
+
+    const repo = new OrionRepositoryService(CodPayment, 't1');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['t3.first_name', 'driverName'],
+      ['count(t3.user_id)', 'totalResi'],
+      ['t3.user_id', 'userIdDriver'],
+      ['t4.branch_name', 'branchNameFinal'],
+      ['t4.branch_id', 'branchIdFinal'],
+    );
+
+    q.innerJoin(e => e.awbItemAttr, 't2', j => {
+      j.andWhere(e => e.isDeleted, w => w.isFalse());
+      j.andWhere(
+        e => e.transactionStatusId,
+        w => w.equals(TRANSACTION_STATUS.DEFAULT),
+      );
+      j.andWhere(e => e.awbStatusIdFinal, w => w.equals(AWB_STATUS.DLV));
+    });
+
+    q.innerJoin(e => e.userDriver, 't3');
+
+    q.innerJoin(e => e.branchFinal, 't4', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    q.groupByRaw(
+      't3.user_id, t4.branch_id',
+    );
+
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new WebCodCountResponseVm();
+
+    result.total = total;
 
     return result;
   }
