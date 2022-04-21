@@ -132,7 +132,7 @@ module.exports = {
     }
   },
   reportingService: {
-    baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service', //https://swagger.s.sicepat.tech/operation/reporting-service
+    baseUrl : 'http://api-internal.sicepat.io/operation/reporting-service', //https://swagger.sicepat.tech/operation/reporting-service
     path: {
       report: '/v1/reporting/report',
     }
