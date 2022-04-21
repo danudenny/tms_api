@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards, Delete, Param, Query, Get, Response, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards, Delete, Param, Query, Get, Response } from '@nestjs/common';
 import express = require('express');
 
 import { Transactional } from '../../../../shared/external/typeorm-transactional-cls-hooked/Transactional';
