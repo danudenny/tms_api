@@ -16,7 +16,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<express.Response>();
     const request = ctx.getRequest();
     let requestErrorResponse = exception;
- 
     if (request && response) {
       let status = HttpStatus.INTERNAL_SERVER_ERROR;
       if (exception instanceof HttpException) {
@@ -26,7 +25,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
           requestErrorResponse = exception.getResponse();
         }
       }
-
       // NOTE: detail error stack only fatal status
       const fatalStatus = [500, 501, 502, 503, 504, 505];
       if (fatalStatus.includes(status)) {
@@ -35,10 +33,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
           host,
         );
         PinoLoggerService.error('#### All Exception Filter : ', exception);
-          
-        const ctxrpc = host.switchToRpc();
-        let payloadBody = ctxrpc.getData().body;
-        let fullUrl = ctxrpc.getData().headers.host + request.url;
+        
+        let payloadBody = request.body;
+        let fullUrl = request.protocol+'://'+request.hostname + request.url;
         SlackUtil.sendMessage(ConfigService.get('slackchannel.errorCode'), `#### All Exception Filter : ${exception}`, fullUrl, payloadBody)
       
       } else {
