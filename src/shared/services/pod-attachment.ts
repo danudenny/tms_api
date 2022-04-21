@@ -10,6 +10,7 @@ export class PodAttachment {
   public static async upsertPodAttachment(data: PodWebAttachmentModel) {
     const timeNow = moment().toDate();
     let dataAttachment = await PodAwbAttachment.findOne({
+      select: ['id'],
       where: {
         awbItemId: data.awbItemId,
         awbStatusId: data.awbStatusId,
