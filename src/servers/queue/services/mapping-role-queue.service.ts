@@ -4,6 +4,7 @@ import { QueueBullBoard } from './queue-bull-board';
 import { MasterDataService } from '../../background/services/integration/masterdata.service';
 import { MappingRolePayloadVm } from '../../background/models/mapping-role.payload.vm';
 import { MappingRoleUserPayloadVm } from '../../background/models/mapping-role-user.payload.vm';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -34,8 +35,8 @@ export class MappingRoleQueueService {
     this.queue.process(5, async job => {
       // await getManager().transaction(async transactionalEntityManager => {
       // }); // end transaction
-      console.log('### JOB ID =========', job.id);
-      console.log('### JOB DATA =========', job.data);
+      PinoLoggerService.log(`### JOB ID ========= ${job.id}`);
+      PinoLoggerService.log(`### JOB DATA ========= ${job.data}`);
 
       const data = job.data;
 
@@ -54,11 +55,11 @@ export class MappingRoleQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

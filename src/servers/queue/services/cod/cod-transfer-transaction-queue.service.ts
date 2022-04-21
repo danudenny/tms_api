@@ -7,6 +7,7 @@ import { User } from '../../../../shared/orm-entity/user';
 import { WebCodFirstTransactionPayloadVm } from '../../../main/models/cod/web-awb-cod-payload.vm';
 import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -41,11 +42,8 @@ export class CodTransferTransactionQueueService {
       try {
         const data = job.data;
 
-        console.log('#### JOB ID  ::: ', job.id);
-        console.log(
-          '##################### SYNC DATA AWB NUMBER - cod transaction detail ::: ',
-          data.awbNumber,
-        );
+        PinoLoggerService.log(`#### JOB ID  ::: ${job.id}`);
+        PinoLoggerService.log(`##################### SYNC DATA AWB NUMBER - cod transaction detail ::: ${data.awbNumber}`);
 
         let transactionDetail: CodTransactionDetail;
         const masterQueryRunner = getConnection().createQueryRunner('master');
@@ -121,9 +119,9 @@ export class CodTransferTransactionQueueService {
 
             // sync first data to mongo
             const newMongo = await this.insertMongo(transactionDetail);
-            console.log(' ############ NEW DATA MONGO :: ', newMongo);
+            PinoLoggerService.log(`############ NEW DATA MONGO :: ${newMongo}`);
           } else {
-            console.error('## Data COD Transaction :: Not Found !!! :: ', data);
+            console.error('[cod-transfer-transaction-queue] ## Data COD Transaction :: Not Found !!! :: ', data);
             // TODO: insert awb trouble
           }
         }
@@ -142,7 +140,7 @@ export class CodTransferTransactionQueueService {
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

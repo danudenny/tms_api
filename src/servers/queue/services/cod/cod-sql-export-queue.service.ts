@@ -2,6 +2,7 @@ import { ConfigService } from '../../../../shared/services/config.service';
 import { QueueBullBoard } from '../queue-bull-board';
 import { V1WebReportCodService } from '../../../main/services/web/v1/web-report-cod.service';
 import { V1WebReportSqlCodService } from '../../../main/services/web/v1/web-report-sql-cod.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 
 export class CodSqlExportMongoQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -55,11 +56,11 @@ export class CodSqlExportMongoQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function (job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

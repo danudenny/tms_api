@@ -3,6 +3,7 @@ import { MongoDbConfig } from '../../config/database/mongodb.config';
 import { QueueBullBoard } from '../queue-bull-board';
 import { User } from '../../../../shared/orm-entity/user';
 import moment = require('moment');
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 
 // Sync Update Data Transaction to Mongodb
 export class CodSyncTransactionQueueService {
@@ -42,7 +43,7 @@ export class CodSyncTransactionQueueService {
         const checkData = await collection.findOne({
           _id: data.awbNumber,
         });
-        console.log('##### SYNC MONGO AWB :: ', data.awbNumber);
+        PinoLoggerService.log(`##### SYNC MONGO AWB :: ${data.awbNumber}`);
 
         if (checkData) {
           console.log('## UPDATE DATA IN MONGO !!!');
@@ -76,7 +77,7 @@ export class CodSyncTransactionQueueService {
           console.log('## NOT FOUND DATA IN MONGO !!! ', data.awbNumber);
         }
       } catch (error) {
-        console.error(error);
+        console.error("[cod-sync-transaction-queue] ", error);
         throw error;
       }
 
@@ -86,11 +87,11 @@ export class CodSyncTransactionQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 
