@@ -311,4 +311,5 @@ export class CodTransactionDetail extends TmsBaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_driver' })
   userDriver: User;
+
 }

@@ -109,6 +109,14 @@ export class V1WebAwbCodController {
     return V1WebAwbCodService.awbCodDlvV2(payload);
   }
 
+  @Post('countAwbDlvV2')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebCodCountResponseVm })
+  public async countAwbDlvV2(@Body() payload: BaseMetaPayloadVm) {
+    return V1WebAwbCodService.countAwbCodDlvV2(payload);
+  }
+
   @Post('awbDlv')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
