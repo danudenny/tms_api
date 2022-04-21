@@ -35,10 +35,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         PinoLoggerService.error('#### All Exception Filter : ', exception);
         
         const payloadBody = request.body;
-        const fullUrl = request.protocol+'://'+request.headers.host + request.url;
-        SlackUtil.sendMessage(ConfigService.get('slackchannel.errorCode'), `#### All Exception Filter : ${exception}`, fullUrl, payloadBody)
+        const fullUrl = request.protocol + '://' + request.headers.host + request.url;
+        SlackUtil.sendMessage(ConfigService.get('slackchannel.errorCode'), `#### All Exception Filter : ${exception}`, fullUrl, payloadBody);
       
-      } else {
+      } else {  
         PinoLoggerService.warn('#### All Exception Filter, Error Response : ', requestErrorResponse);
       }
       const finalRequestErrorResponse = fclone(requestErrorResponse);
