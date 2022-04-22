@@ -158,6 +158,7 @@ export class BagScanOutBranchSortirQueueService {
           branchIdLast: data.branchId,
           bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
           userIdUpdated: data.userId,
+          branchIdNext: item.branch_id_to,
           updatedTime: moment().toDate(),
         },
       );
