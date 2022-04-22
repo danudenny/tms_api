@@ -61,4 +61,16 @@ export class SortationScanOutController {
     };
   }
 
+  @Delete('route/deleted/:id')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async deleteDoSortationRoute(@Param('id') doSortationDetailId: string) {
+    await SortationScanOutService.sortationScanOutRouteDelete(doSortationDetailId);
+
+    return {
+      message: 'Sortation Detail ID: ' + doSortationDetailId + ' Deleted' ,
+      statusCode: 200,
+      data: [],
+    };
+  }
+
 }

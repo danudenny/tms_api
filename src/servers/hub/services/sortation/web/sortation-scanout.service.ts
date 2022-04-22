@@ -21,6 +21,7 @@ import { BagScanDoSortationQueueService } from '../../../../queue/services/bag-s
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sortation-detail-item';
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
+import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 
 @Injectable()
 export class SortationScanOutService {
@@ -255,12 +256,6 @@ export class SortationScanOutService {
           isSortir = true;
         }
 
-        // pengecekan GP untuk status DO_HUB
-        // if (BAG_STATUS.DO_HUB != bagDetail.bagItemStatusIdLast) {
-          //   result.message = `${messageBagType} ${bagNumber} belum di scan masuk`;
-          //   return result;
-          // }
-
         // pengecekan jika total bag/bagsortir sudah pernah scan, akan di cek kembali scan selanjutnya tidak boleh beda type bag
         if (resultDoSortaionDetail.totalBag > 0 || resultDoSortaionDetail.totalBagSortir > 0) {
           if (resultDoSortaionDetail.isSortir != isSortir) {
@@ -269,14 +264,14 @@ export class SortationScanOutService {
           }
         }
 
-        // HOLD VALIDASI KEBUTUHAN TESTING DEV
         const branch = await Branch.findOne({
             where: {
               branchId: resultDoSortaionDetail.branchIdTo,
-              isDeleted: false,
               isActive: true,
+              isDeleted: false,
             },
         });
+
         if (bagDetail.bag.representativeIdTo != Number(branch.representativeId)) {
           result.message = `Tujuan kota ${messageBagType} ${bagNumber} dengan kota rute tidak sama.`;
           return result;
@@ -450,45 +445,60 @@ export class SortationScanOutService {
         * validation if driver sudah berangkat harus change driver
         *
       */
-      // const resultDoSortaionDetail = await DoSortationDetail.find({
-      //   where: {
-      //     doSortationId: payload.doSortationId,
-      //     arrivalDateTime: null,
-      //     isDeleted: false,
-      //   },
-      // });
+      const resultDoSortaionDetails = await DoSortationDetail.find({
+        select: ['doSortationDetailId', 'totalBag', 'totalBagSortir'],
+        where: {
+          doSortationId: payload.doSortationId,
+          arrivalDateTime: null,
+          checkPoint: 0,
+          isDeleted: false,
+        },
+      });
+
+      if (!resultDoSortaionDetails || resultDoSortaionDetails.length < 1) {
+        throw new BadRequestException(`Gagal membuat surat jalan`);
+      }
+
+      const resultDoSortaionDetailIds = [];
+      for (const resultDoSortaionDetail of resultDoSortaionDetails) {
+        if (resultDoSortaionDetail.totalBag == 0 && resultDoSortaionDetail.totalBagSortir == 0) {
+          PinoLoggerService.warn(`sortation-scanout-service-not-scan-bag[${resultDoSortaionDetail.doSortationDetailId}]`);
+          throw new BadRequestException(`Salah satu rute belum scan bag`);
+        }
+        resultDoSortaionDetailIds.push(resultDoSortaionDetail.doSortationDetailId);
+      }
 
       // cara ini hanya mengecek jika salah satu rute sudah terisi boleh lanjut DONE
       // harus di make sure kembali secara bisnis flow
       // apakaha harus di looping satu2 cek jika salah satu rute kosong bag nya????
       // sementara seperti ini dulu code nya.
-      const rawQuery = `
-        SELECT ARRAY(
-          SELECT
-            do_sortation_detail_id
-          FROM do_sortation_detail
-          WHERE
-            do_sortation_id = '${payload.doSortationId}'
-            AND is_deleted = false
-            AND check_point = 0
-        );
-      `;
-      const resultDoSortaionDetailIds = await RawQueryService.query(rawQuery);
-      if (!resultDoSortaionDetailIds[0].array || resultDoSortaionDetailIds[0].array.length < 1) {
-        throw new BadRequestException(`Gagal membuat surat jalan`);
-      }
+      // const rawQuery = `
+      //   SELECT ARRAY(
+      //     SELECT
+      //       do_sortation_detail_id
+      //     FROM do_sortation_detail
+      //     WHERE
+      //       do_sortation_id = '${payload.doSortationId}'
+      //       AND is_deleted = false
+      //       AND check_point = 0
+      //   );
+      // `;
+      // const resultDoSortaionDetailIds = await RawQueryService.query(rawQuery);
+      // if (!resultDoSortaionDetailIds[0].array || resultDoSortaionDetailIds[0].array.length < 1) {
+      //   throw new BadRequestException(`Gagal membuat surat jalan`);
+      // }
 
-      const checkDetailItem = await DoSortationDetailItem.find({
-        select: ['doSortationDetailId', 'bagItemId'],
-        where: {
-          doSortationDetailId: In(resultDoSortaionDetailIds[0].array),
-          isDeleted: false,
-        },
-      });
+      // const checkDetailItem = await DoSortationDetailItem.find({
+      //   select: ['doSortationDetailId', 'bagItemId'],
+      //   where: {
+      //     doSortationDetailId: In(resultDoSortaionDetailIds[0].array),
+      //     isDeleted: false,
+      //   },
+      // });
 
-      if (!checkDetailItem || checkDetailItem.length < 1) {
-        throw new BadRequestException(`Belum pernah scan bag`);
-      }
+      // if (!checkDetailItem || checkDetailItem.length < 1) {
+      //   throw new BadRequestException(`Belum pernah scan bag`);
+      // }
 
       await getManager().transaction(async transactional => {
         for (const sortationDetailId of resultDoSortaionDetailIds[0].array) {
@@ -616,6 +626,50 @@ export class SortationScanOutService {
       }
     });
 
+  }
+
+  static async sortationScanOutRouteDelete(doSortationDetailId: string) {
+    const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    if (!doSortationDetailId) {
+      throw new BadRequestException(`ID Surat Jalan Sortation Detail harus di isi`);
+    }
+
+    const resultDoSortaionDetail = await DoSortationDetail.findOne({
+      where: {
+        doSortationDetailId,
+        isDeleted: false,
+      },
+    });
+
+    if (!resultDoSortaionDetail) {
+      throw new BadRequestException(`Surat Jalan Detail dengan ID ${doSortationDetailId}, tidak ditemukan`);
+    }
+
+    // if (resultDoSortaionDetail.totalBag > 0 || resultDoSortaionDetail.totalBagSortir > 0) {
+    //   throw new BadRequestException(`tidak bisa di hapus, karena rute ini sudah ada bag nya`);
+    // }
+
+    await getManager().transaction(async transactional => {
+      await transactional.update(DoSortationDetail,
+          { doSortationDetailId: resultDoSortaionDetail.doSortationDetailId},
+          {
+            userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+            isDeleted: true,
+          },
+      );
+
+      await transactional.update(DoSortationDetailItem,
+        { doSortationDetailId: resultDoSortaionDetail.doSortationDetailId},
+        {
+          userIdUpdated: authMeta.userId,
+            updatedTime: moment().toDate(),
+            isDeleted: true,
+          },
+        );
+    });
   }
 
   private static async updateTotalBagSortationAndSortationDetail(
