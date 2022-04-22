@@ -66,6 +66,7 @@ export class BagScanOutBranchSortirQueueService {
         if (tempBag.includes(Number(item.bag_item_id))) {
           continue;
         }
+        tempBag.push(Number(item.bag_item_id));
         dataResultBagItemBranch.push(item);
       }
 
