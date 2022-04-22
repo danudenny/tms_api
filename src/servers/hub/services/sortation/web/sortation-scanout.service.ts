@@ -637,6 +637,7 @@ export class SortationScanOutService {
     }
 
     const resultDoSortaionDetail = await DoSortationDetail.findOne({
+      select: ['doSortationDetailId'],
       where: {
         doSortationDetailId,
         isDeleted: false,
