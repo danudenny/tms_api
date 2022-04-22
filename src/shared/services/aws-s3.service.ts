@@ -114,7 +114,7 @@ export class AwsS3Service {
         });
       }
     } catch (error) {
-      console.log('get error: ', error.message);
+      console.log(`[AwsS3Service][uploadFromUrl] get error: ${error.message}`);
     }
   }
 

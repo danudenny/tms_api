@@ -340,14 +340,28 @@ export class AuthV2Service {
       }, HttpStatus.FORBIDDEN);
     }
 
+    const sortChannel = String(ConfigService.get('svcOtp.sortChannel')).split(',');
+
     const addresses = [];
     for (const address of response.data.result.addresses) {
       const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
       loginChannelOtpAddresses.channel = address.channel;
-      loginChannelOtpAddresses.address = SharedService.maskString(address.address, '+', '4', '4');
-      loginChannelOtpAddresses.enable = 'wa' == address.channel ? false : true;
+      loginChannelOtpAddresses.address = address.channel == 'email' ? 
+        SharedService.maskEmail(address.address) : 
+        SharedService.maskString(address.address, '+', '4', '4');
+      loginChannelOtpAddresses.enable = ConfigService.get('svcOtp.disableChannel').includes(address.channel) ? false : true;
 
-      addresses.push({ ...loginChannelOtpAddresses });
+      //Add sort mechanism
+      if (sortChannel.includes(address.channel)) {
+        for (var i = 0; i < sortChannel.length; i++) {
+          if (sortChannel[i] == address.channel) {
+            addresses[i] = loginChannelOtpAddresses;
+            break;
+          }
+        }
+      } else {
+        addresses.push({ ...loginChannelOtpAddresses });
+      }
     }
     return addresses;
   }

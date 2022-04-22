@@ -7,6 +7,7 @@ import { AwbItem } from '../../../shared/orm-entity/awb-item';
 import { DropoffHubDetailBagging } from '../../../shared/orm-entity/dropoff_hub_detail_bagging';
 import { BagRepresentativeItem } from '../../../shared/orm-entity/bag-representative-item';
 import { DropoffHubDetailBagRepresentative } from '../../../shared/orm-entity/dropoff_hub_detail_bag_representative';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -39,7 +40,7 @@ export class BagRepresentativeDropoffHubQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
       try {
-        console.log('### SCAN DROP OFF HUB BAG REPRESENTATIVE JOB ID =========', job.id);
+        PinoLoggerService.log(`### SCAN DROP OFF HUB BAG REPRESENTATIVE JOB ID ========= ${job.id}`);
         const data = job.data;
 
         const bagRepresentativeItem = await BagRepresentativeItem.find({
@@ -78,7 +79,7 @@ export class BagRepresentativeDropoffHubQueueService {
             }
           } // End Of Loop
         } else {
-          console.log('### Data Bag Item Representative :: Not Found!!');
+          console.log('[bag-representative-dropoff-hub-queue] ### Data Bag Item Representative :: Not Found!!');
         }
         return true;
       } catch (error) {
@@ -90,11 +91,11 @@ export class BagRepresentativeDropoffHubQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 
