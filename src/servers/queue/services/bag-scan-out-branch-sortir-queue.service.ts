@@ -60,6 +60,14 @@ export class BagScanOutBranchSortirQueueService {
         WHERE dsd.do_sortation_id = '${data.doSortationId}' AND dsd.is_deleted = FALSE
         ORDER BY CASE WHEN bih.bag_item_status_id = ${BAG_STATUS.OUT_HUB} THEN 1 ELSE 2 END, bih.history_date DESC
       `);
+      const tempBag = [];
+      const dataResultBagItemBranch = [];
+      for (const item of resultBagItemBranch) {
+        if (tempBag.includes(Number(item.bag_item_id))) {
+          continue;
+        }
+        dataResultBagItemBranch.push(item);
+      }
 
       const resultDriver = await RawQueryService.query(`
          SELECT
@@ -84,7 +92,7 @@ export class BagScanOutBranchSortirQueueService {
 
       await this.createHistoryCombinePackageAwb(
         data,
-        resultBagItemBranch,
+        dataResultBagItemBranch,
         employeeIdDriver,
         employeeNameDriver,
         branchName,
@@ -113,13 +121,7 @@ export class BagScanOutBranchSortirQueueService {
   ) {
     let branchNameNext = '';
     const tempAwb = [];
-    const tempBag = [];
     for (const item of resultQuery) {
-      if (tempBag.includes(Number(item.bag_item_id))) {
-        continue;
-      }
-      tempBag.push(Number(item.bag_item_id));
-
       if (item.branch_id_to) {
         const branchNext = await SharedService.getDataBranchCity(
           item.branch_id_to,
