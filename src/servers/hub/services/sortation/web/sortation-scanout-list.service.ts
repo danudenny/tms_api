@@ -535,8 +535,8 @@ export class SortationScanOutListService {
     } else {
       // photo
       q.andWhere(
-        e => e.doSortationVehicleId,
-        w => w.equals(scanoutHistory.doSortationVehicleId),
+        e => e.doSortationDetailId,
+        w => w.equals(scanoutHistory.doSortationDetailId),
       ).andWhereRaw(`LOWER(dsa.attachment_type) IN ('signature', 'photo')`);
     }
     q.andWhere(e => e.isDeleted, w => w.isFalse());
