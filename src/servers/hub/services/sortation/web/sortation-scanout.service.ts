@@ -501,7 +501,7 @@ export class SortationScanOutService {
       // }
 
       await getManager().transaction(async transactional => {
-        for (const sortationDetailId of resultDoSortaionDetailIds[0].array) {
+        for (const sortationDetailId of resultDoSortaionDetailIds) {
           await transactional.update(DoSortationDetail,
             {doSortationDetailId:  sortationDetailId},
             {
