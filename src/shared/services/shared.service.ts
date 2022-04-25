@@ -14,6 +14,7 @@ export class SharedService {
     q.select({
       userId: true,
       username: true,
+      employeeId: true,
       employee: {
         employeeId: true,
         employeeName: true,
