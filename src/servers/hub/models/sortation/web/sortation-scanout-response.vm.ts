@@ -105,6 +105,12 @@ export class SortationLoadDetailVm {
   branchToName: string;
 
   @ApiModelProperty()
+  isSortir: boolean;
+
+  @ApiModelProperty()
+  employeeDriverId: string;
+
+  @ApiModelProperty()
   bagItems: string[];
 }
 

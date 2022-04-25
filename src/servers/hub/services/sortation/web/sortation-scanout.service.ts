@@ -345,9 +345,9 @@ export class SortationScanOutService {
       const resultDoSortation = await DoSortation.findOne({
         where: {
           doSortationId: payload.doSortationId,
-          doSortationStatusIdLast: DO_SORTATION_STATUS.CREATED,
-          branchIdFrom: permissonPayload.branchId,
-          userIdCreated: authMeta.userId,
+          doSortationStatusIdLast: In([DO_SORTATION_STATUS.CREATED, DO_SORTATION_STATUS.ASSIGNED]),
+          // branchIdFrom: permissonPayload.branchId,
+          // userIdCreated: authMeta.userId,
           isDeleted: false,
         },
       });
@@ -362,9 +362,11 @@ export class SortationScanOutService {
         ['t2.do_sortation_id', 'doSortationId'],
         ['t2.do_sortation_code', 'doSortationCode'],
         ['t1.do_sortation_detail_id', 'doSortationDetailId'],
+        ['t1.is_sortir', 'isSortir'],
         ['t3.branch_id', 'branchIdTo'],
         ['t3.branch_name', 'branchToName'],
         ['t3.branch_code', 'branchCode'],
+        ['t4.employee_driver_id', 'employeeDriverId'],
       );
 
       q.innerJoin(e => e.doSortation, 't2', j =>
@@ -372,6 +374,10 @@ export class SortationScanOutService {
       );
 
       q.innerJoin(e => e.branchTo, 't3', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      );
+
+      q.innerJoin(e => e.doSortationVehicle, 't4', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 

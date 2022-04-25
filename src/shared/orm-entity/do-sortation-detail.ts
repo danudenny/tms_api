@@ -12,6 +12,7 @@ import { TmsBaseEntity } from './tms-base';
 import { DoSortationDetailItem } from './do-sortation-detail-item';
 import { Branch } from './branch';
 import { DoSortation } from './do-sortation';
+import { DoSortationVehicle } from './do-sortation-vehicle';
 
 @Entity('do_sortation_detail', { schema: 'public' })
 export class DoSortationDetail extends TmsBaseEntity {
@@ -159,4 +160,8 @@ export class DoSortationDetail extends TmsBaseEntity {
   @ManyToOne(() => DoSortation, sortation => sortation.doSortationDetails)
   @JoinColumn({ name: 'do_sortation_id' })
   doSortation: DoSortation;
+
+  @OneToOne(() => DoSortationVehicle)
+  @JoinColumn({ name: 'do_sortation_vehicle_id' })
+  doSortationVehicle: DoSortationVehicle;
 }
