@@ -28,14 +28,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (fatalStatus.includes(status)) {
         requestErrorResponse = ErrorParserService.parseRequestErrorFromExceptionAndArgumentsHost(exception, host);
         PinoLoggerService.error('#### All Exception Filter : ', exception);
-        const payloadBody = request.body;
-        const secureProtocol = (request.secure) ? 'https' : 'http';
-        const fullUrl = secureProtocol + '://' + request.headers.host + request.url;
+        const fullUrl =  request.headers.host + request.url;
         SlackUtil.sendMessage(
           ConfigService.get('slackchannel.errorCode'),
           `#### All Exception Filter : ${exception}`,
           fullUrl,
-          payloadBody,
+          request.body,
         );
       } else {
         PinoLoggerService.warn('#### All Exception Filter, Error Response : ', requestErrorResponse);
