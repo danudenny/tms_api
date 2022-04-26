@@ -1,8 +1,16 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { TmsBaseEntity } from './tms-base';
 import { DoSortationStatus } from './do-sortation-status';
 import { DoSortation } from './do-sortation';
 import { Branch } from './branch';
+import { DoSortationVehicle } from './do-sortation-vehicle';
 
 @Entity('do_sortation_history', { schema: 'public' })
 export class DoSortationHistory extends TmsBaseEntity {
@@ -113,4 +121,8 @@ export class DoSortationHistory extends TmsBaseEntity {
   @OneToOne(() => Branch)
   @JoinColumn({ name: 'branch_id_to' })
   branchTo: Branch;
+
+  @OneToOne(() => DoSortationVehicle)
+  @JoinColumn({ name: 'do_sortation_vehicle_id' })
+  doSortationVehicle: DoSortationVehicle;
 }

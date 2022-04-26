@@ -262,10 +262,10 @@ export class SortationScanOutListService {
       .innerJoin(e => e.doSortation.user, 'u', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       )
-      .leftJoin(e => e.doSortation.doSortationVehicle, 'dsv', j =>
+      .leftJoin(e => e.doSortationVehicle, 'dsv', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       )
-      .leftJoin(e => e.doSortation.doSortationVehicle.employee, 'e', j =>
+      .leftJoin(e => e.doSortationVehicle.employee, 'e', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
