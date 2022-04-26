@@ -108,6 +108,9 @@ export class SortationLoadDetailVm {
   branchToName: string;
 
   @ApiModelProperty()
+  branchCode: string;
+
+  @ApiModelProperty()
   isSortir: boolean;
 
   @ApiModelProperty()
