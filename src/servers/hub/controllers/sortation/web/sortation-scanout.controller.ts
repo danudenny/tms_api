@@ -1,10 +1,25 @@
-import { Body, Controller, Delete, Param, Post, UseGuards} from '@nestjs/common';
+import { Body, Controller, Delete, Param, Post, UseGuards } from '@nestjs/common';
+
 import { ApiOkResponse, ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
-import { SortationChangeVehiclePayloadVm, SortationScanOutBagsPayloadVm, SortationScanOutDonePayloadVm, SortationScanOutLoadPayloadVm, SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
-import { SortationChangeVehicleResponseVm, SortationScanOutBagsResponseVm, SortationScanOutDoneResponseVm, SortationScanOutLoadResponseVm, SortationScanOutRouteResponseVm, SortationScanOutVehicleResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import {
+  SortationChangeVehiclePayloadVm,
+  SortationScanOutBagsPayloadVm,
+  SortationScanOutDonePayloadVm,
+  SortationScanOutLoadPayloadVm,
+  SortationScanOutRoutePayloadVm,
+  SortationScanOutVehiclePayloadVm,
+} from '../../../models/sortation/web/sortation-scanout-payload.vm';
+import {
+  SortationChangeVehicleResponseVm,
+  SortationScanOutBagsResponseVm,
+  SortationScanOutDoneResponseVm,
+  SortationScanOutLoadResponseVm,
+  SortationScanOutRouteResponseVm,
+  SortationScanOutVehicleResponseVm,
+} from '../../../models/sortation/web/sortation-scanout-response.vm';
 import { SortationScanOutService } from '../../../services/sortation/web/sortation-scanout.service';
 
 @ApiUseTags('Scan Out Sortation')
@@ -73,9 +88,7 @@ export class SortationScanOutController {
     };
   }
 
-
   @Post('changeVehicle')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: SortationChangeVehicleResponseVm })
   public async changeVehicle(@Body() payload: SortationChangeVehiclePayloadVm) {

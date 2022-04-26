@@ -3,7 +3,7 @@ import moment = require('moment');
 import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { SortationChangeVehiclePayloadVm, SortationScanOutBagsPayloadVm, SortationScanOutDonePayloadVm, SortationScanOutLoadPayloadVm, SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
-import { SortationBagDetailResponseVm, SortationChangeVehicleResponseVm, SortationLoadDetailVm, SortationScanOutBagsResponseVm, SortationScanOutDonedVm, SortationScanOutDoneResponseVm, SortationScanOutLoadResponseVm, SortationScanOutLoadVm, SortationScanOutRouteResponseVm, SortationScanOutRouteVm, SortationScanOutVehicleResponseVm, SortationScanOutVehicleVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import { SortationBagDetailResponseVm, SortationChangeVehicleResponseVm, SortationScanOutBagsResponseVm, SortationScanOutDonedVm, SortationScanOutDoneResponseVm, SortationScanOutLoadResponseVm, SortationScanOutLoadVm, SortationScanOutRouteResponseVm, SortationScanOutRouteVm, SortationScanOutVehicleResponseVm, SortationScanOutVehicleVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { toInteger } from 'lodash';
@@ -15,13 +15,13 @@ import { SortationService } from './sortation.service';
 import { Vehicle } from '../../../../../shared/orm-entity/vehicle';
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { BagService } from '../../../../main/services/v1/bag.service';
-import { BAG_STATUS } from '../../../../../shared/constants/bag-status.constant';
 import { EntityManager, getManager, In } from 'typeorm';
 import { BagScanDoSortationQueueService } from '../../../../queue/services/bag-scan-do-sortation-queue.service';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sortation-detail-item';
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
+import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 
 @Injectable()
 export class SortationScanOutService {
@@ -811,8 +811,6 @@ export class SortationScanOutService {
   static async changeVehicle(
     payload: SortationChangeVehiclePayloadVm,
   ): Promise<SortationChangeVehicleResponseVm> {
-    const authMeta = AuthService.getAuthData();
-    const permissionPayload = AuthService.getPermissionTokenPayload();
     const doSortation = await DoSortation.findOne(
       {
         doSortationId: payload.doSortationId,
@@ -880,7 +878,47 @@ export class SortationScanOutService {
       );
     }
 
+    const newDoSortationStatus =
+      doSortationVehicle.employeeDriverId == payload.employeeIdDriver
+        ? DO_SORTATION_STATUS.DRIVER_CHANGED
+        : DO_SORTATION_STATUS.VEHICLE_CHANGED;
+
+    // start transaction
+    const newDSVId = await this.createNewDSV(
+      payload,
+      doSortationVehicle,
+      newDoSortationStatus,
+    );
+
+    const keyword =
+      newDoSortationStatus === DO_SORTATION_STATUS.DRIVER_CHANGED
+        ? 'supir'
+        : 'kendaraan';
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: `Sukses mengganti ${keyword} sortation ${
+        doSortation.doSortationCode
+      }`,
+      data: [
+        {
+          doSortationId: doSortation.doSortationId,
+          doSortationCode: doSortation.doSortationCode,
+          doSortationVehicleId: newDSVId,
+        },
+      ],
+    } as SortationChangeVehicleResponseVm;
+  }
+
+  @Transactional()
+  private static async createNewDSV(
+    payload: SortationChangeVehiclePayloadVm,
+    doSortationVehicle: DoSortationVehicle,
+    newDoSortationStatus: number,
+  ): Promise<string> {
     const now = moment().toDate();
+    const authMeta = AuthService.getAuthData();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
 
     const [newDoSortationVehicleId] = await Promise.all([
       // create new doSortationVehicle with vehicleSeq incremented
@@ -899,11 +937,6 @@ export class SortationScanOutService {
         { isActive: false, userIdUpdated: authMeta.userId, updatedTime: now },
       ),
     ]);
-
-    const newDoSortationStatus =
-      doSortationVehicle.employeeDriverId == payload.employeeIdDriver
-        ? DO_SORTATION_STATUS.DRIVER_CHANGED
-        : DO_SORTATION_STATUS.VEHICLE_CHANGED;
 
     await Promise.all([
       DoSortation.update(
@@ -927,23 +960,6 @@ export class SortationScanOutService {
       ),
     ]);
 
-    const keyword =
-      newDoSortationStatus === DO_SORTATION_STATUS.DRIVER_CHANGED
-        ? 'supir'
-        : 'kendaraan';
-
-    return {
-      statusCode: HttpStatus.OK,
-      message: `Sukses mengganti ${keyword} sortation ${
-        doSortation.doSortationCode
-      }`,
-      data: [
-        {
-          doSortationId: doSortation.doSortationId,
-          doSortationCode: doSortation.doSortationCode,
-          doSortationVehicleId: newDoSortationVehicleId,
-        },
-      ],
-    } as SortationChangeVehicleResponseVm;
+    return newDoSortationVehicleId;
   }
 }
