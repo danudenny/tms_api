@@ -1,9 +1,9 @@
 
 import moment = require('moment');
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common';
 import { AuthService } from '../../../../../shared/services/auth.service';
-import { SortationScanOutBagsPayloadVm, SortationScanOutDonePayloadVm, SortationScanOutLoadPayloadVm, SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
-import { SortationBagDetailResponseVm, SortationLoadDetailVm, SortationScanOutBagsResponseVm, SortationScanOutDonedVm, SortationScanOutDoneResponseVm, SortationScanOutLoadResponseVm, SortationScanOutLoadVm, SortationScanOutRouteResponseVm, SortationScanOutRouteVm, SortationScanOutVehicleResponseVm, SortationScanOutVehicleVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import { SortationChangeVehiclePayloadVm, SortationScanOutBagsPayloadVm, SortationScanOutDonePayloadVm, SortationScanOutLoadPayloadVm, SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
+import { SortationBagDetailResponseVm, SortationChangeVehicleResponseVm, SortationLoadDetailVm, SortationScanOutBagsResponseVm, SortationScanOutDonedVm, SortationScanOutDoneResponseVm, SortationScanOutLoadResponseVm, SortationScanOutLoadVm, SortationScanOutRouteResponseVm, SortationScanOutRouteVm, SortationScanOutVehicleResponseVm, SortationScanOutVehicleVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { toInteger } from 'lodash';
@@ -808,4 +808,142 @@ export class SortationScanOutService {
     }
   }
 
+  static async changeVehicle(
+    payload: SortationChangeVehiclePayloadVm,
+  ): Promise<SortationChangeVehicleResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
+    const doSortation = await DoSortation.findOne(
+      {
+        doSortationId: payload.doSortationId,
+        isDeleted: false,
+      },
+      {
+        select: [
+          'doSortationId',
+          'doSortationCode',
+          'doSortationStatusIdLast',
+          'doSortationVehicleIdLast',
+        ],
+      },
+    );
+    if (!doSortation) {
+      throw new BadRequestException(
+        `Sortation ${payload.doSortationId} tidak ditemukan`,
+      );
+    }
+    const validStatuses = [
+      DO_SORTATION_STATUS.CREATED,
+      DO_SORTATION_STATUS.ASSIGNED,
+    ];
+
+    if (
+      !validStatuses.includes(
+        parseInt(doSortation.doSortationStatusIdLast.toString(), 10),
+      )
+    ) {
+      throw new UnprocessableEntityException(
+        'Status Sortation bukan CREATED maupun ASSIGNED',
+      );
+    }
+
+    const doSortationVehicle = await DoSortationVehicle.findOne(
+      {
+        doSortationVehicleId: doSortation.doSortationVehicleIdLast,
+        isDeleted: false,
+        isActive: true,
+      },
+      {
+        select: [
+          'doSortationVehicleId',
+          'employeeDriverId',
+          'vehicleSeq',
+          'vehicleNumber',
+        ],
+      },
+    );
+
+    // if doSortationVehicle is not found, something is wrong with the data
+    if (!doSortationVehicle) {
+      throw new InternalServerErrorException(
+        'Kendaraan Sortation tidak ditemukan',
+      );
+    }
+
+    // check if payload values are the same as current values
+    if (
+      doSortationVehicle.employeeDriverId == payload.employeeIdDriver &&
+      doSortationVehicle.vehicleNumber == payload.vehicleNumber
+    ) {
+      throw new UnprocessableEntityException(
+        'Tidak bisa digantikan dengan supir dan kendaraan yang sama',
+      );
+    }
+
+    const now = moment().toDate();
+
+    const [newDoSortationVehicleId] = await Promise.all([
+      // create new doSortationVehicle with vehicleSeq incremented
+      SortationService.createDoSortationVehicle(
+        payload.doSortationId,
+        null,
+        payload.vehicleNumber,
+        doSortationVehicle.vehicleSeq + 1,
+        payload.employeeIdDriver,
+        permissionPayload.branchId,
+        authMeta.userId,
+      ),
+      // set previous doSortationVehicle to inactive
+      DoSortationVehicle.update(
+        { doSortationVehicleId: doSortationVehicle.doSortationVehicleId },
+        { isActive: false, userIdUpdated: authMeta.userId, updatedTime: now },
+      ),
+    ]);
+
+    const newDoSortationStatus =
+      doSortationVehicle.employeeDriverId == payload.employeeIdDriver
+        ? DO_SORTATION_STATUS.DRIVER_CHANGED
+        : DO_SORTATION_STATUS.VEHICLE_CHANGED;
+
+    await Promise.all([
+      DoSortation.update(
+        { doSortationId: payload.doSortationId },
+        {
+          doSortationVehicleIdLast: newDoSortationVehicleId,
+          doSortationStatusIdLast: newDoSortationStatus,
+          userIdUpdated: authMeta.userId,
+          updatedTime: now,
+        },
+      ),
+      SortationService.createDoSortationHistory(
+        payload.doSortationId,
+        null,
+        newDoSortationVehicleId,
+        now,
+        permissionPayload.branchId,
+        newDoSortationStatus,
+        null,
+        authMeta.userId,
+      ),
+    ]);
+
+    const keyword =
+      newDoSortationStatus === DO_SORTATION_STATUS.DRIVER_CHANGED
+        ? 'supir'
+        : 'kendaraan';
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: `Sukses mengganti ${keyword} sortation ${
+        doSortation.doSortationCode
+      }`,
+      data: [
+        {
+          doSortationId: doSortation.doSortationId,
+          doSortationCode: doSortation.doSortationCode,
+          doSortationVehicleId: newDoSortationVehicleId,
+        },
+      ],
+    } as SortationChangeVehicleResponseVm;
+  }
 }

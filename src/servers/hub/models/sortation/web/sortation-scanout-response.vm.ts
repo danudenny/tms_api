@@ -1,4 +1,7 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../../shared/external/nestjs-swagger';
+import {
+  ApiModelProperty,
+  ApiModelPropertyOptional,
+} from '../../../../../shared/external/nestjs-swagger';
 
 export class BaseSortsationRepsonseVm {
   @ApiModelProperty()
@@ -25,7 +28,7 @@ export class SortationScanOutVehicleVm {
   employeeIdDriver: number;
 }
 export class SortationScanOutVehicleResponseVm extends BaseSortsationRepsonseVm {
-  @ApiModelProperty({type: () => SortationScanOutVehicleVm})
+  @ApiModelProperty({ type: () => SortationScanOutVehicleVm })
   data: SortationScanOutVehicleVm;
 }
 
@@ -50,7 +53,7 @@ export class SortationScanOutRouteVm {
 }
 
 export class SortationScanOutRouteResponseVm extends BaseSortsationRepsonseVm {
-  @ApiModelProperty({type: () => SortationScanOutRouteVm})
+  @ApiModelProperty({ type: () => SortationScanOutRouteVm })
   data: SortationScanOutRouteVm;
 }
 
@@ -90,7 +93,7 @@ export class SortationBagDetailResponseVm {
 }
 
 export class SortationScanOutBagsResponseVm extends BaseSortsationRepsonseVm {
-  @ApiModelProperty({type: () => [SortationBagDetailResponseVm]})
+  @ApiModelProperty({ type: () => [SortationBagDetailResponseVm] })
   data: SortationBagDetailResponseVm[];
 }
 
@@ -121,12 +124,12 @@ export class SortationScanOutLoadVm {
   @ApiModelProperty()
   doSortationCode: string;
 
-  @ApiModelProperty({type: () => [SortationLoadDetailVm]})
+  @ApiModelProperty({ type: () => [SortationLoadDetailVm] })
   doSortationDetails: SortationLoadDetailVm[];
 }
 
 export class SortationScanOutLoadResponseVm extends BaseSortsationRepsonseVm {
-  @ApiModelProperty({type: () => SortationScanOutLoadVm})
+  @ApiModelProperty({ type: () => SortationScanOutLoadVm })
   data: SortationScanOutLoadVm;
 }
 
@@ -142,7 +145,7 @@ export class SortationScanOutImageVm {
 }
 
 export class SortationScanOutImageResponseVm extends BaseSortsationRepsonseVm {
-  @ApiModelProperty({type: () => [SortationScanOutImageVm]})
+  @ApiModelProperty({ type: () => [SortationScanOutImageVm] })
   data: SortationScanOutImageVm[];
 }
 
@@ -155,6 +158,37 @@ export class SortationScanOutDonedVm {
 }
 
 export class SortationScanOutDoneResponseVm extends BaseSortsationRepsonseVm {
-  @ApiModelProperty({type: () => SortationScanOutDonedVm})
+  @ApiModelProperty({ type: () => SortationScanOutDonedVm })
   data: SortationScanOutDonedVm;
+}
+
+export class SortationChangeVehicleDataVm {
+  @ApiModelProperty()
+  doSortationId: string;
+
+  @ApiModelProperty()
+  doSortationCode: string;
+
+  @ApiModelProperty()
+  doSortationVehicleId: string;
+}
+
+export class SortationChangeVehicleResponseVm extends BaseSortsationRepsonseVm {
+  @ApiModelProperty({ type: () => [SortationChangeVehicleDataVm] })
+  data: SortationChangeVehicleDataVm[];
+}
+
+export class SortationHandoverDataVm {
+  @ApiModelProperty()
+  doSortationId: string;
+
+  @ApiModelProperty()
+  doSortationCode: string;
+
+  @ApiModelProperty()
+  doSortationVehicleId: string;
+}
+export class SortationHandoverResponseVm extends BaseSortsationRepsonseVm {
+  @ApiModelProperty({ type: () => [SortationHandoverDataVm] })
+  data: SortationHandoverDataVm[];
 }

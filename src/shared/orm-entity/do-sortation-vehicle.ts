@@ -51,6 +51,12 @@ export class DoSortationVehicle extends TmsBaseEntity {
   })
   note: string;
 
+  @Column('boolean', {
+    default: true,
+    name: 'is_active'
+  })
+  isActive: boolean;
+
   @Column('bigint', {
     nullable: false,
     name: 'user_id_created',

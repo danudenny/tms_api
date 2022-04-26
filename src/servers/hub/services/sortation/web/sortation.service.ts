@@ -46,7 +46,7 @@ export class SortationService {
     employeeDriverId: number,
     branchIdLogin: number,
     userIdLogin: number,
-  ) {
+  ): Promise<string | null> {
     const dataDoSortationVehicle = DoSortationVehicle.create({
       doSortationId,
       vehicleId,
