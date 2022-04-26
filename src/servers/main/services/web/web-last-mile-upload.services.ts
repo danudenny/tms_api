@@ -6,10 +6,8 @@ export class WebLastMileUploadService {
   static async uploadFile(payload : WebLastMileUploadPayloadVm, file): Promise<WebLastMileUploadResponseVm>{
     const result = new WebLastMileUploadResponseVm();
     const uuidv1 = require('uuid/v1');
-    let uuidGen = uuidv1();
     let attachmentId = null;
-    let ext = await file.originalname.split('.').pop();
-    file.originalname = await uuidGen+'.'+ext;
+    file.originalname = await uuidv1()+'.'+file.originalname.split('.').pop();
     const pathId = `tms-delivery-${payload.photoType}`;
       let attachment = await AttachmentService.uploadFileBufferToS3(
         file.buffer,
