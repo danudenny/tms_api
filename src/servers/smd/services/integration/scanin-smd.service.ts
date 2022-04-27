@@ -836,9 +836,9 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     q2.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND (r.is_deleted = FALSE)');
     q2.leftJoin('branch', 'bb', 'bhin.branch_id=bb.branch_id and bb.is_deleted = FALSE');
     q2.leftJoin('users', 'u', 'u.user_id=bhin.user_id_updated and u.is_deleted = FALSE');
+    payload.applyFiltersToQueryBuilder(q2);
     q2.andWhere('b.is_deleted = FALSE');
     q2.andWhere('bhin.bag_item_status_id in( 3550, 3500)');
-    payload.applyFiltersToQueryBuilder(q2);
 
     const total = await q2.execute();
 
