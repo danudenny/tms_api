@@ -10,6 +10,8 @@ import { MobileSortationEndPayloadVm } from '../../../models/sortation/mobile/mo
 import { MobileSortationContinuePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-continue.payload.vm';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileSortationUploadImagePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.payload.vm';
+import { MobileSortationCancelPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-cancel.payload.vm';
+import { MobileSortationProblemPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-problem.payload.vm';
 
 @ApiUseTags('Mobile Sortation')
 @Controller('mobile/sortation')
@@ -29,6 +31,20 @@ export class MobileSortationController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanInMobileSortation(@Body() payload: MobileSortationArrivalPayloadVm) {
     return MobileSortationService.scanInMobileSortation(payload);
+  }
+
+  @Post('problem')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async problemMobileSortation(@Body() payload: MobileSortationProblemPayloadVm, @UploadedFile() file) {
+    return MobileSortationService.problemMobileSortation(payload, file);
+  }
+
+  @Post('cancel')
+  @Transactional()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async scanInCancelMobileSortation(@Body() payload: MobileSortationCancelPayloadVm) {
+    return MobileSortationService.scanInCancelMobileSortation(payload);
   }
 
   @Post('end')

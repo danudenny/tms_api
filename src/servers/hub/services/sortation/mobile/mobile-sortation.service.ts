@@ -21,6 +21,14 @@ import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortatio
 import { BagScanOutBranchSortirQueueService } from '../../../../queue/services/bag-scan-out-branch-sortir-queue.service';
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
+import { MobileSortationCancelPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-cancel.payload.vm';
+import { MobileSortationCancelResponseVm } from '../../../models/sortation/mobile/mobile-sortation-cancel.response.vm';
+import { MobileSortationProblemPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-problem.payload.vm';
+import {
+  MobileSortationProblemResponseVm
+} from '../../../models/sortation/mobile/mobile-sortation-problem.response.vm';
+import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
+import { DoSmdDetailAttachment } from '../../../../../shared/orm-entity/do_smd_detail_attachment';
 
 @Injectable()
 export class MobileSortationService {
@@ -269,6 +277,223 @@ export class MobileSortationService {
     } else {
       throw new BadRequestException(`Can't Find  Do Sortation Detail ID : ` + payload.doSortationDetailId);
     }
+  }
+
+  static async scanInCancelMobileSortation(payload: MobileSortationCancelPayloadVm) {
+    const authMeta = AuthService.getAuthData();
+    const result = new MobileSortationCancelResponseVm();
+    const timeNow = moment().toDate();
+
+    const resultDoSortationDetail = await DoSortationDetail.findOne({
+      select: [
+        'doSortationId',
+        'depatureDateTime',
+        'branchIdTo',
+        'doSortationTime',
+        'doSortationVehicleId',
+        'branchIdFrom',
+      ],
+      where: {
+        doSortationDetailId: payload.doSortationDetailId,
+        isDeleted: false,
+      },
+    });
+
+    if (resultDoSortationDetail) {
+      // update do sortation
+      await DoSortation.update({
+        doSortationId: resultDoSortationDetail.doSortationId,
+      }, {
+        doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
+        arrivalDateTime: null,
+        userIdUpdated: authMeta.userId,
+        updatedTime: timeNow,
+      });
+
+      await DoSortationDetail.update({
+        doSortationDetailId: payload.doSortationDetailId,
+      }, {
+        doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
+        arrivalDateTime: null,
+        latitudeArrival: null,
+        longitudeArrival: null,
+        userIdUpdated: authMeta.userId,
+        updatedTime: timeNow,
+      });
+
+      await this.createDoSortationHistory(
+        resultDoSortationDetail.doSortationId,
+        resultDoSortationDetail.doSortationDetailId,
+        resultDoSortationDetail.doSortationTime,
+        resultDoSortationDetail.doSortationVehicleId,
+        DO_SORTATION_STATUS.CANCEL_ARRIVED,
+        resultDoSortationDetail.branchIdFrom,
+        resultDoSortationDetail.branchIdTo,
+        null,
+        null,
+        authMeta.userId,
+      );
+
+      await this.createDoSortationHistory(
+        resultDoSortationDetail.doSortationId,
+        resultDoSortationDetail.doSortationDetailId,
+        resultDoSortationDetail.doSortationTime,
+        resultDoSortationDetail.doSortationVehicleId,
+        DO_SORTATION_STATUS.ON_THE_WAY,
+        resultDoSortationDetail.branchIdFrom,
+        resultDoSortationDetail.branchIdTo,
+        null,
+        null,
+        authMeta.userId,
+      );
+
+      const data = [];
+      data.push({
+        doSortationId: resultDoSortationDetail.doSortationId,
+        doSortationDetailId: resultDoSortationDetail.doSortationDetailId,
+        arrivalDateTime: timeNow,
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'Sortation Success Cancel Arrival';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`Can't Find  DO Sortation Detail ID : ` + payload.doSortationDetailId);
+    }
+  }
+
+  static async problemMobileSortation(payload: MobileSortationProblemPayloadVm, file): Promise<any> {
+    const authMeta = AuthService.getAuthData();
+    const result = new MobileSortationProblemResponseVm();
+    const timeNow = moment().toDate();
+
+    let url = null;
+    let attachmentId = null;
+
+    const resultDoSortation = await DoSortation.findOne({
+      select: [
+        'doSortationId',
+        'doSortationVehicleIdLast',
+      ],
+      where: {
+        doSortationId: payload.doSortationId,
+        isDeleted: false,
+      },
+    });
+
+    if (!resultDoSortation) {
+      throw new BadRequestException(`Can't Find DO SORTATION ID : ` + payload.doSortationId);
+    }
+
+    const resultDoSortationArrival = await DoSortationDetail.findOne({
+      select: [
+        'depatureDateTime',
+        'arrivalDateTime',
+        'doSortationId',
+        'doSortationDetailId',
+        'doSortationTime',
+        'doSortationVehicleId',
+        'branchIdFrom',
+        'branchIdTo',
+      ],
+      where: {
+        doSortationId: payload.doSortationId,
+        isDeleted: false,
+        arrivalDateTime: null,
+      },
+    });
+
+    if (resultDoSortationArrival) {
+      // Upload Foto
+      PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SORTATION: ', authMeta);
+      let attachment = await AttachmentTms.findOne({
+        where: {
+          fileName: file.originalname,
+        },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (attachment) {
+        // attachment exist
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      } else {
+        // upload image
+        const pathId = `sortation-delivery-${payload.imageType}`;
+        attachment = await AttachmentService.uploadFileBufferToS3(
+          file.buffer,
+          file.originalname,
+          file.mimetype,
+          pathId,
+        );
+        if (attachment) {
+          attachmentId = attachment.attachmentTmsId;
+          url = attachment.url;
+        }
+      }
+
+      // NOTE: insert data
+      if (attachmentId) {
+        // TODO: validate doPodDeliverDetailId ??
+        const doSortationDelivereyAttachment = await DoSortationAttachment.create();
+        doSortationDelivereyAttachment.doSortationDetailId = resultDoSortationArrival.doSortationDetailId;
+        doSortationDelivereyAttachment.attachmentTmsId = attachmentId;
+        doSortationDelivereyAttachment.attachmentType = payload.imageType;
+        doSortationDelivereyAttachment.doSortationVehicleId = resultDoSortation.doSortationVehicleIdLast;
+        await DoSortationAttachment.save(doSortationDelivereyAttachment);
+      }
+    } else {
+      throw new BadRequestException(`DO Sortation ID : ` + payload.doSortationId + ` already arrival`);
+    }
+
+    await DoSortation.update({
+      doSortationId: resultDoSortation.doSortationId,
+    }, {
+      doSortationStatusIdLast: DO_SORTATION_STATUS.PROBLEM,
+      userIdUpdated: authMeta.userId,
+      updatedTime: timeNow,
+    });
+
+    await DoSortationDetail.update({
+      doSortationId: payload.doSortationId,
+      arrivalDateTime: null,
+    }, {
+      doSortationStatusIdLast: DO_SORTATION_STATUS.PROBLEM,
+      userIdUpdated: authMeta.userId,
+      updatedTime: timeNow,
+    });
+
+    await DoSortationVehicle.update({
+      doSortationVehicleId: resultDoSortation.doSortationVehicleIdLast,
+    }, {
+      note: payload.reasonNote,
+      userIdUpdated: authMeta.userId,
+      updatedTime: timeNow,
+    });
+
+    await this.createDoSortationHistory(
+      resultDoSortationArrival.doSortationId,
+      resultDoSortationArrival.doSortationDetailId,
+      resultDoSortationArrival.doSortationTime,
+      resultDoSortationArrival.doSortationVehicleId,
+      DO_SORTATION_STATUS.PROBLEM,
+      resultDoSortationArrival.branchIdFrom,
+      resultDoSortationArrival.branchIdTo,
+      null,
+      null,
+      authMeta.userId,
+    );
+
+    const data = [];
+    data.push({
+      doSortationId: resultDoSortation.doSortationId,
+      reasonDate: timeNow,
+    });
+    result.statusCode = HttpStatus.OK;
+    result.message = 'Sortation Success Created Problem';
+    result.data = data;
+    return result;
+
   }
 
   static async scanInMobileSortation(payload: MobileSortationArrivalPayloadVm) {
