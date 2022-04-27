@@ -9,6 +9,7 @@ import {
   ScanOutSortationRouteDetailPayloadVm,
 } from '../../../models/sortation/web/sortation-scanout-list.payload.vm';
 import { SortationHandoverPayloadVm, SortationScanOutImagePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
+import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 
 @ApiUseTags('Scan Out Sortation')
 @Controller('sortation/scanOut')
@@ -56,6 +57,7 @@ export class SortationScanOutListController {
   }
 
   @Post('handover')
+  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public HandOver(@Req() request: any, @Body() payload: SortationHandoverPayloadVm) {
     return SortationScanOutListService.sortationHandover(payload);
