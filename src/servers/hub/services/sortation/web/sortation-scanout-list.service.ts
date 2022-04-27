@@ -729,7 +729,6 @@ export class SortationScanOutListService {
     const insertDoSortationVehicle = await DoSortationVehicle.insert(
       dataDoSortationVehicle,
     );
-    console.log(insertDoSortationVehicle.identifiers[0]);
     return insertDoSortationVehicle.identifiers.length
       ? insertDoSortationVehicle.identifiers[0].doSortationVehicleId
       : null;
