@@ -33,6 +33,7 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { ScanOutSortationHandoverResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import moment = require('moment');
 import { DoSortationDetail } from '../../../../../shared/orm-entity/do-sortation-detail';
+import { SortationHandoverPayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
 
 @Injectable()
 export class SortationScanOutListService {
@@ -556,7 +557,7 @@ export class SortationScanOutListService {
     return result;
   }
 
-  public static async sortationHandover(payload: any): Promise<any> {
+  public static async sortationHandover(payload: SortationHandoverPayloadVm): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
