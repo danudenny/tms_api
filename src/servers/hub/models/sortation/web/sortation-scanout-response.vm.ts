@@ -195,3 +195,14 @@ export class SortationHandoverResponseVm extends BaseSortsationRepsonseVm {
   @ApiModelProperty({ type: () => [SortationHandoverDataVm] })
   data: SortationHandoverDataVm[];
 }
+
+export class ScanOutSortationHandoverResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [SortationHandoverDataVm]})
+  data: SortationHandoverDataVm[];
+}
