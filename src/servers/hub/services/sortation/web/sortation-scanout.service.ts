@@ -643,7 +643,6 @@ export class SortationScanOutService {
     }
 
     const resultDoSortaionDetail = await DoSortationDetail.findOne({
-      select: ['doSortationDetailId'],
       where: {
         doSortationDetailId,
         isDeleted: false,
@@ -654,11 +653,28 @@ export class SortationScanOutService {
       throw new BadRequestException(`Surat Jalan Detail dengan ID ${doSortationDetailId}, tidak ditemukan`);
     }
 
-    // if (resultDoSortaionDetail.totalBag > 0 || resultDoSortaionDetail.totalBagSortir > 0) {
-    //   throw new BadRequestException(`tidak bisa di hapus, karena rute ini sudah ada bag nya`);
-    // }
+    const resultDoSortaion = await DoSortation.findOne({
+      where: {
+        doSortationId: resultDoSortaionDetail.doSortationId,
+        isDeleted: false,
+      },
+    });
+
+    if (!resultDoSortaion) {
+      throw new BadRequestException(`Surat Jalan dengan detail id ${doSortationDetailId}, tidak ditemukan`);
+    }
 
     await getManager().transaction(async transactional => {
+      await transactional.update(DoSortation,
+        { doSortationId: resultDoSortaionDetail.doSortationId},
+        {
+          totalBag: resultDoSortaion.totalBag - resultDoSortaionDetail.totalBag,
+          totalBagSortir: resultDoSortaion.totalBagSortir - resultDoSortaionDetail.totalBagSortir,
+          updatedTime: moment().toDate(),
+          userIdUpdated: authMeta.userId,
+        },
+      );
+
       await transactional.update(DoSortationDetail,
           { doSortationDetailId: resultDoSortaionDetail.doSortationDetailId},
           {
@@ -672,10 +688,10 @@ export class SortationScanOutService {
         { doSortationDetailId: resultDoSortaionDetail.doSortationDetailId},
         {
           userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
-            isDeleted: true,
-          },
-        );
+          updatedTime: moment().toDate(),
+          isDeleted: true,
+        },
+      );
     });
   }
 
