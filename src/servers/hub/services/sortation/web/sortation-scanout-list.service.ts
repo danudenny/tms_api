@@ -649,9 +649,9 @@ export class SortationScanOutListService {
             item.doSortationStatusIdLast = 1150;
             item.userIdUpdated = authMeta.userId;
             item.updatedTime = moment().toDate();
-
+            await item.save();
             await DoSortationDetail.update(
-              { doSortationId: item.doSortationId },
+              { doSortationId: item.doSortationId, arrivalDateTime: null },
               {
                 doSortationStatusIdLast: 1150,
                 userIdUpdated: authMeta.userId,
@@ -664,6 +664,8 @@ export class SortationScanOutListService {
               doSortationCode: item.doSortationCode,
               doSortationVehicleId: paramDoSortationVehicleId,
             });
+
+            arrSmd.push(item.doSortationCode);
           }
 
           result.statusCode = HttpStatus.OK;
