@@ -5,7 +5,6 @@ import moment = require('moment');
 import { EnumHubReport, HUB_REPORT } from '../../../../shared/constants/laporan-hub.constat';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { ConfigService } from '../../../../shared/services/config.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import {
   CentralHubReportPayloadVm,
