@@ -1140,4 +1140,5 @@ export class SortationScanOutService {
     const resultDataDoSortationVehicle = await RawQueryService.query(rawQuery);
     return resultDataDoSortationVehicle;
   }
+}
 
