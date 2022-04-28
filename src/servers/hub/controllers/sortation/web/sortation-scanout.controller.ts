@@ -98,7 +98,7 @@ export class SortationScanOutController {
 
   @Post('handover')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public HandOver(@Body() payload: SortationHandoverPayloadVm) {
+  public async HandOver(@Body() payload: SortationHandoverPayloadVm) {
     return SortationScanOutService.sortationHandover(payload);
   }
 }
