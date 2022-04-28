@@ -1,34 +1,57 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { MobileSortationArrivalPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-arrival.payload.vm';
-import { MobileSortationArrivalResponseVm } from '../../../models/sortation/mobile/mobile-sortation-arrival.response.vm';
+import {
+  MobileSortationArrivalResponseVm,
+} from '../../../models/sortation/mobile/mobile-sortation-arrival.response.vm';
 import { DoSortationDetail } from '../../../../../shared/orm-entity/do-sortation-detail';
 import moment = require('moment');
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
-import { MobileSortationDepaturePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-depature.payload.vm';
-import { MobileSortationDepatureResponseVm } from '../../../models/sortation/mobile/mobile-sortation-depature.response.vm';
+import {
+  MobileSortationDepaturePayloadVm,
+} from '../../../models/sortation/mobile/mobile-sortation-depature.payload.vm';
+import {
+  MobileSortationDepatureResponseVm,
+} from '../../../models/sortation/mobile/mobile-sortation-depature.response.vm';
 import { MobileSortationEndPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-end.payload.vm';
 import { MobileSortationEndResponseVm } from '../../../models/sortation/mobile/mobile-sortation-end.response.vm';
-import { MobileSortationContinuePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-continue.payload.vm';
-import { MobileSortationContinueResponseVm } from '../../../models/sortation/mobile/mobile-sortation-continue.response.vm';
+import {
+  MobileSortationContinuePayloadVm,
+} from '../../../models/sortation/mobile/mobile-sortation-continue.payload.vm';
+import {
+  MobileSortationContinueResponseVm,
+} from '../../../models/sortation/mobile/mobile-sortation-continue.response.vm';
 import { AttachmentTms } from '../../../../../shared/orm-entity/attachment-tms';
 import { AttachmentService } from '../../../../../shared/services/attachment.service';
-import { MobileSortationUploadImageResponseVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.response.vm';
+import {
+  MobileSortationUploadImageResponseVm,
+} from '../../../models/sortation/mobile/mobile-sortation-upload-image.response.vm';
 import { DoSortationAttachment } from '../../../../../shared/orm-entity/do-sortation-attachment';
-import { MobileSortationUploadImagePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.payload.vm';
+import {
+  MobileSortationUploadImagePayloadVm,
+} from '../../../models/sortation/mobile/mobile-sortation-upload-image.payload.vm';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
-import { BagScanOutBranchSortirQueueService } from '../../../../queue/services/bag-scan-out-branch-sortir-queue.service';
+import {
+  BagScanOutBranchSortirQueueService,
+} from '../../../../queue/services/bag-scan-out-branch-sortir-queue.service';
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { MobileSortationCancelPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-cancel.payload.vm';
 import { MobileSortationCancelResponseVm } from '../../../models/sortation/mobile/mobile-sortation-cancel.response.vm';
 import { MobileSortationProblemPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-problem.payload.vm';
 import {
-  MobileSortationProblemResponseVm
+  MobileSortationProblemResponseVm,
 } from '../../../models/sortation/mobile/mobile-sortation-problem.response.vm';
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { DoSmdDetailAttachment } from '../../../../../shared/orm-entity/do_smd_detail_attachment';
+import {
+  MobileSortationHandoverPayloadVm,
+} from '../../../models/sortation/mobile/mobile-sortation-handover.payload.vm';
+import {
+  MobileSortationHandoverResponseVm,
+} from '../../../models/sortation/mobile/mobile-sortation-handover.response.vm';
+import { getManager } from 'typeorm';
 
 @Injectable()
 export class MobileSortationService {
@@ -53,64 +76,72 @@ export class MobileSortationService {
     });
 
     if (resultDoSortation) {
-      if (resultDoSortation.depatureDateTime) {
-        await DoSortation.update(
+      await getManager().transaction(async transaction => {
+        if (resultDoSortation.depatureDateTime) {
+          await transaction.update(
+            DoSortation,
+            {
+              doSortationId: payload.doSortationId,
+            },
+            {
+              doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            },
+          );
+        } else {
+          await transaction.update(
+            DoSortation,
+            {
+              doSortationId: payload.doSortationId,
+            },
+            {
+              doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+              depatureDateTime: moment().toDate(),
+            },
+          );
+        }
+
+        await transaction.update(
+          DoSortationDetail,
           {
             doSortationId: payload.doSortationId,
-          },
-          {
+            arrivalDateTime: null,
+          }, {
             doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          },
-        );
-      } else {
-        await DoSortation.update(
-          {
-            doSortationId: payload.doSortationId,
-          },
-          {
-            doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
             depatureDateTime: moment().toDate(),
-          },
-        );
-      }
+            latitudeDeparture: payload.latitude,
+            longitudeDeparture: payload.longitude,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          });
 
-      await DoSortationDetail.update({
-        doSortationId: payload.doSortationId,
-        arrivalDateTime: null,
-      }, {
-        doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-        depatureDateTime: moment().toDate(),
-        latitudeDeparture: payload.latitude,
-        longitudeDeparture: payload.longitude,
-        userIdUpdated: authMeta.userId,
-        updatedTime: timeNow,
-      });
+        if (resultDoSortation.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
+          await this.createDoSortationHistory(
+            transaction,
+            resultDoSortation.doSortationId,
+            null,
+            resultDoSortation.doSortationTime,
+            resultDoSortation.doSortationVehicleIdLast,
+            DO_SORTATION_STATUS.ON_THE_WAY,
+            resultDoSortation.branchIdFrom,
+            null,
+            null,
+            null,
+            authMeta.userId,
+          );
+        }
 
-      if (resultDoSortation.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
-        await this.createDoSortationHistory(
-          resultDoSortation.doSortationId,
-          null,
-          resultDoSortation.doSortationTime,
-          resultDoSortation.doSortationVehicleIdLast,
-          DO_SORTATION_STATUS.ON_THE_WAY,
+        // update status AWB & Bag queue
+        BagScanOutBranchSortirQueueService.perform(
+          payload.doSortationId,
           resultDoSortation.branchIdFrom,
-          null,
-          null,
-          null,
           authMeta.userId,
         );
-      }
+      });
 
-      // update status AWB & Bag queue
-      BagScanOutBranchSortirQueueService.perform(
-        payload.doSortationId,
-        resultDoSortation.branchIdFrom,
-        authMeta.userId,
-      );
 
       const data = [];
       data.push({
@@ -159,111 +190,116 @@ export class MobileSortationService {
         },
       });
 
-      if (resultSortationDetailArrival) {
-        console.log('masuk sini');
-        await DoSortation.update({
-            doSortationId: resultDoSortationDetail.doSortationId,
-          },
-          {
-            doSortationStatusIdLast: DO_SORTATION_STATUS.RECEIVED,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          });
+      await getManager().transaction(async transaction => {
+        if (resultSortationDetailArrival) {
+          await transaction.update(DoSortation, {
+              doSortationId: resultDoSortationDetail.doSortationId,
+            },
+            {
+              doSortationStatusIdLast: DO_SORTATION_STATUS.RECEIVED,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
 
-        await DoSortationDetail.update({
-            doSortationDetailId: payload.doSortationDetailId,
-          },
-          {
-            doSortationStatusIdLast: DO_SORTATION_STATUS.RECEIVED,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          });
+          await transaction.update(DoSortationDetail, {
+              doSortationDetailId: payload.doSortationDetailId,
+            },
+            {
+              doSortationStatusIdLast: DO_SORTATION_STATUS.RECEIVED,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
 
-        await this.createDoSortationHistory(
-          resultDoSortationDetail.doSortationId,
-          resultDoSortationDetail.doSortationDetailId,
-          resultDoSortationDetail.doSortationTime,
-          resultDoSortationDetail.doSortationVehicleId,
-          DO_SORTATION_STATUS.VALID,
-          resultDoSortationDetail.branchIdFrom,
-          resultDoSortationDetail.branchIdTo,
-          null,
-          null,
-          authMeta.userId,
-        );
+          await this.createDoSortationHistory(
+            transaction,
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            resultDoSortationDetail.doSortationVehicleId,
+            DO_SORTATION_STATUS.VALID,
+            resultDoSortationDetail.branchIdFrom,
+            resultDoSortationDetail.branchIdTo,
+            null,
+            null,
+            authMeta.userId,
+          );
 
-        await this.createDoSortationHistory(
-          resultDoSortationDetail.doSortationId,
-          resultDoSortationDetail.doSortationDetailId,
-          resultDoSortationDetail.doSortationTime,
-          resultDoSortationDetail.doSortationVehicleId,
-          DO_SORTATION_STATUS.RECEIVED,
-          resultDoSortationDetail.branchIdFrom,
-          resultDoSortationDetail.branchIdTo,
-          null,
-          null,
-          authMeta.userId,
-        );
+          await this.createDoSortationHistory(
+            transaction,
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            resultDoSortationDetail.doSortationVehicleId,
+            DO_SORTATION_STATUS.RECEIVED,
+            resultDoSortationDetail.branchIdFrom,
+            resultDoSortationDetail.branchIdTo,
+            null,
+            null,
+            authMeta.userId,
+          );
 
-      } else {
-        await DoSortation.update({
-            doSortationId: resultDoSortationDetail.doSortationId,
-          },
-          {
-            doSortationStatusIdLast: DO_SORTATION_STATUS.FINISHED,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          });
+        } else {
+          await transaction.update(DoSortation, {
+              doSortationId: resultDoSortationDetail.doSortationId,
+            },
+            {
+              doSortationStatusIdLast: DO_SORTATION_STATUS.FINISHED,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
 
-        await DoSortationDetail.update({
-            doSortationDetailId: payload.doSortationDetailId,
-          },
-          {
-            doSortationStatusIdLast: DO_SORTATION_STATUS.FINISHED,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          });
+          await transaction.update(DoSortationDetail, {
+              doSortationDetailId: payload.doSortationDetailId,
+            },
+            {
+              doSortationStatusIdLast: DO_SORTATION_STATUS.FINISHED,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
 
-        await this.createDoSortationHistory(
-          resultDoSortationDetail.doSortationId,
-          resultDoSortationDetail.doSortationDetailId,
-          resultDoSortationDetail.doSortationTime,
-          resultDoSortationDetail.doSortationVehicleId,
-          DO_SORTATION_STATUS.VALID,
-          resultDoSortationDetail.branchIdFrom,
-          resultDoSortationDetail.branchIdTo,
-          null,
-          null,
-          authMeta.userId,
-        );
+          await this.createDoSortationHistory(
+            transaction,
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            resultDoSortationDetail.doSortationVehicleId,
+            DO_SORTATION_STATUS.VALID,
+            resultDoSortationDetail.branchIdFrom,
+            resultDoSortationDetail.branchIdTo,
+            null,
+            null,
+            authMeta.userId,
+          );
 
-        await this.createDoSortationHistory(
-          resultDoSortationDetail.doSortationId,
-          resultDoSortationDetail.doSortationDetailId,
-          resultDoSortationDetail.doSortationTime,
-          resultDoSortationDetail.doSortationVehicleId,
-          DO_SORTATION_STATUS.RECEIVED,
-          resultDoSortationDetail.branchIdFrom,
-          resultDoSortationDetail.branchIdTo,
-          null,
-          null,
-          authMeta.userId,
-        );
+          await this.createDoSortationHistory(
+            transaction,
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            resultDoSortationDetail.doSortationVehicleId,
+            DO_SORTATION_STATUS.RECEIVED,
+            resultDoSortationDetail.branchIdFrom,
+            resultDoSortationDetail.branchIdTo,
+            null,
+            null,
+            authMeta.userId,
+          );
 
-        await this.createDoSortationHistory(
-          resultDoSortationDetail.doSortationId,
-          resultDoSortationDetail.doSortationDetailId,
-          resultDoSortationDetail.doSortationTime,
-          resultDoSortationDetail.doSortationVehicleId,
-          DO_SORTATION_STATUS.FINISHED,
-          resultDoSortationDetail.branchIdFrom,
-          resultDoSortationDetail.branchIdTo,
-          null,
-          null,
-          authMeta.userId,
-        );
-      }
-
+          await this.createDoSortationHistory(
+            transaction,
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            resultDoSortationDetail.doSortationVehicleId,
+            DO_SORTATION_STATUS.FINISHED,
+            resultDoSortationDetail.branchIdFrom,
+            resultDoSortationDetail.branchIdTo,
+            null,
+            null,
+            authMeta.userId,
+          );
+        }
+      });
       const data = [];
       data.push({
         doSortationId: resultDoSortationDetail.doSortationId,
@@ -300,52 +336,56 @@ export class MobileSortationService {
     });
 
     if (resultDoSortationDetail) {
-      // update do sortation
-      await DoSortation.update({
-        doSortationId: resultDoSortationDetail.doSortationId,
-      }, {
-        doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-        arrivalDateTime: null,
-        userIdUpdated: authMeta.userId,
-        updatedTime: timeNow,
+      await getManager().transaction(async transaction => {
+        // update do sortation
+        await transaction.update(DoSortation, {
+          doSortationId: resultDoSortationDetail.doSortationId,
+        }, {
+          doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
+          arrivalDateTime: null,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        });
+
+        await transaction.update(DoSortationDetail, {
+          doSortationDetailId: payload.doSortationDetailId,
+        }, {
+          doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
+          arrivalDateTime: null,
+          latitudeArrival: null,
+          longitudeArrival: null,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        });
+
+        await this.createDoSortationHistory(
+          transaction,
+          resultDoSortationDetail.doSortationId,
+          resultDoSortationDetail.doSortationDetailId,
+          resultDoSortationDetail.doSortationTime,
+          resultDoSortationDetail.doSortationVehicleId,
+          DO_SORTATION_STATUS.CANCEL_ARRIVED,
+          resultDoSortationDetail.branchIdFrom,
+          resultDoSortationDetail.branchIdTo,
+          null,
+          null,
+          authMeta.userId,
+        );
+
+        await this.createDoSortationHistory(
+          transaction,
+          resultDoSortationDetail.doSortationId,
+          resultDoSortationDetail.doSortationDetailId,
+          resultDoSortationDetail.doSortationTime,
+          resultDoSortationDetail.doSortationVehicleId,
+          DO_SORTATION_STATUS.ON_THE_WAY,
+          resultDoSortationDetail.branchIdFrom,
+          resultDoSortationDetail.branchIdTo,
+          null,
+          null,
+          authMeta.userId,
+        );
       });
-
-      await DoSortationDetail.update({
-        doSortationDetailId: payload.doSortationDetailId,
-      }, {
-        doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-        arrivalDateTime: null,
-        latitudeArrival: null,
-        longitudeArrival: null,
-        userIdUpdated: authMeta.userId,
-        updatedTime: timeNow,
-      });
-
-      await this.createDoSortationHistory(
-        resultDoSortationDetail.doSortationId,
-        resultDoSortationDetail.doSortationDetailId,
-        resultDoSortationDetail.doSortationTime,
-        resultDoSortationDetail.doSortationVehicleId,
-        DO_SORTATION_STATUS.CANCEL_ARRIVED,
-        resultDoSortationDetail.branchIdFrom,
-        resultDoSortationDetail.branchIdTo,
-        null,
-        null,
-        authMeta.userId,
-      );
-
-      await this.createDoSortationHistory(
-        resultDoSortationDetail.doSortationId,
-        resultDoSortationDetail.doSortationDetailId,
-        resultDoSortationDetail.doSortationTime,
-        resultDoSortationDetail.doSortationVehicleId,
-        DO_SORTATION_STATUS.ON_THE_WAY,
-        resultDoSortationDetail.branchIdFrom,
-        resultDoSortationDetail.branchIdTo,
-        null,
-        null,
-        authMeta.userId,
-      );
 
       const data = [];
       data.push({
@@ -403,86 +443,88 @@ export class MobileSortationService {
       },
     });
 
-    if (resultDoSortationArrival) {
-      // Upload Foto
-      PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SORTATION: ', authMeta);
-      let attachment = await AttachmentTms.findOne({
-        where: {
-          fileName: file.originalname,
-        },
-        lock: { mode: 'pessimistic_write' },
-      });
 
-      if (attachment) {
-        // attachment exist
-        attachmentId = attachment.attachmentTmsId;
-        url = attachment.url;
-      } else {
-        // upload image
-        const pathId = `sortation-delivery-${payload.imageType}`;
-        attachment = await AttachmentService.uploadFileBufferToS3(
-          file.buffer,
-          file.originalname,
-          file.mimetype,
-          pathId,
-        );
+    await getManager().transaction(async transaction => {
+      if (resultDoSortationArrival) {
+        PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SORTATION: ', authMeta);
+        let attachment = await AttachmentTms.findOne({
+          where: {
+            fileName: file.originalname,
+          },
+          lock: { mode: 'pessimistic_write' },
+        });
         if (attachment) {
+          // attachment exist
           attachmentId = attachment.attachmentTmsId;
           url = attachment.url;
+        } else {
+          // upload image
+          const pathId = `sortation-delivery-${payload.imageType}`;
+          attachment = await AttachmentService.uploadFileBufferToS3(
+            file.buffer,
+            file.originalname,
+            file.mimetype,
+            pathId,
+          );
+          if (attachment) {
+            attachmentId = attachment.attachmentTmsId;
+            url = attachment.url;
+          }
         }
+
+        // NOTE: insert data
+        if (attachmentId) {
+          // TODO: validate doPodDeliverDetailId ??
+          const doSortationDelivereyAttachment = await DoSortationAttachment.create();
+          doSortationDelivereyAttachment.doSortationDetailId = resultDoSortationArrival.doSortationDetailId;
+          doSortationDelivereyAttachment.attachmentTmsId = attachmentId;
+          doSortationDelivereyAttachment.attachmentType = payload.imageType;
+          doSortationDelivereyAttachment.doSortationVehicleId = resultDoSortation.doSortationVehicleIdLast;
+          await transaction.save(DoSortationAttachment, doSortationDelivereyAttachment);
+        }
+      } else {
+        throw new BadRequestException(`DO Sortation ID : ` + payload.doSortationId + ` already arrival`);
       }
 
-      // NOTE: insert data
-      if (attachmentId) {
-        // TODO: validate doPodDeliverDetailId ??
-        const doSortationDelivereyAttachment = await DoSortationAttachment.create();
-        doSortationDelivereyAttachment.doSortationDetailId = resultDoSortationArrival.doSortationDetailId;
-        doSortationDelivereyAttachment.attachmentTmsId = attachmentId;
-        doSortationDelivereyAttachment.attachmentType = payload.imageType;
-        doSortationDelivereyAttachment.doSortationVehicleId = resultDoSortation.doSortationVehicleIdLast;
-        await DoSortationAttachment.save(doSortationDelivereyAttachment);
-      }
-    } else {
-      throw new BadRequestException(`DO Sortation ID : ` + payload.doSortationId + ` already arrival`);
-    }
+      await transaction.update(DoSortation, {
+        doSortationId: resultDoSortation.doSortationId,
+      }, {
+        doSortationStatusIdLast: DO_SORTATION_STATUS.PROBLEM,
+        userIdUpdated: authMeta.userId,
+        updatedTime: timeNow,
+      });
 
-    await DoSortation.update({
-      doSortationId: resultDoSortation.doSortationId,
-    }, {
-      doSortationStatusIdLast: DO_SORTATION_STATUS.PROBLEM,
-      userIdUpdated: authMeta.userId,
-      updatedTime: timeNow,
+      await transaction.update(DoSortationDetail, {
+        doSortationId: payload.doSortationId,
+        arrivalDateTime: null,
+      }, {
+        doSortationStatusIdLast: DO_SORTATION_STATUS.PROBLEM,
+        userIdUpdated: authMeta.userId,
+        updatedTime: timeNow,
+      });
+
+      await transaction.update(DoSortationVehicle, {
+        doSortationVehicleId: resultDoSortation.doSortationVehicleIdLast,
+      }, {
+        note: payload.reasonNote,
+        userIdUpdated: authMeta.userId,
+        updatedTime: timeNow,
+      });
+
+      await this.createDoSortationHistory(
+        transaction,
+        resultDoSortationArrival.doSortationId,
+        resultDoSortationArrival.doSortationDetailId,
+        resultDoSortationArrival.doSortationTime,
+        resultDoSortationArrival.doSortationVehicleId,
+        DO_SORTATION_STATUS.PROBLEM,
+        resultDoSortationArrival.branchIdFrom,
+        resultDoSortationArrival.branchIdTo,
+        null,
+        null,
+        authMeta.userId,
+      );
     });
-
-    await DoSortationDetail.update({
-      doSortationId: payload.doSortationId,
-      arrivalDateTime: null,
-    }, {
-      doSortationStatusIdLast: DO_SORTATION_STATUS.PROBLEM,
-      userIdUpdated: authMeta.userId,
-      updatedTime: timeNow,
-    });
-
-    await DoSortationVehicle.update({
-      doSortationVehicleId: resultDoSortation.doSortationVehicleIdLast,
-    }, {
-      note: payload.reasonNote,
-      userIdUpdated: authMeta.userId,
-      updatedTime: timeNow,
-    });
-
-    await this.createDoSortationHistory(
-      resultDoSortationArrival.doSortationId,
-      resultDoSortationArrival.doSortationDetailId,
-      resultDoSortationArrival.doSortationTime,
-      resultDoSortationArrival.doSortationVehicleId,
-      DO_SORTATION_STATUS.PROBLEM,
-      resultDoSortationArrival.branchIdFrom,
-      resultDoSortationArrival.branchIdTo,
-      null,
-      null,
-      authMeta.userId,
-    );
 
     const data = [];
     data.push({
@@ -493,6 +535,51 @@ export class MobileSortationService {
     result.message = 'Sortation Success Created Problem';
     result.data = data;
     return result;
+
+  }
+
+  static async handoverMobileSortation(payload: MobileSortationHandoverPayloadVm) {
+    const authMeta = AuthService.getAuthData();
+    const result = new MobileSortationHandoverResponseVm();
+    const timeNow = moment().toDate();
+    const resultDoSortation = await DoSortation.findOne({
+      select: [
+        'doSortationId',
+        'doSortationVehicleIdLast',
+      ],
+      where: {
+        doSortationId: payload.doSortationId,
+        isDeleted: false,
+      },
+    });
+
+    const resultDoSortationDetail = await DoSortationDetail.findOne({
+      select: [
+        'depatureDateTime',
+        'arrivalDateTime',
+        'doSortationId',
+        'doSortationDetailId',
+        'doSortationTime',
+        'doSortationVehicleId',
+        'branchIdFrom',
+        'branchIdTo',
+      ],
+      where: {
+        doSortationId: payload.doSortationId,
+        isDeleted: false,
+        arrivalDateTime: null,
+      },
+    });
+
+    if (!resultDoSortationDetail) {
+      throw new BadRequestException(`All Sortation Has Arrival`);
+    }
+
+    if (resultDoSortation) {
+
+    } else {
+      throw new BadRequestException(`Can't Find  DO SORTATION ID : ` + payload.doSortationId);
+    }
 
   }
 
@@ -532,45 +619,47 @@ export class MobileSortationService {
           result.data = data;
           return result;
         } else {
-          console.log('masuk sini:');
-          // Ubah Status 4000 Arrived
-          await DoSortation.update(
-            {
-              doSortationId: resultSortationDetail.doSortationId,
-            },
-            {
-              doSortationStatusIdLast: DO_SORTATION_STATUS.HAS_ARRIVED,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-              arrivalDateTime: moment().toDate(),
-            },
-          );
+          await getManager().transaction(async transaction => {
+            // Ubah Status 4000 Arrived
+            await transaction.update(DoSortation,
+              {
+                doSortationId: resultSortationDetail.doSortationId,
+              },
+              {
+                doSortationStatusIdLast: DO_SORTATION_STATUS.HAS_ARRIVED,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+                arrivalDateTime: moment().toDate(),
+              },
+            );
 
-          await DoSortationDetail.update({
-              doSortationDetailId: payload.doSortationDetailId,
-              arrivalDateTime: null,
-            },
-            {
-              doSortationStatusIdLast: DO_SORTATION_STATUS.HAS_ARRIVED,
-              arrivalDateTime: moment().toDate(),
-              latitudeArrival: payload.latitude,
-              longitudeArrival: payload.longitude,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-            });
+            await transaction.update(DoSortationDetail, {
+                doSortationDetailId: payload.doSortationDetailId,
+                arrivalDateTime: null,
+              },
+              {
+                doSortationStatusIdLast: DO_SORTATION_STATUS.HAS_ARRIVED,
+                arrivalDateTime: moment().toDate(),
+                latitudeArrival: payload.latitude,
+                longitudeArrival: payload.longitude,
+                userIdUpdated: authMeta.userId,
+                updatedTime: timeNow,
+              });
 
-          await this.createDoSortationHistory(
-            resultSortationDetail.doSortationId,
-            resultSortationDetail.doSortationDetailId,
-            resultSortationDetail.doSortationTime,
-            resultSortationDetail.doSortationVehicleId,
-            DO_SORTATION_STATUS.HAS_ARRIVED,
-            resultSortationDetail.branchIdFrom,
-            resultSortationDetail.branchIdTo,
-            null,
-            null,
-            authMeta.userId,
-          );
+            await this.createDoSortationHistory(
+              transaction,
+              resultSortationDetail.doSortationId,
+              resultSortationDetail.doSortationDetailId,
+              resultSortationDetail.doSortationTime,
+              resultSortationDetail.doSortationVehicleId,
+              DO_SORTATION_STATUS.HAS_ARRIVED,
+              resultSortationDetail.branchIdFrom,
+              resultSortationDetail.branchIdTo,
+              null,
+              null,
+              authMeta.userId,
+            );
+          });
 
           result.statusCode = HttpStatus.OK;
           result.message = 'Sortation Success Arrival';
@@ -604,35 +693,38 @@ export class MobileSortationService {
       });
 
       if (resultDoSortation) {
-        await DoSortation.update({
-          doSortationId: payload.doSortationId,
-        }, {
-          doSortationStatusIdLast: 3000,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        });
-
-        await DoSortationDetail.update(
-          { doSortationId: payload.doSortationId, arrivalDateTime: null },
-          {
+        await getManager().transaction(async transaction => {
+          await transaction.update(DoSortation, {
+            doSortationId: payload.doSortationId,
+          }, {
             doSortationStatusIdLast: 3000,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
-          },
-        );
+          });
 
-        await this.createDoSortationHistory(
-          resultDoSortation.doSortationId,
-          null,
-          resultDoSortation.doSortationTime,
-          resultDoSortation.doSortationVehicleIdLast,
-          3000,
-          null,
-          null,
-          payload.reasonId,
-          null,
-          authMeta.userId,
-        );
+          await transaction.update(DoSortationDetail,
+            { doSortationId: payload.doSortationId, arrivalDateTime: null },
+            {
+              doSortationStatusIdLast: 3000,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            },
+          );
+
+          await this.createDoSortationHistory(
+            transaction,
+            resultDoSortation.doSortationId,
+            null,
+            resultDoSortation.doSortationTime,
+            resultDoSortation.doSortationVehicleIdLast,
+            3000,
+            null,
+            null,
+            payload.reasonId,
+            null,
+            authMeta.userId,
+          );
+        });
 
         const data = [];
         data.push({
@@ -693,12 +785,14 @@ export class MobileSortationService {
                     AND dsd.is_deleted = false
                     limit 1`;
       const resultData = await RawQueryService.query(sql);
-      const doSortationAttachment = await DoSortationAttachment.create();
-      doSortationAttachment.doSortationDetailId = payload.doSortationDetailId;
-      doSortationAttachment.attachmentTmsId = attachmentId;
-      doSortationAttachment.attachmentType = payload.imageType;
-      doSortationAttachment.doSortationVehicleId = resultData[0].do_sortation_vehicle_id;
-      await DoSortationAttachment.save(doSortationAttachment);
+      await getManager().transaction(async transaction => {
+        const doSortationAttachment = await DoSortationAttachment.create();
+        doSortationAttachment.doSortationDetailId = payload.doSortationDetailId;
+        doSortationAttachment.attachmentTmsId = attachmentId;
+        doSortationAttachment.attachmentType = payload.imageType;
+        doSortationAttachment.doSortationVehicleId = resultData[0].do_sortation_vehicle_id;
+        await transaction.save(DoSortationAttachment, doSortationAttachment);
+      });
     }
 
     const data = [];
@@ -713,6 +807,7 @@ export class MobileSortationService {
   }
 
   public static async createDoSortationHistory(
+    transaction,
     doSortationId: string,
     doSortationDetailId: string,
     doSortationTime: Date,
@@ -724,7 +819,7 @@ export class MobileSortationService {
     reasonNote: string,
     userId: number,
   ) {
-    const dataDoSortationHistory = DoSortationHistory.create({
+    const dataDoSortationHistory = transaction.create(DoSortationHistory, {
       doSortationId,
       doSortationDetailId,
       doSortationTime,

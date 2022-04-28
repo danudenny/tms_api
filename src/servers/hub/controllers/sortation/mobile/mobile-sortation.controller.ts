@@ -1,6 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
-import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { MobileSortationArrivalPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-arrival.payload.vm';
@@ -12,6 +11,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileSortationUploadImagePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.payload.vm';
 import { MobileSortationCancelPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-cancel.payload.vm';
 import { MobileSortationProblemPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-problem.payload.vm';
+import {
+  MobileSortationHandoverPayloadVm
+} from '../../../models/sortation/mobile/mobile-sortation-handover.payload.vm';
 
 @ApiUseTags('Mobile Sortation')
 @Controller('mobile/sortation')
@@ -20,42 +22,42 @@ export class MobileSortationController {
   }
 
   @Post('departure')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanOutMobileSortation(@Body() payload: MobileSortationDepaturePayloadVm) {
     return MobileSortationService.scanOutMobileSortation(payload);
   }
 
   @Post('arrival')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanInMobileSortation(@Body() payload: MobileSortationArrivalPayloadVm) {
     return MobileSortationService.scanInMobileSortation(payload);
   }
 
   @Post('problem')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async problemMobileSortation(@Body() payload: MobileSortationProblemPayloadVm, @UploadedFile() file) {
     return MobileSortationService.problemMobileSortation(payload, file);
   }
 
+  @Post('handover')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async handoverMobileSortation(@Body() payload: MobileSortationHandoverPayloadVm) {
+    return MobileSortationService.handoverMobileSortation(payload);
+  }
+
   @Post('cancel')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanInCancelMobileSortation(@Body() payload: MobileSortationCancelPayloadVm) {
     return MobileSortationService.scanInCancelMobileSortation(payload);
   }
 
   @Post('end')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanInEndMobileSortation(@Body() payload: MobileSortationEndPayloadVm) {
     return MobileSortationService.scanInEndMobileSortation(payload);
   }
 
   @Post('continue')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async continueMobileSortation(@Body() payload: MobileSortationContinuePayloadVm) {
     return MobileSortationService.continueMobileSortation(payload);
@@ -66,7 +68,6 @@ export class MobileSortationController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  @Transactional()
   public async uploadImageMobileSortation(
     @Body() payload: MobileSortationUploadImagePayloadVm,
     @UploadedFile() file,
