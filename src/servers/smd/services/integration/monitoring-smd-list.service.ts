@@ -25,6 +25,7 @@ export class MonitoringSmdServices {
     payload.fieldResolverMap['departure_date_time'] = 'ds.departure_date_time';
     payload.fieldResolverMap['arrival_date_time'] = 'ds.arrival_date_time';
     payload.fieldResolverMap['is_intercity'] = 'ds.is_intercity';
+    payload.fieldResolverMap['employee_id_driver'] = 'ds.employee_id_driver';
 
     payload.fieldFilterManualMap['departure_date_time'] = true;
     payload.globalSearchFields = [
@@ -39,6 +40,9 @@ export class MonitoringSmdServices {
       },
       {
         field: 'is_intercity',
+      },
+      {
+        field: 'employee_id_driver',
       },
     ];
     if (!payload.sortBy) {
@@ -80,6 +84,7 @@ export class MonitoringSmdServices {
       .addSelect('ds.transit_date_time', 'transit_date_time')
       .addSelect('ds.arrival_date_time', 'arrival_date_time')
       .addSelect(`ds.employee_driver_name`, 'employee_driver_name')
+      .addSelect(`ds.employee_id_driver`, 'employee_id_driver')
       .addSelect(`ds.is_intercity`, 'is_intercity')
       .addSelect(`ds.do_smd_intercity`, 'do_smd_intercity')
       .from(subQuery => {
@@ -97,6 +102,7 @@ export class MonitoringSmdServices {
           .addSelect(`ds.trip`, 'trip')
           .addSelect(`'T' || ds.counter_trip`, 'smd_trip')
           .addSelect(`e.fullname`, 'employee_driver_name')
+          .addSelect(`e.employee_id`, 'employee_id_driver')
           .addSelect(`(
                       select
                         sum(bi.weight)
