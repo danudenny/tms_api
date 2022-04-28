@@ -3,7 +3,7 @@ import moment = require('moment');
 import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { SortationChangeVehiclePayloadVm, SortationHandoverPayloadVm, SortationScanOutBagsPayloadVm, SortationScanOutDonePayloadVm, SortationScanOutLoadPayloadVm, SortationScanOutRoutePayloadVm, SortationScanOutVehiclePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
-import { ScanOutSortationHandoverResponseVm, SortationBagDetailResponseVm, SortationChangeVehicleResponseVm, SortationScanOutBagsResponseVm, SortationScanOutDonedVm, SortationScanOutDoneResponseVm, SortationScanOutLoadResponseVm, SortationScanOutLoadVm, SortationScanOutRouteResponseVm, SortationScanOutRouteVm, SortationScanOutVehicleResponseVm, SortationScanOutVehicleVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import { SortationBagDetailResponseVm, SortationChangeVehicleResponseVm, SortationHandoverResponseVm, SortationScanOutBagsResponseVm, SortationScanOutDonedVm, SortationScanOutDoneResponseVm, SortationScanOutLoadResponseVm, SortationScanOutLoadVm, SortationScanOutRouteResponseVm, SortationScanOutRouteVm, SortationScanOutVehicleResponseVm, SortationScanOutVehicleVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { toInteger } from 'lodash';
@@ -980,17 +980,17 @@ export class SortationScanOutService {
     return newDoSortationVehicleId;
   }
 
-  public static async sortationHandover(payload: SortationHandoverPayloadVm): Promise<any> {
+  public static async sortationHandover(payload: SortationHandoverPayloadVm): Promise<SortationHandoverResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
-    const result = new ScanOutSortationHandoverResponseVm();
+    const result = new SortationHandoverResponseVm();
     const data = [];
 
     const resultDOSortation = await DoSortation.findOne({
       where: {
         doSortationId: payload.doSortationId,
-        doSortationStatusIdLast: 8000,
+        doSortationStatusIdLast: DO_SORTATION_STATUS.PROBLEM,
         isDeleted: false,
       },
     });
@@ -1001,7 +1001,7 @@ export class SortationScanOutService {
             employee_driver_id
           FROM
             do_sortation_vehicle dsv
-          INNER JOIN do_sortation ds ON ds.do_sortation_id = dsv.do_sortation_id AND ds.is_deleted = FALSE AND ds.do_sortation_status_id_last = 8000
+          INNER JOIN do_sortation ds ON ds.do_sortation_id = dsv.do_sortation_id AND ds.is_deleted = FALSE AND ds.do_sortation_status_id_last = ${DO_SORTATION_STATUS.PROBLEM}
           WHERE
             dsv.do_sortation_vehicle_id = '${
               resultDOSortation.doSortationVehicleIdLast
@@ -1027,7 +1027,7 @@ export class SortationScanOutService {
           const dataDoSortation = await DoSortation.find({
             where: {
               doSortationVehicleIdLast: In(vehicleId),
-              doSortationStatusIdLast: 8000,
+              doSortationStatusIdLast: DO_SORTATION_STATUS.PROBLEM,
               isDeleted: false,
             },
           });
@@ -1069,11 +1069,11 @@ export class SortationScanOutService {
                 paramDoSortationVehicleId,
                 item.doSortationTime,
                 permissonPayload.branchId,
-                1150,
+                DO_SORTATION_STATUS.BACKUP_PROCESS,
                 authMeta.userId,
               );
 
-              item.doSortationStatusIdLast = 1150;
+              item.doSortationStatusIdLast = DO_SORTATION_STATUS.BACKUP_PROCESS;
               item.userIdUpdated = authMeta.userId;
               item.updatedTime = moment().toDate();
               await item.save();
@@ -1083,7 +1083,7 @@ export class SortationScanOutService {
                   arrivalDateTime: null,
                 },
                 {
-                  doSortationStatusIdLast: 1150,
+                  doSortationStatusIdLast: DO_SORTATION_STATUS.BACKUP_PROCESS,
                   userIdUpdated: authMeta.userId,
                   updatedTime: moment().toDate(),
                 },
@@ -1131,7 +1131,7 @@ export class SortationScanOutService {
           employee_driver_id
         FROM
           do_sortation_vehicle dsv
-        INNER JOIN do_sortation ds ON ds.do_sortation_id = dsv.do_sortation_id AND ds.is_deleted = FALSE AND ds.do_sortation_status_id_last = 8000
+        INNER JOIN do_sortation ds ON ds.do_sortation_id = dsv.do_sortation_id AND ds.is_deleted = FALSE AND ds.do_sortation_status_id_last = ${DO_SORTATION_STATUS.PROBLEM}
         WHERE
           dsv.employee_driver_id = ${employee_id_driver}
           AND dsv.is_active = TRUE

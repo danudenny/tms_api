@@ -19,7 +19,7 @@ import {
   ScanOutSortationImagePayloadVm,
   ScanOutSortationRouteDetailPayloadVm,
 } from '../../../models/sortation/web/sortation-scanout-list.payload.vm';
-import { createQueryBuilder, In } from 'typeorm';
+import { createQueryBuilder } from 'typeorm';
 import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sortation-detail-item';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
@@ -27,13 +27,7 @@ import { OrionRepositoryQueryService } from '../../../../../shared/services/orio
 import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { DoSortationAttachment } from '../../../../../shared/orm-entity/do-sortation-attachment';
-import { RawQueryService } from '../../../../../shared/services/raw-query.service';
-import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
-import { AuthService } from '../../../../../shared/services/auth.service';
-import { ScanOutSortationHandoverResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
 import moment = require('moment');
-import { DoSortationDetail } from '../../../../../shared/orm-entity/do-sortation-detail';
-import { SortationHandoverPayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
 
 @Injectable()
 export class SortationScanOutListService {

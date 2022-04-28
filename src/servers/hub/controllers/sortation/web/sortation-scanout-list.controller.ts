@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
@@ -8,7 +8,7 @@ import {
   ScanOutSortationBagDetailPayloadVm,
   ScanOutSortationRouteDetailPayloadVm,
 } from '../../../models/sortation/web/sortation-scanout-list.payload.vm';
-import { SortationHandoverPayloadVm, SortationScanOutImagePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
+import { SortationScanOutImagePayloadVm } from '../../../models/sortation/web/sortation-scanout-payload.vm';
 
 @ApiUseTags('Scan Out Sortation')
 @Controller('sortation/scanOut')
