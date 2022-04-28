@@ -6,6 +6,7 @@ import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.g
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import {
   SortationChangeVehiclePayloadVm,
+  SortationHandoverPayloadVm,
   SortationScanOutBagsPayloadVm,
   SortationScanOutDonePayloadVm,
   SortationScanOutLoadPayloadVm,
@@ -93,5 +94,11 @@ export class SortationScanOutController {
   @ApiOkResponse({ type: SortationChangeVehicleResponseVm })
   public async changeVehicle(@Body() payload: SortationChangeVehiclePayloadVm) {
     return SortationScanOutService.changeVehicle(payload);
+  }
+
+  @Post('handover')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public HandOver(@Body() payload: SortationHandoverPayloadVm) {
+    return SortationScanOutService.sortationHandover(payload);
   }
 }
