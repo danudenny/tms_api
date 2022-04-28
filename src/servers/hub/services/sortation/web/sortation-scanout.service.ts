@@ -980,7 +980,6 @@ export class SortationScanOutService {
     return newDoSortationVehicleId;
   }
 
-  @Transactional()
   public static async sortationHandover(payload: SortationHandoverPayloadVm): Promise<any> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -1039,56 +1038,60 @@ export class SortationScanOutService {
           const vehicleSeqRunning = dataSortationVehicle.vehicleSeq + 1;
 
           for (const item of dataDoSortation) {
-            /* Set Active False yang lama */
-            await DoSortationVehicle.update(
-              { doSortationVehicleId : item.doSortationVehicleIdLast },
-              {
-                isActive: false,
-                userIdUpdated: authMeta.userId,
-                updatedTime: moment().toDate(),
-              },
-            );
 
-            /* Create Vehicle Dulu dan jangan update ke do_sortation*/
-            const paramDoSortationVehicleId = await this.createDoSortationVehicle(
-              item.doSortationId,
-              payload.vehicleNumber,
-              payload.employeeIdDriver,
-              vehicleSeqRunning,
-              permissonPayload.branchId,
-              authMeta.userId,
-            );
+            await getManager().transaction(async transaction => {
+              /* Set Active False yang lama */
+              await transaction.update(DoSortationVehicle,
+                { doSortationVehicleId : item.doSortationVehicleIdLast },
+                {
+                  isActive: false,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
+                });
 
-            const paramDoSortationHistoryId = await this.createDoSortationHistory(
-              item.doSortationId,
-              null,
-              paramDoSortationVehicleId,
-              item.doSortationTime,
-              permissonPayload.branchId,
-              1150,
-              authMeta.userId,
-            );
+              /* Create Vehicle Dulu dan jangan update ke do_sortation*/
+              const paramDoSortationVehicleId = await this.createDoSortationVehicle(
+                item.doSortationId,
+                payload.vehicleNumber,
+                payload.employeeIdDriver,
+                vehicleSeqRunning,
+                permissonPayload.branchId,
+                authMeta.userId,
+              );
 
-            item.doSortationStatusIdLast = 1150;
-            item.userIdUpdated = authMeta.userId;
-            item.updatedTime = moment().toDate();
-            await item.save();
-            await DoSortationDetail.update(
-              { doSortationId: item.doSortationId, arrivalDateTime: null },
-              {
-                doSortationStatusIdLast: 1150,
-                userIdUpdated: authMeta.userId,
-                updatedTime: moment().toDate(),
-              },
-            );
+              const paramDoSortationHistoryId = await this.createDoSortationHistory(
+                item.doSortationId,
+                null,
+                paramDoSortationVehicleId,
+                item.doSortationTime,
+                permissonPayload.branchId,
+                1150,
+                authMeta.userId,
+              );
 
-            data.push({
-              doSortationId: item.doSortationId,
-              doSortationCode: item.doSortationCode,
-              doSortationVehicleId: paramDoSortationVehicleId,
+              item.doSortationStatusIdLast = 1150;
+              item.userIdUpdated = authMeta.userId;
+              item.updatedTime = moment().toDate();
+              await item.save();
+              await DoSortationDetail.update(
+                { doSortationId: item.doSortationId, arrivalDateTime: null },
+                {
+                  doSortationStatusIdLast: 1150,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
+                },
+              );
+
+              data.push({
+                doSortationId: item.doSortationId,
+                doSortationCode: item.doSortationCode,
+                doSortationVehicleId: paramDoSortationVehicleId,
+              });
+
+              arrSmd.push(item.doSortationCode);
+
             });
 
-            arrSmd.push(item.doSortationCode);
           }
 
           result.statusCode = HttpStatus.OK;
