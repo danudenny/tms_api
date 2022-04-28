@@ -1074,10 +1074,15 @@ export class SortationScanOutService {
                 authMeta.userId,
               );
 
-              item.doSortationStatusIdLast = DO_SORTATION_STATUS.BACKUP_PROCESS;
-              item.userIdUpdated = authMeta.userId;
-              item.updatedTime = moment().toDate();
-              await item.save();
+              await transaction.update(DoSortation,
+                {doSortationId : item.doSortationId},
+                {
+                  doSortationVehicleIdLast : paramDoSortationVehicleId,
+                  doSortationStatusIdLast : DO_SORTATION_STATUS.BACKUP_PROCESS,
+                  updatedTime : moment().toDate(),
+                  userIdUpdated : authMeta.userId,
+                },
+              );
               await DoSortationDetail.update(
                 {
                   doSortationId: item.doSortationId,
