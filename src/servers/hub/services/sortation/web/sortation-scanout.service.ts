@@ -1077,7 +1077,6 @@ export class SortationScanOutService {
               await transaction.update(DoSortation,
                 {doSortationId : item.doSortationId},
                 {
-                  doSortationVehicleIdLast : paramDoSortationVehicleId,
                   doSortationStatusIdLast : DO_SORTATION_STATUS.BACKUP_PROCESS,
                   updatedTime : moment().toDate(),
                   userIdUpdated : authMeta.userId,
