@@ -3,7 +3,7 @@ import { CentralHubReportPayloadVm, CentralSortirListPayloadVm, CentralSortirPay
 import { CentralSortirService } from '../../services/integration/central-sortir.service';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { HUB_REPORT } from '../../../../shared/constants/laporan-hub.constat';
+import { HUB_REPORT } from '../../../../shared/constants/laporan-hub.constant';
 
 @Controller('central/sortir')
 export class CentralSortirController {
