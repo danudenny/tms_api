@@ -1,6 +1,6 @@
 export enum HUB_REPORT {
   HUB_MACHINE = 1,
-  lEBIH_SORTIR = 2,
+  LEBIH_SORTIR = 2,
 }
 export class EnumHubReport {
   static getKeyByValue(value: number) {

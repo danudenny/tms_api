@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import moment = require('moment');
 
-import { EnumHubReport, HUB_REPORT } from '../../../../shared/constants/laporan-hub.constat';
+import { EnumHubReport, HUB_REPORT } from '../../../../shared/constants/laporan-hub.constant';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -101,7 +101,7 @@ export class CentralSortirService {
       const request = await axios.post(url, qs.stringify(body), options);
       return { status: request.status, ...request.data };
     } catch (e) {
-      throw e;
+      throw e.message;
     }
   }
 
@@ -177,7 +177,7 @@ export class CentralSortirService {
       const request = await axios.post(url, qs.stringify(body), options);
       return { status: request.status, ...request.data };
     } catch (e) {
-      throw e;
+      throw e.message;
     }
   }
 
@@ -197,7 +197,7 @@ export class CentralSortirService {
         LEFT JOIN bag bdo ON bido.bag_id = bdo.bag_id AND bdo.is_deleted = FALSE \n
     WHERE
         hsa.is_deleted = FALSE \n`;
-    if (HUB_REPORT.lEBIH_SORTIR == type) {
+    if (HUB_REPORT.LEBIH_SORTIR == type) {
       query = query + `AND hsa.scan_date_in_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
         AND hsa.scan_date_in_hub < '${moment(payload.endDate).format('YYYY-MM-DD')}' \n
         AND hsa.do_hub = FALSE \n

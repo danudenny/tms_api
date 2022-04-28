@@ -40,13 +40,13 @@ export class CentralSortirController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @HttpCode(HttpStatus.OK)
   async generatedLebihSortirReporting(@Body() payload: CentralHubReportPayloadVm) {
-    return CentralSortirService.generateReportingLaporanHub(payload, HUB_REPORT.lEBIH_SORTIR);
+    return CentralSortirService.generateReportingLaporanHub(payload, HUB_REPORT.LEBIH_SORTIR);
   }
 
   @Post('lebih-sortir/queue/list')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @HttpCode(HttpStatus.OK)
   async getListLebihSortirReporting(@Body() body: CentralSortirListPayloadVm) {
-    return CentralSortirService.getListLaporanHubReporting(body, HUB_REPORT.lEBIH_SORTIR);
+    return CentralSortirService.getListLaporanHubReporting(body, HUB_REPORT.LEBIH_SORTIR);
   }
 }
