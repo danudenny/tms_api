@@ -27,7 +27,6 @@ import { OrionRepositoryQueryService } from '../../../../../shared/services/orio
 import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { DoSortationAttachment } from '../../../../../shared/orm-entity/do-sortation-attachment';
-import moment = require('moment');
 
 @Injectable()
 export class SortationScanOutListService {

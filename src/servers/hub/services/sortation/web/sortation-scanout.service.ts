@@ -22,7 +22,6 @@ import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sorta
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
-import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
 
 @Injectable()
 export class SortationScanOutService {
@@ -1054,22 +1053,24 @@ export class SortationScanOutService {
               );
 
               /* Create Vehicle Dulu dan jangan update ke do_sortation*/
-              const paramDoSortationVehicleId = await this.createDoSortationVehicle(
+              const paramDoSortationVehicleId = await SortationService.createDoSortationVehicle(
                 item.doSortationId,
+                null,
                 payload.vehicleNumber,
-                payload.employeeIdDriver,
                 vehicleSeqRunning,
+                payload.employeeIdDriver,
                 permissonPayload.branchId,
                 authMeta.userId,
               );
 
-              const paramDoSortationHistoryId = await this.createDoSortationHistory(
+              await SortationService.createDoSortationHistory(
                 item.doSortationId,
                 null,
                 paramDoSortationVehicleId,
                 item.doSortationTime,
                 permissonPayload.branchId,
                 DO_SORTATION_STATUS.BACKUP_PROCESS,
+                null,
                 authMeta.userId,
               );
 
@@ -1140,59 +1141,3 @@ export class SortationScanOutService {
     return resultDataDoSortationVehicle;
   }
 
-  private static async createDoSortationVehicle(
-    paramDoSortationId: string,
-    paramVehicleNumber: string,
-    paramEmployeeId: number,
-    paramVehicleSeq: number,
-    paramBranchId: number,
-    userId: number,
-  ) {
-    const dataDoSortationVehicle = DoSortationVehicle.create({
-      doSortationId: paramDoSortationId,
-      vehicleNumber: paramVehicleNumber,
-      employeeDriverId: paramEmployeeId,
-      branchIdCreated: paramBranchId,
-      vehicleSeq : paramVehicleSeq,
-      userIdCreated: userId,
-      userIdUpdated: userId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-    });
-    const insertDoSortationVehicle = await DoSortationVehicle.insert(
-      dataDoSortationVehicle,
-    );
-    return insertDoSortationVehicle.identifiers.length
-      ? insertDoSortationVehicle.identifiers[0].doSortationVehicleId
-      : null;
-  }
-
-  private static async createDoSortationHistory(
-    paramDoSortationId: string,
-    paramDoSortationDetailId: string,
-    paramDoSortationVehicleId: string,
-    paramDoSortationDepartureScheduleDate: Date,
-    paramBranchId: number,
-    paramDoSortationStatusId: number,
-    userId: number,
-  ) {
-    const dataDoSortationHistory = DoSortationHistory.create({
-      doSortationId: paramDoSortationId,
-      doSortationDetailId: paramDoSortationDetailId,
-      doSortationVehicleId: paramDoSortationVehicleId,
-      doSortationTime: paramDoSortationDepartureScheduleDate,
-      userIdCreated: userId,
-      userIdUpdated: userId,
-      doSortationStatusId: paramDoSortationStatusId,
-      branchIdFrom: paramBranchId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
-    });
-    const insertDoSortationHistory = await DoSortationHistory.insert(
-      dataDoSortationHistory,
-    );
-    return insertDoSortationHistory.identifiers.length
-      ? insertDoSortationHistory.identifiers[0].doSortationHistoryId
-      : null;
-  }
-}
