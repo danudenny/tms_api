@@ -4,7 +4,7 @@ import {
   SortationL2ModuleSearchPayloadVm,
 } from '../../../models/sortation/web/sortation-l2-module-search.payload.vm';
 import { Employee } from '../../../../../shared/orm-entity/employee';
-import { createQueryBuilder, Not } from 'typeorm';
+import { createQueryBuilder, getManager, Not } from 'typeorm';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { SortationL2ModuleSearchResponseVm } from '../../../models/sortation/web/sortation-l2-module-search.response.vm';
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
@@ -29,34 +29,38 @@ export class SortationL2ModuleService {
     });
 
     if (findDoSortation) {
-      await DoSortation.update({
-        doSortationId: findDoSortation.doSortationId,
-      }, {
-        doSortationStatusIdLast: DO_SORTATION_STATUS.FINISHED,
-        userIdUpdated: authMeta.userId,
-        updatedTime: timeNow,
-      });
-      await DoSortationDetail.update({
-        doSortationId: findDoSortation.doSortationId,
-      }, {
-        doSortationStatusIdLast: DO_SORTATION_STATUS.FINISHED,
-        userIdUpdated: authMeta.userId,
-        updatedTime: timeNow,
-        arrivalDateTime: moment().toDate(),
+      await getManager().transaction(async transaction => {
+        await transaction.update(DoSortation, {
+          doSortationId: findDoSortation.doSortationId,
+        }, {
+          doSortationStatusIdLast: DO_SORTATION_STATUS.FINISHED,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        });
+        await transaction.update(DoSortationDetail, {
+          doSortationId: findDoSortation.doSortationId,
+        }, {
+          doSortationStatusIdLast: DO_SORTATION_STATUS.FINISHED,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+          arrivalDateTime: moment().toDate(),
+        });
+
+        await MobileSortationService.createDoSortationHistory(
+          transaction,
+          findDoSortation.doSortationId,
+          null,
+          findDoSortation.doSortationTime,
+          findDoSortation.doSortationVehicleIdLast,
+          DO_SORTATION_STATUS.FINISHED,
+          findDoSortation.branchIdFrom,
+          null,
+          null,
+          null,
+          authMeta.userId,
+        );
       });
 
-      await MobileSortationService.createDoSortationHistory(
-        findDoSortation.doSortationId,
-        null,
-        findDoSortation.doSortationTime,
-        findDoSortation.doSortationVehicleIdLast,
-        DO_SORTATION_STATUS.FINISHED,
-        findDoSortation.branchIdFrom,
-        null,
-        null,
-        null,
-        authMeta.userId,
-      );
       const resultData = [];
       resultData.push({
         doSortationId: findDoSortation.doSortationId,

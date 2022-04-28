@@ -16,14 +16,12 @@ export class SortationL2ModuleController {
   }
 
   @Post('search')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async searchSortation(@Body() payload: SortationL2ModuleSearchPayloadVm) {
     return SortationL2ModuleService.searchSortation(payload);
   }
 
   @Post('finish')
-  @Transactional()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async finishManualSortation(@Body() payload: SortationL2ModuleFinishManualPayloadVm) {
     return SortationL2ModuleService.finishManualSortation(payload);
