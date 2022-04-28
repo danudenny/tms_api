@@ -1037,17 +1037,21 @@ export class SortationScanOutService {
           });
           const vehicleSeqRunning = dataSortationVehicle.vehicleSeq + 1;
 
-          for (const item of dataDoSortation) {
+          await getManager().transaction(async transaction => {
 
-            await getManager().transaction(async transaction => {
+            for (const item of dataDoSortation) {
               /* Set Active False yang lama */
-              await transaction.update(DoSortationVehicle,
-                { doSortationVehicleId : item.doSortationVehicleIdLast },
+              await transaction.update(
+                DoSortationVehicle,
+                {
+                  doSortationVehicleId: item.doSortationVehicleIdLast,
+                },
                 {
                   isActive: false,
                   userIdUpdated: authMeta.userId,
                   updatedTime: moment().toDate(),
-                });
+                },
+              );
 
               /* Create Vehicle Dulu dan jangan update ke do_sortation*/
               const paramDoSortationVehicleId = await this.createDoSortationVehicle(
@@ -1074,7 +1078,10 @@ export class SortationScanOutService {
               item.updatedTime = moment().toDate();
               await item.save();
               await DoSortationDetail.update(
-                { doSortationId: item.doSortationId, arrivalDateTime: null },
+                {
+                  doSortationId: item.doSortationId,
+                  arrivalDateTime: null,
+                },
                 {
                   doSortationStatusIdLast: 1150,
                   userIdUpdated: authMeta.userId,
@@ -1089,10 +1096,8 @@ export class SortationScanOutService {
               });
 
               arrSmd.push(item.doSortationCode);
-
-            });
-
-          }
+            }
+          });
 
           result.statusCode = HttpStatus.OK;
           result.message = 'Nomor Sortation ' + arrSmd.join(',') + ' berhasil handover';
