@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
@@ -353,7 +353,7 @@ export class BaggingSmdService {
             break;
           }
 
-          if (i == 4) { throw new BadRequestException('Error generate BaggingCode !'); }
+          if (i == 4) { throw new InternalServerErrorException('BaggingCode gagal di buat, silahkan ulangi beberapa saat lagi!'); }
       }
 
       // Redlock for race condition
