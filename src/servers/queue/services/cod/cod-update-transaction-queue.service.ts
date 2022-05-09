@@ -8,6 +8,7 @@ import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { User } from '../../../../shared/orm-entity/user';
 import moment = require('moment');
 import { getConnection } from 'typeorm';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 
 export class CodUpdateTransactionQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -60,7 +61,7 @@ export class CodUpdateTransactionQueueService {
         } finally {
           await masterDataTransactionQueryRunner.release();
         }
-        console.log('##### TOTAL DATA Transaction :: ', dataTransaction.length);
+        PinoLoggerService.log(`##### TOTAL DATA Transaction :: ${dataTransaction.length}`);
 
         if (dataTransaction.length) {
           for (const item of dataTransaction) {
@@ -114,7 +115,7 @@ export class CodUpdateTransactionQueueService {
           console.log('## Update MongoDb :: ', dataUpdate);
           const updateMongo = await collection.updateMany(query, dataUpdate);
         } catch (error) {
-          console.error(error);
+          console.error(`[cod-update-transaction-queue] `, error);
           throw error;
         }
         return true;
@@ -127,11 +128,11 @@ export class CodUpdateTransactionQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

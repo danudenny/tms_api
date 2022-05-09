@@ -9,6 +9,7 @@ import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { getManager } from 'typeorm';
 import { UpsertHubSummaryAwbQueueService } from './upsert-hub-summary-awb-queue.service';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 
 // DOC: https://optimalbits.github.io/bull/
@@ -42,7 +43,7 @@ export class BagDropoffHubQueueService {
     // NOTE: Concurrency defaults to 1 if not specified.
     this.queue.process(5, async job => {
       try {
-        console.log('### SCAN DROP OFF HUB JOB ID =========', job.id);
+        PinoLoggerService.log(`### SCAN DROP OFF HUB JOB ID ========= ${job.id}`);
         const data = job.data;
 
         const dateNow = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -113,7 +114,7 @@ export class BagDropoffHubQueueService {
 
                 // NOTE: queue by Bull
                 // add awb history with background process
-                console.log('### SCAN DROP OFF HUB AWB HISTORY =========', itemAwb.awbNumber);
+                PinoLoggerService.log(`### SCAN DROP OFF HUB AWB HISTORY ========= ${itemAwb.awbNumber}`);
                 DoPodDetailPostMetaQueueService.createJobByDropoffBag(
                   itemAwb.awbItemId,
                   data.branchId,
@@ -130,10 +131,10 @@ export class BagDropoffHubQueueService {
                 // });
 
                 // run queue upsert raw summary awb
-                console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY =========', itemAwb.awbNumber);
-                console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY data =========', data);
-                console.log('### SCAN DROP OFF HUB UPSERT HUB SUMMARY itemAwb =========', itemAwb);
-                console.log(upsertRawHubSummaryAwbSql);
+                PinoLoggerService.log(`### SCAN DROP OFF HUB UPSERT HUB SUMMARY ========= ${itemAwb.awbNumber}`, );
+                PinoLoggerService.log(`### SCAN DROP OFF HUB UPSERT HUB SUMMARY data ========= ${data}`);
+                PinoLoggerService.log(`### SCAN DROP OFF HUB UPSERT HUB SUMMARY itemAwb ========= ${itemAwb}`);
+                PinoLoggerService.log(upsertRawHubSummaryAwbSql);
                 UpsertHubSummaryAwbQueueService.perform(
                   data.branchId,
                   itemAwb.awbNumber,
@@ -142,12 +143,12 @@ export class BagDropoffHubQueueService {
                   itemAwb.awbItemId,
                   data.userId,
                 );
-                console.log('### SCAN DROP OFF HUB END =========', itemAwb.awbNumber);
+                PinoLoggerService.log(`### SCAN DROP OFF HUB END ========= ${itemAwb.awbNumber}`);
               }
             }
           } // end of loop
         } else {
-          console.log('### Data Bag Item Awb :: Not Found!!');
+          PinoLoggerService.log('### Data Bag Item Awb :: Not Found!!');
         }
         return true;
       } catch (error) {
@@ -159,11 +160,11 @@ export class BagDropoffHubQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

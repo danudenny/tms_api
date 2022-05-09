@@ -256,6 +256,26 @@ export class LastMileDeliveryOutService {
           // NOTE: create data do pod detail per awb number
           try {
             await getManager().transaction(async transactionManager => {
+              const dataSpk = await DoPodDeliverDetail.find({
+                select: ['awbNumber'],
+                where: {
+                  awbItemId: awb.awbItemId,
+                  isDeleted: false,
+                },
+              });
+              if (dataSpk.length) {
+                await transactionManager.update(
+                  DoPodDeliverDetail,
+                  {
+                    awbItemId: awb.awbItemId,
+                    isDeleted: false,
+                  },
+                  {
+                    isDeleted: true,
+                    userIdUpdated: authMeta.userId,
+                  },
+                );
+              }
 
               const doPodDeliverDetail = DoPodDeliverDetail.create();
               doPodDeliverDetail.doPodDeliverId = payload.doPodDeliverId;

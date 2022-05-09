@@ -9,6 +9,7 @@ import { BAG_STATUS } from '../../../shared/constants/bag-status.constant';
 import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
 import {In} from 'typeorm';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -44,7 +45,7 @@ export class BagScanDoSmdQueueService {
       try {
         // await getManager().transaction(async transactionalEntityManager => {
         // }); // end transaction
-        console.log('### SCAN DO SMD JOB ID =========', job.id);
+        PinoLoggerService.log(`### SCAN DO SMD JOB ID ========= ${job.id}`);
         const data = job.data;
         const tempAwb = [];
 
@@ -104,11 +105,11 @@ export class BagScanDoSmdQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

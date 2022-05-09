@@ -11,6 +11,7 @@ import { getManager } from 'typeorm';
 import { AwbHistory } from '../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 import { UpdateHubSummaryAwbOutQueueService } from './update-hub-summary-awb-out-queue.service';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -44,7 +45,7 @@ export class BagScanOutHubQueueService {
     this.queue.process(5, async job => {
       try {
         await getManager().transaction(async transactionalEntityManager => {
-          console.log('### SCAN OUT HUB JOB ID =========', job.id);
+          PinoLoggerService.log(`### SCAN OUT HUB JOB ID ========= ${job.id}`);
           const data = job.data;
   
           const dateNow = moment().toDate();
@@ -166,11 +167,11 @@ export class BagScanOutHubQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 

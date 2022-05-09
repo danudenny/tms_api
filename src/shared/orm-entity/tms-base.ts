@@ -1,6 +1,7 @@
 import { BeforeInsert, BeforeUpdate, Column } from 'typeorm';
 
 import { BaseActionEntity } from './base-action';
+import { ColumnDateTransformer } from './column-date-transformer';
 
 export class TmsBaseEntity extends BaseActionEntity {
   @Column('bigint', {

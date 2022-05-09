@@ -83,11 +83,6 @@ export class BagItem extends TmsBaseEntity {
   })
   userIdUpdated: number | null;
 
-  @Column('timestamp without time zone', {
-    nullable: false,
-    name: 'updated_time',
-  })
-  updatedTime: Date;
   // @Column('integer', {
   //   nullable: true,
   //   name: 'employee_id_last',

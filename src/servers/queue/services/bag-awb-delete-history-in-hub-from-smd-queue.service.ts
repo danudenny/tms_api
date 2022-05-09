@@ -8,6 +8,7 @@ import { In } from 'typeorm';
 import { BAG_STATUS } from '../../../shared/constants/bag-status.constant';
 import { AwbHistory } from '../../../shared/orm-entity/awb-history';
 import {BagItemHistory} from '../../../shared/orm-entity/bag-item-history';
+import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 
 // DOC: https://optimalbits.github.io/bull/
 
@@ -43,7 +44,7 @@ export class BagAwbDeleteHistoryInHubFromSmdQueueService {
       try {
         // await getManager().transaction(async transactionalEntityManager => {
         // }); // end transaction
-        console.log('### DELETE HISTORY BAG AND AWB SMD IN_HUB JOB ID =========', job.id);
+        PinoLoggerService.log(`### DELETE HISTORY BAG AND AWB SMD IN_HUB JOB ID ========= ${job.id}`);
         const data = job.data;
         const bagItemIds = new Set(); // unique data
         const awbItemIds = [];
@@ -109,11 +110,11 @@ export class BagAwbDeleteHistoryInHubFromSmdQueueService {
     this.queue.on('completed', job => {
       // cleans all jobs that completed over 5 seconds ago.
       this.queue.clean(5000);
-      console.log(`Job with id ${job.id} has been completed`);
+      PinoLoggerService.log(`Job with id ${job.id} has been completed`);
     });
 
     this.queue.on('cleaned', function(job, type) {
-      console.log('Cleaned %s %s jobs', job.length, type);
+      PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
 
