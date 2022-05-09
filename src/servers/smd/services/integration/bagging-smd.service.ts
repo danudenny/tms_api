@@ -346,13 +346,14 @@ export class BaggingSmdService {
 
       /** check bagging code for duplicate */
       for (let i = 0; i < 5; i++) {
-          if (i == 4) { throw new BadRequestException('Error generate BaggingCode !'); }
           const check_baggingCode = await Bagging.findOne({where : {baggingCode : paramBaggingCode}});
           if (check_baggingCode) {
             paramBaggingCode = await CustomCounterCode.baggingCodeRandomCounter(moment().toDate());
           } else {
             break;
           }
+
+          if (i == 4) { throw new BadRequestException('Error generate BaggingCode !'); }
       }
 
       // Redlock for race condition
