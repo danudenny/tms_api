@@ -332,53 +332,54 @@ import {Injectable} from '@nestjs/common';
    }
    queryParam += 'AND ctd.is_deleted = false';
 
-   const query = `SELECT
-     ctd.partner_name AS "Partner",
-     ctd.awb_date AS "Awb Date",
-     ctd.awb_number AS "Awb",
-     ctd.parcel_value AS "Package Amount",
-     ctd.cod_value AS "COD Amount",
-     ctd.cod_fee AS "COD Fee",
-     ctd.cod_value AS "Amount Transafer",
-     ctd.pod_date AS "POD Datetime",
-     ctd.consignee_name AS "Recipient",
-     ctd.payment_method AS "Tipe Pembayaran",
-     sis.status_title AS "Status Internal",
-     aws.awb_status_name AS "Tracking Status",
-     sisinv.status_title AS "Status Invoice",
-     ctd.cust_package AS "Cust Package",
-     ctd.pickup_source AS "Pickup Source",
-     ctd.current_position AS "Current Position",
-     ctd.destination_code AS "Destination Code",
-     ctd.destination AS "Destination",
-     rep.representative_code AS "Perwakilan",
-     CONCAT(ude.nik+' ', ude.fullname) AS "Sigesit",
-     ctd.parcel_content AS "Package Detail",
-     ctd.package_type AS "Services",
-     ctd.parcel_note AS "Notes",
-     ctd.updated_time AS "Date Updated",
-     CONCAT(uae.nik+' ', uae.fullname) AS "User Updated"
-   FROM
-     "public"."cod_transaction_detail" "ctd"
-   LEFT JOIN "public"."awb_item_attr" "aia" ON "aia"."awb_item_id" = "ctd"."awb_item_id"
-     AND ("aia"."is_deleted" = 'false')
-   LEFT JOIN "public"."transaction_status" "sisinv" ON "sisinv"."transaction_status_id" = "ctd"."supplier_invoice_status_id"
-   LEFT JOIN "public"."transaction_status" "sis" ON "sis"."transaction_status_id" = "ctd"."transaction_status_id"
-   LEFT JOIN "public"."awb_status" "aws" ON "aws"."awb_status_id" = "aia"."awb_status_id_last"
-   INNER JOIN "public"."users" "ctd_userDriver" ON "ctd_userDriver"."user_id" = "ctd"."user_id_driver"
-   INNER JOIN "public"."employee" "ude" ON "ude"."employee_id" = "ctd_userDriver"."employee_id"
-   INNER JOIN "public"."users" "ctd_userAdmin" ON "ctd_userAdmin"."user_id" = "ctd"."user_id_updated"
-   INNER JOIN "public"."employee" "uae" ON "uae"."employee_id" = "ctd_userAdmin"."employee_id"
-   INNER JOIN "public"."branch" "ctd_branch" ON "ctd_branch"."branch_id" = "aia"."branch_id_last"
-   INNER JOIN "public"."representative" "rep" ON "rep"."representative_id" = "ctd_branch"."representative_id"
-     AND ("rep"."is_deleted" = 'false')
-   WHERE 
-     TRUE 
-     ${queryParam}
-   `;
+   const query = `SELECT 
+    ctd.partner_name AS "Partner",
+    ctd.awb_date AS "Awb Date",
+    ctd.awb_number AS "Awb",
+    ctd.parcel_value AS "Package Amount",
+    ctd.cod_value AS "COD Amount",
+    ctd.cod_fee AS "COD Fee",
+    ctd.cod_value AS "Amount Transafer",
+    ctd.pod_date AS "POD Datetime",
+    ctd.consignee_name AS "Recipient",
+    ctd.payment_method AS "Tipe Pembayaran",
+    sis.status_title AS "Status Internal",
+    aws.awb_status_name AS "Tracking Status",
+    sisinv.status_title AS "Status Invoice",
+    ctd.cust_package AS "Cust Package",
+    ctd.pickup_source AS "Pickup Source",
+    ctd.current_position AS "Current Position",
+    ctd.destination_code AS "Destination Code",
+    ctd.destination AS "Destination",
+    rep.representative_code AS "Perwakilan",
+    CONCAT(ude.nik+' ', ude.fullname) AS "Sigesit",
+    ctd.parcel_content AS "Package Detail",
+    ctd.package_type AS "Services",
+    ctd.parcel_note AS "Notes",
+    ctd.updated_time AS "Date Updated",
+    CONCAT(uae.nik+' ', uae.fullname) AS "User Updated"
+  FROM
+    "public"."cod_transaction_detail" "ctd"
+    INNER JOIN "public"."awb_item_attr" "aia" ON "aia"."awb_item_id" = "ctd"."awb_item_id"
+      AND ("aia"."is_deleted" = 'false')
+    LEFT JOIN "public"."transaction_status" "sisinv" ON "sisinv"."transaction_status_id" = "ctd"."supplier_invoice_status_id"
+    LEFT JOIN "public"."transaction_status" "sis" ON "sis"."transaction_status_id" = "ctd"."transaction_status_id"
+    LEFT JOIN "public"."awb_status" "aws" ON "aws"."awb_status_id" = "aia"."awb_status_id_last"
+    LEFT JOIN "public"."users" "ctd_userDriver" ON "ctd_userDriver"."user_id" = "ctd"."user_id_driver"
+    LEFT JOIN "public"."employee" "ude" ON "ude"."employee_id" = "ctd_userDriver"."employee_id"
+    LEFT JOIN "public"."users" "ctd_userAdmin" ON "ctd_userAdmin"."user_id" = "ctd"."user_id_updated"
+    LEFT JOIN "public"."employee" "uae" ON "uae"."employee_id" = "ctd_userAdmin"."employee_id"
+    LEFT JOIN "public"."branch" "ctd_branch" ON "ctd_branch"."branch_id" = "aia"."branch_id_last"
+    LEFT JOIN "public"."representative" "rep" ON "rep"."representative_id" = "ctd_branch"."representative_id"
+      AND ("rep"."is_deleted" = 'false')
+  WHERE 
+    TRUE 
+    ${queryParam}
+  `;
 
    return query;
  }
+  
 
    isNumber(value: string | number): boolean {
     return ((value != null) &&
