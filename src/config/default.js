@@ -68,6 +68,9 @@ module.exports = {
     baseUrl : 'http://api-internal.s.sicepat.io/core/query-service/api/v1/',
     schema: 'pod',
   },
+  priorityService :{
+    baseUrl : 'http://api-internal.s.sicepat.io/core/prirotiy-service/api/v1/',
+  },
   exportService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
   },
