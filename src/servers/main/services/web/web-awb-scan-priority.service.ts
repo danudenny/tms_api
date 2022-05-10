@@ -3,11 +3,13 @@ import { PriorityServiceApi } from '../../../../shared/services/priority.service
 import { AuthService } from '../../../../shared/services/auth.service';
 export class WebAwbScanPriorityService {
   static async scanProirity(awbNumber : string): Promise<WebAwbScanPriorityResponse>{
+    const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     let dataPriority = await PriorityServiceApi.checkPriority(awbNumber, permissonPayload.branchId);
     const result = new WebAwbScanPriorityResponse();
     result.awbNumber = awbNumber;
-    result.routeAndPriority = dataPriority;
+    result.routeAndPriority = dataPriority.data.priority;
+    result.kelurahan = dataPriority.data.kelurahan;
     return result;
   }
 }
