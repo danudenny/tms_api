@@ -183,7 +183,7 @@ export class CentralSortirService {
 
   private static async generateLaporanHubQuery(payload: CentralHubReportPayloadVm, type: number) {
     let query = `
-        hsa.awb_number as "Nomor Resi", \n
+        ''''||hsa.awb_number as "Nomor Resi", \n
         SUBSTRING(b.bag_number||LPAD(bi.bag_seq::text, 3, '0'), 1, 10) as "Gabung Paket/ Gabung Sortir", \n
         CASE WHEN hsa.do_hub THEN 'Yes' ELSE 'No' END as "do", \n
         CASE WHEN hsa.in_hub THEN 'Yes' ELSE 'No' END as "in", \n
