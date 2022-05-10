@@ -1,5 +1,5 @@
 export enum HUB_REPORT {
-  HUB_MACHINE = 1,
+  HUB_MESIN = 1,
   LEBIH_SORTIR = 2,
 }
 export class EnumHubReport {

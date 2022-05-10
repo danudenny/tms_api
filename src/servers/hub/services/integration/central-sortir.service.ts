@@ -183,12 +183,12 @@ export class CentralSortirService {
 
   private static async generateLaporanHubQuery(payload: CentralHubReportPayloadVm, type: number) {
     let query = `
-        hsa.awb_number as "awbNumber", \n
-        CONCAT(b.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber", \n
+        hsa.awb_number as "Nomor Resi", \n
+        SUBSTRING(b.bag_number||LPAD(bi.bag_seq::text, 3, '0'), 1, 10) as "Gabung Paket/ Gabung Sortir", \n
         CASE WHEN hsa.do_hub THEN 'Yes' ELSE 'No' END as "do", \n
         CASE WHEN hsa.in_hub THEN 'Yes' ELSE 'No' END as "in", \n
         CASE WHEN hsa.out_hub THEN 'Yes' ELSE 'No' END as "out", \n
-        hsa.note as "note" \n
+        hsa.note as "Catatan" \n
     FROM hub_summary_awb hsa \n
         LEFT JOIN bag_item bi ON hsa.bag_item_id_in = bi.bag_item_id AND bi.is_deleted = FALSE \n
         LEFT JOIN bag b ON bi.bag_id = b.bag_id AND b.is_deleted = FALSE \n
@@ -197,12 +197,12 @@ export class CentralSortirService {
     WHERE
         hsa.is_deleted = FALSE \n`;
     if (HUB_REPORT.LEBIH_SORTIR == type) {
-      query = `SELECT \n hsa.scan_date_in_hub as "scanDateInHub", \n` + query + `AND hsa.scan_date_in_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
+      query = `SELECT \n hsa.scan_date_in_hub as "Tanggal Scan", \n` + query + `AND hsa.scan_date_in_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
         AND hsa.scan_date_in_hub < '${moment(payload.endDate).format('YYYY-MM-DD')}' \n
         AND hsa.do_hub = FALSE \n
         AND hsa.in_hub = TRUE \n`;
     } else {
-      query = `SELECT \n hsa.scan_date_do_hub as "scanDateDoHub", \n` + query + `AND hsa.scan_date_do_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
+      query = `SELECT \n hsa.scan_date_do_hub as "Tanggal Scan", \n` + query + `AND hsa.scan_date_do_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
         AND hsa.scan_date_do_hub < '${moment(payload.endDate).format('YYYY-MM-DD')}' \n`;
     }
     if (payload.branchId && payload.branchId !== 0) {

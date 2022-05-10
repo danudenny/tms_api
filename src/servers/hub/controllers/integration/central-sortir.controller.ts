@@ -26,14 +26,14 @@ export class CentralSortirController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @HttpCode(HttpStatus.OK)
   async generatedMonitoringHubMacineReporting(@Body() payload: CentralHubReportPayloadVm) {
-    return CentralSortirService.generateReportingLaporanHub(payload, HUB_REPORT.HUB_MACHINE);
+    return CentralSortirService.generateReportingLaporanHub(payload, HUB_REPORT.HUB_MESIN);
   }
 
   @Post('do-hub/queue/list')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @HttpCode(HttpStatus.OK)
   async getListMonitoringHubMacineReporting(@Body() body: CentralSortirListPayloadVm) {
-    return CentralSortirService.getListLaporanHubReporting(body, HUB_REPORT.HUB_MACHINE);
+    return CentralSortirService.getListLaporanHubReporting(body, HUB_REPORT.HUB_MESIN);
   }
 
   @Post('lebih-sortir/queue/generate')
