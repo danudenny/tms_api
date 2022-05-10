@@ -182,8 +182,7 @@ export class CentralSortirService {
   }
 
   private static async generateLaporanHubQuery(payload: CentralHubReportPayloadVm, type: number) {
-    let query = `SELECT \n
-        hsa.scan_date_in_hub as "scanDateInHub", \n
+    let query = `
         hsa.awb_number as "awbNumber", \n
         CONCAT(b.bag_number, LPAD(bi.bag_seq :: text, 3, '0')) as "bagNumber", \n
         CASE WHEN hsa.do_hub THEN 'Yes' ELSE 'No' END as "do", \n
@@ -198,12 +197,12 @@ export class CentralSortirService {
     WHERE
         hsa.is_deleted = FALSE \n`;
     if (HUB_REPORT.LEBIH_SORTIR == type) {
-      query = query + `AND hsa.scan_date_in_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
+      query = `SELECT \n hsa.scan_date_in_hub as "scanDateInHub", \n` + query + `AND hsa.scan_date_in_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
         AND hsa.scan_date_in_hub < '${moment(payload.endDate).format('YYYY-MM-DD')}' \n
         AND hsa.do_hub = FALSE \n
         AND hsa.in_hub = TRUE \n`;
     } else {
-      query = query + `AND hsa.scan_date_do_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
+      query = `SELECT \n hsa.scan_date_do_hub as "scanDateDoHub", \n` + query + `AND hsa.scan_date_do_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
         AND hsa.scan_date_do_hub < '${moment(payload.endDate).format('YYYY-MM-DD')}' \n`;
     }
     if (payload.branchId && payload.branchId !== 0) {
