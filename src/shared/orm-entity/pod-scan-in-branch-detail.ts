@@ -61,6 +61,13 @@ export class PodScanInBranchDetail extends TmsBaseEntity {
   })
   bagNumber: string;
 
+  @Column('character varying', {
+    nullable: true,
+    length: 255,
+    name: 'route_priority',
+  })
+  routePriority: string;
+
   @OneToOne(() => AwbItemAttr)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbItemAttr: AwbItemAttr;

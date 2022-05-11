@@ -177,23 +177,26 @@ export class LastMileDeliveryInService {
       // Check type scan value number
       inputNumber = inputNumber.trim();
       if (await AwbService.isAwbNumberLenght(inputNumber)) {
-        // awb number
-        const resultAwb = await this.scanInAwbBranch(
-          inputNumber,
-          payload.bagNumber,
-          payload.podScanInBranchId,
-        );
-        const dataItem = new V2ScanInputNumberBranchVm();
-        dataItem.awbNumber = resultAwb.awbNumber;
-        dataItem.status = resultAwb.status;
-        dataItem.message = resultAwb.message;
-        dataItem.trouble = resultAwb.trouble;
+        // check route priority
+        let priorityData = await WebAwbScanPriorityService.scanPriority(inputNumber)
+        if (priorityData) {
+          // check awb number
+          const resultAwb = await this.scanInAwbBranch(
+            inputNumber,
+            payload.bagNumber,
+            payload.podScanInBranchId,
+            priorityData.routeAndPriority
+          );
+          const dataItem = new V2ScanInputNumberBranchVm();
+          dataItem.awbNumber = resultAwb.awbNumber;
+          dataItem.status = resultAwb.status;
+          dataItem.message = resultAwb.message;
+          dataItem.trouble = resultAwb.trouble;
+          dataItem.routeAndPriority = priorityData.routeAndPriority
+          data.push(dataItem);
 
-        let priorityData = await WebAwbScanPriorityService.scanPriority(resultAwb.awbNumber)
-        dataItem.routeAndPriority = priorityData.routeAndPriority
-        data.push(dataItem);
-
-        dataBag = resultAwb.dataBag;
+          dataBag = resultAwb.dataBag;
+        }
       } else if (await BagService.isBagNumberLenght(inputNumber)) {
         resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId, false);
       } else if (await BagService.isSealNumberLenght(inputNumber)) {
@@ -447,6 +450,7 @@ export class LastMileDeliveryInService {
     awbNumber: string,
     bagNumber: string,
     podScanInBranchId: string,
+    routePriority: string = null
   ): Promise<ScanBranchAwbVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -529,57 +533,6 @@ export class LastMileDeliveryInService {
               result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
             }
           } else {
-            // ONLY SCAN AWB NUMBER ===========================================
-            // NOTE: if awb item attr bagItemLast not null
-            // find bag if lazy scan bag number
-            // #region check bag if null
-            // bagId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
-            // bagItemId = awb.bagItemLast ? awb.bagItemLast.bagItemId : 0;
-            // const podScanInBranchBag = await PodScanInBranchBag.findOne({
-            //   where: {
-            //     podScanInBranchId,
-            //     bagId,
-            //     bagItemId,
-            //     isDeleted: false,
-            //   },
-            // });
-
-            // if (podScanInBranchBag) {
-            //   // set data bag
-            //   bagId = podScanInBranchBag.bagId;
-            //   bagItemId = podScanInBranchBag.bagItemId;
-
-            //   // NOTE: check doPodDetail ====================================
-            //   const doPodDetail = await DoPodDetail.findOne({
-            //     where: {
-            //       awbItemId: awb.awbItemId,
-            //       isScanIn: false,
-            //       isDeleted: false,
-            //     },
-            //   });
-            //   if (doPodDetail) {
-            //     // Update Data doPodDetail
-            //     await DoPodDetail.update(doPodDetail.doPodDetailId, {
-            //       isScanIn: true,
-            //       updatedTime: moment().toDate(),
-            //       userIdUpdated: authMeta.userId,
-            //     });
-            //   }
-            //   // ============================================================
-
-            //   dataBag.bagId = bagId;
-            //   dataBag.bagItemId = bagItemId;
-            //   dataBag.status = 'ok';
-            //   dataBag.message = 'Success';
-            //   dataBag.trouble = false;
-
-            //   result.dataBag = dataBag;
-            // } else {
-            //   result.status = 'warning';
-            //   result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
-            // }
-            // #endregion check bag if null
-
             // handle awb number only with not have bag number
             result.status = 'warning';
             result.message = `Resi ${awbNumber} tidak ada dalam gabung paket`;
@@ -594,6 +547,7 @@ export class LastMileDeliveryInService {
           podScanInBranchDetailObj.awbNumber = awbNumber;
           podScanInBranchDetailObj.bagNumber = bagNumber;
           podScanInBranchDetailObj.isTrouble = result.trouble;
+          podScanInBranchDetailObj.routePriority = routePriority;
           await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 
           // AFTER Scan IN ===============================================
