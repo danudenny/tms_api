@@ -30,24 +30,6 @@ export class V2WebScanInBagBranchVm {
 }
 
 
-// export class ScanValidateBranchVm {
-//   @ApiModelProperty()
-//   bagNumber: string;
-
-//   @ApiModelProperty()
-//   totalAwbInBag: number;
-
-//   @ApiModelProperty()
-//   totalAwbScan: number;
-
-//   @ApiModelProperty()
-//   totalAwbMore: number;
-
-//   @ApiModelProperty()
-//   totalAwbLess: number;
-
-// }
-
 
 // Response
 export class V2ScanInputNumberBranchVm {
@@ -67,28 +49,6 @@ export class V2ScanInputNumberBranchVm {
   routeAndPriority: string;
 }
 
-// export class V2ScanInputNumberLoadBranchVm {
-//   @ApiModelProperty()
-//   awbNumber: string;
-
-//   @ApiModelProperty()
-//   status: string;
-
-//   @ApiModelProperty()
-//   trouble: boolean;
-
-//   @ApiModelProperty()
-//   message: string;
-// }
-
-// export class V2WebScanInLoadBranchResponseVm   {
-//   @ApiModelProperty()
-//   bagNumber: string;
-
-//   @ApiModelProperty()
-//   AwbDetail: V2ScanInputNumberLoadBranchVm[];
-// }
-
 export class V2ScanBranchBagVm {
   @ApiModelProperty()
   bagId: number;
@@ -106,27 +66,6 @@ export class V2ScanBranchBagVm {
   message: string;
 }
 
-// export class WebScanInBagBranchResponseVm {
-//   @ApiModelProperty()
-//   totalData: number;
-
-//   @ApiModelProperty()
-//   totalSuccess: number;
-
-//   @ApiModelProperty()
-//   totalError: number;
-
-//   @ApiModelProperty({ type: () => V2ScanBranchBagVm })
-//   dataBag: V2ScanBranchBagVm;
-
-//   @ApiModelProperty({ type: [V2ScanInputNumberBranchVm] })
-//   data: V2ScanInputNumberBranchVm[];
-// }
-
-// export class ScanBranchAwbVm extends V2ScanInputNumberLoadBranchVm {
-//   @ApiModelProperty({ type: [V2ScanBranchBagVm] })
-//   dataBag: V2ScanBranchBagVm;
-// }
 
 export class V2WebScanInBranchResponseVm {
   @ApiModelProperty()
@@ -144,41 +83,3 @@ export class V2WebScanInBranchResponseVm {
   @ApiModelProperty({ type: [V2ScanInputNumberBranchVm] })
   data: V2ScanInputNumberBranchVm[];
 }
-
-// export class ScanInAwbLoadVm {
-//   @ApiModelProperty()
-//   awbNumber: string;
-
-//   @ApiModelProperty()
-//   trouble: boolean;
-
-//   @ApiModelProperty()
-//   isFiltered: boolean;
-
-//   @ApiModelProperty()
-//   status: string;
-
-//   @ApiModelProperty()
-//   message: string;
-// }
-
-// export class ScanInBagLoadVm {
-//   @ApiModelProperty()
-//   bagNumber: string;
-
-//   @ApiModelProperty({ type: [ScanInAwbLoadVm] })
-//   awb: ScanInAwbLoadVm[];
-// }
-
-// export class WebScanInBranchLoadResponseVm {
-//   @ApiModelProperty()
-//   podScanInBranchId: string;
-
-//   @ApiModelProperty({ type: [ScanInBagLoadVm] })
-//   data: ScanInBagLoadVm[];
-// }
-
-// export class HubDeliveryInExcelExecuteVm {
-//   @ApiModelProperty()
-//   id: string;
-// }

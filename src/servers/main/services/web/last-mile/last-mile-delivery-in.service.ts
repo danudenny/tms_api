@@ -27,6 +27,9 @@ import { AwbService } from '../../v1/awb.service';
 import { BagService } from '../../v1/bag.service';
 import moment = require('moment');
 import { getManager } from 'typeorm';
+import { V2WebScanInBranchResponseVm, V2ScanInputNumberBranchVm } from '../../../models/web-scanin-v2.vm';
+import {WebAwbScanPriorityService} from '../../web/web-awb-scan-priority.service'
+
 // #endregion
 export class LastMileDeliveryInService {
   private static async resultBag(
@@ -138,11 +141,95 @@ export class LastMileDeliveryInService {
     return result;
   }
 
-  // static async getScanInAwbBranch(
-  //   awbNumber: string,
-  // ); {
-  //   return
-  // }
+  // additional call to priority service aka tms mono to get prioritazion data
+  static async scanInBranchV2(
+    payload: WebScanInBagBranchVm,
+  ): Promise<WebScanInBranchResponseVm> {
+    let isBag: boolean = false;
+    let data: V2ScanInputNumberBranchVm[] = [];
+    let dataBag = new ScanBranchBagVm();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+
+    // find and create pod_scan_in_branch
+    let podScanInBranch = await PodScanInBranch.findOne({
+      where: {
+        branchId: permissonPayload.branchId,
+        transactionStatusId: 600,
+        isDeleted: false,
+      },
+    });
+
+    if (podScanInBranch) {
+      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+    } else {
+      podScanInBranch = PodScanInBranch.create();
+      podScanInBranch.branchId = permissonPayload.branchId;
+      podScanInBranch.scanInType = 'bag'; // default
+      podScanInBranch.transactionStatusId = 600;
+      podScanInBranch.totalBagScan = 0;
+
+      await PodScanInBranch.save(podScanInBranch);
+      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+    }
+
+    for (let inputNumber of payload.scanValue) {
+      let resultBag;
+      // Check type scan value number
+      inputNumber = inputNumber.trim();
+      if (await AwbService.isAwbNumberLenght(inputNumber)) {
+        // awb number
+        const resultAwb = await this.scanInAwbBranch(
+          inputNumber,
+          payload.bagNumber,
+          payload.podScanInBranchId,
+        );
+        const dataItem = new V2ScanInputNumberBranchVm();
+        dataItem.awbNumber = resultAwb.awbNumber;
+        dataItem.status = resultAwb.status;
+        dataItem.message = resultAwb.message;
+        dataItem.trouble = resultAwb.trouble;
+
+        let priorityData = await WebAwbScanPriorityService.scanPriority(resultAwb.awbNumber)
+        dataItem.routeAndPriority = priorityData.routeAndPriority
+        data.push(dataItem);
+
+        dataBag = resultAwb.dataBag;
+      } else if (await BagService.isBagNumberLenght(inputNumber)) {
+        resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId, false);
+      } else if (await BagService.isSealNumberLenght(inputNumber)) {
+        resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId, true);
+      } else {
+        const dataItem = new V2ScanInputNumberBranchVm();
+        dataItem.awbNumber = inputNumber;
+        dataItem.status = 'error';
+        dataItem.message = 'Nomor tidak valid';
+        dataItem.trouble = true;
+        data.push(dataItem);
+      }
+      if (resultBag) {
+          isBag = true;
+          data = resultBag.data;
+          dataBag = resultBag.dataBag;
+        }
+    }
+
+    // get bag number
+    if (dataBag && dataBag.bagItemId && payload.bagNumber == '') {
+      const bagItem = await BagService.getBagNumber(dataBag.bagItemId);
+      if (bagItem) {
+        payload.bagNumber =
+          bagItem.bag.bagNumber + bagItem.bagSeq.toString().padStart(3, '0');
+      }
+    }
+
+    const result = new V2WebScanInBranchResponseVm();
+    result.bagNumber = payload.bagNumber;
+    result.podScanInBranchId = payload.podScanInBranchId;
+    result.isBag = isBag;
+    result.data = data;
+    result.dataBag = dataBag;
+    return result;
+  }
 
   static async scanInBagBranch(
     bagData: BagItem,
