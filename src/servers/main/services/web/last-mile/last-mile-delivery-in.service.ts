@@ -138,6 +138,12 @@ export class LastMileDeliveryInService {
     return result;
   }
 
+  // static async getScanInAwbBranch(
+  //   awbNumber: string,
+  // ); {
+  //   return
+  // }
+
   static async scanInBagBranch(
     bagData: BagItem,
     bagNumber: string,

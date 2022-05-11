@@ -79,6 +79,7 @@ import { MobileDoPodReturnController } from './mobile/mobile-do-pod-return.contr
 import { RejectPackageController } from './combine-package/reject-package.controller';
 import { WebAwbCodReportController } from './web/v1/web-awb-cod-report.controller';
 import { WebAwbCodRedshiftController } from './web/v1/web-awb-cod-redshift.controller';
+import { V2WebDeliveryInController } from './web/v2/web-delivery-in.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -163,6 +164,7 @@ import { WebAwbCodRedshiftController } from './web/v1/web-awb-cod-redshift.contr
     RejectPackageController,
     WebAwbCodReportController,
     WebAwbCodRedshiftController,
+    V2WebDeliveryInController,
   ],
 })
 export class MainServerControllersModule {}
