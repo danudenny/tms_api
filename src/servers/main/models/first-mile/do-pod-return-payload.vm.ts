@@ -72,6 +72,12 @@ export class WebReturnVm {
 
   @ApiModelProperty()
   reasonNotes: string;
+  
+  @ApiModelPropertyOptional()
+  attachmentTmsId: number;
+
+  @ApiModelPropertyOptional()
+  photoType: string;
 
 }
 
