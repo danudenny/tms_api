@@ -1,3 +1,4 @@
+import { WebAwbScanPriorityResponse } from './../../../models/web-awb-scan-priority-response.vm';
 // #region import
 import { AWB_STATUS } from '../../../../../shared/constants/awb-status.constant';
 import { BAG_STATUS } from '../../../../../shared/constants/bag-status.constant';
@@ -95,6 +96,7 @@ export class LastMileDeliveryInService {
           inputNumber,
           payload.bagNumber,
           payload.podScanInBranchId,
+          false,
         );
         const dataItem = new ScanInputNumberBranchVm();
         dataItem.awbNumber = resultAwb.awbNumber;
@@ -177,26 +179,23 @@ export class LastMileDeliveryInService {
       // Check type scan value number
       inputNumber = inputNumber.trim();
       if (await AwbService.isAwbNumberLenght(inputNumber)) {
-        // check route priority
-        let priorityData = await WebAwbScanPriorityService.scanPriority(inputNumber)
-        if (priorityData) {
-          // check awb number
-          const resultAwb = await this.scanInAwbBranch(
-            inputNumber,
-            payload.bagNumber,
-            payload.podScanInBranchId,
-            priorityData.routeAndPriority
-          );
-          const dataItem = new V2ScanInputNumberBranchVm();
-          dataItem.awbNumber = resultAwb.awbNumber;
-          dataItem.status = resultAwb.status;
-          dataItem.message = resultAwb.message;
-          dataItem.trouble = resultAwb.trouble;
-          dataItem.routeAndPriority = priorityData.routeAndPriority
-          data.push(dataItem);
+        // check awb number
+        const resultAwb = await this.scanInAwbBranch(
+          inputNumber,
+          payload.bagNumber,
+          payload.podScanInBranchId,
+          true
+        );
+        const dataItem = new V2ScanInputNumberBranchVm();
+        dataItem.awbNumber = resultAwb.awbNumber;
+        dataItem.status = resultAwb.status;
+        dataItem.message = resultAwb.message;
+        dataItem.trouble = resultAwb.trouble;
+        // dataItem.routeAndPriority = priorityData.routeAndPriority
+        data.push(dataItem);
 
-          dataBag = resultAwb.dataBag;
-        }
+        dataBag = resultAwb.dataBag;
+
       } else if (await BagService.isBagNumberLenght(inputNumber)) {
         resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId, false);
       } else if (await BagService.isSealNumberLenght(inputNumber)) {
@@ -450,7 +449,7 @@ export class LastMileDeliveryInService {
     awbNumber: string,
     bagNumber: string,
     podScanInBranchId: string,
-    routePriority: string = null
+    usePriority: boolean = false
   ): Promise<ScanBranchAwbVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -485,14 +484,33 @@ export class LastMileDeliveryInService {
         // TODO: find by check data
         let bagId = 0;
         let bagItemId = 0;
+        var podScanInBranchDetail;
+        var routeInfo = new WebAwbScanPriorityResponse;
+        var routePriority = '';
 
-        const podScanInBranchDetail = await PodScanInBranchDetail.findOne({
-          where: {
-            podScanInBranchId,
-            awbItemId: awb.awbItemId,
-            isDeleted: false,
-          },
-        });
+        if (usePriority) {
+          [podScanInBranchDetail, routeInfo] = await Promise.all([
+            PodScanInBranchDetail.findOne({
+              where: {
+                podScanInBranchId,
+                awbItemId: awb.awbItemId,
+                isDeleted: false,
+              },
+            }),
+            WebAwbScanPriorityService.scanPriority(awbNumber)
+          ])
+          if (routeInfo) {
+            routePriority = routeInfo.routeAndPriority;
+          }
+        } else {
+          podScanInBranchDetail = await PodScanInBranchDetail.findOne({
+            where: {
+              podScanInBranchId,
+              awbItemId: awb.awbItemId,
+              isDeleted: false,
+            },
+          })
+        }
 
         if (podScanInBranchDetail) {
           result.status = 'error';
@@ -547,7 +565,10 @@ export class LastMileDeliveryInService {
           podScanInBranchDetailObj.awbNumber = awbNumber;
           podScanInBranchDetailObj.bagNumber = bagNumber;
           podScanInBranchDetailObj.isTrouble = result.trouble;
-          podScanInBranchDetailObj.routePriority = routePriority;
+          if (usePriority) {
+            podScanInBranchDetailObj.routePriority = routePriority;
+          }
+
           await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 
           // AFTER Scan IN ===============================================
