@@ -43,7 +43,6 @@ export class SlackUtil {
       username: this.slackUsername,
       channel: channel,
       text: text,
-      icon_emoji: ':ghost:',
       attachments: [
         {
           text: stack,
