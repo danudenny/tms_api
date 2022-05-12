@@ -93,7 +93,6 @@ export class LogWayzimServices {
       result.message = `Success Insert AWB`;
       return result;
     } catch (e) {
-      // console.error(e.message);
       return generateErrorResult('internal server error');
     }
   }
