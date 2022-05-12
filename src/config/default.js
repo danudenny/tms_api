@@ -103,7 +103,7 @@ module.exports = {
   },
   slack :{
     baseUrl : 'https://hooks.slack.com/services/',
-    tokenSlack : 'TEL84PB2L/B02NFKJ7S4A/Xrscr7amizYvioxcpPVZueGa',
+    tokenSlack : 'TEL84PB2L/B03BJECQLSY/2De9VYLyD1WLHBIfRofYgGWx',
     userSlack : 'Incoming Webhook'
   },
   divaPayment: {
