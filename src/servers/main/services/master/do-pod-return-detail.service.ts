@@ -85,6 +85,7 @@ export class DoPodReturnDetailService {
       ['t1.type', 'type'],
       ['t3.url', 'url'],
       ['t2.awb_number', 'awbNumber'],
+      ['t3.created_time', 'createdTime'],
     );
 
     q.innerJoin(e => e.doPodReturnDetail, 't2', j =>
