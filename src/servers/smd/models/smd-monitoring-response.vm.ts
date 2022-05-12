@@ -63,4 +63,7 @@ export class MonitoringListVm {
     @ApiModelProperty()
     employee_driver_name: string;
 
+    @ApiModelProperty()
+    representative_code: string;
+
   }
