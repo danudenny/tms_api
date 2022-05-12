@@ -5,6 +5,7 @@ import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import { Representative } from '../../../../shared/orm-entity/representative';
 import { UpdateRepresentativeManualResponse } from '../../models/smd-helpdesk-response.vm';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import moment from 'moment';
 
 @Injectable()
@@ -73,7 +74,7 @@ export class SmdHelpdeskService {
       result.message = 'update representative_code success';
       return result;
     } catch (e) {
-      console.error(e.message);
+      PinoLoggerService.log(e.message);
       throw new BadRequestException(`Internal Server Error`);
     }
   }
