@@ -27,7 +27,8 @@ export class PriorityServiceApi {
       // const request = await axios.post(url, body, options);
       let request = {
         data: {
-          priority : 'A1',
+          zone : 'A',
+          priority : '1',
           kelurahan : 'Kebon Jeruk'
         }
       }

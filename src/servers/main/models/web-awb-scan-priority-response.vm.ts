@@ -3,6 +3,12 @@ import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm
 
 export class WebAwbScanPriorityResponse {
   @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
   awbNumber: string;
 
   @ApiModelProperty()
