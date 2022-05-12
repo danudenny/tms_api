@@ -257,6 +257,9 @@ export class WebDeliveryOutReportService {
       {
         field: 'fullname',
       },
+      {
+        field: 'doPodType',
+      },
     ];
 
     const repo = new OrionRepositoryService(DoPod, 't1');
@@ -300,7 +303,6 @@ export class WebDeliveryOutReportService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.andWhere(e => e.doPodType, w => w.equals(POD_TYPE.OUT_BRANCH_AWB));
     q.andWhere(e => e.totalScanOutAwb, w => w.greaterThan(0));
 
     q.groupByRaw('t1.do_pod_id, t1.created_time,t1.do_pod_code,t1.do_pod_date_time,t1.description,t2.fullname,t3.branch_name, t5.partner_logistic_name, t2.nik, t6.branch_id, t6.branch_name');
