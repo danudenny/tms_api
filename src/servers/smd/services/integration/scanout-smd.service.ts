@@ -1691,6 +1691,7 @@ export class ScanoutSmdService {
             sealNumberLast: payload.seal_number,
             userIdUpdated: authMeta.userId,
             doSmdTime: timeNow,
+            departureScheduleDateTime: timeNow,
             updatedTime: timeNow,
           },
         );
@@ -2869,6 +2870,7 @@ export class ScanoutSmdService {
             sealNumberLast: payload.sealNumber,
             userIdUpdated: authMeta.userId,
             doSmdTime: timeNow,
+            departureScheduleDateTime: timeNow,
             updatedTime: timeNow,
           },
         );
