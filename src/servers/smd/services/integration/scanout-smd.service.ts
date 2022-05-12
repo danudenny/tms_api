@@ -1681,6 +1681,7 @@ export class ScanoutSmdService {
             {
               sealNumber: payload.seal_number,
               userIdUpdated: authMeta.userId,
+              departureScheduleDateTime: timeNow,
               updatedTime: timeNow,
             },
           );
@@ -1715,7 +1716,7 @@ export class ScanoutSmdService {
           resultDoSmd.doSmdVehicleIdLast,
           null,
           null,
-          resultDoSmd.doSmdTime,
+          timeNow,
           permissonPayload.branchId,
           paramStatusId,
           payload.seal_number,
@@ -2880,6 +2881,7 @@ export class ScanoutSmdService {
             {
               sealNumber: payload.sealNumber,
               userIdUpdated: authMeta.userId,
+              departureScheduleDateTime: timeNow,
               updatedTime: timeNow,
             },
           );
@@ -2891,7 +2893,7 @@ export class ScanoutSmdService {
           doSmdVehicleId,
           null,
           null,
-          doSmd.doSmdTime,
+          timeNow,
           121, // branch kantor pusat
           1200, // status seal change
           payload.sealNumber,
