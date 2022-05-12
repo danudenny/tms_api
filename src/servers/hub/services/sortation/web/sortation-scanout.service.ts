@@ -509,18 +509,20 @@ export class SortationScanOutService {
       await getManager().transaction(async transactional => {
         for (const sortationDetailId of resultDoSortaionDetailIds) {
           await transactional.update(DoSortationDetail,
-            {doSortationDetailId:  sortationDetailId},
+            { doSortationDetailId: sortationDetailId },
             {
               doSortationStatusIdLast: DO_SORTATION_STATUS.ASSIGNED,
+              doSortationTime: timeNow,
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
             },
           );
         }
         await transactional.update(DoSortation,
-          {doSortationId:  payload.doSortationId},
+          { doSortationId: payload.doSortationId },
           {
             doSortationStatusIdLast: DO_SORTATION_STATUS.ASSIGNED,
+            doSortationTime: timeNow,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
           },
@@ -531,7 +533,7 @@ export class SortationScanOutService {
         resultDoSortaion.doSortationId,
         null,
         resultDoSortaion.doSortationVehicleIdLast,
-        resultDoSortaion.doSortationTime,
+        timeNow,
         permissonPayload.branchId,
         DO_SORTATION_STATUS.ASSIGNED,
         null,
