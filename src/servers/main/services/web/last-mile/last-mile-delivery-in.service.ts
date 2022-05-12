@@ -191,7 +191,7 @@ export class LastMileDeliveryInService {
         dataItem.status = resultAwb.status;
         dataItem.message = resultAwb.message;
         dataItem.trouble = resultAwb.trouble;
-        // dataItem.routeAndPriority = priorityData.routeAndPriority
+        dataItem.routeAndPriority = resultAwb.routePriority;
         data.push(dataItem);
 
         dataBag = resultAwb.dataBag;
@@ -567,6 +567,7 @@ export class LastMileDeliveryInService {
           podScanInBranchDetailObj.isTrouble = result.trouble;
           if (usePriority) {
             podScanInBranchDetailObj.routePriority = routePriority;
+            result.routePriority = routePriority;
           }
 
           await PodScanInBranchDetail.save(podScanInBranchDetailObj);
