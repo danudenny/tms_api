@@ -22,3 +22,14 @@ export class CentralSortirListPayloadVm {
   @ApiModelPropertyOptional()
   page: number;
 }
+
+export class CentralHubReportPayloadVm {
+  @ApiModelProperty()
+  startDate: string;
+
+  @ApiModelProperty()
+  endDate: string;
+
+  @ApiModelPropertyOptional()
+  branchId: number;
+}

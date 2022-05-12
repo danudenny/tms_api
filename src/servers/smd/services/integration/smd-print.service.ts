@@ -341,7 +341,6 @@ export class SmdPrintService {
       t1.do_smd_detail_id
       `);
     const data = await v.exec();
-    // console.log(data.length);
     let result = new PrintDoSmdBaggingDataDoSmdDetailBagBaggingItemVm();
 
     if (data.length > 0) {
@@ -376,7 +375,6 @@ export class SmdPrintService {
       t1.do_smd_detail_id
       `);
     const data = await v.exec();
-    // console.log(data.length);
     let result = new PrintDoSmdBagDataNewDoSmdDetailBagBagItemVm();
 
     if (data.length > 0) {
@@ -409,7 +407,6 @@ export class SmdPrintService {
       t1.do_smd_detail_id
       `);
     const data = await v.exec();
-    // console.log(data.length);
     let result = new PrintDoSmdBagRepresentativeDataDoSmdDetailBagBagRepresentativeItemVm();
 
     if (data.length > 0) {

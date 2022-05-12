@@ -103,7 +103,7 @@ export class LastMileTransitOutService {
       },
     });
 
-    if (payload.doPodType === 3015) {
+    if (payload.doPodType === 3015 || payload.doPodType === 3035) {
       result.printDoPodMetadata.doPodCode = doPod.doPodCode;
       result.printDoPodMetadata.branchTo.branchName = branchData.branchName;
       result.printDoPodMetadata.description = payload.desc;
