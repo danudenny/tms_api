@@ -1,3 +1,4 @@
+import { ConfigService } from "./config.service";
 
 export class RoleGroupService {
 
@@ -5,18 +6,16 @@ export class RoleGroupService {
    * Handle role COD merge
    * must not isHeadOffice
    * @static
-   * @param {string} roleName
+   * @param {number} roleId
    * @param {boolean} isHeadOffice
    * @returns {boolean}
    * @memberof RoleGroupService
    */
-  public static isRoleCodMerge(roleName: string, isHeadOffice: boolean): boolean {
-    const arrMerge = [
-      'Admin COD - Merger',
-      'Ops - Koordinator Sigesit Antar (COD)',
-    ];
+  public static isRoleCodMerge(roleId: number, isHeadOffice: boolean): boolean {
+    const codRole = ConfigService.get('codRoleId');
+    const arrMerge = codRole.codMerge;
 
-    if (arrMerge.includes(roleName) && !isHeadOffice) {
+    if (arrMerge.includes(Number(roleId)) && !isHeadOffice) {
       return true;
     } else {
       return false;
@@ -27,15 +26,16 @@ export class RoleGroupService {
    * Handle role COD Admin
    * must not isHeadOffice
    * @static
-   * @param {string} roleName
+   * @param {number} roleId
    * @param {boolean} isHeadOffice
    * @returns {boolean}
    * @memberof RoleGroupService
    */
-  public static isRoleCodAdmin(roleName: string, isHeadOffice: boolean): boolean {
-    const arrAdmin = ['Ops - Admin COD', 'Ops - Admin Operational ( COD )'];
+  public static isRoleCodAdmin(roleId: number, isHeadOffice: boolean): boolean {
+    const codRole = ConfigService.get('codRoleId');
+    const arrAdmin = codRole.codAdmin;
 
-    if (arrAdmin.includes(roleName) && !isHeadOffice) {
+    if (arrAdmin.includes(Number(roleId)) && !isHeadOffice) {
       return true;
     } else {
       return false;
@@ -46,15 +46,16 @@ export class RoleGroupService {
    * Handle role Web COD manual
    * must not isHeadOffice
    * @static
-   * @param {string} roleName
+   * @param {number} roleId
    * @param {boolean} isHeadOffice
    * @returns {boolean}
    * @memberof RoleGroupService
    */
-  public static isRoleCodManual(roleName: string, isHeadOffice: boolean): boolean {
-    const arrAdmin = ['Admin FORCE MAJEURE'];
+  public static isRoleCodManual(roleId: number, isHeadOffice: boolean): boolean {
+    const codRole = ConfigService.get('codRoleId');
+    const arrAdmin = codRole.codManual;
 
-    if (arrAdmin.includes(roleName)) {
+    if (arrAdmin.includes(Number(roleId))) {
       return true;
     } else {
       return false;
