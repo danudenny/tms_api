@@ -80,6 +80,7 @@ import { RejectPackageController } from './combine-package/reject-package.contro
 import { WebAwbCodReportController } from './web/v1/web-awb-cod-report.controller';
 import { WebAwbCodRedshiftController } from './web/v1/web-awb-cod-redshift.controller';
 import { V2WebDeliveryInController } from './web/v2/web-delivery-in.controller';
+import { V2MobileDeliveryInController } from './mobile/v2/mobile-delivery-in.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -165,6 +166,7 @@ import { V2WebDeliveryInController } from './web/v2/web-delivery-in.controller';
     WebAwbCodReportController,
     WebAwbCodRedshiftController,
     V2WebDeliveryInController,
+    V2MobileDeliveryInController,
   ],
 })
 export class MainServerControllersModule {}
