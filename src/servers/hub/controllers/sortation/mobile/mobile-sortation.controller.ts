@@ -38,6 +38,7 @@ export class MobileSortationController {
 
   @Post('problem')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @UseInterceptors(FileInterceptor('file'))
   public async problemMobileSortation(@Body() payload: MobileSortationProblemPayloadVm, @UploadedFile() file) {
     return MobileSortationService.problemMobileSortation(payload, file);
   }
