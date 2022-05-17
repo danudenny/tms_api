@@ -449,7 +449,6 @@ export class MobileSortationService {
       },
     });
 
-
     await getManager().transaction(async transaction => {
       if (resultDoSortationArrival) {
         PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SORTATION: ', authMeta);
@@ -457,7 +456,7 @@ export class MobileSortationService {
           where: {
             fileName: file.originalname,
           },
-          lock: { mode: 'pessimistic_write' },
+          // lock: { mode: 'pessimistic_write' },
         });
         if (attachment) {
           // attachment exist
@@ -477,7 +476,6 @@ export class MobileSortationService {
             url = attachment.url;
           }
         }
-
         // NOTE: insert data
         if (attachmentId) {
           // TODO: validate doPodDeliverDetailId ??
@@ -857,7 +855,7 @@ export class MobileSortationService {
       where: {
         fileName: file.originalname,
       },
-      lock: { mode: 'pessimistic_write' },
+      // lock: { mode: 'pessimistic_write' },
     });
 
     if (attachment) {
@@ -908,7 +906,7 @@ export class MobileSortationService {
       where: {
         fileName: file.originalname,
       },
-      lock: { mode: 'pessimistic_write' },
+      // lock: { mode: 'pessimistic_write' },
     });
 
     if (attachment) {
