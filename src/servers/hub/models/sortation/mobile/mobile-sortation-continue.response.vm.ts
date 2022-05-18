@@ -13,5 +13,5 @@ export class MobileSortationContinueResponseVm {
 
 export class MobileSortationContinueDataVm {
   @ApiModelProperty()
-  statusCode: string;
+  doSortationId: string;
 }

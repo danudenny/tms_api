@@ -52,10 +52,10 @@ import {
 } from '../../../models/sortation/mobile/mobile-sortation-handover.response.vm';
 import { getManager } from 'typeorm';
 import {
-  MobileSortationHanoverImageResponseVm
+  MobileSortationHanoverImageResponseVm,
 } from '../../../models/sortation/mobile/mobile-sortation-hanover-image.response.vm';
 import {
-  MobileSortationHandoverImagePayloadVm
+  MobileSortationHandoverImagePayloadVm,
 } from '../../../models/sortation/mobile/mobile-sortation-handover-image.payload.vm';
 
 @Injectable()
@@ -145,7 +145,6 @@ export class MobileSortationService {
           authMeta.userId,
         );
       });
-
 
       const data = [];
       data.push({
@@ -774,7 +773,7 @@ export class MobileSortationService {
             resultDoSortation.doSortationTime,
             resultDoSortation.doSortationVehicleIdLast,
             3000,
-            null,
+            resultDoSortation.branchIdFrom,
             null,
             null,
             authMeta.userId,
@@ -785,6 +784,7 @@ export class MobileSortationService {
         data.push({
           doSortationId: resultDoSortation.doSortationId,
         });
+
         result.statusCode = HttpStatus.OK;
         result.message = 'Sortation Success Created Continue';
         result.data = data;
