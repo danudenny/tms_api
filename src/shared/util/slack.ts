@@ -42,7 +42,7 @@ export class SlackUtil {
     }
 
     const body = {
-      username: (username) ? username : this.slackUserName,
+      username: username || this.slackUserName,
       channel: channel,
       text: text,
       icon_emoji: (icon) ? icon : ':sicepat:', 
