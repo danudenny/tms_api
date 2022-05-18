@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ConfigService } from '../../shared/services/config.service';
 import { RequestErrorService } from '../../shared/services/request-error.service';
 import { HttpStatus } from '@nestjs/common';
+import { RedisService } from '../../shared/services/redis.service';
 
 export class PriorityServiceApi {
   public static get queryServiceUrl() {
@@ -25,14 +26,30 @@ export class PriorityServiceApi {
     try {
       //TODO: Implement service priority here
       // const request = await axios.post(url, body, options);
-      let request = {
-        data: {
-          zone : 'A',
-          priority : '1',
-          kelurahan : 'Kebon Jeruk'
+      let data = await RedisService.get(
+        `servicePriorityisNull`,
+        true,
+      );
+
+      if(data == true){
+        let request = {
+          data: {
+            zone : 'X',
+            priority : '1',
+            kelurahan : 'Kebon Jeruk'
+          }
         }
+        return request;
+      }else{
+        let request = {
+          data: {
+            zone : 'A',
+            priority : '1',
+            kelurahan : 'Kebon Jeruk'
+          }
+        }
+        return request;
       }
-      return request;
     } catch (err) {
       RequestErrorService.throwObj(
         {
