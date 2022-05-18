@@ -27,16 +27,16 @@ export class PriorityServiceApi {
       //TODO: Implement service priority here
       // const request = await axios.post(url, body, options);
       let data = await RedisService.get(
-        `servicePriorityisNull`,
+        `servicePriority`,
         true,
       );
 
-      if(data == true){
+      if(data){
         let request = {
           data: {
-            zone : 'X',
-            priority : '1',
-            kelurahan : 'Kebon Jeruk'
+            zone : data.zone,
+            priority : data.priority,
+            kelurahan : data.kelurahan
           }
         }
         return request;
