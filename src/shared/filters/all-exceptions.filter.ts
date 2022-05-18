@@ -30,10 +30,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         PinoLoggerService.error('#### All Exception Filter : ', exception);
         const fullUrl =  request.headers.host + request.url;
         SlackUtil.sendMessage(
-          ConfigService.get('slackchannel.errorCode'),
+          ConfigService.get('slackchannel.tmsError.channel'),
           `#### All Exception Filter : ${exception}`,
           fullUrl,
           request.body,
+          ConfigService.get('slackchannel.tmsError.icon'),
+          'SicepatAlertTMS'
         );
       } else {
         PinoLoggerService.warn('#### All Exception Filter, Error Response : ', requestErrorResponse);

@@ -19,6 +19,8 @@ export class SlackUtil {
     text: string,
     stack?: string,
     fields?: any,
+    icon?: string,
+    username?:string,
   ) {
     let url = `${this.slackURL}/${this.tokenSlack}`;
     text = `[${process.env.NODE_ENV}] : ${text}`;
@@ -40,9 +42,10 @@ export class SlackUtil {
     }
 
     const body = {
-      username: this.slackUsername,
+      username: (username) ? username : this.slackUsername,
       channel: channel,
       text: text,
+      icon_emoji: (icon) ? icon : ':sicepat:', 
       attachments: [
         {
           text: stack,
