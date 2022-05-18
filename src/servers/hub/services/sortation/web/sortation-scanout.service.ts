@@ -666,12 +666,29 @@ export class SortationScanOutService {
       throw new BadRequestException(`Surat Jalan dengan detail id ${doSortationDetailId}, tidak ditemukan`);
     }
 
+    const branchRemove = await Branch.findOne({
+        where: {
+          branchCode: resultDoSortaionDetail.branchIdTo,
+          isDeleted : false,
+          isActive : true,
+        },
+      });
+
+    if (!branchRemove) {
+      throw new BadRequestException(`Gerai tidak ditemukan`);
+    }
+
+    const branchIdToList = await this.listAfterRemove(resultDoSortaion.branchIdToList, String(branchRemove.branchId));
+    const branchNameToList = await this.listAfterRemove(resultDoSortaion.branchNameToList, branchRemove.branchName);
+
     await getManager().transaction(async transactional => {
       await transactional.update(DoSortation,
         { doSortationId: resultDoSortaionDetail.doSortationId},
         {
           totalBag: resultDoSortaion.totalBag - resultDoSortaionDetail.totalBag,
           totalBagSortir: resultDoSortaion.totalBagSortir - resultDoSortaionDetail.totalBagSortir,
+          branchIdToList,
+          branchNameToList,
           updatedTime: moment().toDate(),
           userIdUpdated: authMeta.userId,
         },
@@ -1147,5 +1164,14 @@ export class SortationScanOutService {
     const resultDataDoSortationVehicle = await RawQueryService.query(rawQuery);
     return resultDataDoSortationVehicle;
   }
-}
 
+  private static async listAfterRemove(arrays: any[], compareValue: any) {
+    arrays.forEach((array, index, obj) => {
+      if (array == compareValue) {
+        obj.splice(index, 1);
+      }
+    });
+
+    return arrays;
+  }
+}

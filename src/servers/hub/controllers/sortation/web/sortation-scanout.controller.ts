@@ -101,4 +101,5 @@ export class SortationScanOutController {
   public async HandOver(@Body() payload: SortationHandoverPayloadVm) {
     return SortationScanOutService.sortationHandover(payload);
   }
+
 }
