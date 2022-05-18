@@ -26,6 +26,7 @@ import { SmdHelpdeskController } from './integration/smd-helpdesk.controller';
 import { SmdCentralReportingController } from './integration/smd-central-reporting.controller';
 import { SmdMutationController } from './integration/smd-mutation.controller';
 import { PrintSmdMutationController } from './integration/print-smd-mutation.controller';
+import { ErrorSMDController } from './integration/error.controller';
 
 @Module({
   imports: [SharedModule, SmdServerServicesModule],
@@ -54,6 +55,7 @@ import { PrintSmdMutationController } from './integration/print-smd-mutation.con
     SmdCentralReportingController,
     SmdMutationController,
     PrintSmdMutationController,
+    ErrorSMDController
   ],
 })
 export class SmdServerControllersModule {}

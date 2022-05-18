@@ -6,7 +6,7 @@ export class SlackUtil {
     return ConfigService.get('slack.baseUrl');
   }
 
-  public static get slackUsername() {
+  public static get slackUserName() {
     return ConfigService.get('slack.userSlack');
   }
 
@@ -42,7 +42,7 @@ export class SlackUtil {
     }
 
     const body = {
-      username: (username) ? username : this.slackUsername,
+      username: (username) ? username : this.slackUserName,
       channel: channel,
       text: text,
       icon_emoji: (icon) ? icon : ':sicepat:', 

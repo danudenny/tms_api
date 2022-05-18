@@ -35,7 +35,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
           fullUrl,
           request.body,
           ConfigService.get('slackchannel.tmsError.icon'),
-          'SicepatAlertTMS'
+          ConfigService.get('slackchannel.tmsError.username')
         );
       } else {
         PinoLoggerService.warn('#### All Exception Filter, Error Response : ', requestErrorResponse);
