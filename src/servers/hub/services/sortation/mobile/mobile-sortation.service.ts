@@ -44,7 +44,6 @@ import {
   MobileSortationProblemResponseVm,
 } from '../../../models/sortation/mobile/mobile-sortation-problem.response.vm';
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
-import { DoSmdDetailAttachment } from '../../../../../shared/orm-entity/do_smd_detail_attachment';
 import {
   MobileSortationHandoverPayloadVm,
 } from '../../../models/sortation/mobile/mobile-sortation-handover.payload.vm';
@@ -133,7 +132,6 @@ export class MobileSortationService {
             resultDoSortation.doSortationVehicleIdLast,
             DO_SORTATION_STATUS.ON_THE_WAY,
             resultDoSortation.branchIdFrom,
-            null,
             null,
             null,
             authMeta.userId,
@@ -226,7 +224,6 @@ export class MobileSortationService {
             resultDoSortationDetail.branchIdFrom,
             resultDoSortationDetail.branchIdTo,
             null,
-            null,
             authMeta.userId,
           );
 
@@ -239,7 +236,6 @@ export class MobileSortationService {
             DO_SORTATION_STATUS.RECEIVED,
             resultDoSortationDetail.branchIdFrom,
             resultDoSortationDetail.branchIdTo,
-            null,
             null,
             authMeta.userId,
           );
@@ -273,7 +269,6 @@ export class MobileSortationService {
             resultDoSortationDetail.branchIdFrom,
             resultDoSortationDetail.branchIdTo,
             null,
-            null,
             authMeta.userId,
           );
 
@@ -287,7 +282,6 @@ export class MobileSortationService {
             resultDoSortationDetail.branchIdFrom,
             resultDoSortationDetail.branchIdTo,
             null,
-            null,
             authMeta.userId,
           );
 
@@ -300,7 +294,6 @@ export class MobileSortationService {
             DO_SORTATION_STATUS.FINISHED,
             resultDoSortationDetail.branchIdFrom,
             resultDoSortationDetail.branchIdTo,
-            null,
             null,
             authMeta.userId,
           );
@@ -374,7 +367,6 @@ export class MobileSortationService {
           resultDoSortationDetail.branchIdFrom,
           resultDoSortationDetail.branchIdTo,
           null,
-          null,
           authMeta.userId,
         );
 
@@ -387,7 +379,6 @@ export class MobileSortationService {
           DO_SORTATION_STATUS.ON_THE_WAY,
           resultDoSortationDetail.branchIdFrom,
           resultDoSortationDetail.branchIdTo,
-          null,
           null,
           authMeta.userId,
         );
@@ -525,7 +516,6 @@ export class MobileSortationService {
         resultDoSortationArrival.branchIdFrom,
         resultDoSortationArrival.branchIdTo,
         null,
-        null,
         authMeta.userId,
       );
     });
@@ -631,7 +621,6 @@ export class MobileSortationService {
           resultDoSortationDetail.branchIdFrom,
           resultDoSortationDetail.branchIdTo,
           null,
-          null,
           authMeta.userId,
         );
       });
@@ -724,7 +713,6 @@ export class MobileSortationService {
               resultSortationDetail.branchIdFrom,
               resultSortationDetail.branchIdTo,
               null,
-              null,
               authMeta.userId,
             );
           });
@@ -788,7 +776,6 @@ export class MobileSortationService {
             3000,
             null,
             null,
-            payload.reasonId,
             null,
             authMeta.userId,
           );
@@ -969,7 +956,6 @@ export class MobileSortationService {
     doSortationStatusId: number,
     branchIdFrom: number,
     branchIdTo: number,
-    reasonId: number,
     reasonNote: string,
     userId: number,
   ) {
@@ -981,7 +967,6 @@ export class MobileSortationService {
       doSortationStatusId,
       branchIdFrom,
       branchIdTo,
-      reasonId,
       reasonNote,
       userIdCreated: userId,
       userIdUpdated: userId,

@@ -56,7 +56,6 @@ export class SortationL2ModuleService {
           findDoSortation.branchIdFrom,
           null,
           null,
-          null,
           authMeta.userId,
         );
       });
@@ -72,7 +71,7 @@ export class SortationL2ModuleService {
       result.data = resultData;
       return result;
     } else {
-      throw new BadRequestException(`Can't Find  DO SORTATION CODE : ` + payload.doSortationCode);
+      throw new BadRequestException(`DO SORTATION CODE : ` + payload.doSortationCode + `TIDAK DI TEMUKAN`);
     }
   }
 
@@ -101,7 +100,9 @@ export class SortationL2ModuleService {
       const data = await qb.getRawMany();
       const resultData = [];
       data.forEach(element => {
-        resultData.push(element.doSortationCode);
+        if (!resultData.includes(element.doSortationCode)) {
+          resultData.push(element.doSortationCode);
+        }
       });
       const result = new SortationL2ModuleSearchResponseVm();
       result.statusCode = HttpStatus.OK;

@@ -5,9 +5,6 @@ export class MobileSortationContinuePayloadVm {
   doSortationId: string;
 
   @ApiModelProperty()
-  reasonId: number;
-
-  @ApiModelProperty()
   longitude: string;
 
   @ApiModelProperty()
