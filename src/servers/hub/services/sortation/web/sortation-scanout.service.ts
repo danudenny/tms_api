@@ -442,9 +442,9 @@ export class SortationScanOutService {
         throw new BadRequestException(`Surat Jalan tidak ditemukan, Gagal membuat surat jalan`);
       }
 
-      if (resultDoSortaion.doSortationStatusIdLast != DO_SORTATION_STATUS.CREATED) {
-        throw new BadRequestException(`Surat Jalan Sudah Di proses`);
-      }
+      // if (resultDoSortaion.doSortationStatusIdLast != DO_SORTATION_STATUS.CREATED) {
+      //   throw new BadRequestException(`Surat Jalan Sudah Di proses`);
+      // }
 
       /* TODO::
         * Phase 2
