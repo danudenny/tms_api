@@ -5,9 +5,6 @@ import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.g
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import { V2MobileScanInBranchResponseVm, MobileScanInBagBranchVm } from '../../../models/mobile-scanin.vm';
 import { LastMileDeliveryInService } from '../../../services/mobile/mobile-last-mile-delivery-in.service';
-import { ResponseSerializerOptions } from '../../../../../shared/decorators/response-serializer-options.decorator';
-import { MobileDeliveryInService } from '../../../services/mobile/mobile-delivery-in.service';
-import { MobileScanInValidateBranchVm } from '../../../models/mobile-delivery.vm';
 
 @ApiUseTags('Mobile Delivery In V2')
 @Controller('mobile/v2/pod/scanIn')

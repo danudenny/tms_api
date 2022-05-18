@@ -464,6 +464,9 @@ export class LastMileDeliveryInService {
           podScanInBranchDetailObj.awbNumber = awbNumber;
           podScanInBranchDetailObj.bagNumber = bagNumber;
           podScanInBranchDetailObj.isTrouble = result.trouble;
+          if (usePriority) {
+            podScanInBranchDetailObj.routePriority = routeInfo.routeAndPriority
+          }
           await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 
           // AFTER Scan IN ===============================================
@@ -524,12 +527,10 @@ export class LastMileDeliveryInService {
       payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
     }
 
-    // for (let inputNumber of payload.scanValue) {
     let inputNumber = payload.scanValue;
     let resultBag;
-    // Check type scan value number
+
     if (regexNumber.test(inputNumber)) {
-      // awb number
       const resultAwb = await this.scanInAwbBranch(
         inputNumber,
         payload.bagNumber,
@@ -541,7 +542,6 @@ export class LastMileDeliveryInService {
       data.message = resultAwb.message;
       data.trouble = resultAwb.trouble;
       data.routeAndPriority = resultAwb.routePriority;
-      console.log(data)
     } else if (await BagService.isBagNumberLenght(inputNumber)) {
       resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId);
     } else {
