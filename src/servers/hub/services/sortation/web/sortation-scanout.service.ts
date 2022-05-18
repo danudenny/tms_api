@@ -668,7 +668,7 @@ export class SortationScanOutService {
 
     const branchRemove = await Branch.findOne({
         where: {
-          branchCode: resultDoSortaionDetail.branchIdTo,
+          branchId: resultDoSortaionDetail.branchIdTo,
           isDeleted : false,
           isActive : true,
         },
