@@ -13,7 +13,6 @@ import moment = require('moment');
 import { DoSortationDetail } from '../../../../../shared/orm-entity/do-sortation-detail';
 import { MobileSortationService } from '../mobile/mobile-sortation.service';
 
-
 @Injectable()
 export class SortationL2ModuleService {
   public static async finishManualSortation(payload: SortationL2ModuleFinishManualPayloadVm) {
@@ -86,7 +85,7 @@ export class SortationL2ModuleService {
       const qb = createQueryBuilder();
       qb.addSelect('ds.do_sortation_code', 'doSortationCode');
       qb.from('do_sortation', 'ds');
-      qb.innerJoin(
+      qb.leftJoin(
         'do_sortation_detail',
         'dsd',
         `ds.do_sortation_id = dsd.do_sortation_id and dsd.is_deleted = false and dsd.do_sortation_status_id_last <> ${DO_SORTATION_STATUS.FINISHED}`,
