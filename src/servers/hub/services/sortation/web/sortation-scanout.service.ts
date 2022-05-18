@@ -1082,6 +1082,7 @@ export class SortationScanOutService {
                   doSortationStatusIdLast : DO_SORTATION_STATUS.BACKUP_PROCESS,
                   updatedTime : moment().toDate(),
                   userIdUpdated : authMeta.userId,
+                  doSortationVehicleIdLast : paramDoSortationVehicleId,
                 },
               );
               await DoSortationDetail.update(
