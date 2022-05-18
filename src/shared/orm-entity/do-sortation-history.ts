@@ -64,6 +64,12 @@ export class DoSortationHistory extends TmsBaseEntity {
   })
   branchIdTo: number;
 
+  @Column('integer', {
+    nullable: true,
+    name: 'reason_id',
+  })
+  reasonId: number;
+
   @Column('text', {
     nullable: true,
     name: 'reason_note',
