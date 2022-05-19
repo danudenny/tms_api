@@ -5,6 +5,7 @@ import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.g
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
 import {
   SortationL2ModuleFinishManualPayloadVm,
+  SortationL2ModuleHandoverPayloadVm,
   SortationL2ModuleSearchPayloadVm,
 } from '../../../models/sortation/web/sortation-l2-module-search.payload.vm';
 import { SortationL2ModuleService } from '../../../services/sortation/web/sortation-l2-module.service';
@@ -25,5 +26,11 @@ export class SortationL2ModuleController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async finishManualSortation(@Body() payload: SortationL2ModuleFinishManualPayloadVm) {
     return SortationL2ModuleService.finishManualSortation(payload);
+  }
+
+  @Post('handover')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async handoverSortation(@Body() payload: SortationL2ModuleHandoverPayloadVm){
+    return SortationL2ModuleService.handoverModuleSortation(payload);
   }
 }

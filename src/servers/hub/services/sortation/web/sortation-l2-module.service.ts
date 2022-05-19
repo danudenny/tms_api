@@ -1,10 +1,11 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   SortationL2ModuleFinishManualPayloadVm,
+  SortationL2ModuleHandoverPayloadVm,
   SortationL2ModuleSearchPayloadVm,
 } from '../../../models/sortation/web/sortation-l2-module-search.payload.vm';
 import { Employee } from '../../../../../shared/orm-entity/employee';
-import { createQueryBuilder, getManager, Not } from 'typeorm';
+import { createQueryBuilder, getManager, In, Not } from 'typeorm';
 import { DO_SORTATION_STATUS } from '../../../../../shared/constants/do-sortation-status.constant';
 import { SortationL2ModuleSearchResponseVm } from '../../../models/sortation/web/sortation-l2-module-search.response.vm';
 import { DoSortation } from '../../../../../shared/orm-entity/do-sortation';
@@ -12,6 +13,10 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import moment = require('moment');
 import { DoSortationDetail } from '../../../../../shared/orm-entity/do-sortation-detail';
 import { MobileSortationService } from '../mobile/mobile-sortation.service';
+import { SortationHandoverResponseVm } from '../../../models/sortation/web/sortation-scanout-response.vm';
+import { RawQueryService } from '../../../../../shared/services/raw-query.service';
+import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
+import { SortationService } from './sortation.service';
 
 @Injectable()
 export class SortationL2ModuleService {
@@ -107,5 +112,167 @@ export class SortationL2ModuleService {
     } else {
       throw new BadRequestException(`Employee with nik : ` + payload.nik + ` Not Found`);
     }
+  }
+
+  public static async handoverModuleSortation(payload: SortationL2ModuleHandoverPayloadVm): Promise<SortationHandoverResponseVm> {
+    const authMeta = AuthService.getAuthData();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
+
+    const result = new SortationHandoverResponseVm();
+    const data = [];
+
+    /** search do_sortation not finish */
+    const resultDoSortation = await DoSortation.findOne({
+      where: {
+        doSortationCode : payload.doSortationCode,
+        isDeleted : false,
+        doSortationStatusIdLast: Not(DO_SORTATION_STATUS.FINISHED),
+      },
+    });
+
+    if (resultDoSortation) {
+      const RawQuery = `SELECT
+        do_sortation_vehicle_id,
+        employee_driver_id
+      FROM
+        do_sortation_vehicle dsv
+      INNER JOIN do_sortation ds ON ds.do_sortation_id = dsv.do_sortation_id AND ds.is_deleted = FALSE AND ds.do_sortation_status_id_last <> ${DO_SORTATION_STATUS.FINISHED}
+      WHERE
+        dsv.do_sortation_vehicle_id = '${
+          resultDoSortation.doSortationVehicleIdLast
+        }'
+        AND dsv.is_active = TRUE
+        AND dsv.is_deleted = FALSE; `;
+
+      const resulDoSortationVechile = await RawQueryService.query(RawQuery);
+      if (resulDoSortationVechile.length > 0) {
+        if (resulDoSortationVechile[0].employee_driver_id != payload.employeeIdDriver) {
+
+          const resultAllDriverVehicle = await this.findAllActiveVehicleInDriver(
+            resulDoSortationVechile[0].employee_driver_id, payload.doSortationCode,
+          );
+          const arrSmd = [];
+          const vehicleId = [];
+          for (const item of resultAllDriverVehicle) {
+            vehicleId.push(item.do_sortation_vehicle_id);
+          }
+
+          const dataDoSortation = await DoSortation.find({
+            where: {
+              doSortationVehicleIdLast: In(vehicleId),
+              doSortationStatusIdLast: Not(DO_SORTATION_STATUS.FINISHED),
+              isDeleted: false,
+            },
+          });
+
+          const dataSortationVehicle = await DoSortationVehicle.findOne({
+            where : {doSortationVehicleId : resultDoSortation.doSortationVehicleIdLast},
+          });
+          const vehicleSeqRunning = dataSortationVehicle.vehicleSeq + 1;
+
+          await getManager().transaction(async transaction => {
+            for (const item of dataDoSortation) {
+              /* Set Active False yang lama */
+              await transaction.update(
+                DoSortationVehicle,
+                {
+                  doSortationVehicleId : item.doSortationVehicleIdLast,
+                },
+                {
+                  isActive: false,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
+                });
+
+              /* Create Vehicle Dulu dan jangan update ke do_sortation*/
+              const paramDoSortationVehicleId = await SortationService.createDoSortationVehicle(
+                item.doSortationId,
+                null,
+                payload.vehicleNumber,
+                vehicleSeqRunning,
+                payload.employeeIdDriver,
+                permissionPayload.branchId,
+                authMeta.userId,
+              );
+
+              await SortationService.createDoSortationHistory(
+                item.doSortationId,
+                null,
+                paramDoSortationVehicleId,
+                item.doSortationTime,
+                permissionPayload.branchId,
+                DO_SORTATION_STATUS.BACKUP_PROCESS,
+                null,
+                authMeta.userId,
+              );
+
+              await transaction.update(DoSortation,
+                {
+                  doSortationId : item.doSortationId,
+                },
+                {
+                  doSortationStatusIdLast : DO_SORTATION_STATUS.BACKUP_PROCESS,
+                  updatedTime : moment().toDate(),
+                  userIdUpdated : authMeta.userId,
+                  doSortationVehicleIdLast : paramDoSortationVehicleId,
+                },
+              );
+
+              await DoSortationDetail.update(
+                {
+                  doSortationId: item.doSortationId,
+                  arrivalDateTime: null,
+                },
+                {
+                  doSortationStatusIdLast: DO_SORTATION_STATUS.BACKUP_PROCESS,
+                  userIdUpdated: authMeta.userId,
+                  updatedTime: moment().toDate(),
+                },
+              );
+
+              data.push({
+                doSortationId: item.doSortationId,
+                doSortationCode: item.doSortationCode,
+                doSortationVehicleId: paramDoSortationVehicleId,
+              });
+              arrSmd.push(item.doSortationCode);
+            }
+
+          });
+
+          result.statusCode = HttpStatus.OK;
+          result.message = 'Nomor Sortation ' + arrSmd.join(',') + ' berhasil handover';
+          result.data = data;
+          return result;
+
+        } else {
+          throw new BadRequestException(
+            `Tidak bisa handover ke driver yang sama.`,
+          );
+        }
+      } else {
+        throw new BadRequestException(`Status tidak dapat di proses pada Sortation: ` + resultDoSortation.doSortationCode);
+      }
+    } else {
+      throw new BadRequestException(`Sortation Code ${payload.doSortationCode} tidak ditemukan!`);
+    }
+  }
+
+  static async findAllActiveVehicleInDriver(
+    employee_id_driver: number, do_sortation_code: string,
+  ): Promise<any[]> {
+    const rawQuery = `
+        SELECT
+          do_sortation_vehicle_id,
+          employee_driver_id
+        FROM
+          do_sortation_vehicle dsv
+        INNER JOIN do_sortation ds ON ds.do_sortation_id = dsv.do_sortation_id AND ds.is_deleted = FALSE AND ds.do_sortation_status_id_last <> ${DO_SORTATION_STATUS.FINISHED} AND ds.do_sortation_code = '${do_sortation_code}'
+        WHERE
+          dsv.employee_driver_id = ${employee_id_driver}
+          AND dsv.is_active = TRUE
+          AND dsv.is_deleted = FALSE; `;
+    const resultDataDoSortationVehicle = await RawQueryService.query(rawQuery);
+    return resultDataDoSortationVehicle;
   }
 }
