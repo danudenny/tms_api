@@ -113,6 +113,9 @@ export class PhotoDetailResponseVm {
 
   @ApiModelProperty()
   awbNumber: string;
+
+  @ApiModelProperty()
+  createdTime: string;
 }
 
 export class PhotoResponseVm {

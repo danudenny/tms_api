@@ -1,6 +1,6 @@
 {
   "name": "sicepat-tms",
-  "version": "2.11.0",
+  "version": "2.13.0",
   "description": "",
   "author": "",
   "license": "MIT",
@@ -68,8 +68,8 @@
     "on-change": "^1.6.2",
     "patch-package": "^6.1.2",
     "path-to-regexp": "^3.0.0",
-    "pg": "7.18.2",
-    "pg-query-stream": "^3.4.2",
+    "pg": "8.7.3",
+    "pg-query-stream": "^4.2.3",
     "pino": "^5.13.1",
     "postinstall-postinstall": "^2.0.0",
     "redis": "^2.8.0",
