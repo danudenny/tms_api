@@ -85,16 +85,12 @@ export class SortationL2ModuleService {
       const qb = createQueryBuilder();
       qb.addSelect('ds.do_sortation_code', 'doSortationCode');
       qb.from('do_sortation', 'ds');
-      qb.leftJoin(
-        'do_sortation_detail',
-        'dsd',
-        `ds.do_sortation_id = dsd.do_sortation_id and dsd.is_deleted = false and dsd.do_sortation_status_id_last <> ${DO_SORTATION_STATUS.FINISHED}`,
-      );
       qb.innerJoin(
         'do_sortation_vehicle',
         'dsv',
         `ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id  and dsv.is_deleted = false and dsv.employee_driver_id = ${searchEmployee.employeeId}`,
       );
+      qb.andWhere(`ds.do_sortation_status_id_last <> ${DO_SORTATION_STATUS.FINISHED}`);
       qb.andWhere('ds.is_deleted = false');
       const data = await qb.getRawMany();
       const resultData = [];
