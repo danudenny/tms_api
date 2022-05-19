@@ -143,6 +143,10 @@ module.exports = {
     codNonFee: 'cod-non-fee',
     supplierInvoiceFee: 'cod-supplier-invoice-fee',
   },
+  codReportConfig: {
+    regexExpToReplace : '[\\n\\r\\;\\t\\|\\"\\\']+',
+    roundedDecimal : 0,
+  },
   codRoleId:{
     codMerge: [120, 147], //Admin COD - Merger, Ops - Koordinator Sigesit Antar (COD)
     codAdmin: [115, 136], //Ops - Admin COD, Ops - Admin Operational ( COD )
