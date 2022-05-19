@@ -278,12 +278,13 @@ export class SortationScanOutService {
           return result;
         }
 
-        const sortationDetailItemExist = await this.getSortationDetailItemExist(
-            bagDetail.bagItemId,
-            resultDoSortaionDetail.doSortationDetailId,
-        );
+        const sortationDetailItemExist = await this.getSortationDetailItemExist(bagDetail.bagItemId);
         if (sortationDetailItemExist) {
-          result.message = `${messageBagType} ${bagNumber} sudah di scan`;
+          let doSortationCodeList;
+          sortationDetailItemExist.forEach((code) => {
+            doSortationCodeList = doSortationCodeList ?  doSortationCodeList + ', ' + code.doSortationCode : code.doSortationCode;
+          });
+          result.message = `${messageBagType} ${bagNumber} sudah di scan di surat jalan ${doSortationCodeList}`;
           return result;
         }
 
@@ -757,20 +758,20 @@ export class SortationScanOutService {
     }
   }
 
-  private static async getSortationDetailItemExist(
-    bagItemId: number,
-    doSortationDetailId: string): Promise<any> {
+  private static async getSortationDetailItemExist( bagItemId: number ): Promise<any> {
       const rawQuery = `
           SELECT
             dsd.do_sortation_detail_id AS "doSmdDetailId",
-            dsdi.bag_item_id AS "bagItemId"
+            dsdi.bag_item_id AS "bagItemId",
+            ds.do_sortation_code AS "doSortationCode"
           FROM do_sortation_detail dsd
           INNER JOIN do_sortation_detail_item dsdi ON dsd.do_sortation_detail_id = dsdi.do_sortation_detail_id
             AND dsdi.bag_item_id = ${bagItemId}
             AND dsdi.is_deleted = FALSE
+          INNER JOIN do_sortation ds ON ds.do_sortation_id = dsd.do_sortation_id
+            AND ds.is_deleted = FALSE
           WHERE
-            dsd.do_sortation_detail_id = '${doSortationDetailId}' AND
-            dsd.do_sortation_status_id_last != ${DO_SORTATION_STATUS.CREATED} AND
+            dsd.do_sortation_status_id_last != ${DO_SORTATION_STATUS.FINISHED} AND
             dsd.is_deleted = FALSE;
         `;
       const result = await RawQueryService.query(rawQuery);
