@@ -63,15 +63,14 @@ export class PriorityServiceApi {
   }
 
   private static async funcGetData(url, body, options, countRetry = 0){
-    console.log('jumlah retry>>>>>>',countRetry);
     countRetry = countRetry + 1;
     try{
       const request = await axios.post(url, body, options);
       return request;
     }catch(err){
       const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-      await delay(1000);
-      if(countRetry < 2){
+      await delay(ConfigService.get('priorityService.delayTime'));
+      if(countRetry < ConfigService.get('priorityService.retryCount')){
         this.funcGetData(url, body, options, countRetry);
       }
     }

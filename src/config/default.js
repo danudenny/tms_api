@@ -70,6 +70,8 @@ module.exports = {
   },
   priorityService :{
     baseUrl : 'http://api-internal.s.sicepat.io/core/prirotiy-service/api/v1/',
+    retryCount : 2,
+    delayTime : 2000,
   },
   exportService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
