@@ -74,6 +74,7 @@ export class SortationService {
     doSortationStatusId: number,
     reasonId: number,
     userId: number,
+    reasonNote?: string | null,
   ) {
     const dataDoSortationHistory = DoSortationHistory.create({
       doSortationId,
@@ -87,6 +88,7 @@ export class SortationService {
       createdTime: moment().toDate(),
       userIdUpdated: userId,
       updatedTime: moment().toDate(),
+      reasonNote,
     });
     const doSortationHistory = await DoSortationHistory.insert(dataDoSortationHistory);
     return doSortationHistory.identifiers.length

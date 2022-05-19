@@ -22,6 +22,7 @@ import { DoSortationDetailItem } from '../../../../../shared/orm-entity/do-sorta
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
+import { Employee } from '../../../../../shared/orm-entity/employee';
 
 @Injectable()
 export class SortationScanOutService {
@@ -880,21 +881,27 @@ export class SortationScanOutService {
       );
     }
 
-    const doSortationVehicle = await DoSortationVehicle.findOne(
-      {
-        doSortationVehicleId: doSortation.doSortationVehicleIdLast,
-        isDeleted: false,
-        isActive: true,
-      },
-      {
-        select: [
-          'doSortationVehicleId',
-          'employeeDriverId',
-          'vehicleSeq',
-          'vehicleNumber',
-        ],
-      },
-    );
+    const repo = new OrionRepositoryService(DoSortationVehicle, 'dsv');
+    const q = repo.findOneRaw();
+    q.selectRaw(
+      ['dsv.doSortationVehicleId', 'doSortationVehicleId'],
+      ['dsv.employeeDriverId', 'employeeDriverId'],
+      ['dsv.vehicleSeq', 'vehicleSeq'],
+      ['dsv.vehicleNumber', 'vehicleNumber'],
+      ['e.nickname', 'employeeName'],
+      ['e.nik', 'nik'],
+    )
+      .leftJoin(e => e.employee, 'e', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .andWhere(
+        e => e.doSortationVehicleId,
+        w => w.equals(doSortation.doSortationVehicleIdLast),
+      )
+      .andWhere(e => e.isActive, w => w.isTrue())
+      .andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const doSortationVehicle = await q.exec();
 
     // if doSortationVehicle is not found, something is wrong with the data
     if (!doSortationVehicle) {
@@ -913,26 +920,29 @@ export class SortationScanOutService {
       );
     }
 
-    const newDoSortationStatus =
-      doSortationVehicle.employeeDriverId == payload.employeeIdDriver
-        ? DO_SORTATION_STATUS.VEHICLE_CHANGED
-        : DO_SORTATION_STATUS.DRIVER_CHANGED;
+    const newDriver = await Employee.findOne(
+      {
+        employeeId: payload.employeeIdDriver,
+        isDeleted: false,
+      },
+      {
+        select: ['nik', 'nickname'],
+      },
+    );
+
+    const newDoSortationStatus = DO_SORTATION_STATUS.DRIVER_CHANGED;
 
     // start transaction
     const newDSVId = await this.createNewDSV(
       payload,
+      newDriver,
       doSortationVehicle,
       newDoSortationStatus,
     );
 
-    const keyword =
-      newDoSortationStatus === DO_SORTATION_STATUS.DRIVER_CHANGED
-        ? 'supir'
-        : 'kendaraan';
-
     return {
       statusCode: HttpStatus.OK,
-      message: `Sukses mengganti ${keyword} sortation ${
+      message: `Sukses mengganti supir sortation ${
         doSortation.doSortationCode
       }`,
       data: [
@@ -948,7 +958,8 @@ export class SortationScanOutService {
   @Transactional()
   private static async createNewDSV(
     payload: SortationChangeVehiclePayloadVm,
-    doSortationVehicle: DoSortationVehicle,
+    newDriver: Employee,
+    doSortationVehicle: any,
     newDoSortationStatus: number,
   ): Promise<string> {
     const now = moment().toDate();
@@ -973,6 +984,12 @@ export class SortationScanOutService {
       ),
     ]);
 
+    const reasonNote = `${doSortationVehicle.employeeName} (${doSortationVehicle.nik}) ${
+      doSortationVehicle.vehicleNumber
+    } digantikan oleh ${newDriver.nickname} (${newDriver.nik}) ${
+      payload.vehicleNumber
+    }`;
+
     await Promise.all([
       DoSortation.update(
         { doSortationId: payload.doSortationId },
@@ -992,6 +1009,7 @@ export class SortationScanOutService {
         newDoSortationStatus,
         null,
         authMeta.userId,
+        reasonNote,
       ),
     ]);
 
