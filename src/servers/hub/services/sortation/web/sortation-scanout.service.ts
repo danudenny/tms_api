@@ -915,8 +915,8 @@ export class SortationScanOutService {
 
     const newDoSortationStatus =
       doSortationVehicle.employeeDriverId == payload.employeeIdDriver
-        ? DO_SORTATION_STATUS.DRIVER_CHANGED
-        : DO_SORTATION_STATUS.VEHICLE_CHANGED;
+        ? DO_SORTATION_STATUS.VEHICLE_CHANGED
+        : DO_SORTATION_STATUS.DRIVER_CHANGED;
 
     // start transaction
     const newDSVId = await this.createNewDSV(
