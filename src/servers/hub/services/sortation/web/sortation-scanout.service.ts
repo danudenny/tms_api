@@ -1166,11 +1166,12 @@ export class SortationScanOutService {
   }
 
   private static async listAfterRemove(arrays: any[], compareValue: any) {
-    arrays.forEach((array, index, obj) => {
-      if (array == compareValue) {
-        obj.splice(index, 1);
+    for (let i = 0; i < arrays.length; i++) {
+      if (arrays[i] == compareValue) {
+        arrays.splice(i, 1);
+        break;
       }
-    });
+    }
 
     return arrays;
   }
