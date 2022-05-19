@@ -57,6 +57,7 @@ import {
 import {
   MobileSortationHandoverImagePayloadVm,
 } from '../../../models/sortation/mobile/mobile-sortation-handover-image.payload.vm';
+import { RepositoryService } from '../../../../../shared/services/repository.service';
 
 @Injectable()
 export class MobileSortationService {
@@ -166,20 +167,26 @@ export class MobileSortationService {
     const result = new MobileSortationEndResponseVm();
     const timeNow = moment().toDate();
 
-    const resultDoSortationDetail = await DoSortationDetail.findOne({
-      select: [
-        'doSortationDetailId',
-        'doSortationId',
-        'doSortationTime',
-        'doSortationVehicleId',
-        'branchIdFrom',
-        'branchIdTo',
-      ],
-      where: {
-        doSortationDetailId: payload.doSortationDetailId,
-        isDeleted: false,
-      },
-    });
+    const repo = RepositoryService.doSortationDetail;
+    const q = repo.findOneRaw();
+    q.selectRaw(
+      ['do_sortation_detail.doSortationDetailId', 'doSortationDetailId'],
+      ['do_sortation_detail.doSortationId', 'doSortationId'],
+      ['do_sortation_detail.doSortationTime', 'doSortationTime'],
+      ['do_sortation_detail.branchIdFrom', 'branchIdFrom'],
+      ['do_sortation_detail.branchIdTo', 'branchIdTo'],
+      ['ds.doSortationVehicleIdLast', 'doSortationVehicleId'],
+    )
+      .innerJoin(e => e.doSortation, 'ds', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .andWhere(
+        e => e.doSortationDetailId,
+        w => w.equals(payload.doSortationDetailId),
+      )
+      .andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const resultDoSortationDetail = await q.exec();
 
     if (resultDoSortationDetail) {
       const resultSortationDetailArrival = await DoSortationDetail.findOne({
@@ -318,20 +325,26 @@ export class MobileSortationService {
     const result = new MobileSortationCancelResponseVm();
     const timeNow = moment().toDate();
 
-    const resultDoSortationDetail = await DoSortationDetail.findOne({
-      select: [
-        'doSortationId',
-        'depatureDateTime',
-        'branchIdTo',
-        'doSortationTime',
-        'doSortationVehicleId',
-        'branchIdFrom',
-      ],
-      where: {
-        doSortationDetailId: payload.doSortationDetailId,
-        isDeleted: false,
-      },
-    });
+    const repo = RepositoryService.doSortationDetail;
+    const q = repo.findOneRaw();
+    q.selectRaw(
+      ['do_sortation_detail.doSortationId', 'doSortationId'],
+      ['do_sortation_detail.depatureDateTime', 'depatureDateTime'],
+      ['do_sortation_detail.branchIdTo', 'branchIdTo'],
+      ['do_sortation_detail.doSortationTime', 'doSortationTime'],
+      ['do_sortation_detail.branchIdFrom', 'branchIdFrom'],
+      ['ds.doSortationVehicleIdLast', 'doSortationVehicleId'],
+    )
+      .innerJoin(e => e.doSortation, 'ds', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .andWhere(
+        e => e.doSortationDetailId,
+        w => w.equals(payload.doSortationDetailId),
+      )
+      .andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const resultDoSortationDetail = await q.exec();
 
     if (resultDoSortationDetail) {
       await getManager().transaction(async transaction => {
@@ -510,7 +523,7 @@ export class MobileSortationService {
         resultDoSortationArrival.doSortationId,
         resultDoSortationArrival.doSortationDetailId,
         resultDoSortationArrival.doSortationTime,
-        resultDoSortationArrival.doSortationVehicleId,
+        resultDoSortation.doSortationVehicleIdLast,
         DO_SORTATION_STATUS.PROBLEM,
         resultDoSortationArrival.branchIdFrom,
         resultDoSortationArrival.branchIdTo,
@@ -615,7 +628,7 @@ export class MobileSortationService {
           resultDoSortationDetail.doSortationId,
           resultDoSortationDetail.doSortationDetailId,
           resultDoSortationDetail.doSortationTime,
-          resultDoSortationDetail.doSortationVehicleId,
+          resultDoSortation.doSortationVehicleIdLast,
           DO_SORTATION_STATUS.DRIVER_CHANGED,
           resultDoSortationDetail.branchIdFrom,
           resultDoSortationDetail.branchIdTo,
@@ -644,22 +657,29 @@ export class MobileSortationService {
     const result = new MobileSortationArrivalResponseVm();
     const timeNow = moment().toDate();
     const data = [];
-    const resultSortationDetail = await DoSortationDetail.findOne({
-      select: [
-        'depatureDateTime',
-        'arrivalDateTime',
-        'doSortationId',
-        'doSortationDetailId',
-        'doSortationTime',
-        'doSortationVehicleId',
-        'branchIdFrom',
-        'branchIdTo',
-      ],
-      where: {
-        doSortationDetailId: payload.doSortationDetailId,
-        isDeleted: false,
-      },
-    });
+
+    const repo = RepositoryService.doSortationDetail;
+    const q = repo.findOneRaw();
+    q.selectRaw(
+      ['do_sortation_detail.depatureDateTime', 'depatureDateTime'],
+      ['do_sortation_detail.arrivalDateTime', 'arrivalDateTime'],
+      ['do_sortation_detail.doSortationId', 'doSortationId'],
+      ['do_sortation_detail.doSortationDetailId', 'doSortationDetailId'],
+      ['do_sortation_detail.doSortationTime', 'doSortationTime'],
+      ['do_sortation_detail.branchIdFrom', 'branchIdFrom'],
+      ['do_sortation_detail.branchIdTo', 'branchIdTo'],
+      ['ds.doSortationVehicleIdLast', 'doSortationVehicleId'],
+    )
+      .innerJoin(e => e.doSortation, 'ds', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .andWhere(
+        e => e.doSortationDetailId,
+        w => w.equals(payload.doSortationDetailId),
+      )
+      .andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const resultSortationDetail = await q.exec();
 
     if (resultSortationDetail) {
       if (resultSortationDetail.depatureDateTime) {
