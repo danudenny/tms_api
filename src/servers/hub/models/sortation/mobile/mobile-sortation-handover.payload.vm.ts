@@ -8,7 +8,7 @@ export class MobileSortationHandoverPayloadVm {
   longitude: string;
 
   @ApiModelProperty()
-  lattitude: string;
+  latitude: string;
 
   @ApiModelProperty()
   note: string;
