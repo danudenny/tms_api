@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
@@ -180,7 +180,7 @@ export class BaggingSmdService {
       return result;
     }
 
-    if(bagDetail && !bagDetail.bag.representativeIdTo){
+    if (bagDetail && !bagDetail.bag.representativeIdTo) {
       result.message = 'Gabung paket tidak ada representative id';
       return result;
     }
@@ -342,7 +342,20 @@ export class BaggingSmdService {
     if (!payload.baggingId) {
       const baggingDate = await this.dateMinus1day(moment().toDate());
       const maxBagSeq = await this.getMaxBaggingSeq(dataPackage.representative_id_to, baggingDate, permissionPayload.branchId);
-      const paramBaggingCode = await CustomCounterCode.baggingCodeRandomCounter(moment().toDate());
+      let paramBaggingCode = await CustomCounterCode.baggingCodeRandomCounter(moment().toDate());
+
+      /** check bagging code for duplicate */
+      for (let i = 0; i < 5; i++) {
+          const check_baggingCode = await Bagging.findOne({where : {baggingCode : paramBaggingCode}});
+          if (check_baggingCode) {
+            paramBaggingCode = await CustomCounterCode.baggingCodeRandomCounter(moment().toDate());
+          } else {
+            break;
+          }
+
+          if (i == 4) { throw new InternalServerErrorException('BaggingCode gagal di buat, silahkan ulangi beberapa saat lagi!'); }
+      }
+
       // Redlock for race condition
       const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 10);
       if (redlock) {

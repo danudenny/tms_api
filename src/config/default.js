@@ -98,6 +98,19 @@ module.exports = {
     baseUrl: 'http://52.77.199.252:5168/',
     authKey: '5a71a345b4eaa9d23b4d4c745e7785e9',
   },
+  slackchannel:{
+    tmsError: {
+      icon : ':sicepat-icon:',
+      channel : '#prod-alert-tms',
+      username : 'SicepatAlertTMS',
+    }
+  },
+  slack :{
+    baseUrl : 'https://hooks.slack.com/services/',
+    // tokenSlack : 'TEL84PB2L/B03BJECQLSY/2De9VYLyD1WLHBIfRofYgGWx',
+    tokenSlack : 'TEL84PB2L/B02NFKJ7S4A/Xrscr7amizYvioxcpPVZueGa',
+    userSlack : 'Incoming Webhook'
+  },
   divaPayment: {
     sicepatKlikUrl: 'http://sicepatklik.com/apps/pubext/web/index.php?r=cod',
     apiKey: '91e3a6d02ac4f6054479c9ee03854a22',
