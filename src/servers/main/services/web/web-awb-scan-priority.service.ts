@@ -3,7 +3,7 @@ import { PriorityServiceApi } from '../../../../shared/services/priority.service
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbService } from '../v1/awb.service';
 export class WebAwbScanPriorityService {
-  static async scanProirity(awbNumber: string, isValidated: boolean = false, awbItemId : number  = 0): Promise<WebAwbScanPriorityResponse> {
+  static async scanPriority(awbNumber: string, isValidated: boolean = false, awbItemId : number  = 0): Promise<WebAwbScanPriorityResponse> {
     //validasi manifest
 
     const result = new WebAwbScanPriorityResponse();
