@@ -101,7 +101,7 @@ module.exports = {
   slackchannel:{
     tmsError: {
       icon : ':sicepat-icon:',
-      channel : '#prod-alert-tms',
+      channel : '#staging-alert-tms',
       username : 'SicepatAlertTMS',
     }
   },
