@@ -900,7 +900,8 @@ export class SortationScanOutService {
         w => w.equals(doSortation.doSortationVehicleIdLast),
       )
       .andWhere(e => e.isActive, w => w.isTrue())
-      .andWhere(e => e.isDeleted, w => w.isFalse());
+      .andWhere(e => e.isDeleted, w => w.isFalse())
+      .take(1);
 
     const doSortationVehicle = await q.exec();
 

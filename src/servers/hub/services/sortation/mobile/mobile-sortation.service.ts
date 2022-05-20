@@ -184,7 +184,8 @@ export class MobileSortationService {
         e => e.doSortationDetailId,
         w => w.equals(payload.doSortationDetailId),
       )
-      .andWhere(e => e.isDeleted, w => w.isFalse());
+      .andWhere(e => e.isDeleted, w => w.isFalse())
+      .take(1);
 
     const resultDoSortationDetail = await q.exec();
 
@@ -342,7 +343,8 @@ export class MobileSortationService {
         e => e.doSortationDetailId,
         w => w.equals(payload.doSortationDetailId),
       )
-      .andWhere(e => e.isDeleted, w => w.isFalse());
+      .andWhere(e => e.isDeleted, w => w.isFalse())
+      .take(1);
 
     const resultDoSortationDetail = await q.exec();
 
@@ -677,7 +679,8 @@ export class MobileSortationService {
         e => e.doSortationDetailId,
         w => w.equals(payload.doSortationDetailId),
       )
-      .andWhere(e => e.isDeleted, w => w.isFalse());
+      .andWhere(e => e.isDeleted, w => w.isFalse())
+      .take(1);
 
     const resultSortationDetail = await q.exec();
 
