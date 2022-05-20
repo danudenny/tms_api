@@ -18,6 +18,6 @@ export class WebAwbScanPriorityController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: WebAwbScanPriorityResponse })
   public async scanPriorityAwbNumber(@Param('awbNumber') awbNumber: string) {
-    return WebAwbScanPriorityService.scanProirity(awbNumber, true, 0);
+    return WebAwbScanPriorityService.scanPriority(awbNumber, true, 0);
   }
 }
