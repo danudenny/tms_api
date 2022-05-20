@@ -33,11 +33,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         if (checkUrl[1] && checkUrl[1] != 'bull') {
           SlackUtil.sendMessage(
             ConfigService.get('slackchannel.tmsError.channel'),
-            `#### All Exception Filter : ${exception}`,
-            fullUrl,
+            exception,
+            exception.stack,
             request.body,
             ConfigService.get('slackchannel.tmsError.icon'),
             ConfigService.get('slackchannel.tmsError.username'),
+            fullUrl,
           );
         }
 
