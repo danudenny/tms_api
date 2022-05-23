@@ -30,16 +30,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
         PinoLoggerService.error('#### All Exception Filter : ', exception);
         const fullUrl =  request.headers.host + request.url;
         const checkUrl = request.url.split('/');
-        if (checkUrl[1] && checkUrl[1] != 'bull') {
-          SlackUtil.sendMessage(
-            ConfigService.get('slackchannel.tmsError.channel'),
-            exception,
-            exception.stack,
-            request.body,
-            ConfigService.get('slackchannel.tmsError.icon'),
-            ConfigService.get('slackchannel.tmsError.username'),
-            fullUrl,
-          );
+        const exludePath = ConfigService.get('slack.excludePath');
+        if (checkUrl[1]) {
+          for (const keyPath in exludePath) {
+            if (checkUrl[1] != exludePath[keyPath]) {
+                SlackUtil.sendMessage(
+                  ConfigService.get('slackchannel.tmsError.channel'),
+                  exception,
+                  exception.stack,
+                  request.body,
+                  ConfigService.get('slackchannel.tmsError.icon'),
+                  ConfigService.get('slackchannel.tmsError.username'),
+                  fullUrl,
+                );
+            }
+          }
+
         }
 
       } else {
