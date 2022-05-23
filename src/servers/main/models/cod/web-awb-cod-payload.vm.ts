@@ -4,7 +4,7 @@ import {
 } from '../../../../shared/external/nestjs-swagger';
 import { IsAwbNumber } from '../../../../shared/decorators/custom-validation.decorator';
 import { IsDefined } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class WebCodAwbPayloadVm {
   @ApiModelProperty()
@@ -211,4 +211,25 @@ export class WebCodPaymentDeletePayloadVm {
 
   @ApiModelProperty()
   note: string;
+}
+
+export class BaseAwbCodDlvV2PayloadVm {
+
+  @ApiModelProperty()
+  @Transform(value => value || 1) // Transform imprted from 'class-transformer', set to 1 if value is undefined
+  page: number;
+
+  @ApiModelProperty()
+  @Transform(value => value || 10) // Transform imprted from 'class-transformer', set to 10 if value is undefined
+  limit: number;
+
+  @ApiModelPropertyOptional()
+  sortBy: string;
+
+  @ApiModelPropertyOptional({ enum: ['asc', 'desc'] })
+  sortDir: 'asc' | 'desc';
+
+  @ApiModelProperty()
+  branchIdFinal: number;
+
 }

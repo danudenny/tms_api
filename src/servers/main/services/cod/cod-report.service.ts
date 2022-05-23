@@ -215,7 +215,7 @@ import {Injectable} from '@nestjs/common';
      //#region handle Role COD
      if (
        RoleGroupService.isRoleCodMerge(
-         permissionPayload.roleName,
+         permissionPayload.roleId,
          permissionPayload.isHeadOffice,
        )
      ) {
@@ -228,7 +228,7 @@ import {Injectable} from '@nestjs/common';
 
      if (
        RoleGroupService.isRoleCodAdmin(
-         permissionPayload.roleName,
+         permissionPayload.roleId,
          permissionPayload.isHeadOffice,
        )
      ) {

@@ -105,7 +105,7 @@ export class V1WebAwbCodService {
     //#region handle Role COD
     if (
       RoleGroupService.isRoleCodMerge(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -118,7 +118,7 @@ export class V1WebAwbCodService {
 
     if (
       RoleGroupService.isRoleCodAdmin(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -287,7 +287,7 @@ export class V1WebAwbCodService {
     //#region Cod Merger
     if (
       RoleGroupService.isRoleCodMerge(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -300,7 +300,7 @@ export class V1WebAwbCodService {
 
     if (
       RoleGroupService.isRoleCodAdmin(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -435,7 +435,7 @@ export class V1WebAwbCodService {
     //#region Cod Merger
     if (
       RoleGroupService.isRoleCodMerge(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -448,7 +448,7 @@ export class V1WebAwbCodService {
 
     if (
       RoleGroupService.isRoleCodAdmin(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -672,7 +672,7 @@ export class V1WebAwbCodService {
     //#region Cod Merger
     if (
       RoleGroupService.isRoleCodMerge(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -685,7 +685,7 @@ export class V1WebAwbCodService {
 
     if (
       RoleGroupService.isRoleCodAdmin(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
         )
     ) {
@@ -796,7 +796,7 @@ export class V1WebAwbCodService {
     //#region Cod Merger
     if (
       RoleGroupService.isRoleCodMerge(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -810,7 +810,7 @@ export class V1WebAwbCodService {
 
     if (
       RoleGroupService.isRoleCodAdmin(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -1024,7 +1024,7 @@ export class V1WebAwbCodService {
     //#region Cod Merger
     if (
       RoleGroupService.isRoleCodMerge(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
@@ -1037,7 +1037,7 @@ export class V1WebAwbCodService {
 
     if (
       RoleGroupService.isRoleCodAdmin(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {
