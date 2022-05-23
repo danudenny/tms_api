@@ -31,21 +31,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const fullUrl =  request.headers.host + request.url;
         const checkUrl = request.url.split('/');
         const exludePath = ConfigService.get('slack.excludePath');
-        if (checkUrl[1]) {
-          for (const keyPath in exludePath) {
-            if (checkUrl[1] != exludePath[keyPath]) {
-                SlackUtil.sendMessage(
-                  ConfigService.get('slackchannel.tmsError.channel'),
-                  exception,
-                  exception.stack,
-                  request.body,
-                  ConfigService.get('slackchannel.tmsError.icon'),
-                  ConfigService.get('slackchannel.tmsError.username'),
-                  fullUrl,
-                );
-            }
-          }
-
+        if (checkUrl[1] && !exludePath.includes(checkUrl[1])) {
+          SlackUtil.sendMessage(
+            ConfigService.get('slackchannel.tmsError.channel'),
+            exception,
+            exception.stack,
+            request.body,
+            ConfigService.get('slackchannel.tmsError.icon'),
+            ConfigService.get('slackchannel.tmsError.username'),
+            fullUrl,
+          );
         }
 
       } else {
