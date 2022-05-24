@@ -51,6 +51,7 @@ export class PriorityServiceApi {
         }
         return request;
       }
+
     } catch (err) {
       RequestErrorService.throwObj(
         {
