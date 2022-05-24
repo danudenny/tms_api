@@ -333,7 +333,7 @@ export class AwbService {
       awbNumber,
     })]);
 
-    if(rawData1 || rawData2){
+    if(rawData1 !== undefined || rawData2.length > 0){
       return true;
     }else{
       return false;

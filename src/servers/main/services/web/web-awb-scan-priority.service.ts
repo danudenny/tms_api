@@ -15,14 +15,15 @@ export class WebAwbScanPriorityService {
         select :['awbNumber','awbItemId'],
         where :{
           awbNumber : awbNumber,
+          isDeleted : false,
         }
       });
-      
+
       if (awb) {
         const dataPriority = await PriorityServiceApi.checkPriority(awbNumber, permissonPayload.branchId);
         result.awbNumber = awbNumber;
         result.kelurahan = dataPriority.data.kelurahan;
-        if (AwbService.isManifestedNew(awb.awbNumber, awb.awbItemId)) {
+        if (await AwbService.isManifestedNew(awb.awbNumber, awb.awbItemId)) {
           result.status = 'ok';
           result.message = 'success';
           result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;
@@ -39,7 +40,7 @@ export class WebAwbScanPriorityService {
       let dataPriority = await PriorityServiceApi.checkPriority(awbNumber, permissonPayload.branchId);
       result.awbNumber = awbNumber;
       result.kelurahan = dataPriority.data.kelurahan;
-      if (AwbService.isManifestedNew(awbNumber, awbItemId)) {
+      if (await AwbService.isManifestedNew(awbNumber, awbItemId)) {
         result.status = 'ok';
         result.message = 'success';
         result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;
