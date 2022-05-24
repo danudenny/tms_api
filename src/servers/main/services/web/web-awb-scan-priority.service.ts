@@ -23,7 +23,7 @@ export class WebAwbScanPriorityService {
         const dataPriority = await PriorityServiceApi.checkPriority(awbNumber, permissonPayload.branchId);
         result.awbNumber = awbNumber;
         result.kelurahan = dataPriority.data.kelurahan;
-        if (await AwbService.isManifestedNew(awb.awbNumber, awb.awbItemId)) {
+        if (await AwbService.isManifested(awb.awbNumber, awb.awbItemId)) {
           result.status = 'ok';
           result.message = 'success';
           result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;
@@ -40,7 +40,7 @@ export class WebAwbScanPriorityService {
       let dataPriority = await PriorityServiceApi.checkPriority(awbNumber, permissonPayload.branchId);
       result.awbNumber = awbNumber;
       result.kelurahan = dataPriority.data.kelurahan;
-      if (await AwbService.isManifestedNew(awbNumber, awbItemId)) {
+      if (await AwbService.isManifested(awbNumber, awbItemId)) {
         result.status = 'ok';
         result.message = 'success';
         result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;

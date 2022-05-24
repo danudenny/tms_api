@@ -306,39 +306,6 @@ export class AwbService {
 
     return rawData ? true : false;
   }
-
-  public static async isManifestedNew(
-    awbNumber: string,
-    awbItemId: number,
-  ): Promise<boolean> {
-    const query = `
-      SELECT
-        nostt as "awbNumber"
-      FROM
-        temp_stt
-      WHERE
-        nostt = :awbNumber
-      LIMIT
-        1;
-    `;
-
-    const [rawData1, rawData2] = await Promise.all([AwbHistory.findOne({
-      select: ['awbHistoryId'],
-      where: {
-        awbItemId,
-        awbStatusId: AWB_STATUS.MANIFESTED,
-        isDeleted: false,
-      },
-    }), RawQueryService.queryWithParams(query, {
-      awbNumber,
-    })]);
-
-    if(rawData1 !== undefined || rawData2.length > 0){
-      return true;
-    }else{
-      return false;
-    }
-  }
   
   public static async validationContainAwBStatus(optionalManifested, awbNumber, awbItemId, isReturCheck): Promise<[boolean, string]> {
     let retVal = false;
