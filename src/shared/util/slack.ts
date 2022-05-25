@@ -20,13 +20,14 @@ export class SlackUtil {
     stack?: string,
     fields?: any,
     icon?: string,
-    username?:string,
+    username?: string,
+    endPoint?: string,
   ) {
-    let url = `${this.slackURL}/${this.tokenSlack}`;
+    const url = `${this.slackURL}/${this.tokenSlack}`;
     text = `[${process.env.NODE_ENV}] : ${text}`;
     const options = {
       headers: {
-        accept: 'application/json',
+        'accept': 'application/json',
         'Content-Type': 'application/json',
       },
     };
@@ -43,14 +44,20 @@ export class SlackUtil {
 
     const body = {
       username: username || this.slackUserName,
-      channel: channel,
-      text: text,
-      icon_emoji: (icon) ? icon : ':sicepat:', 
+      channel,
+      text,
+      icon_emoji: (icon) ? icon : ':sicepat:',
       attachments: [
         {
           text: stack,
           color: '#e50606',
           title: 'Stack Trace',
+          mrkdwn_in: ['text'],
+        },
+        {
+          text: endPoint,
+          color: '#FFFF00',
+          title: 'Url',
           mrkdwn_in: ['text'],
         },
         {
@@ -63,7 +70,7 @@ export class SlackUtil {
     };
 
     try {
-      let sendMessage = await axios.post(url, body, options);
+      const sendMessage = await axios.post(url, body, options);
       return sendMessage;
     } catch (err) {
       console.log('error at slack service sending message : ', err.message);

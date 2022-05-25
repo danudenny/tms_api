@@ -109,7 +109,8 @@ module.exports = {
     baseUrl : 'https://hooks.slack.com/services/',
     // tokenSlack : 'TEL84PB2L/B03BJECQLSY/2De9VYLyD1WLHBIfRofYgGWx',
     tokenSlack : 'TEL84PB2L/B02NFKJ7S4A/Xrscr7amizYvioxcpPVZueGa',
-    userSlack : 'Incoming Webhook'
+    userSlack : 'Incoming Webhook',
+    excludePath : ['bull']
   },
   divaPayment: {
     sicepatKlikUrl: 'http://sicepatklik.com/apps/pubext/web/index.php?r=cod',
