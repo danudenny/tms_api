@@ -105,6 +105,10 @@ export class MobileSortationService {
         e => e.arrivalDateTime,
         w => w.isNotNull(),
       )
+      .andWhere(
+        e => e.isDeleted,
+        w => w.isFalse(),
+      )
       .orderBy({ arrivalDateTime: 'DESC' })
       .take(1);
 
@@ -222,7 +226,7 @@ export class MobileSortationService {
           'doSortationId',
         ],
         where: {
-          doSortationDetailId: resultDoSortationDetail.doSortationId,
+          doSortationId: resultDoSortationDetail.doSortationId,
           isDeleted: false,
           arrivalDateTime: null,
         },
