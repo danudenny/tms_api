@@ -50,7 +50,8 @@ import {
 import { PhotoResponseVm } from '../../../../../servers/main/models/bag-order-detail-response.vm';
 import { AwbStatusService } from '../../master/awb-status.service';
 import { ImgProxyHelper } from '../../../../../shared/helpers/imgproxy-helper';
-
+import { PodAttachment } from '../../../../../shared/services/pod-attachment';
+import { PodWebAttachmentModel } from '../../../../../shared/models/pod-web-attachment.model';
 
 export class FirstMileDoPodReturnService {
 
@@ -523,6 +524,20 @@ export class FirstMileDoPodReturnService {
                       authMeta.userId,
                       false,
                     );
+
+                    //handling upload here
+                    if(returnData.attachmentTmsId && (AWB_STATUS.RTN == returnData.awbStatusId || AWB_STATUS.RTC == returnData.awbStatusId)){
+                      let propUpload = new PodWebAttachmentModel();
+                      propUpload.awbNumber = awb.awbNumber;
+                      propUpload.awbItemId = awb.awbItemId;
+                      propUpload.attachmentTmsId =  returnData.attachmentTmsId;
+                      propUpload.awbStatusId = returnData.awbStatusId;
+                      propUpload.photoType = returnData.photoType;
+                      propUpload.userIdCreated = authMeta.userId;
+                      propUpload.userIdUpdated = authMeta.userId;
+                      await PodAttachment.upsertPodAttachment(propUpload);
+                    }
+
                     response.status = 'ok';
                     response.message = 'success';
                   }
@@ -546,6 +561,22 @@ export class FirstMileDoPodReturnService {
                   returnData,
                   awb.awbId,
                 );
+                
+                if(manualStatus){
+                  //handling upload here
+                  if(returnData.attachmentTmsId && (AWB_STATUS.RTN == returnData.awbStatusId || AWB_STATUS.RTC == returnData.awbStatusId)){
+                    let propUpload = new PodWebAttachmentModel();
+                    propUpload.awbNumber = awb.awbNumber;
+                    propUpload.awbItemId = awb.awbItemId;
+                    propUpload.attachmentTmsId =  returnData.attachmentTmsId;
+                    propUpload.awbStatusId = returnData.awbStatusId;
+                    propUpload.photoType = returnData.photoType;
+                    propUpload.userIdCreated = authMeta.userId;
+                    propUpload.userIdUpdated = authMeta.userId;
+                    await PodAttachment.upsertPodAttachment(propUpload);
+                  }
+                }
+
                 const messageError = `Resi ${returnData.awbNumber}, tidak dapat update status manual`;
                 response.status = manualStatus ? 'ok' : 'error';
                 response.message = manualStatus ? 'success' : messageError;

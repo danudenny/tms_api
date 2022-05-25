@@ -1183,8 +1183,7 @@ export class ScanoutSmdService {
           return result;
         }
         const paramBagSeq = bagDetail.bagSeq;
-        // console.log('############# errorsmd bag15digit: ' + paramBagNumberWithSeq + ' ###### bag_detail:' + bagDetail);
-
+       
         rawQuery = `
           SELECT
             bih.bag_item_status_id
@@ -1197,8 +1196,6 @@ export class ScanoutSmdService {
           LIMIT 1;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
-
-        // console.log('############# errorsmd bag15digit: ' + paramBagNumberWithSeq + ' ###### resultDataBag:' + resultDataBag);
 
         if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
           rawQuery = `
@@ -1362,8 +1359,6 @@ export class ScanoutSmdService {
         }
         const paramBagSeq = bagDetail.bagSeq;
 
-        // console.log('############# errorsmd bag10digit: ' + payload.item_number + ' ###### bag_detail:' + bagDetail);
-
         rawQuery = `
           SELECT
             bih.bag_item_status_id
@@ -1376,7 +1371,6 @@ export class ScanoutSmdService {
           LIMIT 1;
         `;
         const resultDataBag = await RawQueryService.query(rawQuery);
-        // console.log('############# errorsmd bag10digit: ' + payload.item_number + ' ###### resultDataBag:' + resultDataBag);
 
         if (resultDataBag.length > 0 && resultDataBag[0].bag_item_status_id) {
           rawQuery = `
@@ -1681,6 +1675,7 @@ export class ScanoutSmdService {
             {
               sealNumber: payload.seal_number,
               userIdUpdated: authMeta.userId,
+              departureScheduleDateTime: timeNow,
               updatedTime: timeNow,
             },
           );
@@ -1690,6 +1685,8 @@ export class ScanoutSmdService {
           {
             sealNumberLast: payload.seal_number,
             userIdUpdated: authMeta.userId,
+            doSmdTime: timeNow,
+            departureScheduleDateTime: timeNow,
             updatedTime: timeNow,
           },
         );
@@ -1713,7 +1710,7 @@ export class ScanoutSmdService {
           resultDoSmd.doSmdVehicleIdLast,
           null,
           null,
-          resultDoSmd.doSmdTime,
+          timeNow,
           permissonPayload.branchId,
           paramStatusId,
           payload.seal_number,
@@ -2867,6 +2864,8 @@ export class ScanoutSmdService {
           {
             sealNumberLast: payload.sealNumber,
             userIdUpdated: authMeta.userId,
+            doSmdTime: timeNow,
+            departureScheduleDateTime: timeNow,
             updatedTime: timeNow,
           },
         );
@@ -2876,6 +2875,7 @@ export class ScanoutSmdService {
             {
               sealNumber: payload.sealNumber,
               userIdUpdated: authMeta.userId,
+              departureScheduleDateTime: timeNow,
               updatedTime: timeNow,
             },
           );
@@ -2887,7 +2887,7 @@ export class ScanoutSmdService {
           doSmdVehicleId,
           null,
           null,
-          doSmd.doSmdTime,
+          timeNow,
           121, // branch kantor pusat
           1200, // status seal change
           payload.sealNumber,

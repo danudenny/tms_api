@@ -55,6 +55,7 @@ import { WebAwbPodController } from './web/web-awb-pod.controller';
 import { WebAwbScanPriorityController } from './web/web-awb-scan-priority.controller';
 import { WebAwbReturnController } from './web/web-awb-return.controller';
 import { WebAwbReturnCancelController } from './web/web-awb-return-cancel.controller';
+import { WebLastMileUploadController } from './web/web-last-mile-upload.controller';
 import { WebAwbUpdateStatusController } from './web/web-awb-update-status.controller';
 import { WebBagPodController } from './web/web-bag-pod.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
@@ -114,6 +115,7 @@ import { WebAwbCodReportController } from './web/v1/web-awb-cod-report.controlle
     WebAwbScanPriorityController,
     WebAwbReturnController,
     WebAwbReturnCancelController,
+    WebLastMileUploadController,
     ProvincesController,
     CitiesController,
     DistrictsController,

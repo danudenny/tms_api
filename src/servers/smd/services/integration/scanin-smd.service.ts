@@ -103,11 +103,9 @@ export class ScaninSmdService {
           const getDoBagQuery = `select db.do_bag_code from do_bag_detail dbd inner join do_bag db on db.do_bag_id = dbd.do_bag_id AND db.is_deleted = FALSE
                 where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
           const resultDoBag = await RawQueryService.query(getDoBagQuery);
-          console.log('resultDoBag', resultDoBag);
+
           if (resultDoBag.length > 0) {
-            console.log('resultDoPodCodeQuery', resultDoBag[0]);
             sliceDoPodCode = resultDoBag[0].do_bag_code.slice(0, 3);
-            console.log('sliceDoPodCode', sliceDoPodCode);
             if (sliceDoPodCode === 'SGB') {
               statusItem = 4500;
             }
@@ -237,9 +235,7 @@ export class ScaninSmdService {
           resultbagItemHistory.userIdUpdated = authMeta.userId;
           resultbagItemHistory.updatedTime = moment().toDate();
           await BagItemHistory.insert(resultbagItemHistory);
-          console.log(resultbagItemHistory);
-          console.log(resultbagItemHistory.bagItemHistoryId);
-
+      
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
@@ -353,11 +349,8 @@ export class ScaninSmdService {
           const getDoBagQuery = `select db.do_bag_code from do_bag_detail dbd inner join do_bag db on db.do_bag_id = dbd.do_bag_id AND db.is_deleted = FALSE
 where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
           const resultDoBag = await RawQueryService.query(getDoBagQuery);
-          console.log('resultDoBag', resultDoBag);
           if (resultDoBag.length > 0) {
-            console.log('resultDoPodCodeQuery', resultDoBag[0]);
             sliceDoPodCode = resultDoBag[0].do_bag_code.slice(0, 3);
-            console.log('sliceDoPodCode', sliceDoPodCode);
             if (sliceDoPodCode === 'SGB') {
               statusItem = 4500;
             }
@@ -484,9 +477,7 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
           resultbagItemHistory.userIdUpdated = authMeta.userId;
           resultbagItemHistory.updatedTime = moment().toDate();
           await BagItemHistory.insert(resultbagItemHistory);
-          console.log(resultbagItemHistory);
-          console.log(resultbagItemHistory.bagItemHistoryId);
-
+    
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
@@ -827,12 +818,25 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     q.andWhereRaw('bhin.bag_item_status_id in( 3550, 3500)');
 
     const data = await q.exec();
-    const total = await q.countWithoutTakeAndSkip();
+
+    const q2 = repo.createQueryBuilder();
+    q2.select('COUNT(b.bag_id)');
+    q2.innerJoin('bag_item', 'bi', 'bi.bag_id = b.bag_id AND (bi.is_deleted = FALSE)');
+    q2.leftJoin('branch', 'br', 'br.branch_id = b.branch_id AND (br.is_deleted = FALSE)');
+    q2.leftJoin('bag_item_history', 'bhin', 'bhin.bag_item_id = bi.bag_item_id AND bhin.is_deleted = FALSE');
+    q2.leftJoin('representative', 'r', 'r.representative_id = b.representative_id_to AND (r.is_deleted = FALSE)');
+    q2.leftJoin('branch', 'bb', 'bhin.branch_id=bb.branch_id and bb.is_deleted = FALSE');
+    q2.leftJoin('users', 'u', 'u.user_id=bhin.user_id_updated and u.is_deleted = FALSE');
+    payload.applyFiltersToQueryBuilder(q2);
+    q2.andWhere('b.is_deleted = FALSE');
+    q2.andWhere('bhin.bag_item_status_id in( 3550, 3500)');
+
+    const total = await q2.execute();
 
     const result = new ScanInListResponseVm();
 
     result.data = data;
-    result.paging = MetaService.set(payload.page, payload.limit, total);
+    result.paging = MetaService.set(payload.page, payload.limit, Number(total[0].count));
 
     return result;
 
@@ -1039,7 +1043,7 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     let lastNumber = 0;
     const timeNow = moment().toDate();
     prefix = `TB/${moment(receivedBagTime).format('YYMM')}/`;
-    // console.log(prefix);
+  
     const code = await SysCounter.findOne({
       where: {
         key: prefix,

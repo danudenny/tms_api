@@ -14,7 +14,7 @@ export class HubMachineSortirService {
   static async deleteKeyRedis(payload): Promise<any> {
     const key = payload.key;
     const data = await RedisService.get(key, true);
-    // console.log('data: ', data);
+
     const result = { statusCode : HttpStatus.OK, message: '' };
     if (data) {
       // delete key redis
@@ -302,7 +302,7 @@ export class HubMachineSortirService {
           //     bs.branch_id = ${payload.sorting_branch_id}
           //   ;
           // `;
-          // console.log(rawQuery);
+         
           const rawQuery = `
             SELECT bs.*
             FROM branch_sortir bs
@@ -314,7 +314,7 @@ export class HubMachineSortirService {
               dmd.district_id='${resultDistrict.districtId}'
           `;
           const resultData = await RawQueryService.query(rawQuery);
-          // console.log(rawQuery);
+          
           if (resultData.length > 0 ) {
             result.message = 'Check Spk Success';
             const combineChute = [];
@@ -632,7 +632,7 @@ export class HubMachineSortirService {
             ;
           `;
           const resultData = await RawQueryService.query(rawQuery);
-          // console.log(rawQuery);
+     
           if (resultData.length > 0 ) {
             result.message = 'Check Spk Success';
             const combineChute = [];

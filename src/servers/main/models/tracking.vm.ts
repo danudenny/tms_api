@@ -14,6 +14,9 @@ export class ImageProxyUrlParamVm {
   @ApiModelPropertyOptional()
   doPodId: string;
 
+  @ApiModelPropertyOptional()
+  doPodDeliverDetailId: string;
+
   @ApiModelPropertyOptional({ example: 'photo, photoCod, signature'})
   attachmentType: string;
 

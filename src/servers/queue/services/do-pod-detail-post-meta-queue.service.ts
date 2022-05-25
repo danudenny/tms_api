@@ -922,6 +922,7 @@ export class DoPodDetailPostMetaQueueService {
     q.select({
       userId: true,
       username: true,
+      employeeId: true,
       employee: {
         employeeId: true,
         employeeName: true,
