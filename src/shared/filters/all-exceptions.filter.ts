@@ -5,11 +5,12 @@ import fclone from 'fclone';
 import { ConfigService } from '../services/config.service';
 import { ErrorParserService } from '../services/error-parser.service';
 import { PinoLoggerService } from '../services/pino-logger.service';
+import { RedisService } from '../services/redis.service';
 import { SlackUtil } from '../util/slack';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  catch(exception: any, host: ArgumentsHost) {
+  async catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<express.Response>();
     const request = ctx.getRequest();
@@ -29,14 +30,25 @@ export class AllExceptionsFilter implements ExceptionFilter {
         requestErrorResponse = ErrorParserService.parseRequestErrorFromExceptionAndArgumentsHost(exception, host);
         PinoLoggerService.error('#### All Exception Filter : ', exception);
         const fullUrl =  request.headers.host + request.url;
-        SlackUtil.sendMessage(
-          ConfigService.get('slackchannel.tmsError.channel'),
-          `#### All Exception Filter : ${exception}`,
-          fullUrl,
-          request.body,
-          ConfigService.get('slackchannel.tmsError.icon'),
-          ConfigService.get('slackchannel.tmsError.username')
-        );
+        const checkUrl = request.url.split('/');
+        const exludePath = ConfigService.get('slack.excludePath');
+
+        /** check status slack message in redis */
+        const redisGet = await RedisService.get(`tms:alerts`, true);
+        if (checkUrl[1] && !exludePath.includes(checkUrl[1])) {
+          if (redisGet && redisGet.isActive) {
+            SlackUtil.sendMessage(
+              ConfigService.get('slackchannel.tmsError.channel'),
+              exception,
+              exception.stack,
+              request.body,
+              ConfigService.get('slackchannel.tmsError.icon'),
+              ConfigService.get('slackchannel.tmsError.username'),
+              fullUrl,
+            );
+          }
+        }
+
       } else {
         PinoLoggerService.warn('#### All Exception Filter, Error Response : ', requestErrorResponse);
       }
