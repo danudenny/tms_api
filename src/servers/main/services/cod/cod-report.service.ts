@@ -1,17 +1,17 @@
-import {Injectable} from '@nestjs/common';
- import {RedshiftReportingService} from '../report/redshift-reporting.service';
- import {ConfigService} from '../../../../shared/services/config.service';
- import { BaseMetaPayloadVm, ReportBaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
- import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
- import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
- import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
- import { RoleGroupService } from '../../../../shared/services/role-group.service';
- import { AuthService } from '../../../../shared/services/auth.service';
- import {TRANSACTION_STATUS} from '../../../../shared/constants/transaction-status.constant';
- import * as moment from 'moment';
+import { Injectable } from '@nestjs/common';
+import { RedshiftReportingService } from '../report/redshift-reporting.service';
+import { ConfigService } from '../../../../shared/services/config.service';
+import { BaseMetaPayloadVm, ReportBaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { RoleGroupService } from '../../../../shared/services/role-group.service';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
+import * as moment from 'moment';
 
- @Injectable()
- export class CodReportService {
+@Injectable()
+export class CodReportService {
 
   private configReportType;
   private configCodReport;
@@ -23,28 +23,28 @@ import {Injectable} from '@nestjs/common';
     this.configCodReport = ConfigService.get('codReportConfig');
   }
 
-   async fetchReportSupplierInvoiceAwb(supplierInvoiceId: string, page: number, limit: number) {
-     const reportType = this.configReportType.supplierInvoiceAwb + ':' + supplierInvoiceId;
-     return this.reportingService.fetchReport(page, limit, reportType);
-   }
+  async fetchReportSupplierInvoiceAwb(supplierInvoiceId: string, page: number, limit: number) {
+    const reportType = this.configReportType.supplierInvoiceAwb + ':' + supplierInvoiceId;
+    return this.reportingService.fetchReport(page, limit, reportType);
+  }
 
-   async generateReportSupplierInvoiceAwb(supplierInvoiceId: string) {
-     const reportType = this.configReportType.supplierInvoiceAwb + ':' + supplierInvoiceId;
-     const rawQuery = this.generateQueryReportSupplierInvoiceAwb(supplierInvoiceId);
-     return this.reportingService.generateReport(reportType, rawQuery);
-   }
+  async generateReportSupplierInvoiceAwb(supplierInvoiceId: string) {
+    const reportType = this.configReportType.supplierInvoiceAwb + ':' + supplierInvoiceId;
+    const rawQuery = this.generateQueryReportSupplierInvoiceAwb(supplierInvoiceId);
+    return this.reportingService.generateReport(reportType, rawQuery);
+  }
 
-   async fetchReportCODFee(page: number, limit: number) {
-     const reportType = this.configReportType.supplierInvoiceFee;
-     return this.reportingService.fetchReport(page, limit, reportType);
-   }
+  async fetchReportCODFee(page: number, limit: number) {
+    const reportType = this.configReportType.supplierInvoiceFee;
+    return this.reportingService.fetchReport(page, limit, reportType);
+  }
 
-   async generateReportCODFee(payload: ReportBaseMetaPayloadVm) {
-     const reportType = this.configReportType.supplierInvoiceFee;
-     const rawQuery = this.generateQueryReportCODFee(payload.filters);
+  async generateReportCODFee(payload: ReportBaseMetaPayloadVm) {
+    const reportType = this.configReportType.supplierInvoiceFee;
+    const rawQuery = this.generateQueryReportCODFee(payload.filters);
 
-     return this.reportingService.generateReport(reportType, rawQuery);
-   }
+    return this.reportingService.generateReport(reportType, rawQuery);
+  }
 
   private generateQueryReportCODFee(filters) {
     let queryParam = "";
@@ -53,15 +53,15 @@ import {Injectable} from '@nestjs/common';
         const d = moment
           .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00');
-        
-        queryParam +=  `AND ctd.updated_time >= '${d}' `;
+
+        queryParam += `AND ctd.updated_time >= '${d}' `;
       }
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment
           .utc(filter.value).add(1, 'days')
           .format('YYYY-MM-DD 00:00:00')
-        queryParam +=  `AND ctd.updated_time < '${d}' `; 
+        queryParam += `AND ctd.updated_time < '${d}' `;
       }
 
       if (filter.field == 'supplier' && filter.value && this.isNumber(filter.value)) {
@@ -75,7 +75,7 @@ import {Injectable} from '@nestjs/common';
       if (filter.field == 'branchLast' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.branch_id = ${filter.value} `;
       }
-      
+
       if (filter.field == 'transactionStatus' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.transaction_status_id = ${filter.value} `;
       }
@@ -91,10 +91,10 @@ import {Injectable} from '@nestjs/common';
         ctd.partner_name AS "partner", 
         TO_CHAR(ctd.awb_date, 'YYYY-MM-DD') AS "awb date", 
         ctd.awb_number AS "awb", 
-        round(ctd.parcel_value, `+this.configCodReport.roundedDecimal+`) AS "package amount", 
-        round(ctd.cod_value, `+this.configCodReport.roundedDecimal+`) AS "cod amount", 
-        round(ctd.cod_fee, `+this.configCodReport.roundedDecimal+`) AS "cod fee", 
-        round(ctd.cod_value, `+this.configCodReport.roundedDecimal+`) AS "amount transfer", 
+        round(ctd.parcel_value, `+ this.configCodReport.roundedDecimal + `) AS "package amount", 
+        round(ctd.cod_value, `+ this.configCodReport.roundedDecimal + `) AS "cod amount", 
+        round(ctd.cod_fee, `+ this.configCodReport.roundedDecimal + `) AS "cod fee", 
+        round(ctd.cod_value, `+ this.configCodReport.roundedDecimal + `) AS "amount transfer", 
         TO_CHAR(ctd.pod_date, 'YYYY-MM-DD HH:mm') AS "pod datetime",
         ctd.consignee_name AS "recipient",
         ctd.payment_method AS "tipe pembayaran",
@@ -107,9 +107,9 @@ import {Injectable} from '@nestjs/common';
         ctd.destination AS "destination", 
         rep.representative_code AS "perwakilan",
         coalesce(driver.nik, '') || ' - ' || coalesce(driver.fullname, '') AS "sigesit", 
-        regexp_replace(ctd.parcel_content, '`+this.configCodReport.regexExpToReplace+`', ' ') AS "package detail",
+        regexp_replace(ctd.parcel_content, '`+ this.configCodReport.regexExpToReplace + `', ' ') AS "package detail",
         ctd.package_type AS "services", 
-        regexp_replace(ctd.parcel_note, '`+this.configCodReport.regexExpToReplace+`', ' ') AS "note", 
+        regexp_replace(ctd.parcel_note, '`+ this.configCodReport.regexExpToReplace + `', ' ') AS "note", 
         '' AS "submitted date", 
         '' AS "submitted number", 
         coalesce(to_char(ctd.updated_time, 'YYYY-MM-DD HH:mm'), '') AS "date updated", 
@@ -141,10 +141,10 @@ import {Injectable} from '@nestjs/common';
                     t1.partner_name AS "partner name", 
                     t1.awb_date AS "awb date", 
                     t1.awb_number AS "awb", 
-                    round(t1.parcel_value, `+this.configCodReport.roundedDecimal+`) AS "package amount", 
-                    round(t1.cod_value, `+this.configCodReport.roundedDecimal+`) AS "cod amount", 
-                    round(t1.cod_fee, `+this.configCodReport.roundedDecimal+`) AS "cod fee", 
-                    round(t1.cod_value, `+this.configCodReport.roundedDecimal+`) AS "amount transfer", 
+                    round(t1.parcel_value, `+ this.configCodReport.roundedDecimal + `) AS "package amount", 
+                    round(t1.cod_value, `+ this.configCodReport.roundedDecimal + `) AS "cod amount", 
+                    round(t1.cod_fee, `+ this.configCodReport.roundedDecimal + `) AS "cod fee", 
+                    round(t1.cod_value, `+ this.configCodReport.roundedDecimal + `) AS "amount transfer", 
                     t1.pod_date AS "pod datetime",
                     t1.consignee_name AS "recipient",
                     'DRAFT INVOICE' AS "Status internal",
@@ -154,9 +154,9 @@ import {Injectable} from '@nestjs/common';
                     t1.current_position AS "current position",
                     t1.destination_code AS "destination code",
                     t1.destination AS "destination",
-                    regexp_replace(t1.parcel_content, '`+this.configCodReport.regexExpToReplace+`', ' ') AS "package detail",
+                    regexp_replace(t1.parcel_content, '`+ this.configCodReport.regexExpToReplace + `', ' ') AS "package detail",
                     t1.package_type AS "services",
-                    regexp_replace(t1.parcel_note, '`+this.configCodReport.regexExpToReplace+`', ' ') AS "note"
+                    regexp_replace(t1.parcel_note, '`+ this.configCodReport.regexExpToReplace + `', ' ') AS "note"
                   FROM 
                     cod_transaction_detail AS t1 
                   WHERE 
@@ -175,7 +175,7 @@ import {Injectable} from '@nestjs/common';
   }
 
 
- async generateAWBSummaryReport(payload:BaseMetaPayloadVm) {
+  async generateAWBSummaryReport(payload: BaseMetaPayloadVm) {
     const reportType = this.configReportType.awbCodSummary;
     const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthMetadata();
@@ -198,7 +198,7 @@ import {Injectable} from '@nestjs/common';
       ['rep.representative_code', 'perwakilan'],
       ['branch.branch_id', 'branchIdFinal'],
       ['branch.branch_name', 'branchNameFinal'],
-      ['SUM(round(cp.cod_value, '+this.configCodReport.roundedDecimal+'))', 'priceCod'],
+      ['SUM(round(cp.cod_value, ' + this.configCodReport.roundedDecimal + '))', 'priceCod'],
       ['COUNT(t1.awb_item_id)', 'countAwb'],
     );
 
@@ -251,97 +251,97 @@ import {Injectable} from '@nestjs/common';
     q.orderByRaw('SUM(cp.cod_value)', 'DESC');
 
     return this.reportingService.generateReport(reportType, q.getQuery())
- }
-
- async generateAwbCodTransactionDetailReport(payload: ReportBaseMetaPayloadVm){
-  const reportType = this.configReportType.codNonFee;
-  const rawQuery = this.generateQueryAwbCodTransaction(payload)
-
-  return this.reportingService.generateReport(reportType, rawQuery)
-}
-
-async fetchReportAwbTransactionDetail(page: number, limit: number) {
-  const reportType = this.configReportType.codNonFee;
-  return this.reportingService.fetchReport(page, limit, reportType);
-}
-
-private generateQueryAwbCodTransaction(payload: ReportBaseMetaPayloadVm){
-
-   let queryParam = "";
-   for (const filter of payload.filters){
-     if (filter.field == 'periodStart' && filter.value){
-       const d = moment
-       .utc(filter.value)
-       .format('YYYY-MM-DD 00:00:00')
-       queryParam +=  `AND ctd.pod_date >= '${d}' `;
-     }
-     if (filter.field == 'periodEnd' && filter.value){
-       const d = moment
-         .utc(filter.value).add(1, 'days')
-         .format('YYYY-MM-DD 00:00:00')
-       queryParam +=  `AND ctd.pod_date < '${d}' `;
-     }
-
-     if (filter.field == 'transactionStart' && filter.value) {
-       const d = moment
-       .utc(filter.value)
-       .format('YYYY-MM-DD 00:00:00')
-       queryParam +=  `AND ctd.updated_time >= '${d}' `;
-     }
-
-     if (filter.field == 'transactionEnd' && filter.value) {
-       const d = moment
-         .utc(filter.value).add(1, 'days')
-         .format('YYYY-MM-DD 00:00:00')
-       queryParam +=  `AND ctd.updated_time < '${d}' `;
-     }
-
-     if (filter.field == 'manifestedStart' && filter.value) {
-       const d = moment
-         .utc(filter.value)
-         .format('YYYY-MM-DD 00:00:00')
-       queryParam +=  `AND ctd.awb_date >= '${d}' `;
-     }
-
-     if (filter.field == 'manifestedEnd' && filter.value) {
-       const d = moment
-         .utc(filter.value).add(1, 'days')
-         .format('YYYY-MM-DD 00:00:00')
-       queryParam +=  `AND ctd.awb_date < '${d}' `;
-     }
-
-    if (filter.field == 'partnerId' && filter.value && this.isNumber(filter.value)) {
-      queryParam += `AND ctd.partner_id = ${filter.value } `;
-    }
-    if (filter.field == 'representativeId' && filter.value && this.isNumber(filter.value)) {
-      queryParam += `AND ctd_branch.representative_id = ${filter.value} `;
-    }
-    if (filter.field == 'branchIdFinal' && filter.value && this.isNumber(filter.value)) {
-      queryParam += `AND ctd.branch_id = ${filter.value} `;
-    }
-    if (filter.field == 'awbStatusIdFinal' && filter.value && this.isNumber(filter.value)) {
-      queryParam += `AND aia.awb_status_id_final = ${filter.value} `;
-    }
-    if (filter.field == 'transactionStatusId' && filter.value && this.isNumber(filter.value)) {
-      queryParam += `AND ctd.transaction_status_id = ${filter.value} `;
-    }
-    if (filter.field == 'sigesit' && filter.value && this.isNumber(filter.value)) {
-      queryParam += `AND ctd.user_id_driver = ${filter.value} `;
-    }
-    if (filter.field == 'supplierInvoiceStatusId' && filter.value && this.isNumber(filter.value)) {
-      queryParam += `AND ctd.supplier_invoice_status_id = ${filter.value} `;
-    }
   }
-  queryParam += 'AND ctd.is_deleted = false';
 
-   const query = `SELECT 
+  async generateAwbCodTransactionDetailReport(payload: ReportBaseMetaPayloadVm) {
+    const reportType = this.configReportType.codNonFee;
+    const rawQuery = this.generateQueryAwbCodTransaction(payload)
+
+    return this.reportingService.generateReport(reportType, rawQuery)
+  }
+
+  async fetchReportAwbTransactionDetail(page: number, limit: number) {
+    const reportType = this.configReportType.codNonFee;
+    return this.reportingService.fetchReport(page, limit, reportType);
+  }
+
+  private generateQueryAwbCodTransaction(payload: ReportBaseMetaPayloadVm) {
+
+    let queryParam = "";
+    for (const filter of payload.filters) {
+      if (filter.field == 'periodStart' && filter.value) {
+        const d = moment
+          .utc(filter.value)
+          .format('YYYY-MM-DD 00:00:00')
+        queryParam += `AND ctd.pod_date >= '${d}' `;
+      }
+      if (filter.field == 'periodEnd' && filter.value) {
+        const d = moment
+          .utc(filter.value).add(1, 'days')
+          .format('YYYY-MM-DD 00:00:00')
+        queryParam += `AND ctd.pod_date < '${d}' `;
+      }
+
+      if (filter.field == 'transactionStart' && filter.value) {
+        const d = moment
+          .utc(filter.value)
+          .format('YYYY-MM-DD 00:00:00')
+        queryParam += `AND ctd.updated_time >= '${d}' `;
+      }
+
+      if (filter.field == 'transactionEnd' && filter.value) {
+        const d = moment
+          .utc(filter.value).add(1, 'days')
+          .format('YYYY-MM-DD 00:00:00')
+        queryParam += `AND ctd.updated_time < '${d}' `;
+      }
+
+      if (filter.field == 'manifestedStart' && filter.value) {
+        const d = moment
+          .utc(filter.value)
+          .format('YYYY-MM-DD 00:00:00')
+        queryParam += `AND ctd.awb_date >= '${d}' `;
+      }
+
+      if (filter.field == 'manifestedEnd' && filter.value) {
+        const d = moment
+          .utc(filter.value).add(1, 'days')
+          .format('YYYY-MM-DD 00:00:00')
+        queryParam += `AND ctd.awb_date < '${d}' `;
+      }
+
+      if (filter.field == 'partnerId' && filter.value && this.isNumber(filter.value)) {
+        queryParam += `AND ctd.partner_id = ${filter.value} `;
+      }
+      if (filter.field == 'representativeId' && filter.value && this.isNumber(filter.value)) {
+        queryParam += `AND ctd_branch.representative_id = ${filter.value} `;
+      }
+      if (filter.field == 'branchIdFinal' && filter.value && this.isNumber(filter.value)) {
+        queryParam += `AND ctd.branch_id = ${filter.value} `;
+      }
+      if (filter.field == 'awbStatusIdFinal' && filter.value && this.isNumber(filter.value)) {
+        queryParam += `AND aia.awb_status_id_final = ${filter.value} `;
+      }
+      if (filter.field == 'transactionStatusId' && filter.value && this.isNumber(filter.value)) {
+        queryParam += `AND ctd.transaction_status_id = ${filter.value} `;
+      }
+      if (filter.field == 'sigesit' && filter.value && this.isNumber(filter.value)) {
+        queryParam += `AND ctd.user_id_driver = ${filter.value} `;
+      }
+      if (filter.field == 'supplierInvoiceStatusId' && filter.value && this.isNumber(filter.value)) {
+        queryParam += `AND ctd.supplier_invoice_status_id = ${filter.value} `;
+      }
+    }
+    queryParam += 'AND ctd.is_deleted = false';
+
+    const query = `SELECT 
     ctd.partner_name AS "Partner",
     ctd.awb_date AS "Awb Date",
     ctd.awb_number AS "Awb",
-    round(ctd.parcel_value, `+this.configCodReport.roundedDecimal+`) AS "Package Amount", 
-    round(ctd.cod_value, `+this.configCodReport.roundedDecimal+`) AS "COD Amount", 
-    round(ctd.cod_fee, `+this.configCodReport.roundedDecimal+`) AS "COD Fee", 
-    round(ctd.cod_value, `+this.configCodReport.roundedDecimal+`) AS "Amount Transfer", 
+    round(ctd.parcel_value, `+ this.configCodReport.roundedDecimal + `) AS "Package Amount", 
+    round(ctd.cod_value, `+ this.configCodReport.roundedDecimal + `) AS "COD Amount", 
+    round(ctd.cod_fee, `+ this.configCodReport.roundedDecimal + `) AS "COD Fee", 
+    round(ctd.cod_value, `+ this.configCodReport.roundedDecimal + `) AS "Amount Transfer", 
     ctd.pod_date AS "POD Datetime",
     ctd.consignee_name AS "Recipient",
     ctd.payment_method AS "Tipe Pembayaran",
@@ -355,9 +355,9 @@ private generateQueryAwbCodTransaction(payload: ReportBaseMetaPayloadVm){
     ctd.destination AS "Destination",
     rep.representative_code AS "Perwakilan",
     CONCAT(ude.nik+' ', ude.fullname) AS "Sigesit",
-    regexp_replace(ctd.parcel_content, '`+this.configCodReport.regexExpToReplace+`', ' ') AS "Package Detail",
+    regexp_replace(ctd.parcel_content, '`+ this.configCodReport.regexExpToReplace + `', ' ') AS "Package Detail",
     ctd.package_type AS "Services",
-    regexp_replace(ctd.parcel_note, '`+this.configCodReport.regexExpToReplace+`', ' ') AS "Notes", 
+    regexp_replace(ctd.parcel_note, '`+ this.configCodReport.regexExpToReplace + `', ' ') AS "Notes", 
     ctd.updated_time AS "Date Updated",
     CONCAT(uae.nik+' ', uae.fullname) AS "User Updated"
   FROM
@@ -379,14 +379,14 @@ private generateQueryAwbCodTransaction(payload: ReportBaseMetaPayloadVm){
     ${queryParam}
   `;
 
-   return query;
- }
-  
+    return query;
+  }
 
-   isNumber(value: string | number): boolean {
+
+  isNumber(value: string | number): boolean {
     return ((value != null) &&
-            (value !== '') &&
-            !isNaN(Number(value.toString())));
-   }
+      (value !== '') &&
+      !isNaN(Number(value.toString())));
+  }
 
- }
+}
