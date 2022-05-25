@@ -65,13 +65,13 @@ export class PriorityServiceApi {
   }
 
   private static async funcGetData(url, body, options, countRetry = 0){
-    let channelSlack = await ConfigService.get('awbHistory.channelSlack');
+    let channelSlack = await ConfigService.get('priorityService.slackChannel');
     countRetry = countRetry + 1;
     try{
       const request = await axios.post(url, body, options);
       return request;
     }catch(err){
-      await SlackUtil.sendMessage(channelSlack,"Error from hit service for check priority attemp "+countRetry,err.stack, body); 
+      await SlackUtil.sendMessage(channelSlack,"Error from hit service for check priority attempt "+countRetry,err.stack, body); 
       const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
       await delay(ConfigService.get('priorityService.delayTime'));
       if(countRetry < ConfigService.get('priorityService.retryCount')){
