@@ -74,6 +74,7 @@ export class MobileSortationService {
         'branchIdFrom',
         'doSortationTime',
         'doSortationVehicleIdLast',
+        'doSortationStatusIdLast',
       ],
       where: {
         doSortationId: payload.doSortationId,
@@ -137,14 +138,13 @@ export class MobileSortationService {
             null,
             authMeta.userId,
           );
+          // update status AWB & Bag queue
+          BagScanOutBranchSortirQueueService.perform(
+            payload.doSortationId,
+            resultDoSortation.branchIdFrom,
+            authMeta.userId,
+          );
         }
-
-        // update status AWB & Bag queue
-        BagScanOutBranchSortirQueueService.perform(
-          payload.doSortationId,
-          resultDoSortation.branchIdFrom,
-          authMeta.userId,
-        );
       });
 
       const data = [];
@@ -195,7 +195,7 @@ export class MobileSortationService {
           'doSortationId',
         ],
         where: {
-          doSortationDetailId: payload.doSortationDetailId,
+          doSortationDetailId: resultDoSortationDetail.doSortationId,
           isDeleted: false,
           arrivalDateTime: null,
         },
@@ -775,7 +775,7 @@ export class MobileSortationService {
           await transaction.update(DoSortation, {
             doSortationId: payload.doSortationId,
           }, {
-            doSortationStatusIdLast: 3000,
+            doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
           });
@@ -783,7 +783,7 @@ export class MobileSortationService {
           await transaction.update(DoSortationDetail,
             { doSortationId: payload.doSortationId, arrivalDateTime: null },
             {
-              doSortationStatusIdLast: 3000,
+              doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
             },
@@ -795,7 +795,7 @@ export class MobileSortationService {
             null,
             resultDoSortation.doSortationTime,
             resultDoSortation.doSortationVehicleIdLast,
-            3000,
+            DO_SORTATION_STATUS.ON_THE_WAY,
             resultDoSortation.branchIdFrom,
             null,
             null,
