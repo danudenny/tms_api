@@ -3,6 +3,7 @@ import { ConfigService } from '../../shared/services/config.service';
 import { RequestErrorService } from '../../shared/services/request-error.service';
 import { HttpStatus } from '@nestjs/common';
 import { RedisService } from '../../shared/services/redis.service';
+import { SlackUtil } from '../util/slack';
 
 export class PriorityServiceApi {
   public static get queryServiceUrl() {
@@ -64,11 +65,13 @@ export class PriorityServiceApi {
   }
 
   private static async funcGetData(url, body, options, countRetry = 0){
+    let channelSlack = await ConfigService.get('awbHistory.channelSlack');
     countRetry = countRetry + 1;
     try{
       const request = await axios.post(url, body, options);
       return request;
     }catch(err){
+      await SlackUtil.sendMessage(channelSlack,"Error from hit service for check priority attemp "+countRetry,err.stack, body); 
       const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
       await delay(ConfigService.get('priorityService.delayTime'));
       if(countRetry < ConfigService.get('priorityService.retryCount')){
