@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { MobileSortationArrivalPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-arrival.payload.vm';
 import {
   MobileSortationArrivalResponseVm,
@@ -82,84 +82,111 @@ export class MobileSortationService {
       },
     });
 
-    if (resultDoSortation) {
-      await getManager().transaction(async transaction => {
-        if (resultDoSortation.depatureDateTime) {
-          await transaction.update(
-            DoSortation,
-            {
-              doSortationId: payload.doSortationId,
-            },
-            {
-              doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-            },
-          );
-        } else {
-          await transaction.update(
-            DoSortation,
-            {
-              doSortationId: payload.doSortationId,
-            },
-            {
-              doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-              userIdUpdated: authMeta.userId,
-              updatedTime: timeNow,
-              depatureDateTime: moment().toDate(),
-            },
-          );
-        }
-
-        await transaction.update(
-          DoSortationDetail,
-          {
-            doSortationId: payload.doSortationId,
-            arrivalDateTime: null,
-          }, {
-            doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-            depatureDateTime: moment().toDate(),
-            latitudeDeparture: payload.latitude,
-            longitudeDeparture: payload.longitude,
-            userIdUpdated: authMeta.userId,
-            updatedTime: timeNow,
-          });
-
-        if (resultDoSortation.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
-          await this.createDoSortationHistory(
-            transaction,
-            resultDoSortation.doSortationId,
-            null,
-            resultDoSortation.doSortationTime,
-            resultDoSortation.doSortationVehicleIdLast,
-            DO_SORTATION_STATUS.ON_THE_WAY,
-            resultDoSortation.branchIdFrom,
-            null,
-            null,
-            authMeta.userId,
-          );
-          // update status AWB & Bag queue
-          BagScanOutBranchSortirQueueService.perform(
-            payload.doSortationId,
-            resultDoSortation.branchIdFrom,
-            authMeta.userId,
-          );
-        }
-      });
-
-      const data = [];
-      data.push({
-        doSortationId: resultDoSortation.doSortationId,
-        departureDateTime: resultDoSortation.doSortationTime,
-      });
-
-      result.statusCode = HttpStatus.OK;
-      result.message = 'Sortation Success Departure';
-      result.data = data;
-      return result;
-    } else {
+    if (!resultDoSortation) {
       throw new BadRequestException(`Can't Find  Do Sortation ID : ` + payload.doSortationId);
     }
+
+    if (resultDoSortation.doSortationStatusIdLast == DO_SORTATION_STATUS.ON_THE_WAY) {
+      throw new UnprocessableEntityException(
+        `Status surat jalan sortation ${payload.doSortationId} sudah on the way!`,
+      );
+    }
+
+    const repo = RepositoryService.doSortationDetail;
+    const q = repo.findOneRaw()
+      .selectRaw(
+        ['do_sortation_detail.doSortationDetailId', 'doSortationDetailId'],
+        ['do_sortation_detail.branchTo', 'branchIdTo'])
+      .andWhere(
+        e => e.doSortationId,
+        w => w.equals(payload.doSortationId),
+      )
+      .andWhere(
+        e => e.arrivalDateTime,
+        w => w.isNotNull(),
+      )
+      .orderBy({ arrivalDateTime: 'DESC' })
+      .take(1);
+
+    const departedDetail = await q.exec();
+
+    await getManager().transaction(async transaction => {
+      if (resultDoSortation.depatureDateTime) {
+        await transaction.update(
+          DoSortation,
+          {
+            doSortationId: payload.doSortationId,
+          },
+          {
+            doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+      } else {
+        await transaction.update(
+          DoSortation,
+          {
+            doSortationId: payload.doSortationId,
+          },
+          {
+            doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+            depatureDateTime: moment().toDate(),
+          },
+        );
+      }
+
+      await transaction.update(
+        DoSortationDetail,
+        {
+          doSortationId: payload.doSortationId,
+          arrivalDateTime: null,
+        },
+        {
+          doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
+          depatureDateTime: moment().toDate(),
+          latitudeDeparture: payload.latitude,
+          longitudeDeparture: payload.longitude,
+          userIdUpdated: authMeta.userId,
+          updatedTime: timeNow,
+        },
+      );
+
+      await this.createDoSortationHistory(
+        transaction,
+        resultDoSortation.doSortationId,
+        null,
+        resultDoSortation.doSortationTime,
+        resultDoSortation.doSortationVehicleIdLast,
+        DO_SORTATION_STATUS.ON_THE_WAY,
+        departedDetail ? departedDetail.branchIdTo : resultDoSortation.branchIdFrom,
+        null,
+        null,
+        authMeta.userId,
+      );
+    });
+
+    if (!departedDetail) {
+      // update status AWB & Bag queue
+      await BagScanOutBranchSortirQueueService.perform(
+        payload.doSortationId,
+        resultDoSortation.branchIdFrom,
+        authMeta.userId,
+      );
+    }
+
+    const data = [];
+    data.push({
+      doSortationId: resultDoSortation.doSortationId,
+      departureDateTime: resultDoSortation.doSortationTime,
+    });
+
+    result.statusCode = HttpStatus.OK;
+    result.message = 'Sortation Success Departure';
+    result.data = data;
+    return result;
   }
 
   static async scanInEndMobileSortation(payload: MobileSortationEndPayloadVm) {
