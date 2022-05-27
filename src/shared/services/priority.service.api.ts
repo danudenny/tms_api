@@ -2,7 +2,6 @@ import axios from 'axios';
 import { ConfigService } from '../../shared/services/config.service';
 import { RequestErrorService } from '../../shared/services/request-error.service';
 import { HttpStatus } from '@nestjs/common';
-import { RedisService } from '../../shared/services/redis.service';
 import { SlackUtil } from '../util/slack';
 
 export class PriorityServiceApi {
@@ -10,48 +9,29 @@ export class PriorityServiceApi {
     return ConfigService.get('priorityService.baseUrl');
   }
 
+  public static get xApiKey() {
+    return ConfigService.get('priorityService.xApiKey');
+  }
+
   public static async checkPriority(awbNumber, branchId) {
-    let url = `${this.queryServiceUrl}test`;
+    let url = `${this.queryServiceUrl}branch-zone-priority`;
     const options = {
       headers: {
         'accept': 'application/json',
         'Content-Type': 'application/json',
+        'x-api-key' : this.xApiKey
       }
     };
 
     const body = {
-      awbNumber: awbNumber,
-      branchId: branchId
+      awb_number: awbNumber,
+      branch_id: branchId
     };
 
     try {
       //TODO: Implement service priority here
-      // const request = await axios.post(url, body, options);
-      // let data = await this.funcGetData(url, body, options);
-      let data = await RedisService.get(
-        `servicePriority`,
-        true,
-      );
-
-      if(data){
-        let request = {
-          data: {
-            zone : data.zone,
-            priority : data.priority,
-            kelurahan : data.kelurahan
-          }
-        }
-        return request;
-      }else{
-        let request = {
-          data: {
-            zone : 'A',
-            priority : '1',
-            kelurahan : 'Kebon Jeruk'
-          }
-        }
-        return request;
-      }
+      let data = await this.funcGetData(url, body, options);
+      return data;
 
     } catch (err) {
       RequestErrorService.throwObj(
