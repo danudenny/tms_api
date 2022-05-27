@@ -784,7 +784,8 @@ export class SortationScanOutService {
         dsv.employee_driver_id,
         ds.do_sortation_status_id_last,
         ds.do_sortation_id,
-        ds.branch_id_from
+        ds.branch_id_from,
+        ds.do_sortation_code
       FROM do_sortation_vehicle dsv
       INNER JOIN do_sortation ds ON dsv.do_sortation_vehicle_id = ds.do_sortation_vehicle_id_last
         AND ds.do_sortation_status_id_last <> ${DO_SORTATION_STATUS.FINISHED}
@@ -819,6 +820,11 @@ export class SortationScanOutService {
     if ( toInteger(dataDriver.do_sortation_status_id_last) == DO_SORTATION_STATUS.VALID) {
       throw new BadRequestException(`Driver tidak bisa di assign, karena belum DITERIMA !!`);
     }
+
+    if ( toInteger(dataDriver.do_sortation_status_id_last) < DO_SORTATION_STATUS.ON_THE_WAY ) {
+      throw new BadRequestException(`Driver sudah di assign pada surat jalan ${dataDriver.do_sortation_code}`);
+    }
+
     // Cek Status Created, Assigned, Driver Changed
     if ( toInteger(dataDriver.do_sortation_status_id_last) == DO_SORTATION_STATUS.CREATED
         || toInteger(dataDriver.do_sortation_status_id_last) == DO_SORTATION_STATUS.ASSIGNED
@@ -826,9 +832,8 @@ export class SortationScanOutService {
         if (toInteger(dataDriver.branch_id_from) != toInteger(payloadBranchId)) {
           throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
         }
-    } else if ( toInteger(dataDriver.do_sortation_status_id_last) < DO_SORTATION_STATUS.ON_THE_WAY ) {
-      throw new BadRequestException(`Driver Tidak boleh di assign`);
     }
+
     // Cek Status Received
     if ( toInteger(dataDriver.do_sortation_status_id_last) == DO_SORTATION_STATUS.RECEIVED) {
       const resultDoSortationDetail = await DoSortationDetail.findOne({
