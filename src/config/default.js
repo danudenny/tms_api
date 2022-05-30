@@ -162,9 +162,9 @@ module.exports = {
     roundedDecimal : 0,
   },
   codRoleId:{
-    codMerge: [120, 147], //Admin COD - Merger, Ops - Koordinator Sigesit Antar (COD)
-    codAdmin: [115, 136], //Ops - Admin COD, Ops - Admin Operational ( COD )
-    codManual: [174], //Admin FORCE MAJEURE
+    codMerge: [117, 82], //Admin COD - Merger, Ops - Last Mile Koordinator Sigesit (COD)
+    codAdmin: [103, 147], //Ops - Admin COD, Ops - Admin Operational ( COD )
+    codManual: [212], //Admin FORCE MAJEURE
   },
   korwil: {
     korwilRoleId: [38, 155],
