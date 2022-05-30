@@ -1071,6 +1071,17 @@ export class SortationScanOutService {
           resultDataDoSortationVehicle[0].employee_driver_id !=
           payload.employeeIdDriver
         ) {
+
+          // check if new driver has any recent do_sortation_vehicle records
+          const existingDSV = await this.getDataDriver(payload.employeeIdDriver);
+          if (existingDSV) {
+            await Promise.all(
+              existingDSV.map(async dsv =>
+                this.validationDriverStatus(dsv,  permissonPayload.branchId),
+              ),
+            );
+          }
+
           const resultAllDriverVehicle = await this.findAllActiveVehicleInDriver(
             resultDataDoSortationVehicle[0].employee_driver_id,
           );
