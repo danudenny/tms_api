@@ -854,6 +854,7 @@ export class SortationScanOutService {
   static async changeVehicle(
     payload: SortationChangeVehiclePayloadVm,
   ): Promise<SortationChangeVehicleResponseVm> {
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     const doSortation = await DoSortation.findOne(
       {
         doSortationId: payload.doSortationId,
@@ -925,6 +926,16 @@ export class SortationScanOutService {
     ) {
       throw new UnprocessableEntityException(
         'Tidak bisa digantikan dengan supir dan kendaraan yang sama',
+      );
+    }
+
+    // check if new driver has any recent do_sortation_vehicle records
+    const existingDSV = await this.getDataDriver(payload.employeeIdDriver);
+    if (existingDSV) {
+      await Promise.all(
+        existingDSV.map(async dsv =>
+          this.validationDriverStatus(dsv, permissionPayload.branchId),
+        ),
       );
     }
 
