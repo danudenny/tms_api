@@ -716,141 +716,6 @@ export class SortationScanOutService {
     });
   }
 
-  private static async updateTotalBagSortationAndSortationDetail(
-    isSortir: boolean,
-    resultDoSortation: DoSortation,
-    resultDoSortationDetail: DoSortationDetail,
-    userId: number,
-    transactional: EntityManager,
-  ) {
-    if (isSortir) {
-      await transactional.update(DoSortation,
-        { doSortationId: resultDoSortationDetail.doSortationId},
-        {
-          totalBagSortir: resultDoSortation.totalBagSortir + 1,
-          updatedTime: moment().toDate(),
-          userIdUpdated: userId,
-        });
-
-      await transactional.update(DoSortationDetail,
-        {doSortationDetailId: resultDoSortationDetail.doSortationDetailId},
-        {
-          isSortir: true,
-          totalBagSortir: resultDoSortationDetail.totalBagSortir + 1,
-          updatedTime: moment().toDate(),
-          userIdUpdated: userId,
-        });
-    } else {
-      await transactional.update(DoSortation,
-        { doSortationId: resultDoSortationDetail.doSortationId},
-        {
-          totalBag: resultDoSortation.totalBag + 1,
-          updatedTime: moment().toDate(),
-          userIdUpdated: userId,
-        });
-      await transactional.update(DoSortationDetail,
-        {doSortationDetailId: resultDoSortationDetail.doSortationDetailId},
-        {
-          totalBag: resultDoSortationDetail.totalBag + 1,
-          updatedTime: moment().toDate(),
-          userIdUpdated: userId,
-        });
-    }
-  }
-
-  private static async getSortationDetailItemExist( bagItemId: number ): Promise<any> {
-      const rawQuery = `
-          SELECT
-            dsd.do_sortation_detail_id AS "doSmdDetailId",
-            dsdi.bag_item_id AS "bagItemId",
-            ds.do_sortation_code AS "doSortationCode"
-          FROM do_sortation_detail dsd
-          INNER JOIN do_sortation_detail_item dsdi ON dsd.do_sortation_detail_id = dsdi.do_sortation_detail_id
-            AND dsdi.bag_item_id = ${bagItemId}
-            AND dsdi.is_deleted = FALSE
-          INNER JOIN do_sortation ds ON ds.do_sortation_id = dsd.do_sortation_id
-            AND ds.is_deleted = FALSE
-          WHERE
-            dsd.do_sortation_status_id_last != ${DO_SORTATION_STATUS.FINISHED} AND
-            dsd.is_deleted = FALSE;
-        `;
-      const result = await RawQueryService.query(rawQuery);
-      return result.length > 0 ? result : null ;
-  }
-
-  private static async getDataDriver(employeeDriverId: number): Promise<any> {
-    const rawQueryDriver = `
-      SELECT
-        dsv.employee_driver_id,
-        ds.do_sortation_status_id_last,
-        ds.do_sortation_id,
-        ds.branch_id_from,
-        ds.do_sortation_code
-      FROM do_sortation_vehicle dsv
-      INNER JOIN do_sortation ds ON dsv.do_sortation_vehicle_id = ds.do_sortation_vehicle_id_last
-        AND ds.do_sortation_status_id_last <> ${DO_SORTATION_STATUS.FINISHED}
-        AND ds.is_deleted = FALSE
-      WHERE
-        dsv.created_time >= '${moment().subtract(30, 'days').format('YYYY-MM-DD 00:00:00')}' AND
-        dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND
-        dsv.employee_driver_id = ${employeeDriverId} AND
-        dsv.is_deleted = FALSE;
-    `;
-    return await RawQueryService.query(rawQueryDriver);
-  }
-
-  private static async validationDriverStatus(dataDriver: any, payloadBranchId: number) {
-    const doSortationStatusIdLast = toInteger(dataDriver.do_sortation_status_id_last);
-    // Cek Status OTW
-    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.ON_THE_WAY) {
-      throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
-    }
-    // Cek Status PROBLEM
-    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.PROBLEM) {
-      throw new BadRequestException(`Driver tidak bisa di assign, karena sedang PROBLEM !!`);
-    }
-    // Cek Status HAS ARRIVED
-    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.HAS_ARRIVED) {
-      throw new BadRequestException(`Driver tidak bisa di assign, karena baru tiba !!`);
-    }
-    // Cek Status INVALID
-    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.INVALID) {
-      throw new BadRequestException(`Driver tidak bisa di assign, karena INVALID  !!`);
-    }
-    // Cek Status VALID
-    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.VALID) {
-      throw new BadRequestException(`Driver tidak bisa di assign, karena belum DITERIMA !!`);
-    }
-
-    if ( doSortationStatusIdLast < DO_SORTATION_STATUS.ON_THE_WAY ) {
-      throw new BadRequestException(`Driver sudah di assign pada surat jalan ${dataDriver.do_sortation_code}`);
-    }
-
-    // // Cek Status Created, Assigned, Driver Changed
-    // if ( doSortationStatusIdLast == DO_SORTATION_STATUS.CREATED
-    //     || doSortationStatusIdLast == DO_SORTATION_STATUS.ASSIGNED
-    //     || doSortationStatusIdLast == DO_SORTATION_STATUS.DRIVER_CHANGED) {
-    //     if (toInteger(dataDriver.branch_id_from) != toInteger(payloadBranchId)) {
-    //       throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
-    //     }
-    // }
-
-    // Cek Status Received
-    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.RECEIVED) {
-      const resultDoSortationDetail = await DoSortationDetail.findOne({
-        where: {
-          doSmdId: dataDriver.do_smd_id,
-          doSmdStatusIdLast: DO_SORTATION_STATUS.RECEIVED,
-          branchIdTo: payloadBranchId,
-          isDeleted: false,
-        },
-      });
-      if (!resultDoSortationDetail) {
-        throw new BadRequestException(`Driver tidak bisa di assign, karena Sortation ID : ` + dataDriver.do_sortation_id + ` beda cabang.`);
-      }
-    }
-  }
-
   static async changeVehicle(
     payload: SortationChangeVehiclePayloadVm,
   ): Promise<SortationChangeVehicleResponseVm> {
@@ -972,67 +837,6 @@ export class SortationScanOutService {
         },
       ],
     } as SortationChangeVehicleResponseVm;
-  }
-
-  @Transactional()
-  private static async createNewDSV(
-    payload: SortationChangeVehiclePayloadVm,
-    newDriver: Employee,
-    doSortationVehicle: any,
-    newDoSortationStatus: number,
-  ): Promise<string> {
-    const now = moment().toDate();
-    const authMeta = AuthService.getAuthData();
-    const permissionPayload = AuthService.getPermissionTokenPayload();
-
-    const [newDoSortationVehicleId] = await Promise.all([
-      // create new doSortationVehicle with vehicleSeq incremented
-      SortationService.createDoSortationVehicle(
-        payload.doSortationId,
-        null,
-        payload.vehicleNumber,
-        doSortationVehicle.vehicleSeq + 1,
-        payload.employeeIdDriver,
-        permissionPayload.branchId,
-        authMeta.userId,
-      ),
-      // set previous doSortationVehicle to inactive
-      DoSortationVehicle.update(
-        { doSortationVehicleId: doSortationVehicle.doSortationVehicleId },
-        { isActive: false, userIdUpdated: authMeta.userId, updatedTime: now },
-      ),
-    ]);
-
-    const reasonNote = `${doSortationVehicle.employeeName} (${doSortationVehicle.nik}) ${
-      doSortationVehicle.vehicleNumber
-    } digantikan oleh ${newDriver.nickname} (${newDriver.nik}) ${
-      payload.vehicleNumber
-    }`;
-
-    await Promise.all([
-      DoSortation.update(
-        { doSortationId: payload.doSortationId },
-        {
-          doSortationVehicleIdLast: newDoSortationVehicleId,
-          doSortationStatusIdLast: newDoSortationStatus,
-          userIdUpdated: authMeta.userId,
-          updatedTime: now,
-        },
-      ),
-      SortationService.createDoSortationHistory(
-        payload.doSortationId,
-        null,
-        newDoSortationVehicleId,
-        now,
-        permissionPayload.branchId,
-        newDoSortationStatus,
-        null,
-        authMeta.userId,
-        reasonNote,
-      ),
-    ]);
-
-    return newDoSortationVehicleId;
   }
 
   public static async sortationHandover(payload: SortationHandoverPayloadVm): Promise<SortationHandoverResponseVm> {
@@ -1213,6 +1017,89 @@ export class SortationScanOutService {
     return resultDataDoSortationVehicle;
   }
 
+  private static async updateTotalBagSortationAndSortationDetail(
+    isSortir: boolean,
+    resultDoSortation: DoSortation,
+    resultDoSortationDetail: DoSortationDetail,
+    userId: number,
+    transactional: EntityManager,
+  ) {
+    if (isSortir) {
+      await transactional.update(DoSortation,
+        { doSortationId: resultDoSortationDetail.doSortationId},
+        {
+          totalBagSortir: resultDoSortation.totalBagSortir + 1,
+          updatedTime: moment().toDate(),
+          userIdUpdated: userId,
+        });
+
+      await transactional.update(DoSortationDetail,
+        {doSortationDetailId: resultDoSortationDetail.doSortationDetailId},
+        {
+          isSortir: true,
+          totalBagSortir: resultDoSortationDetail.totalBagSortir + 1,
+          updatedTime: moment().toDate(),
+          userIdUpdated: userId,
+        });
+    } else {
+      await transactional.update(DoSortation,
+        { doSortationId: resultDoSortationDetail.doSortationId},
+        {
+          totalBag: resultDoSortation.totalBag + 1,
+          updatedTime: moment().toDate(),
+          userIdUpdated: userId,
+        });
+      await transactional.update(DoSortationDetail,
+        {doSortationDetailId: resultDoSortationDetail.doSortationDetailId},
+        {
+          totalBag: resultDoSortationDetail.totalBag + 1,
+          updatedTime: moment().toDate(),
+          userIdUpdated: userId,
+        });
+    }
+  }
+
+  private static async getSortationDetailItemExist( bagItemId: number ): Promise<any> {
+      const rawQuery = `
+          SELECT
+            dsd.do_sortation_detail_id AS "doSmdDetailId",
+            dsdi.bag_item_id AS "bagItemId",
+            ds.do_sortation_code AS "doSortationCode"
+          FROM do_sortation_detail dsd
+          INNER JOIN do_sortation_detail_item dsdi ON dsd.do_sortation_detail_id = dsdi.do_sortation_detail_id
+            AND dsdi.bag_item_id = ${bagItemId}
+            AND dsdi.is_deleted = FALSE
+          INNER JOIN do_sortation ds ON ds.do_sortation_id = dsd.do_sortation_id
+            AND ds.is_deleted = FALSE
+          WHERE
+            dsd.do_sortation_status_id_last != ${DO_SORTATION_STATUS.FINISHED} AND
+            dsd.is_deleted = FALSE;
+        `;
+      const result = await RawQueryService.query(rawQuery);
+      return result.length > 0 ? result : null ;
+  }
+
+  private static async getDataDriver(employeeDriverId: number): Promise<any> {
+    const rawQueryDriver = `
+      SELECT
+        dsv.employee_driver_id,
+        ds.do_sortation_status_id_last,
+        ds.do_sortation_id,
+        ds.branch_id_from,
+        ds.do_sortation_code
+      FROM do_sortation_vehicle dsv
+      INNER JOIN do_sortation ds ON dsv.do_sortation_vehicle_id = ds.do_sortation_vehicle_id_last
+        AND ds.do_sortation_status_id_last <> ${DO_SORTATION_STATUS.FINISHED}
+        AND ds.is_deleted = FALSE
+      WHERE
+        dsv.created_time >= '${moment().subtract(30, 'days').format('YYYY-MM-DD 00:00:00')}' AND
+        dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND
+        dsv.employee_driver_id = ${employeeDriverId} AND
+        dsv.is_deleted = FALSE;
+    `;
+    return await RawQueryService.query(rawQueryDriver);
+  }
+
   private static async listAfterRemove(arrays: any[], compareValue: any) {
     for (let i = 0; i < arrays.length; i++) {
       if (arrays[i] == compareValue) {
@@ -1222,5 +1109,118 @@ export class SortationScanOutService {
     }
 
     return arrays;
+  }
+
+  private static async validationDriverStatus(dataDriver: any, payloadBranchId: number) {
+    const doSortationStatusIdLast = toInteger(dataDriver.do_sortation_status_id_last);
+    // Cek Status OTW
+    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.ON_THE_WAY) {
+      throw new BadRequestException(`Driver tidak bisa di assign, karena sedang OTW !!`);
+    }
+    // Cek Status PROBLEM
+    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.PROBLEM) {
+      throw new BadRequestException(`Driver tidak bisa di assign, karena sedang PROBLEM !!`);
+    }
+    // Cek Status HAS ARRIVED
+    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.HAS_ARRIVED) {
+      throw new BadRequestException(`Driver tidak bisa di assign, karena baru tiba !!`);
+    }
+    // Cek Status INVALID
+    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.INVALID) {
+      throw new BadRequestException(`Driver tidak bisa di assign, karena INVALID  !!`);
+    }
+    // Cek Status VALID
+    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.VALID) {
+      throw new BadRequestException(`Driver tidak bisa di assign, karena belum DITERIMA !!`);
+    }
+
+    if ( doSortationStatusIdLast < DO_SORTATION_STATUS.ON_THE_WAY ) {
+      throw new BadRequestException(`Driver sudah di assign pada surat jalan ${dataDriver.do_sortation_code}`);
+    }
+
+    // // Cek Status Created, Assigned, Driver Changed
+    // if ( doSortationStatusIdLast == DO_SORTATION_STATUS.CREATED
+    //     || doSortationStatusIdLast == DO_SORTATION_STATUS.ASSIGNED
+    //     || doSortationStatusIdLast == DO_SORTATION_STATUS.DRIVER_CHANGED) {
+    //     if (toInteger(dataDriver.branch_id_from) != toInteger(payloadBranchId)) {
+    //       throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
+    //     }
+    // }
+
+    // Cek Status Received
+    if ( doSortationStatusIdLast == DO_SORTATION_STATUS.RECEIVED) {
+      const resultDoSortationDetail = await DoSortationDetail.findOne({
+        where: {
+          doSmdId: dataDriver.do_smd_id,
+          doSmdStatusIdLast: DO_SORTATION_STATUS.RECEIVED,
+          branchIdTo: payloadBranchId,
+          isDeleted: false,
+        },
+      });
+      if (!resultDoSortationDetail) {
+        throw new BadRequestException(`Driver tidak bisa di assign, karena Sortation ID : ` + dataDriver.do_sortation_id + ` beda cabang.`);
+      }
+    }
+  }
+
+  @Transactional()
+  private static async createNewDSV(
+    payload: SortationChangeVehiclePayloadVm,
+    newDriver: Employee,
+    doSortationVehicle: any,
+    newDoSortationStatus: number,
+  ): Promise<string> {
+    const now = moment().toDate();
+    const authMeta = AuthService.getAuthData();
+    const permissionPayload = AuthService.getPermissionTokenPayload();
+
+    const [newDoSortationVehicleId] = await Promise.all([
+      // create new doSortationVehicle with vehicleSeq incremented
+      SortationService.createDoSortationVehicle(
+        payload.doSortationId,
+        null,
+        payload.vehicleNumber,
+        doSortationVehicle.vehicleSeq + 1,
+        payload.employeeIdDriver,
+        permissionPayload.branchId,
+        authMeta.userId,
+      ),
+      // set previous doSortationVehicle to inactive
+      DoSortationVehicle.update(
+        { doSortationVehicleId: doSortationVehicle.doSortationVehicleId },
+        { isActive: false, userIdUpdated: authMeta.userId, updatedTime: now },
+      ),
+    ]);
+
+    const reasonNote = `${doSortationVehicle.employeeName} (${doSortationVehicle.nik}) ${
+      doSortationVehicle.vehicleNumber
+    } digantikan oleh ${newDriver.nickname} (${newDriver.nik}) ${
+      payload.vehicleNumber
+    }`;
+
+    await Promise.all([
+      DoSortation.update(
+        { doSortationId: payload.doSortationId },
+        {
+          doSortationVehicleIdLast: newDoSortationVehicleId,
+          doSortationStatusIdLast: newDoSortationStatus,
+          userIdUpdated: authMeta.userId,
+          updatedTime: now,
+        },
+      ),
+      SortationService.createDoSortationHistory(
+        payload.doSortationId,
+        null,
+        newDoSortationVehicleId,
+        now,
+        permissionPayload.branchId,
+        newDoSortationStatus,
+        null,
+        authMeta.userId,
+        reasonNote,
+      ),
+    ]);
+
+    return newDoSortationVehicleId;
   }
 }
