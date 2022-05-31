@@ -11,12 +11,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileSortationUploadImagePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.payload.vm';
 import { MobileSortationCancelPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-cancel.payload.vm';
 import { MobileSortationProblemPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-problem.payload.vm';
-import {
-  MobileSortationHandoverPayloadVm
-} from '../../../models/sortation/mobile/mobile-sortation-handover.payload.vm';
-import {
-  MobileSortationHandoverImagePayloadVm
-} from '../../../models/sortation/mobile/mobile-sortation-handover-image.payload.vm';
 
 @ApiUseTags('Mobile Sortation')
 @Controller('mobile/sortation')

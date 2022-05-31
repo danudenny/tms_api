@@ -44,19 +44,7 @@ import {
   MobileSortationProblemResponseVm,
 } from '../../../models/sortation/mobile/mobile-sortation-problem.response.vm';
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
-import {
-  MobileSortationHandoverPayloadVm,
-} from '../../../models/sortation/mobile/mobile-sortation-handover.payload.vm';
-import {
-  MobileSortationHandoverResponseVm,
-} from '../../../models/sortation/mobile/mobile-sortation-handover.response.vm';
 import { getManager } from 'typeorm';
-import {
-  MobileSortationHanoverImageResponseVm,
-} from '../../../models/sortation/mobile/mobile-sortation-hanover-image.response.vm';
-import {
-  MobileSortationHandoverImagePayloadVm,
-} from '../../../models/sortation/mobile/mobile-sortation-handover-image.payload.vm';
 import { RepositoryService } from '../../../../../shared/services/repository.service';
 
 @Injectable()
