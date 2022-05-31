@@ -43,21 +43,6 @@ export class MobileSortationController {
     return MobileSortationService.problemMobileSortation(payload, file);
   }
 
-  @Post('handover')
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async handoverMobileSortation(@Body() payload: MobileSortationHandoverPayloadVm) {
-    return MobileSortationService.handoverMobileSortation(payload);
-  }
-
-  @Post('handover/image')
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async handoverMobileSortationImage(@Body() payload: MobileSortationHandoverImagePayloadVm,  @UploadedFile() file) {
-    return MobileSortationService.uploadImageMobileSortationHandover(payload, file);
-  }
-
   @Post('cancel')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanInCancelMobileSortation(@Body() payload: MobileSortationCancelPayloadVm) {
