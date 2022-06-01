@@ -548,7 +548,7 @@ export class MobileSortationService {
         DO_SORTATION_STATUS.PROBLEM,
         resultDoSortationArrival.branchIdFrom,
         resultDoSortationArrival.branchIdTo,
-        null,
+        payload.reasonNote,
         authMeta.userId,
       );
     });
