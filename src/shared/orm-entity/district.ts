@@ -63,13 +63,13 @@ export class District extends TmsBaseEntity {
   })
   notes: string | null;
 
-  @Column('character varying', {
-    nullable: false,
-    length: 20,
-    default: () => '0',
-    name: 'zip_code',
-  })
-  zipCode: string;
+  // @Column('character varying', {
+  //   nullable: false,
+  //   length: 20,
+  //   default: () => '0',
+  //   name: 'zip_code',
+  // })
+  // zipCode: string;
 
   @Column('bigint', {
     nullable: true,
