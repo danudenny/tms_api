@@ -521,7 +521,7 @@ export class SortationScanOutListService {
       q.andWhere(
         e => e.doSortationVehicleId,
         w => w.equals(scanoutHistory.doSortationVehicleId),
-      ).andWhereRaw(`LOWER(dsa.attachment_type) = 'problem`);
+      ).andWhereRaw(`LOWER(dsa.attachment_type) = 'problem'`);
     } else if (
       payload.doSortationStatusId == DO_SORTATION_STATUS.BACKUP_PROCESS
     ) {
