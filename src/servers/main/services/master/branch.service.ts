@@ -95,7 +95,7 @@ export class BranchService {
     if (
       merger &&
       RoleGroupService.isRoleCodMerge(
-        permissionPayload.roleName,
+        permissionPayload.roleId,
         permissionPayload.isHeadOffice,
       )
     ) {

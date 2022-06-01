@@ -30,6 +30,7 @@ import { V1WebAwbHandoverService } from './web/v1/web-awb-handover.service';
 import { GatewayService } from './proxy/gateway.service';
 import { CodReportService } from './cod/cod-report.service';
 import { RedshiftReportingService } from './report/redshift-reporting.service';
+import { CodRedshiftService } from './cod/cod-redshift.service';
 
 @Module({
   imports: [SharedModule],
@@ -64,6 +65,7 @@ import { RedshiftReportingService } from './report/redshift-reporting.service';
     GatewayService,
     CodReportService,
     RedshiftReportingService,
+    CodRedshiftService,
   ],
   exports: [
     AwbStatusService,
@@ -96,6 +98,7 @@ import { RedshiftReportingService } from './report/redshift-reporting.service';
     GatewayService,
     CodReportService,
     RedshiftReportingService,
+    CodRedshiftService,
   ],
 })
 export class MainServerServicesModule {}

@@ -460,7 +460,7 @@ export class V2WebCodReportService {
       //#region Cod Merger
       if (
         RoleGroupService.isRoleCodMerge(
-          permissionPayload.roleName,
+          permissionPayload.roleId,
           permissionPayload.isHeadOffice,
         )
       ) {
@@ -474,7 +474,7 @@ export class V2WebCodReportService {
 
       if (
         RoleGroupService.isRoleCodAdmin(
-          permissionPayload.roleName,
+          permissionPayload.roleId,
           permissionPayload.isHeadOffice,
         )
       ) {

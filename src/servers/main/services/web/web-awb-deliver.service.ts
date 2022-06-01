@@ -90,7 +90,7 @@ export class WebAwbDeliverService {
 
                   // check awb is cod
                   if (this.isValidCod(awb.awbItem.awb.isCod, delivery.awbStatusId)) {
-                    if (RoleGroupService.isRoleCodManual(permissonPayload.roleName, permissonPayload.isHeadOffice)) {
+                    if (RoleGroupService.isRoleCodManual(permissonPayload.roleId, permissonPayload.isHeadOffice)) {
                       await this.syncDeliver(delivery, true);
                       response.status = 'ok';
                       response.message = 'success';
