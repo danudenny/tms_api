@@ -211,6 +211,7 @@ export class BagScanOutBranchSmdQueueService {
             bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
             userIdUpdated: data.userId,
             updatedTime: moment().toDate(),
+            branchIdNext : item.branch_id_to,
           },
         );
 
