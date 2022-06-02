@@ -145,6 +145,15 @@ module.exports = {
       },
     }
   },
+  codProxy: {
+    apiInternalBaseUrl: 'http://api-internal.s.sicepat.io',
+    apiTimeoutMs: 15000,
+    allowedService: {
+      "cod-invoice-svc": {
+        destination: "/operation/cod-invoice-svc"
+      }
+    }
+  },
   reportingService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service', //https://swagger.s.sicepat.tech/operation/reporting-service
     path: {
