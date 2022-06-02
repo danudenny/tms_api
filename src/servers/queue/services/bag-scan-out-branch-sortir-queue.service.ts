@@ -132,12 +132,15 @@ export class BagScanOutBranchSortirQueueService {
         }
       }
 
-      const bagItemsAwb = await BagItemAwb.find({
-        where: {
-          bagItemId: Number(item.bag_item_id),
-          isDeleted: false,
-        },
-      });
+      const bagItemsAwb = await RawQueryService.query(`
+        SELECT
+          awb_item_id AS "awbItemId"
+        FROM
+          bag_item_awb
+        WHERE
+          bag_item_id=${item.bag_item_id}
+          AND is_deleted=FALSE
+      `);
 
       const resultbagItemHistory = BagItemHistory.create();
       resultbagItemHistory.bagItemId = item.bag_item_id.toString();
