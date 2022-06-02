@@ -11,6 +11,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { MobileSortationUploadImagePayloadVm } from '../../../models/sortation/mobile/mobile-sortation-upload-image.payload.vm';
 import { MobileSortationCancelPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-cancel.payload.vm';
 import { MobileSortationProblemPayloadVm } from '../../../models/sortation/mobile/mobile-sortation-problem.payload.vm';
+import {MobileSortationHandoverPayloadVm} from '../../../models/sortation/mobile/mobile-sortation-handover.payload.vm';
+import {
+  MobileSortationHandoverImagePayloadVm,
+} from '../../../models/sortation/mobile/mobile-sortation-handover-image.payload.vm';
 
 @ApiUseTags('Mobile Sortation')
 @Controller('mobile/sortation')
@@ -65,6 +69,21 @@ export class MobileSortationController {
     @UploadedFile() file,
   ) {
       return MobileSortationService.uploadImageMobileSortation(payload, file);
+  }
+
+  @Post('handover')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async handoverMobileSortation(@Body() payload: MobileSortationHandoverPayloadVm) {
+    return MobileSortationService.handoverMobileSortation(payload);
+  }
+
+  @Post('handover/image')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async handoverMobileSortationImage(@Body() payload: MobileSortationHandoverImagePayloadVm,  @UploadedFile() file) {
+    return MobileSortationService.uploadImageMobileSortationHandover(payload, file);
   }
 
 }

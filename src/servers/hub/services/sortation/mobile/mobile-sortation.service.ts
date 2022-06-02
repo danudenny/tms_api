@@ -46,6 +46,16 @@ import {
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { getManager } from 'typeorm';
 import { RepositoryService } from '../../../../../shared/services/repository.service';
+import {MobileSortationHandoverPayloadVm} from "../../../models/sortation/mobile/mobile-sortation-handover.payload.vm";
+import {
+  MobileSortationHandoverResponseVm
+} from "../../../models/sortation/mobile/mobile-sortation-handover.response.vm";
+import {
+  MobileSortationHandoverImagePayloadVm
+} from "../../../models/sortation/mobile/mobile-sortation-handover-image.payload.vm";
+import {
+  MobileSortationHanoverImageResponseVm
+} from "../../../models/sortation/mobile/mobile-sortation-hanover-image.response.vm";
 
 @Injectable()
 export class MobileSortationService {
@@ -729,6 +739,199 @@ export class MobileSortationService {
     } catch (e) {
       throw e.error;
     }
+  }
+
+  public static async uploadImageMobileSortationHandover(payload: MobileSortationHandoverImagePayloadVm, file) {
+    const result = new MobileSortationHanoverImageResponseVm();
+    const authMeta = AuthService.getAuthData();
+    PinoLoggerService.log('#### DEBUG USER UPLOAD IMAGE SORTATION HANDOVER: ', authMeta);
+
+    let url = null;
+    let attachmentId = null;
+
+    const resultDoSortation = await DoSortation.findOne({
+      select: [
+        'doSortationId',
+        'doSortationVehicleIdLast',
+      ],
+      where: {
+        doSortationId: payload.doSortationId,
+        isDeleted: false,
+      },
+    });
+
+    const resultDoSortationDetail = await DoSortationDetail.findOne({
+      select: [
+        'depatureDateTime',
+        'arrivalDateTime',
+        'doSortationId',
+        'doSortationDetailId',
+        'doSortationTime',
+        'doSortationVehicleId',
+        'branchIdFrom',
+        'branchIdTo',
+      ],
+      where: {
+        doSortationId: payload.doSortationId,
+        isDeleted: false,
+        arrivalDateTime: null,
+      },
+    });
+
+    if (!resultDoSortationDetail) {
+      throw new BadRequestException(`All Sortation Has Arrival`);
+    }
+
+    let attachment = await AttachmentTms.findOne({
+      where: {
+        fileName: file.originalname,
+      },
+      // lock: { mode: 'pessimistic_write' },
+    });
+
+    if (attachment) {
+      attachmentId = attachment.attachmentTmsId;
+      url = attachment.url;
+    } else {
+      const pathId = `sortation-delivery-${payload.imageType}`;
+      attachment = await AttachmentService.uploadFileBufferToS3(
+          file.buffer,
+          file.originalname,
+          file.mimetype,
+          pathId,
+      );
+      if (attachment) {
+        attachmentId = attachment.attachmentTmsId;
+        url = attachment.url;
+      }
+    }
+
+    await getManager().transaction(async transaction => {
+      const doSortationAttachment = await DoSortationAttachment.create();
+      doSortationAttachment.doSortationDetailId = resultDoSortationDetail.doSortationDetailId;
+      doSortationAttachment.attachmentTmsId = attachmentId;
+      doSortationAttachment.attachmentType = payload.imageType;
+      doSortationAttachment.doSortationVehicleId = resultDoSortation.doSortationVehicleIdLast;
+      await transaction.save(DoSortationAttachment, doSortationAttachment);
+    });
+
+    const data = [];
+    data.push({
+      url,
+      attachmentId,
+    });
+    result.statusCode = HttpStatus.OK;
+    result.message = 'Sortation upload image Handover';
+    result.data = data;
+    return result;
+  }
+
+  static async handoverMobileSortation(payload: MobileSortationHandoverPayloadVm) {
+    const authMeta = AuthService.getAuthData();
+    const result = new MobileSortationHandoverResponseVm();
+    const timeNow = moment().toDate();
+    const resultDoSortation = await DoSortation.findOne({
+      select: [
+        'doSortationId',
+        'doSortationVehicleIdLast',
+      ],
+      where: {
+        doSortationId: payload.doSortationId,
+        isDeleted: false,
+      },
+    });
+
+    const resultDoSortationDetail = await DoSortationDetail.findOne({
+      select: [
+        'depatureDateTime',
+        'arrivalDateTime',
+        'doSortationId',
+        'doSortationDetailId',
+        'doSortationTime',
+        'doSortationVehicleId',
+        'branchIdFrom',
+        'branchIdTo',
+      ],
+      where: {
+        doSortationId: payload.doSortationId,
+        isDeleted: false,
+        arrivalDateTime: null,
+      },
+    });
+
+    if (!resultDoSortationDetail) {
+      throw new BadRequestException(`All Sortation Has Arrival`);
+    }
+
+    if (resultDoSortation) {
+      await getManager().transaction(async transaction => {
+        await transaction.update(DoSortationVehicle,
+            {
+              doSortationVehicleId: resultDoSortation.doSortationVehicleIdLast,
+            },
+            {
+              note: payload.note,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
+
+        const resultDoSortationVehicle = await DoSortationVehicle.findOne({
+          select: ['doSortationVehicleId'],
+          where: {
+            doSortationId: payload.doSortationId,
+            isActive: true,
+            isDeleted: false,
+          },
+        });
+
+        await transaction.update(DoSortation,
+            {
+              doSortationId: resultDoSortation.doSortationId,
+            }, {
+              doSortationStatusIdLast: DO_SORTATION_STATUS.DRIVER_CHANGED,
+              doSortationVehicleIdLast: resultDoSortationVehicle.doSortationVehicleId,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
+
+        await transaction.update(DoSortationDetail,
+            {
+              doSortationId: payload.doSortationId,
+              arrivalDateTime: null,
+            },
+            {
+              doSortationStatusIdLast: DO_SORTATION_STATUS.DRIVER_CHANGED,
+              userIdUpdated: authMeta.userId,
+              updatedTime: timeNow,
+            });
+
+        await this.createDoSortationHistory(
+            transaction,
+            resultDoSortationDetail.doSortationId,
+            resultDoSortationDetail.doSortationDetailId,
+            resultDoSortationDetail.doSortationTime,
+            resultDoSortation.doSortationVehicleIdLast,
+            DO_SORTATION_STATUS.DRIVER_CHANGED,
+            resultDoSortationDetail.branchIdFrom,
+            resultDoSortationDetail.branchIdTo,
+            null,
+            authMeta.userId,
+        );
+      });
+
+      const data = [];
+      data.push({
+        doSortationId: resultDoSortation.doSortationId,
+        handoverDate: timeNow,
+      });
+      result.statusCode = HttpStatus.OK;
+      result.message = 'Sortation Success Handover';
+      result.data = data;
+      return result;
+    } else {
+      throw new BadRequestException(`Can't Find  DO SORTATION ID : ` + payload.doSortationId);
+    }
+
   }
 
   public static async uploadImageMobileSortation(payload: MobileSortationUploadImagePayloadVm, file) {
