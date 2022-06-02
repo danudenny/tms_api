@@ -239,7 +239,7 @@ export class MobileSortationListService {
             qb.innerJoin(
               'do_sortation_vehicle',
               'dsv',
-              `ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id and dsv.employee_driver_id = ${paramEmployeeId} and dsv.is_deleted = false and dsv.is_active = TRUE`,
+              `ds.do_sortation_vehicle_id_last = dsv.do_sortation_vehicle_id and dsv.employee_driver_id = ${paramEmployeeId} and dsv.is_deleted = false`,
             );
             // qb.innerJoin(
             //   'users',
