@@ -749,34 +749,46 @@ export class MobileSortationService {
     let url = null;
     let attachmentId = null;
 
-    const resultDoSortation = await DoSortation.findOne({
-      select: [
-        'doSortationId',
-        'doSortationVehicleIdLast',
-      ],
-      where: {
-        doSortationId: payload.doSortationId,
-        isDeleted: false,
-      },
-    });
+    // const resultDoSortation = await DoSortation.findOne({
+    //   select: [
+    //     'doSortationId',
+    //     'doSortationVehicleIdLast',
+    //   ],
+    //   where: {
+    //     doSortationId: payload.doSortationId,
+    //     isDeleted: false,
+    //   },
+    // });
 
-    const resultDoSortationDetail = await DoSortationDetail.findOne({
-      select: [
-        'depatureDateTime',
-        'arrivalDateTime',
-        'doSortationId',
-        'doSortationDetailId',
-        'doSortationTime',
-        'doSortationVehicleId',
-        'branchIdFrom',
-        'branchIdTo',
-      ],
-      where: {
-        doSortationId: payload.doSortationId,
-        isDeleted: false,
-        arrivalDateTime: null,
-      },
-    });
+    // const resultDoSortationDetail = await DoSortationDetail.findOne({
+    //   select: [
+    //     'depatureDateTime',
+    //     'arrivalDateTime',
+    //     'doSortationId',
+    //     'doSortationDetailId',
+    //     'doSortationTime',
+    //     'doSortationVehicleId',
+    //     'branchIdFrom',
+    //     'branchIdTo',
+    //   ],
+    //   where: {
+    //     doSortationId: payload.doSortationId,
+    //     isDeleted: false,
+    //     arrivalDateTime: null,
+    //   },
+    // });
+
+    const sql = ` select
+                        dsv.do_sortation_vehicle_id,
+                        dsd.do_sortation_detail_id
+                    from
+                        do_sortation_detail dsd
+                        INNER JOIN do_sortation_vehicle dsv ON dsv.do_sortation_id = dsd.do_sortation_id
+                        AND dsv.is_deleted = false  AND dsd.is_active = true
+                    WHERE dsd.do_sortation_id = '${payload.doSortationId}'
+                    AND dsd.is_deleted = false
+                    limit 1`;
+    const resultDoSortationDetail = await RawQueryService.query(sql);
 
     if (!resultDoSortationDetail) {
       throw new BadRequestException(`All Sortation Has Arrival`);
@@ -808,10 +820,10 @@ export class MobileSortationService {
 
     await getManager().transaction(async transaction => {
       const doSortationAttachment = await DoSortationAttachment.create();
-      doSortationAttachment.doSortationDetailId = resultDoSortationDetail.doSortationDetailId;
+      doSortationAttachment.doSortationDetailId = resultDoSortationDetail[0].do_sortation_detail_id;
       doSortationAttachment.attachmentTmsId = attachmentId;
       doSortationAttachment.attachmentType = payload.imageType;
-      doSortationAttachment.doSortationVehicleId = resultDoSortation.doSortationVehicleIdLast;
+      doSortationAttachment.doSortationVehicleId = resultDoSortationDetail[0].do_sortation_vehicle_id;
       await transaction.save(DoSortationAttachment, doSortationAttachment);
     });
 
@@ -973,7 +985,7 @@ export class MobileSortationService {
                     from
                         do_sortation_detail dsd
                         INNER JOIN do_sortation_vehicle dsv ON dsv.do_sortation_id = dsd.do_sortation_id
-                        AND dsv.is_deleted = false
+                        AND dsv.is_deleted = false  AND dsd.is_active = true
                     WHERE dsd.do_sortation_detail_id = '${payload.doSortationDetailId}'
                     AND dsd.is_deleted = false
                     limit 1`;
