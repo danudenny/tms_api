@@ -779,15 +779,16 @@ export class MobileSortationService {
     // });
 
     const sql = ` select
-                        dsv.do_sortation_vehicle_id,
-                        dsd.do_sortation_detail_id
-                    from
-                        do_sortation_detail dsd
-                        INNER JOIN do_sortation_vehicle dsv ON dsv.do_sortation_id = dsd.do_sortation_id
-                        AND dsv.is_deleted = false  AND dsd.is_active = true
-                    WHERE dsd.do_sortation_id = '${payload.doSortationId}'
-                    AND dsd.is_deleted = false
-                    limit 1`;
+        dsv.do_sortation_vehicle_id,
+        dsd.do_sortation_detail_id
+    from
+        do_sortation_detail dsd
+        INNER JOIN do_sortation_vehicle dsv ON dsv.do_sortation_id = dsd.do_sortation_id
+        AND dsv.is_deleted = false  AND dsv.is_active = true
+    WHERE dsd.do_sortation_id = '${payload.doSortationId}'
+    AND dsd.arrival_date_time is null
+    AND dsd.is_deleted = false
+    limit 1`;
     const resultDoSortationDetail = await RawQueryService.query(sql);
 
     if (!resultDoSortationDetail) {
