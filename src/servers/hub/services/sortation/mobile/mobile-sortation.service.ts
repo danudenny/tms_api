@@ -791,7 +791,7 @@ export class MobileSortationService {
     limit 1`;
     const resultDoSortationDetail = await RawQueryService.query(sql);
 
-    if (!resultDoSortationDetail) {
+    if (resultDoSortationDetail.length === 0) {
       throw new BadRequestException(`All Sortation Has Arrival`);
     }
 
@@ -923,11 +923,11 @@ export class MobileSortationService {
             resultDoSortationDetail.doSortationId,
             resultDoSortationDetail.doSortationDetailId,
             resultDoSortationDetail.doSortationTime,
-            resultDoSortation.doSortationVehicleIdLast,
+            resultDoSortationDetail.doSortationVehicleId,
             DO_SORTATION_STATUS.DRIVER_CHANGED,
             resultDoSortationDetail.branchIdFrom,
             resultDoSortationDetail.branchIdTo,
-            null,
+            payload.note,
             authMeta.userId,
         );
       });

@@ -259,7 +259,7 @@ export class SortationScanOutListService {
       .innerJoin(e => e.doSortationStatus, 'dss', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       )
-      .innerJoin(e => e.doSortation.user, 'u', j =>
+      .innerJoin(e => e.user, 'u', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
       )
       .leftJoin(e => e.doSortationVehicle, 'dsv', j =>

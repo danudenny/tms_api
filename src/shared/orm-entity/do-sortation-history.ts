@@ -11,6 +11,7 @@ import { DoSortationStatus } from './do-sortation-status';
 import { DoSortation } from './do-sortation';
 import { Branch } from './branch';
 import { DoSortationVehicle } from './do-sortation-vehicle';
+import {User} from "./user";
 
 @Entity('do_sortation_history', { schema: 'public' })
 export class DoSortationHistory extends TmsBaseEntity {
@@ -125,4 +126,8 @@ export class DoSortationHistory extends TmsBaseEntity {
   @OneToOne(() => DoSortationVehicle)
   @JoinColumn({ name: 'do_sortation_vehicle_id' })
   doSortationVehicle: DoSortationVehicle;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id_created' })
+  user: User;
 }
