@@ -52,6 +52,7 @@ import { WebAwbCountController } from './web/web-awb-count.controller';
 import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
 import { WebAwbFilterController } from './web/web-awb-filter.controller';
 import { WebAwbPodController } from './web/web-awb-pod.controller';
+import { WebAwbScanPriorityController } from './web/web-awb-scan-priority.controller';
 import { WebAwbReturnController } from './web/web-awb-return.controller';
 import { WebAwbReturnCancelController } from './web/web-awb-return-cancel.controller';
 import { WebLastMileUploadController } from './web/web-last-mile-upload.controller';
@@ -112,6 +113,7 @@ import { WebAwbCodRedshiftController } from './web/v1/web-awb-cod-redshift.contr
     WebAwbUpdateStatusController,
     WebAwbCountController,
     WebFirstMileController,
+    WebAwbScanPriorityController,
     WebAwbReturnController,
     WebAwbReturnCancelController,
     WebLastMileUploadController,
