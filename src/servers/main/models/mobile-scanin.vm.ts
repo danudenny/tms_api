@@ -143,16 +143,28 @@ export class V2ScanInputNumberBranchVm {
 }
 export class V2MobileScanInBranchResponseVm {
   @ApiModelProperty()
+  service: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  consigneePhone: string;
+
+  @ApiModelProperty()
+  totalCodValue: string;
+
+  @ApiModelProperty()
+  dateTime: string;
+
+  @ApiModelProperty()
   podScanInBranchId: string;
-
-  @ApiModelProperty()
-  bagNumber: string;
-
-  @ApiModelProperty()
-  isBag: boolean;
-
-  @ApiModelProperty({ type: [ScanBranchBagVm] })
-  dataBag: ScanBranchBagVm;
 
   @ApiModelProperty({ type: [V2ScanInputNumberBranchVm] })
   data: V2ScanInputNumberBranchVm;

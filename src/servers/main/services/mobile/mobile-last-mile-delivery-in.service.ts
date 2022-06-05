@@ -41,10 +41,10 @@ export class LastMileDeliveryInService {
     bagData = await BagService.validBagNumber(inputNumber); // check valid bagNumber
 
     return await this.scanInBagBranch(
-        bagData,
-        inputNumber,
-        podScanInBranchId,
-      );
+      bagData,
+      inputNumber,
+      podScanInBranchId,
+    );
   }
 
   // NOTE: scan in package on branch
@@ -391,7 +391,7 @@ export class LastMileDeliveryInService {
 
         if (usePriority) {
           [podScanInBranchDetail, routeInfo] = await Promise.all([
-           PodScanInBranchDetail.findOne({
+            PodScanInBranchDetail.findOne({
               where: {
                 podScanInBranchId,
                 awbItemId: awb.awbItemId,
@@ -505,59 +505,84 @@ export class LastMileDeliveryInService {
     const authMeta = AuthService.getAuthData();
     const regexNumber = /^[0-9]+$/;
 
-    let podScanInBranch = await PodScanInBranch.findOne({
-      where: {
-        branchId: permissonPayload.branchId,
-        transactionStatusId: 600,
-        isDeleted: false,
-        userIdCreated: authMeta.userId,
-      },
+    const qb = createQueryBuilder();
+    qb.addSelect('awb.awb_number', 'awbNumber');
+    qb.addSelect('awb.consignee_name', 'consigneeName');
+    qb.addSelect('awb.consignee_address', 'consigneeAddress');
+    qb.addSelect('awb.consignee_phone', 'consigneePhone');
+    qb.addSelect('awb.total_cod_value', 'totalCodValue');
+    qb.addSelect('pt.package_type_code', 'service');
+
+    qb.from('awb', 'awb');
+    qb.innerJoin(
+      'package_type',
+      'pt',
+      'pt.package_type_id = awb.package_type_id',
+    );
+    qb.innerJoin('awb_item_attr', 'aia', 'aia.awb_id = awb.awb_id');
+    qb.andWhere('awb.awb_number = :awbNumber', {
+      awbNumber: payload.scanValue,
     });
+    const res = await qb.getRawOne();
 
-    if (podScanInBranch) {
-      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
-    } else {
-      podScanInBranch = PodScanInBranch.create();
-      podScanInBranch.branchId = permissonPayload.branchId;
-      podScanInBranch.scanInType = 'bag'; // default
-      podScanInBranch.transactionStatusId = 600;
-      podScanInBranch.totalBagScan = 0;
+    if (res) {
+      let podScanInBranch = await PodScanInBranch.findOne({
+        where: {
+          branchId: permissonPayload.branchId,
+          transactionStatusId: 600,
+          isDeleted: false,
+          userIdCreated: authMeta.userId,
+        },
+      });
 
-      await PodScanInBranch.save(podScanInBranch);
-      payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+      if (podScanInBranch) {
+        payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+      } else {
+        podScanInBranch = PodScanInBranch.create();
+        podScanInBranch.branchId = permissonPayload.branchId;
+        podScanInBranch.scanInType = 'bag'; // default
+        podScanInBranch.transactionStatusId = 600;
+        podScanInBranch.totalBagScan = 0;
+
+        await PodScanInBranch.save(podScanInBranch);
+        payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+      }
+
+      let inputNumber = payload.scanValue;
+      let resultBag;
+
+      if (regexNumber.test(inputNumber)) {
+        const resultAwb = await this.scanInAwbBranch(
+          inputNumber,
+          payload.bagNumber,
+          payload.podScanInBranchId,
+          true,
+        );
+        data.awbNumber = inputNumber;
+        data.status = resultAwb.status;
+        data.message = resultAwb.message;
+        data.trouble = resultAwb.trouble;
+        data.routeAndPriority = resultAwb.routePriority;
+      } else if (await BagService.isBagNumberLenght(inputNumber)) {
+        resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId);
+      } else {
+        data.awbNumber = inputNumber;
+        data.status = 'error';
+        data.message = 'Nomor tidak valid';
+        data.trouble = true;
+      }
     }
 
-    let inputNumber = payload.scanValue;
-    let resultBag;
-
-    if (regexNumber.test(inputNumber)) {
-      const resultAwb = await this.scanInAwbBranch(
-        inputNumber,
-        payload.bagNumber,
-        payload.podScanInBranchId,
-        true,
-      );
-      data.awbNumber = inputNumber;
-      data.status = resultAwb.status;
-      data.message = resultAwb.message;
-      data.trouble = resultAwb.trouble;
-      data.routeAndPriority = resultAwb.routePriority;
-    } else if (await BagService.isBagNumberLenght(inputNumber)) {
-      resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId);
-    } else {
-      data.awbNumber = inputNumber;
-      data.status = 'error';
-      data.message = 'Nomor tidak valid';
-      data.trouble = true;
-    }
     const result = new V2MobileScanInBranchResponseVm();
     result.podScanInBranchId = payload.podScanInBranchId;
     result.data = data;
-    result.bagNumber = payload.bagNumber;
-    result.dataBag = resultBag;
-    if (resultBag) {
-      result.isBag = true;
-    }
+    result.service = res.service;
+    result.awbNumber = res.awbNumber;
+    result.consigneeName = res.consigneeName;
+    result.consigneeAddress = res.consigneeAddress;
+    result.consigneePhone = res.consigneePhone;
+    result.totalCodValue = res.totalCodValue;
+    result.dateTime = moment().format('YYYY-MM-DD HH:mm:ss');
 
     return result;
   }
