@@ -986,7 +986,7 @@ export class MobileSortationService {
                     from
                         do_sortation_detail dsd
                         INNER JOIN do_sortation_vehicle dsv ON dsv.do_sortation_id = dsd.do_sortation_id
-                        AND dsv.is_deleted = false  AND dsd.is_active = true
+                        AND dsv.is_deleted = false  AND dsv.is_active = true
                     WHERE dsd.do_sortation_detail_id = '${payload.doSortationDetailId}'
                     AND dsd.is_deleted = false
                     limit 1`;
