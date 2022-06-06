@@ -4,11 +4,11 @@ import { ConfigService } from '../../../shared/services/config.service';
 import { RawQueryService } from '../../../shared/services/raw-query.service';
 import { BAG_STATUS } from '../../../shared/constants/bag-status.constant';
 import { SharedService } from '../../../shared/services/shared.service';
-import { BagItemAwb } from '../../../shared/orm-entity/bag-item-awb';
 import { BagItemHistory } from '../../../shared/orm-entity/bag-item-history';
 import { BagItem } from '../../../shared/orm-entity/bag-item';
 import { DoSmdPostAwbHistoryMetaQueueService } from './do-smd-post-awb-history-meta-queue.service';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
+import {UpdateHubSummaryAwbOutQueueService} from './update-hub-summary-awb-out-queue.service';
 export class BagScanOutBranchSortirQueueService {
   public static queue = QueueBullBoard.createQueue.add(
     'bag-scan-out-branch-sortir-queue',
@@ -134,7 +134,8 @@ export class BagScanOutBranchSortirQueueService {
 
       const bagItemsAwb = await RawQueryService.query(`
         SELECT
-          awb_item_id AS "awbItemId"
+          awb_item_id AS "awbItemId",
+          awb_number AS "awbNumber"
         FROM
           bag_item_awb
         WHERE
@@ -170,6 +171,12 @@ export class BagScanOutBranchSortirQueueService {
         for (const itemAwb of bagItemsAwb) {
           if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
             tempAwb.push(itemAwb.awbItemId);
+
+            UpdateHubSummaryAwbOutQueueService.perform(
+                data.branchId,
+                itemAwb.awbNumber,
+                data.userId,
+            );
 
             DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
               Number(itemAwb.awbItemId),
