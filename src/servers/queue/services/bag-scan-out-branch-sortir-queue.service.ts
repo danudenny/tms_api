@@ -49,7 +49,8 @@ export class BagScanOutBranchSortirQueueService {
             b.branch_id AS branch_id_to,
             b.branch_name AS branch_name_to,
             bih.bag_item_status_id,
-            bih1.branch_id
+            bih1.branch_id,
+            bi.bag_item_status_id_last
         FROM do_sortation_detail dsd
         INNER JOIN do_sortation_detail_item dsdi ON dsdi.do_sortation_detail_id = dsd.do_sortation_detail_id AND dsdi.is_deleted = FALSE
         INNER JOIN bag_item bi ON dsdi.bag_item_id = bi.bag_item_id AND bi.is_deleted = FALSE
@@ -123,6 +124,9 @@ export class BagScanOutBranchSortirQueueService {
     let branchNameNext = '';
     const tempAwb = [];
     for (const item of resultQuery) {
+      if (item.bag_item_status_id_last == BAG_STATUS.OUT_HUB) {
+        continue;
+      }
       if (item.branch_id_to) {
         const branchNext = await SharedService.getDataBranchCity(
           item.branch_id_to,
