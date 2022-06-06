@@ -500,7 +500,15 @@ export class LastMileDeliveryInService {
             WebAwbScanPriorityService.scanPriority(awbNumber)
           ])
           if (routeInfo) {
-            routePriority = routeInfo.routeAndPriority;
+            if(routeInfo.status == 'ok'){
+              routePriority = routeInfo.routeAndPriority;
+            }else{
+              result.status = 'error';
+              result.trouble = true;
+              result.message = `Resi ${awbNumber} belum pernah di MANIFESTED`;
+              result.routePriority = routeInfo.routeAndPriority;
+              return result;
+            }
           }
         } else {
           podScanInBranchDetail = await PodScanInBranchDetail.findOne({
