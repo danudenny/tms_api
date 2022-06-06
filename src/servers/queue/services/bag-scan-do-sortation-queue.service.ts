@@ -1,11 +1,13 @@
 import moment = require('moment');
-import { ConfigService } from '../../../shared/services/config.service';
-import { QueueBullBoard } from './queue-bull-board';
-import { BagItemAwb } from '../../../shared/orm-entity/bag-item-awb';
+
 import { BAG_STATUS } from '../../../shared/constants/bag-status.constant';
-import { BagItemHistoryQueueService } from './bag-item-history-queue.service';
 import { BagItem } from '../../../shared/orm-entity/bag-item';
+import { BagItemAwb } from '../../../shared/orm-entity/bag-item-awb';
+import { ConfigService } from '../../../shared/services/config.service';
+import { BagItemHistoryQueueService } from './bag-item-history-queue.service';
 import { DoPodDetailPostMetaQueueService } from './do-pod-detail-post-meta-queue.service';
+import { QueueBullBoard } from './queue-bull-board';
+import { UpdateHubSummaryAwbOutQueueService } from './update-hub-summary-awb-out-queue.service';
 
 export class BagScanDoSortationQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -46,7 +48,7 @@ export class BagScanDoSortationQueueService {
       );
 
       await BagItem.update(
-        {bagItemId : data.bagItemId},
+        { bagItemId: data.bagItemId },
         {
           bagItemStatusIdLast: BAG_STATUS.IN_HUB,
           branchIdLast: data.branchId,
@@ -66,6 +68,11 @@ export class BagScanDoSortationQueueService {
         DoPodDetailPostMetaQueueService.createJobByAwbFilter(
           itemAwb.awbItemId,
           data.branchId,
+          data.userId,
+        );
+        UpdateHubSummaryAwbOutQueueService.perform(
+          data.branchId,
+          itemAwb.awbNumber,
           data.userId,
         );
       }
