@@ -923,7 +923,7 @@ export class MobileSortationService {
             resultDoSortationDetail.doSortationId,
             resultDoSortationDetail.doSortationDetailId,
             resultDoSortationDetail.doSortationTime,
-            resultDoSortationDetail.doSortationVehicleId,
+            resultDoSortationVehicle.doSortationVehicleId,
             DO_SORTATION_STATUS.DRIVER_CHANGED,
             resultDoSortationDetail.branchIdFrom,
             resultDoSortationDetail.branchIdTo,
