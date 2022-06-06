@@ -13,7 +13,7 @@ export class CodGatewayService {
     this.config = ConfigService.get('codProxy');
   }
 
-  public async routeRequest(req: any, resp: Response) {
+  async routeRequest(req: any, resp: Response) {
     const options: AxiosRequestConfig = {
       method: req.method,
       headers: req.headers,
@@ -23,9 +23,22 @@ export class CodGatewayService {
 
     options.url = this.config.apiInternalBaseUrl + this.getDestination(req.url);
 
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthMetadata();
+
     options.headers['x-user-id'] = authMeta.userId.toString();
     options.headers['x-channel-id'] = authMeta.clientId.toString();
+    
+    options.headers['x-role-id'] = permissionPayload.roleId;
+    options.headers['x-role-name'] = permissionPayload.roleName;
+    options.headers['x-branch-id'] = permissionPayload.branchId;
+    options.headers['x-is-head-office'] = permissionPayload.isHeadOffice;
+    
+    const uuidv1 = require('uuid/v1');
+    const requestId = uuidv1();
+   
+    options.headers['x-request-id'] = requestId;
+
     delete options.headers['host'];
 
     const fileSvcAuth = req.headers['x-filesvc-auth'];
