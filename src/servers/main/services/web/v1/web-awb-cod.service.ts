@@ -1794,6 +1794,7 @@ export class V1WebAwbCodService {
         { awbItemId: item.awbItemId },
         {
           transactionStatusId: TRANSACTION_STATUS.TRM,
+          updatedTime: moment().toDate(),
         },
       );
 
