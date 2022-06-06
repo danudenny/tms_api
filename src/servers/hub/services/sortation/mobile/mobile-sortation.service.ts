@@ -171,12 +171,24 @@ export class MobileSortationService {
     });
 
     if (!departedDetail) {
-      // update status AWB & Bag queue
-      await BagScanOutBranchSortirQueueService.perform(
-        payload.doSortationId,
-        resultDoSortation.branchIdFrom,
-        authMeta.userId,
-      );
+      // check has problem
+      const checkDoSortationHistory = await DoSortationHistory.findOne({
+        select: [
+          'doSortationHistoryId',
+        ],
+        where: {
+          doSortationId: resultDoSortation.doSortationId,
+          doSortationStatusId: DO_SORTATION_STATUS.PROBLEM,
+        },
+      });
+      if (!checkDoSortationHistory) {
+        // update status AWB & Bag queue
+        await BagScanOutBranchSortirQueueService.perform(
+            payload.doSortationId,
+            resultDoSortation.branchIdFrom,
+            authMeta.userId,
+        );
+      }
     }
 
     const data = [];
