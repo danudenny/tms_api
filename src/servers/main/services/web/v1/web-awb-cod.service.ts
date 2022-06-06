@@ -1160,6 +1160,7 @@ export class V1WebAwbCodService {
             },
             {
               transactionStatusId: TRANSACTION_STATUS.DEFAULT,
+              updatedTime: timestamp,
             },
           );
 
