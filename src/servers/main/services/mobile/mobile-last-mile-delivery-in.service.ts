@@ -404,8 +404,7 @@ export class LastMileDeliveryInService {
           if(routeInfo.status == 'ok'){
             result.routePriority = routeInfo.routeAndPriority;
           }else{
-            result.status = 'error';
-            result.trouble = true;
+            result.status = 'warning';
             result.message = `Resi ${awbNumber} belum pernah di MANIFESTED`;
             result.routePriority = routeInfo.routeAndPriority;
             return result;
