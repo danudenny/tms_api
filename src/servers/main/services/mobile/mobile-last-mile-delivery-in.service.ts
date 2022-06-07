@@ -402,7 +402,7 @@ export class LastMileDeliveryInService {
           ])
           
           if(routeInfo.status == 'ok'){
-            routePriority = routeInfo.routeAndPriority;
+            result.routePriority = routeInfo.routeAndPriority;
           }else{
             result.status = 'error';
             result.trouble = true;
