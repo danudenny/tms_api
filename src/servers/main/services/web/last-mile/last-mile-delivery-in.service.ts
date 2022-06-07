@@ -486,7 +486,6 @@ export class LastMileDeliveryInService {
         let bagItemId = 0;
         var podScanInBranchDetail;
         var routeInfo = new WebAwbScanPriorityResponse;
-        var routePriority = '';
 
         if (usePriority) {
           [podScanInBranchDetail, routeInfo] = await Promise.all([
@@ -499,17 +498,6 @@ export class LastMileDeliveryInService {
             }),
             WebAwbScanPriorityService.scanPriority(awbNumber)
           ])
-          if (routeInfo) {
-            if(routeInfo.status == 'ok'){
-              routePriority = routeInfo.routeAndPriority;
-            }else{
-              result.status = 'error';
-              result.trouble = false;
-              result.message = `Resi ${awbNumber} belum pernah di MANIFESTED`;
-              result.routePriority = routeInfo.routeAndPriority;
-              return result;
-            }
-          }
         } else {
           podScanInBranchDetail = await PodScanInBranchDetail.findOne({
             where: {
@@ -574,8 +562,17 @@ export class LastMileDeliveryInService {
           podScanInBranchDetailObj.bagNumber = bagNumber;
           podScanInBranchDetailObj.isTrouble = result.trouble;
           if (usePriority) {
-            podScanInBranchDetailObj.routePriority = routePriority;
-            result.routePriority = routePriority;
+            if (routeInfo) {
+              if(routeInfo.status == 'ok'){
+                result.routePriority = routeInfo.routeAndPriority;
+              }else{
+                result.status = 'error';
+                result.trouble = false;
+                result.message = `Resi ${awbNumber} belum pernah di MANIFESTED`;
+                result.routePriority = routeInfo.routeAndPriority;
+              }
+              podScanInBranchDetailObj.routePriority = routeInfo.routeAndPriority;
+            }
           }
 
           await PodScanInBranchDetail.save(podScanInBranchDetailObj);
