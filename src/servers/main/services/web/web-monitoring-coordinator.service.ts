@@ -277,6 +277,9 @@ export class WebMonitoringCoordinatorService {
     const taskHeader = await qb.getRawOne();
     if (taskHeader) {
       result.transactionHeader = taskHeader;
+      result.transactionHeader.checkInDatetime = await moment(taskHeader.checkInDatetime).format('YYYY-MM-DD');
+      result.transactionHeader.checkOutDatetime = await moment(taskHeader.checkOutDatetime).format('YYYY-MM-DD');
+      result.transactionHeader.date = await moment(taskHeader.date).format('YYYY-MM-DD');
       const qbDetail = createQueryBuilder();
       qbDetail.addSelect(
         'a.korwil_transaction_detail_id',
