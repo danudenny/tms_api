@@ -98,6 +98,12 @@ export class HubSummaryAwb extends TmsBaseEntity {
   })
   bagIdIn: number | null;
 
+  @Column('text', {
+    nullable: true,
+    name: 'note',
+  })
+  note: string;
+
   @OneToOne(() => BagItem)
   @JoinColumn({ name: 'bag_item_id_do' })
   bagItemDo: BagItem;
