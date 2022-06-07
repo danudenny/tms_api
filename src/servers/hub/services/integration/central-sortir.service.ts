@@ -193,7 +193,10 @@ export class CentralSortirService {
     if (HUB_REPORT.LEBIH_SORTIR == type) {
       query = `SELECT \n hsa.scan_date_in_hub as "Tanggal Scan", \n
       ''''||hsa.awb_number as "Nomor Resi", \n
-      SUBSTRING(b.bag_number||LPAD(bi.bag_seq::text, 3, '0'), 1, 10) as "Gabung Paket/ Gabung Sortir", \n
+      CASE
+        WHEN b.bag_number is not null THEN SUBSTRING(b.bag_number||LPAD(bi.bag_seq::text, 3, '0'), 1, 10)
+        ELSE SUBSTRING( bdo.bag_number || LPAD(bido.bag_seq :: text, 3, '0'), 1, 10 )
+      END as "Gabung Paket/ Gabung Sortir" , \n
       ` + query + `AND hsa.scan_date_in_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
         AND hsa.scan_date_in_hub < '${moment(payload.endDate).format('YYYY-MM-DD')}' \n
         AND hsa.do_hub = FALSE \n
@@ -201,7 +204,10 @@ export class CentralSortirService {
     } else {
       query = `SELECT \n hsa.scan_date_do_hub as "Tanggal Scan", \n
       ''''||hsa.awb_number as "Nomor Resi", \n
-      SUBSTRING(bdo.bag_number||LPAD(bido.bag_seq::text, 3, '0'), 1, 10) as "Gabung Paket/ Gabung Sortir", \n
+      CASE
+        WHEN bdo.bag_number is not null THEN SUBSTRING( bdo.bag_number || LPAD(bido.bag_seq :: text, 3, '0'), 1, 10 )
+        ELSE SUBSTRING(b.bag_number||LPAD(bi.bag_seq::text, 3, '0'), 1, 10)
+      END as "Gabung Paket/ Gabung Sortir", \n
       ` + query + `AND hsa.scan_date_do_hub >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
         AND hsa.scan_date_do_hub < '${moment(payload.endDate).format('YYYY-MM-DD')}' \n`;
     }
