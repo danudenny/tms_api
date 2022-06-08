@@ -131,6 +131,9 @@ export class ReportPodService {
     payload.fieldResolverMap['packageTypeId'] = 't10.package_type_id';
     payload.fieldResolverMap['packageTypeName'] = 't10.package_type_name';
     payload.fieldResolverMap['packageTypeCode'] = 't10.package_type_code';
+    payload.fieldResolverMap['perwakilan'] = 'bos2.perwakilan';
+    payload.fieldResolverMap['oversla'] = 't10.slamaxdatetimeinternal';
+    payload.fieldResolverMap['slamaxDateTimeInternal'] = 'bos.slamaxdatetimeinternal';
 
     payload.globalSearchFields = [
       {
