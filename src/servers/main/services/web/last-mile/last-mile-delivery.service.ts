@@ -43,7 +43,7 @@ export class LastMileDeliveryService {
       ['t1.user_id_driver', 'userIdDriver'],
       ['t5.branch_name', 'branchName'],
       ['t1.branch_id', 'branchId'],
-      ['t2.fullname', 'nickname'],
+      ["t1_userDriver.username || ' - ' || t2.fullname", 'nickname'],
       ['COUNT(t3.awb_number)', 'totalAwb'],
       [
         'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 14000)',
@@ -70,7 +70,7 @@ export class LastMileDeliveryService {
     );
 
     q2.groupByRaw(
-      '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
+      '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name, t1_userDriver.username',
     );
     const data = await q2.exec();
     const total = 0;

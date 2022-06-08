@@ -338,7 +338,7 @@ export class WebDeliveryOutReportService {
     payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
-      ['t2.fullname', 'Sigesit/Driver'],
+      ["t1_userDriver.username || ' - ' || t2.fullname", 'Sigesit/Driver'],
       ['TO_CHAR(t1.do_pod_deliver_date_time, \'DD Mon YYYY\')', 'Tanggal Pengiriman'],
       ['t5.branch_name', 'Gerai'],
       ['COUNT(DISTINCT(t1.do_pod_deliver_id))', 'Total Surat Jalan'],
@@ -367,7 +367,7 @@ export class WebDeliveryOutReportService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.groupByRaw(
-      't1.do_pod_deliver_date_time, t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
+      't1.do_pod_deliver_date_time, t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name, t1_userDriver.username',
     );
 
     const data = await q.exec();
