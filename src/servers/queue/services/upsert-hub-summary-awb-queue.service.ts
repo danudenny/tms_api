@@ -47,6 +47,7 @@ export class UpsertHubSummaryAwbQueueService {
           {
             awbNumber: data.awbNumber,
             branchId: data.branchId,
+            isDeleted: false,
           },
           { select: ['hubSummaryAwbId'] },
         );
@@ -58,6 +59,7 @@ export class UpsertHubSummaryAwbQueueService {
               {
                 awbNumber: data.awbNumber,
                 branchId: data.branchId,
+                isDeleted: false,
               },
               {
                 scanDateDoHub: dateNow,

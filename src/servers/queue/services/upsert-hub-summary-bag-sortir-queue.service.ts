@@ -50,6 +50,7 @@ export class UpsertHubSummaryBagSortirQueueService {
           {
             awbNumber: data.awbNumber,
             branchId: data.branchId,
+            isDeleted: false,
           },
           { select: ['hubSummaryAwbId'] },
         );
@@ -61,6 +62,7 @@ export class UpsertHubSummaryBagSortirQueueService {
               {
                 awbNumber: data.awbNumber,
                 branchId: data.branchId,
+                isDeleted: false,
               },
               {
                 scanDateInHub: dateNow,

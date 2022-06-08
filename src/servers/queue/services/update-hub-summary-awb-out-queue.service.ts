@@ -50,6 +50,7 @@ export class UpdateHubSummaryAwbOutQueueService {
           {
             awbNumber: data.awbNumber,
             branchId: data.branchId,
+            isDeleted: false,
           },
           { select: ['hubSummaryAwbId'] },
         );
@@ -61,6 +62,7 @@ export class UpdateHubSummaryAwbOutQueueService {
               {
                 awbNumber: data.awbNumber,
                 branchId: data.branchId,
+                isDeleted: false,
               },
               {
                 scanDateOutHub: dateNow,
