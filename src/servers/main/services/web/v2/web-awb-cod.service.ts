@@ -500,6 +500,7 @@ export class V2WebAwbCodService {
           },
           {
             transactionStatusId: TRANSACTION_STATUS.TRM,
+            updatedTime: moment().toDate(),
           },
         );
 
