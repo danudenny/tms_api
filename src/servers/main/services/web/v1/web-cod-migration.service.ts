@@ -113,6 +113,7 @@ export class V1WebCodMigrationService {
       { awbItemId },
       {
         transactionStatusId: TRANSACTION_STATUS.TRM,
+        updatedTime: moment().toDate(),
       },
     );
 
