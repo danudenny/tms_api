@@ -47,6 +47,9 @@ export class SortationPrintService {
       )
       .leftJoin(e => e.doSortationVehicle.employee, 'employee', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      )
+      .leftJoin(e => e.user.employee, 'assigner', j =>
+        j.andWhere(e => e.isDeleted, w => w.isFalse()),
       );
 
     const doSortation = await q
@@ -83,6 +86,13 @@ export class SortationPrintService {
                 cityName: true,
               },
             },
+          },
+        },
+        user: {
+          userId: true,
+          employee: {
+            nik: true,
+            nickname: true,
           },
         },
       })
@@ -147,6 +157,11 @@ export class SortationPrintService {
     }
 
     dataVm.doSortationDetails = dataSortationDetailsVm;
+    dataVm.user = {
+      nik: doSortation.user.employee.nik,
+      nickname: doSortation.user.employee.nickname,
+    };
+    dataVm.isReprint = queryParams.isReprint || false;
     response.data = dataVm;
 
     this.printDoSortationAndQueryMeta(
@@ -268,9 +283,11 @@ export class SortationPrintService {
       ['t2.is_sortir', 'isSortir'],
       [`CONCAT(t2.weight::numeric(10,2))`, 'weight'],
       ['t3.bag_number', 'bagNumber'],
+      ['COUNT(t4.bag_item_awb_id)', 'awbs'],
     );
     v.leftJoin(e => e.doSortationDetailItems.bagItem, 't2');
     v.leftJoin(e => e.doSortationDetailItems.bagItem.bag, 't3');
+    v.leftJoin(e => e.doSortationDetailItems.bagItem.bagItemAwbs, 't4');
     v.where(e => e.doSortationDetailId, w => w.equals(payload.id));
     v.andWhere(e => e.isDeleted, w => w.isFalse());
 

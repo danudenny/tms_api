@@ -59,6 +59,9 @@ export class PrintDoSortationBagDataNewDoSortationDetailBagBagItemVm {
   @ApiModelProperty()
   bagNumber: string;
 
+  @ApiModelProperty()
+  awbs: number;
+
   // @ApiModelProperty()
   // refRepresentativeCode: string;
 }
@@ -150,6 +153,12 @@ export class PrintDoSortationDataVm {
 
   @ApiModelProperty({ type: () => [PrintDoSortationDataDoSortationDetailVm] })
   doSortationDetails: PrintDoSortationDataDoSortationDetailVm[] = [];
+
+  @ApiModelProperty({ type: () => PrintDoSortationDataUserDriverEmployeeVm })
+  user: PrintDoSortationDataUserDriverEmployeeVm = new PrintDoSortationDataUserDriverEmployeeVm();
+
+  @ApiModelProperty()
+  isReprint: boolean;
 }
 
 export class PrintDoSortationVm {
