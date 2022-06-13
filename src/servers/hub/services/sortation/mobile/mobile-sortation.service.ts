@@ -46,16 +46,16 @@ import {
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { getManager } from 'typeorm';
 import { RepositoryService } from '../../../../../shared/services/repository.service';
-import {MobileSortationHandoverPayloadVm} from "../../../models/sortation/mobile/mobile-sortation-handover.payload.vm";
+import {MobileSortationHandoverPayloadVm} from '../../../models/sortation/mobile/mobile-sortation-handover.payload.vm';
 import {
-  MobileSortationHandoverResponseVm
-} from "../../../models/sortation/mobile/mobile-sortation-handover.response.vm";
+  MobileSortationHandoverResponseVm,
+} from '../../../models/sortation/mobile/mobile-sortation-handover.response.vm';
 import {
-  MobileSortationHandoverImagePayloadVm
-} from "../../../models/sortation/mobile/mobile-sortation-handover-image.payload.vm";
+  MobileSortationHandoverImagePayloadVm,
+} from '../../../models/sortation/mobile/mobile-sortation-handover-image.payload.vm';
 import {
-  MobileSortationHanoverImageResponseVm
-} from "../../../models/sortation/mobile/mobile-sortation-hanover-image.response.vm";
+  MobileSortationHanoverImageResponseVm,
+} from '../../../models/sortation/mobile/mobile-sortation-hanover-image.response.vm';
 
 @Injectable()
 export class MobileSortationService {
@@ -262,7 +262,7 @@ export class MobileSortationService {
               updatedTime: timeNow,
             });
 
-          await this.createDoSortationHistory(
+          /*await this.createDoSortationHistory(
             transaction,
             resultDoSortationDetail.doSortationId,
             resultDoSortationDetail.doSortationDetailId,
@@ -273,7 +273,7 @@ export class MobileSortationService {
             resultDoSortationDetail.branchIdTo,
             null,
             authMeta.userId,
-          );
+          );*/
 
           await this.createDoSortationHistory(
             transaction,
@@ -307,7 +307,7 @@ export class MobileSortationService {
               updatedTime: timeNow,
             });
 
-          await this.createDoSortationHistory(
+          /*await this.createDoSortationHistory(
             transaction,
             resultDoSortationDetail.doSortationId,
             resultDoSortationDetail.doSortationDetailId,
@@ -318,7 +318,7 @@ export class MobileSortationService {
             resultDoSortationDetail.branchIdTo,
             null,
             authMeta.userId,
-          );
+          );*/
 
           await this.createDoSortationHistory(
             transaction,
