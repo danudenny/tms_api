@@ -1183,7 +1183,7 @@ export class ScanoutSmdService {
           return result;
         }
         const paramBagSeq = bagDetail.bagSeq;
-       
+
         rawQuery = `
           SELECT
             bih.bag_item_status_id
@@ -1298,7 +1298,7 @@ export class ScanoutSmdService {
                 {
                   bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
                   branchIdLast: permissonPayload.branchId,
-                  bagItemHistoryId: Number(bagItemHistoryId),
+                  bagItemHistoryId,
                   userIdUpdated: authMeta.userId,
                   updatedTime: moment().toDate(),
                 },
@@ -1471,7 +1471,7 @@ export class ScanoutSmdService {
                 {
                   bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
                   branchIdLast: permissonPayload.branchId,
-                  bagItemHistoryId: Number(bagItemHistoryId),
+                  bagItemHistoryId,
                   userIdUpdated: authMeta.userId,
                   updatedTime: moment().toDate(),
                 },

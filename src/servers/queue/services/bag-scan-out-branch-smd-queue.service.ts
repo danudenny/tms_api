@@ -201,14 +201,14 @@ export class BagScanOutBranchSmdQueueService {
         resultbagItemHistory.createdTime = moment().toDate();
         resultbagItemHistory.userIdUpdated = Number(data.userId);
         resultbagItemHistory.updatedTime = moment().toDate();
-        await BagItemHistory.insert(resultbagItemHistory);
+        const bagItemHistory = await BagItemHistory.insert(resultbagItemHistory);
 
         await BagItem.update(
           { bagItemId : item.bag_item_id },
           {
             bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
             branchIdLast: data.branchId,
-            bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
+            bagItemHistoryId: bagItemHistory.identifiers[0].bagItemHistoryId,
             userIdUpdated: data.userId,
             updatedTime: moment().toDate(),
             branchIdNext : item.branch_id_to,

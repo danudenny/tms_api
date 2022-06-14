@@ -234,21 +234,21 @@ export class ScaninSmdService {
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = authMeta.userId;
           resultbagItemHistory.updatedTime = moment().toDate();
-          await BagItemHistory.insert(resultbagItemHistory);
-      
+          const bagItemHistoryDoLineHaul = await BagItemHistory.insert(resultbagItemHistory);
+
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
               bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
-              bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
+              bagItemHistoryId: bagItemHistoryDoLineHaul.identifiers[0].bagItemHistoryId,
               updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
             },
           );
 
-          //:: TODO = update DOPOD lastDateScanIn, totalScanInBag
+          // :: TODO = update DOPOD lastDateScanIn, totalScanInBag
           const doPodDetailBag = await this.getDoPodByBagItem(paramBagItemId);
-          if(doPodDetailBag){
+          if (doPodDetailBag) {
             await getManager().transaction(async transactional => {
               await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
             });
@@ -476,21 +476,21 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
           resultbagItemHistory.createdTime = moment().toDate();
           resultbagItemHistory.userIdUpdated = authMeta.userId;
           resultbagItemHistory.updatedTime = moment().toDate();
-          await BagItemHistory.insert(resultbagItemHistory);
-    
+          const bagItemHistoryDoLineHaul = await BagItemHistory.insert(resultbagItemHistory);
+
           await BagItem.update(
             { bagItemId : paramBagItemId },
             {
               bagItemStatusIdLast: BAG_STATUS.DO_LINE_HAUL,
-              bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
+              bagItemHistoryId: bagItemHistoryDoLineHaul.identifiers[0].bagItemHistoryId,
               updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
             },
           );
 
-          //:: TODO = update DOPOD lastDateScanIn, totalScanInBag
+          // :: TODO = update DOPOD lastDateScanIn, totalScanInBag
           const doPodDetailBag = await this.getDoPodByBagItem(paramBagItemId);
-          if(doPodDetailBag){
+          if (doPodDetailBag) {
             await getManager().transaction(async transactional => {
               await this.updateDoPodTransaction(doPodDetailBag, authMeta.userId, timeNow, transactional);
             });
