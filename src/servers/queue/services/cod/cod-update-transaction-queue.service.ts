@@ -71,6 +71,7 @@ export class CodUpdateTransactionQueueService {
                 { awbItemId: item.awbItemId },
                 {
                   transactionStatusId: TRANSACTION_STATUS.TRF,
+                  updatedTime: data.timestamp,
                 },
               );
             }

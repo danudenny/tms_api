@@ -1160,6 +1160,7 @@ export class V1WebAwbCodService {
             },
             {
               transactionStatusId: TRANSACTION_STATUS.DEFAULT,
+              updatedTime: timestamp,
             },
           );
 
@@ -1793,6 +1794,7 @@ export class V1WebAwbCodService {
         { awbItemId: item.awbItemId },
         {
           transactionStatusId: TRANSACTION_STATUS.TRM,
+          updatedTime: moment().toDate(),
         },
       );
 
