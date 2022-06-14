@@ -49,7 +49,7 @@ export class ScanoutSmdCityService {
         FROM do_smd_vehicle dsv
         INNER JOIN do_smd ds ON dsv.do_smd_vehicle_id = ds.vehicle_id_last AND ds.is_empty = FALSE AND ds.do_smd_status_id_last <> 6000 AND ds.is_deleted = FALSE
         WHERE
-          dsv.created_time >= '${moment().subtract(30,'days').format('YYYY-MM-DD 00:00:00')}' AND
+          dsv.created_time >= '${moment().subtract(30, 'days').format('YYYY-MM-DD 00:00:00')}' AND
           dsv.created_time <= '${moment().format('YYYY-MM-DD 23:59:59')}' AND
           dsv.employee_id_driver = ${payload.employee_id_driver} AND
           dsv.is_active = TRUE AND
@@ -100,7 +100,6 @@ export class ScanoutSmdCityService {
           }
         }
       }
-
 
       // if (resultDataDriver.length > 0) {
       //   // Cek Status OTW
@@ -209,7 +208,7 @@ export class ScanoutSmdCityService {
           do_smd_detail_id: paramDoSmdDetailId,
           departure_schedule_date_time: payload.do_smd_time,
           branch_code: resultbranchTo.branchCode + ' ' + resultbranchTo.branchName,
-          employee_id_driver: payload.employee_id_driver
+          employee_id_driver: payload.employee_id_driver,
         });
 
         result.statusCode = HttpStatus.OK;
@@ -267,7 +266,7 @@ export class ScanoutSmdCityService {
           br.bag_representative_code = :bagRepresentativeNumber AND
           br.is_deleted = FALSE;
       `;
-      const resultDataBagRepresentative = await RawQueryService.queryWithParams(rawQuery, {
+    const resultDataBagRepresentative = await RawQueryService.queryWithParams(rawQuery, {
         bagRepresentativeNumber : payload.item_number,
       });
 
@@ -546,7 +545,7 @@ export class ScanoutSmdCityService {
         const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
 
         const bagDetail = await BagService.validBagNumber(paramBagNumberWithSeq);
-        if(!bagDetail){
+        if (!bagDetail) {
           result.message = 'Bag Number Not Found';
           return result;
         }
@@ -654,7 +653,7 @@ export class ScanoutSmdCityService {
             {
               bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
               branchIdLast: permissonPayload.branchId,
-              bagItemHistoryId: Number(bagItemHistoryId),
+              bagItemHistoryId,
               userIdUpdated: authMeta.userId,
               updatedTime: moment().toDate(),
             },
@@ -707,7 +706,7 @@ export class ScanoutSmdCityService {
         // const weight = parseFloat(paramWeightStr.substr(0, 2) + '.' + paramWeightStr.substr(2, 2));
 
         const bagDetail = await BagService.validBagNumber(payload.item_number);
-        if(!bagDetail){
+        if (!bagDetail) {
           result.message = 'Bag Number Not Found';
           return result;
         }
@@ -816,7 +815,7 @@ export class ScanoutSmdCityService {
             {
               bagItemStatusIdLast: BAG_STATUS.IN_LINE_HAUL,
               branchIdLast: permissonPayload.branchId,
-              bagItemHistoryId: Number(bagItemHistoryId),
+              bagItemHistoryId,
               userIdUpdated: authMeta.userId,
               updatedTime: moment().toDate(),
             },
