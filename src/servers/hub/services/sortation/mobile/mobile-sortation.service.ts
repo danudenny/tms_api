@@ -248,7 +248,7 @@ export class MobileSortationService {
               doSortationId: resultDoSortationDetail.doSortationId,
             },
             {
-              doSortationStatusIdLast: DO_SORTATION_STATUS.RECEIVED,
+              doSortationStatusIdLast: DO_SORTATION_STATUS.DELIVERED,
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
             });
@@ -257,7 +257,7 @@ export class MobileSortationService {
               doSortationDetailId: payload.doSortationDetailId,
             },
             {
-              doSortationStatusIdLast: DO_SORTATION_STATUS.RECEIVED,
+              doSortationStatusIdLast: DO_SORTATION_STATUS.DELIVERED,
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
             });
@@ -281,7 +281,7 @@ export class MobileSortationService {
             resultDoSortationDetail.doSortationDetailId,
             resultDoSortationDetail.doSortationTime,
             resultDoSortationDetail.doSortationVehicleId,
-            DO_SORTATION_STATUS.RECEIVED,
+            DO_SORTATION_STATUS.DELIVERED,
             resultDoSortationDetail.branchIdFrom,
             resultDoSortationDetail.branchIdTo,
             null,
@@ -326,7 +326,7 @@ export class MobileSortationService {
             resultDoSortationDetail.doSortationDetailId,
             resultDoSortationDetail.doSortationTime,
             resultDoSortationDetail.doSortationVehicleId,
-            DO_SORTATION_STATUS.RECEIVED,
+            DO_SORTATION_STATUS.DELIVERED,
             resultDoSortationDetail.branchIdFrom,
             resultDoSortationDetail.branchIdTo,
             null,
