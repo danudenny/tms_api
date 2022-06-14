@@ -1151,8 +1151,8 @@ export class SortationScanOutService {
     if ( doSortationStatusIdLast == DO_SORTATION_STATUS.DELIVERED) {
       const resultDoSortationDetail = await DoSortationDetail.findOne({
         where: {
-          doSmdId: dataDriver.do_smd_id,
-          doSmdStatusIdLast: DO_SORTATION_STATUS.DELIVERED,
+          doSortationId: dataDriver.do_sortation_id,
+          doSortationStatusIdLast: DO_SORTATION_STATUS.DELIVERED,
           branchIdTo: payloadBranchId,
           isDeleted: false,
         },
