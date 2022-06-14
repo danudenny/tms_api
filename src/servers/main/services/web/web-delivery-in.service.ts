@@ -529,8 +529,6 @@ export class WebDeliveryInService {
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
-    q.groupByRaw('t1.do_pod_return_id','t2.fullname');
-
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
