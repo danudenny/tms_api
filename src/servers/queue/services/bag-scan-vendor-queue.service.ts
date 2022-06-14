@@ -96,11 +96,11 @@ export class BagScanVendorQueueService {
 
             await getManager().transaction(async transactionalEntityManager => {
               await transactionalEntityManager.insert(BagItemHistory, resultbagItemHistory);
-              await transactionalEntityManager.insert(BagItemHistory, resultbagItemOutHistory);
+              const bagItemHistoryOut = await transactionalEntityManager.insert(BagItemHistory, resultbagItemOutHistory);
               await transactionalEntityManager.update(BagItem,
                 { bagItemId : bagItemIdEach },
                 {
-                  bagItemHistoryId: Number(resultbagItemOutHistory.bagItemHistoryId),
+                  bagItemHistoryId: bagItemHistoryOut.identifiers[0].bagItemHistoryId,
                   updatedTime: moment().add(1, 'minutes').toDate(),
                 },
               );
