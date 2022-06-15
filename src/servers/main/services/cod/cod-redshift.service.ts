@@ -141,10 +141,6 @@ export class CodRedshiftService {
       .startOf('month')
       .format('YYYY-MM-DD 00:00:00');
 
-    const endDate = moment
-      .utc(today).add(1, 'days')
-      .format('YYYY-MM-DD 00:00:00');
-
     const payload = new  BaseMetaPayloadVm(); 
     payload.page = params.page;
     payload.limit = params.limit;
@@ -164,12 +160,6 @@ export class CodRedshiftService {
     transactionStartFilter.operator = 'gte'
     transactionStartFilter.value = backwardDateStartOf;
     filters.push(transactionStartFilter);
-
-    const transactionEndFilter = new BaseMetaPayloadFilterVm();
-    transactionEndFilter.field = "transactionDate";
-    transactionEndFilter.operator = 'lt'
-    transactionEndFilter.value = endDate;
-    filters.push(transactionEndFilter);
 
     payload.filters = filters
 
