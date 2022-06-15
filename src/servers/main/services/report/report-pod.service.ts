@@ -83,7 +83,7 @@ export class ReportPodService {
           HttpStatus.BAD_REQUEST,
         );
     }
-
+    console.log(queryParam);
     //send to report service
     const options = {
       headers: {
@@ -167,7 +167,7 @@ export class ReportPodService {
       ['t13.district_name', 'Tujuan Kecematan'],
       ['bos2.perwakilan', 'Perwakilan Tujuan'],
       ['(case when bos.status=1 and DATEDIFF(day, bos.slamaxdatetimeinternal, bos.lastvalidtrackingdatetime) > 0 then 1 else 0 end)', 'Oversla'],
-      ['bos.slamaxdatetimeinternal', 'Oversla Maksimal'],
+      ['to_char(bos.slamaxdatetimeinternal,\'DD/MM/YYYY\')', 'Oversla Maksimal'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
