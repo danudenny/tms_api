@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
+import * as moment from 'moment';
 import { AWB_STATUS } from "../../../../shared/constants/awb-status.constant";
 import { TRANSACTION_STATUS } from "../../../../shared/constants/transaction-status.constant";
 import { BaseMetaPayloadFilterVm, BaseMetaPayloadVm } from "../../../../shared/models/base-meta-payload.vm";
@@ -25,6 +26,7 @@ export class CodRedshiftService {
     const payload = this.remapParamsAwbDlvV2ToPayload(params)
 
     payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
+    payload.fieldResolverMap['transactionDate'] = 't1.created_time';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'driverName';
@@ -81,6 +83,7 @@ export class CodRedshiftService {
     const payload = this.remapParamsAwbDlvV2ToPayload(params)
   
     payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
+    payload.fieldResolverMap['transactionDate'] = 't1.created_time';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'driverName';
@@ -130,18 +133,47 @@ export class CodRedshiftService {
 
   remapParamsAwbDlvV2ToPayload(params: BaseAwbCodDlvV2PayloadVm): BaseMetaPayloadVm {
 
+    const today = moment();
+    const backwardDate = moment
+      .utc(today).subtract(3, 'M');
+
+    const backwardDateStartOf = moment(backwardDate)
+      .startOf('month')
+      .format('YYYY-MM-DD 00:00:00');
+
+    const endDate = moment
+      .utc(today).add(1, 'days')
+      .format('YYYY-MM-DD 00:00:00');
+
     const payload = new  BaseMetaPayloadVm(); 
     payload.page = params.page;
     payload.limit = params.limit;
     payload.sortDir = params.sortDir;
     payload.sortBy = params.sortBy
 
-    const filters = new BaseMetaPayloadFilterVm();
-    filters.field = 'branchIdFinal';
-    filters.operator = 'eq';
-    filters.value = params.branchIdFinal
-    payload.filters = [filters] 
+    let filters : BaseMetaPayloadFilterVm [] = [];
+
+    const branchFilter = new BaseMetaPayloadFilterVm();
+    branchFilter.field = 'branchIdFinal';
+    branchFilter.operator = 'eq';
+    branchFilter.value = params.branchIdFinal
+    filters.push(branchFilter);
+
+    const transactionStartFilter = new BaseMetaPayloadFilterVm();
+    transactionStartFilter.field = "transactionDate";
+    transactionStartFilter.operator = 'gte'
+    transactionStartFilter.value = backwardDateStartOf;
+    filters.push(transactionStartFilter);
+
+    const transactionEndFilter = new BaseMetaPayloadFilterVm();
+    transactionEndFilter.field = "transactionDate";
+    transactionEndFilter.operator = 'lt'
+    transactionEndFilter.value = endDate;
+    filters.push(transactionEndFilter);
+
+    payload.filters = filters
 
     return payload;
   }
+
 }
