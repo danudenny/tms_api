@@ -83,7 +83,7 @@ export class ReportPodService {
           HttpStatus.BAD_REQUEST,
         );
     }
-    console.log(queryParam);
+    
     //send to report service
     const options = {
       headers: {
