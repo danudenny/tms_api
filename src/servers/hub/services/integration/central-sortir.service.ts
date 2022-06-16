@@ -205,6 +205,7 @@ export class CentralSortirService {
       query = `SELECT \n hsa.scan_date_do_hub as "Tanggal Scan", \n
       ''''||hsa.awb_number as "Nomor Resi", \n
       CASE
+        WHEN b.bag_number is not null THEN SUBSTRING(b.bag_number||LPAD(bi.bag_seq::text, 3, '0'), 1, 10)
         WHEN bdo.bag_number is not null THEN SUBSTRING( bdo.bag_number || LPAD(bido.bag_seq :: text, 3, '0'), 1, 10 )
         ELSE SUBSTRING(b.bag_number||LPAD(bi.bag_seq::text, 3, '0'), 1, 10)
       END as "Gabung Paket/ Gabung Sortir", \n
