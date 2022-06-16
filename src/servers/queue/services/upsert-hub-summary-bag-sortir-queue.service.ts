@@ -65,8 +65,10 @@ export class UpsertHubSummaryBagSortirQueueService {
                 isDeleted: false,
               },
               {
-                scanDateInHub: dateNow,
                 inHub: true,
+                scanDateInHub: dateNow,
+                bagItemIdIn: data.bagItemId,
+                bagIdIn: data.bagId,
                 note: data.note,
                 userIdUpdated: data.userId,
                 updatedTime: dateNow,
