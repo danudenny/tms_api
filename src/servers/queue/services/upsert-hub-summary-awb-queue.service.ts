@@ -75,14 +75,18 @@ export class UpsertHubSummaryAwbQueueService {
             branchId: data.branchId,
             awbNumber: data.awbNumber,
             doHub: true,
-            bagItemIdIn: data.bagItemId,
-            bagIdIn: data.bagId,
+            bagItemIdDo: data.bagItemId,
+            bagIdDo: data.bagId,
             awbItemId: data.awbItemId,
             userIdCreated: data.userId,
             userIdUpdated: data.userId,
             createdTime: dateNow,
             updatedTime: dateNow,
           });
+          // `insert into hub_summary_awb (awb_number, scan_date_do_hub,do_hub, bag_item_id_do, bag_id_do, awb_item_id, user_id_updated, updated_time, branch_id,user_id_created, created_time)
+          //                     values ('${escape(data.awbNumber)}', '${dateNow}', true, ${data.bagItemId}, ${data.bagId}, ${data.awbItemId}, ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}')
+          //                     ON CONFLICT (awb_number,branch_id) DO UPDATE SET do_hub = true, scan_date_do_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}';`;
+
         });
       } catch (error) {
         console.error('### ERROR UPSERT', error);
