@@ -83,7 +83,7 @@ export class ReportPodService {
           HttpStatus.BAD_REQUEST,
         );
     }
-
+    
     //send to report service
     const options = {
       headers: {
@@ -131,6 +131,9 @@ export class ReportPodService {
     payload.fieldResolverMap['packageTypeId'] = 't10.package_type_id';
     payload.fieldResolverMap['packageTypeName'] = 't10.package_type_name';
     payload.fieldResolverMap['packageTypeCode'] = 't10.package_type_code';
+    payload.fieldResolverMap['perwakilan'] = 'bos2.perwakilan';
+    payload.fieldResolverMap['oversla'] = 't10.slamaxdatetimeinternal';
+    payload.fieldResolverMap['slamaxDateTimeInternal'] = 'bos.slamaxdatetimeinternal';
 
     payload.globalSearchFields = [
       {
@@ -162,6 +165,9 @@ export class ReportPodService {
       ['t11.representative_code', 'Perwakilan Asal'],
       ['t12.pickup_merchant', 'Seller'],
       ['t13.district_name', 'Tujuan Kecematan'],
+      ['bos2.perwakilan', 'Perwakilan Tujuan'],
+      ['(case when bos.status=1 and DATEDIFF(day, bos.slamaxdatetimeinternal, bos.lastvalidtrackingdatetime) > 0 then 1 else 0 end)', 'Oversla'],
+      ['to_char(bos.slamaxdatetimeinternal,\'DD/MM/YYYY\')', 'Oversla Maksimal'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -210,6 +216,9 @@ export class ReportPodService {
     q.leftJoin(e => e.awbItemAttr.awb.districtTo, 't13', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    q.leftJoinRaw('bosicepat_spartantrackingnotesummary','bos','bos.receiptnumber = t1.awb_number');
+    q.leftJoinRaw('bosicepat_stt','bos2','bos2.nostt = t1.awb_number');
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.userIdUploaded, w => w.equals(1));
