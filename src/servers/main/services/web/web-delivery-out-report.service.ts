@@ -315,7 +315,7 @@ export class WebDeliveryOutReportService {
   ): Promise<any> {
     // mapping field
     payload.fieldResolverMap['doPodDeliverDateTime'] =
-      't1.do_pod_deliver_date_time';
+      't1.do_pod_deliver_date';
     payload.fieldResolverMap['datePOD'] = 'Tanggal Pengiriman';
     payload.fieldResolverMap['branchFrom'] = 't1.branch_id';
     payload.fieldResolverMap['branchName'] = 't5.branch_name';
@@ -338,8 +338,8 @@ export class WebDeliveryOutReportService {
     payload.applyToOrionRepositoryQuery(q);
 
     q.selectRaw(
-      ['t2.fullname', 'Sigesit/Driver'],
-      ['TO_CHAR(t1.do_pod_deliver_date_time, \'DD Mon YYYY\')', 'Tanggal Pengiriman'],
+      ["t1_userDriver.username || ' - ' || t2.fullname", 'Sigesit/Driver'],
+      ['TO_CHAR(t1.do_pod_deliver_date, \'DD Mon YYYY\')', 'Tanggal Pengiriman'],
       ['t5.branch_name', 'Gerai'],
       ['COUNT(DISTINCT(t1.do_pod_deliver_id))', 'Total Surat Jalan'],
       ['COUNT(t3.awb_number)', 'Total Assigned'],
@@ -355,6 +355,9 @@ export class WebDeliveryOutReportService {
         'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000 AND t3.awb_status_id_last <> 14000)',
         'Total Bermasalah',
       ],
+      ['"t1_userDriver"."user_id"', 'User ID'],
+      ['t5.branch_id', 'Branch ID'],
+      ['t2.employee_id', 'Employee ID']
     );
 
     q.innerJoin(e => e.userDriver.employee, 't2', j =>
@@ -367,7 +370,7 @@ export class WebDeliveryOutReportService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.groupByRaw(
-      't1.do_pod_deliver_date_time, t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
+      't1.do_pod_deliver_date, t1.user_id_driver, t1.branch_id, t2.employee_id, t5.branch_id, "t1_userDriver"."user_id"',
     );
 
     const data = await q.exec();
