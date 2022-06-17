@@ -1011,8 +1011,8 @@ export class V1PackageService {
     let bagNumberPrefix = 'SS';
     if (payload.note === 'Reject') {
       bagNumberPrefix = 'SR';
-    } else if (payload.note === 'Irregular') {
-      bagNumberPrefix = 'SI';
+    } else if (payload.note === 'Cargo') {
+      bagNumberPrefix = 'SC';
     }
     return bagNumberPrefix + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
   }
