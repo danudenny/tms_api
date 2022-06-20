@@ -176,7 +176,7 @@ module.exports = {
     returnRoleId: [15],
   },
   hubSortation:{
-    sortationDriverRoleId: [214],
+    sortationDriverRoleId: [1240],
   },
   masterData: {
     apiKey:
