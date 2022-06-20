@@ -196,8 +196,6 @@ export class SortationScanOutService {
 
       const responseDetail = new SortationScanOutRouteVm();
       responseDetail.doSortationDetailId = doSortationDetailId;
-      // responseDetail.doSortationId = resultDoSortaion.doSortationId,
-      // responseDetail.doSortationCode = resultDoSortaion.doSortationCode;
       responseDetail.branchId = resultBranchTo.branchId;
       responseDetail.branchCode = resultBranchTo.branchCode;
       responseDetail.branchName = resultBranchTo.branchName;
@@ -320,12 +318,6 @@ export class SortationScanOutService {
         detailResponse.bagNumber = (bagDetail.bag.bagNumber + String(bagDetail.bagSeq).padStart(3, '0')).substring(0, 10);
         detailResponse.isSortir = isSortir;
         detailResponse.message = `${messageBagType} dengan nomor ${bagNumber} berhasil di scan`;
-        // detailResponse.bagNumber = bagDetail.bag.bagNumber;
-        // detailResponse.bagSeq = bagDetail.bagSeq;
-        // detailResponse.weight = bagDetail.weight;
-        // detailResponse.branchId = branch.branchId;
-        // detailResponse.branchCode = branch.branchCode;
-        // detailResponse.branchToName = branch.branchName;
 
         data.push(detailResponse);
       }
@@ -348,8 +340,6 @@ export class SortationScanOutService {
         where: {
           doSortationId: payload.doSortationId,
           doSortationStatusIdLast: In([DO_SORTATION_STATUS.CREATED, DO_SORTATION_STATUS.ASSIGNED]),
-          // branchIdFrom: permissonPayload.branchId,
-          // userIdCreated: authMeta.userId,
           isDeleted: false,
         },
       });
@@ -444,10 +434,6 @@ export class SortationScanOutService {
         throw new BadRequestException(`Surat Jalan tidak ditemukan, Gagal membuat surat jalan`);
       }
 
-      // if (resultDoSortaion.doSortationStatusIdLast != DO_SORTATION_STATUS.CREATED) {
-      //   throw new BadRequestException(`Surat Jalan Sudah Di proses`);
-      // }
-
       /* TODO::
         * Phase 2
         * validation if driver sudah berangkat harus change driver
@@ -475,38 +461,6 @@ export class SortationScanOutService {
         }
         resultDoSortaionDetailIds.push(resultDoSortaionDetail.doSortationDetailId);
       }
-
-      // cara ini hanya mengecek jika salah satu rute sudah terisi boleh lanjut DONE
-      // harus di make sure kembali secara bisnis flow
-      // apakaha harus di looping satu2 cek jika salah satu rute kosong bag nya????
-      // sementara seperti ini dulu code nya.
-      // const rawQuery = `
-      //   SELECT ARRAY(
-      //     SELECT
-      //       do_sortation_detail_id
-      //     FROM do_sortation_detail
-      //     WHERE
-      //       do_sortation_id = '${payload.doSortationId}'
-      //       AND is_deleted = false
-      //       AND check_point = 0
-      //   );
-      // `;
-      // const resultDoSortaionDetailIds = await RawQueryService.query(rawQuery);
-      // if (!resultDoSortaionDetailIds[0].array || resultDoSortaionDetailIds[0].array.length < 1) {
-      //   throw new BadRequestException(`Gagal membuat surat jalan`);
-      // }
-
-      // const checkDetailItem = await DoSortationDetailItem.find({
-      //   select: ['doSortationDetailId', 'bagItemId'],
-      //   where: {
-      //     doSortationDetailId: In(resultDoSortaionDetailIds[0].array),
-      //     isDeleted: false,
-      //   },
-      // });
-
-      // if (!checkDetailItem || checkDetailItem.length < 1) {
-      //   throw new BadRequestException(`Belum pernah scan bag`);
-      // }
 
       await getManager().transaction(async transactional => {
         for (const sortationDetailId of resultDoSortaionDetailIds) {
@@ -924,7 +878,8 @@ export class SortationScanOutService {
               );
 
               /* Create Vehicle Dulu dan jangan update ke do_sortation*/
-              const paramDoSortationVehicleId = await SortationService.createDoSortationVehicle(
+              const paramDoSortationVehicleId = await SortationService.createDoSortationVehicleHandover(
+                transaction,
                 item.doSortationId,
                 null,
                 payload.vehicleNumber,
@@ -934,7 +889,8 @@ export class SortationScanOutService {
                 authMeta.userId,
               );
 
-              await SortationService.createDoSortationHistory(
+              await SortationService.createDoSortationHandoverHistory(
+                transaction,
                 item.doSortationId,
                 null,
                 paramDoSortationVehicleId,
@@ -951,10 +907,11 @@ export class SortationScanOutService {
                   doSortationStatusIdLast : DO_SORTATION_STATUS.BACKUP_PROCESS,
                   updatedTime : moment().toDate(),
                   userIdUpdated : authMeta.userId,
-                  // doSortationVehicleIdLast : paramDoSortationVehicleId,
+          // doSortationVehicleIdLast : paramDoSortationVehicleId,
                 },
               );
-              await DoSortationDetail.update(
+
+              await transaction.update(DoSortationDetail,
                 {
                   doSortationId: item.doSortationId,
                   arrivalDateTime: null,
@@ -1138,16 +1095,7 @@ export class SortationScanOutService {
       throw new BadRequestException(`Driver sudah di assign pada surat jalan ${dataDriver.do_sortation_code}`);
     }
 
-    // // Cek Status Created, Assigned, Driver Changed
-    // if ( doSortationStatusIdLast == DO_SORTATION_STATUS.CREATED
-    //     || doSortationStatusIdLast == DO_SORTATION_STATUS.ASSIGNED
-    //     || doSortationStatusIdLast == DO_SORTATION_STATUS.DRIVER_CHANGED) {
-    //     if (toInteger(dataDriver.branch_id_from) != toInteger(payloadBranchId)) {
-    //       throw new BadRequestException(`Driver Tidak boleh di assign beda cabang`);
-    //     }
-    // }
-
-    // Cek Status Received
+    // Cek Status delivered
     if ( doSortationStatusIdLast == DO_SORTATION_STATUS.DELIVERED) {
       const resultDoSortationDetail = await DoSortationDetail.findOne({
         where: {

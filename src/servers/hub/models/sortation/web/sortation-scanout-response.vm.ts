@@ -114,7 +114,7 @@ export class SortationLoadDetailVm {
   isSortir: boolean;
 
   @ApiModelProperty()
-  employeeDriverId: string;
+  employeeDriverId: number;
 
   @ApiModelProperty()
   bagItems: string[];

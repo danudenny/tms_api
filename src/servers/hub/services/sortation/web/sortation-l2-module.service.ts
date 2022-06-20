@@ -47,7 +47,7 @@ export class SortationL2ModuleService {
           doSortationStatusIdLast: DO_SORTATION_STATUS.FINISHED,
           userIdUpdated: authMeta.userId,
           updatedTime: timeNow,
-          arrivalDateTime: moment().toDate(),
+          arrivalDateTime: timeNow,
         });
 
         await MobileSortationService.createDoSortationHistory(
