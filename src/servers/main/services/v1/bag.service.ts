@@ -346,6 +346,8 @@ export class BagService {
         refRepresentativeCode: true,
         bagId: true,
         bagNumber: true,
+        isSortir: true,
+        isManual: true,
       },
       weight: true,
     });
@@ -376,6 +378,8 @@ export class BagService {
         refRepresentativeCode: true,
         bagId: true,
         bagNumber: true,
+        isSortir: true,
+        isManual: true,
       },
       weight: true,
     });

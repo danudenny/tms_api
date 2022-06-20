@@ -66,6 +66,8 @@ import { UpdateHubSummaryAwbOutQueueService } from './services/update-hub-summar
 import { UpdateBranchSortirLogSummaryQueueService } from './services/update-branch-sortir-log-summary-queue.service';
 import { UpdatePackageCombineHubQueueService } from './services/update-package-combine-hub-queue.service';
 import { DoMutationQueueService } from './services/do-mutation-queue.service';
+import { BagScanDoSortationQueueService } from './services/bag-scan-do-sortation-queue.service';
+import { BagScanOutBranchSortirQueueService } from './services/bag-scan-out-branch-sortir-queue.service';
 
 // #endregion import
 @Module({
@@ -153,7 +155,7 @@ export class QueueServerModule extends MultiServerAppModule
         UpsertHubSummaryAwbQueueService.boot();
         UpdateHubSummaryAwbOutQueueService.boot();
       }
-  
+
       if (serverConfig.bullCod) {
         // CodPaymentQueueService.boot();
         CodSyncTransactionQueueService.boot();
@@ -164,13 +166,13 @@ export class QueueServerModule extends MultiServerAppModule
         // NOTE: disable cron diva
         // CodCronSettlementQueueService.init();
       }
-  
+
       if (serverConfig.bullSmd) {
         // CodCronSettlementQueueService.init();
         // Titip Bull HUB
         BranchSortirLogQueueService.boot();
       }
-  
+
       if (serverConfig.bullHub) {
         UpsertHubSummaryBagSortirQueueService.boot();
         UpdateBranchSortirLogSummaryQueueService.boot();
@@ -208,6 +210,8 @@ export class QueueServerModule extends MultiServerAppModule
       }
       if (serverConfig.bullHub) {
         DoPodDetailPostMetaInQueueService.boot();
+        BagScanDoSortationQueueService.boot();
+        BagScanOutBranchSortirQueueService.boot();
       }
     }
   }
