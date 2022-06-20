@@ -262,19 +262,6 @@ export class MobileSortationService {
               updatedTime: timeNow,
             });
 
-          /*await this.createDoSortationHistory(
-            transaction,
-            resultDoSortationDetail.doSortationId,
-            resultDoSortationDetail.doSortationDetailId,
-            resultDoSortationDetail.doSortationTime,
-            resultDoSortationDetail.doSortationVehicleId,
-            DO_SORTATION_STATUS.VALID,
-            resultDoSortationDetail.branchIdFrom,
-            resultDoSortationDetail.branchIdTo,
-            null,
-            authMeta.userId,
-          );*/
-
           await this.createDoSortationHistory(
             transaction,
             resultDoSortationDetail.doSortationId,
@@ -306,19 +293,6 @@ export class MobileSortationService {
               userIdUpdated: authMeta.userId,
               updatedTime: timeNow,
             });
-
-          /*await this.createDoSortationHistory(
-            transaction,
-            resultDoSortationDetail.doSortationId,
-            resultDoSortationDetail.doSortationDetailId,
-            resultDoSortationDetail.doSortationTime,
-            resultDoSortationDetail.doSortationVehicleId,
-            DO_SORTATION_STATUS.VALID,
-            resultDoSortationDetail.branchIdFrom,
-            resultDoSortationDetail.branchIdTo,
-            null,
-            authMeta.userId,
-          );*/
 
           await this.createDoSortationHistory(
             transaction,
@@ -641,7 +615,7 @@ export class MobileSortationService {
                 doSortationStatusIdLast: DO_SORTATION_STATUS.HAS_ARRIVED,
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
-                arrivalDateTime: moment().toDate(),
+                arrivalDateTime: timeNow,
               },
             );
 
@@ -651,7 +625,7 @@ export class MobileSortationService {
               },
               {
                 doSortationStatusIdLast: DO_SORTATION_STATUS.HAS_ARRIVED,
-                arrivalDateTime: moment().toDate(),
+                arrivalDateTime: timeNow,
                 latitudeArrival: payload.latitude,
                 longitudeArrival: payload.longitude,
                 userIdUpdated: authMeta.userId,
@@ -760,35 +734,6 @@ export class MobileSortationService {
 
     let url = null;
     let attachmentId = null;
-
-    // const resultDoSortation = await DoSortation.findOne({
-    //   select: [
-    //     'doSortationId',
-    //     'doSortationVehicleIdLast',
-    //   ],
-    //   where: {
-    //     doSortationId: payload.doSortationId,
-    //     isDeleted: false,
-    //   },
-    // });
-
-    // const resultDoSortationDetail = await DoSortationDetail.findOne({
-    //   select: [
-    //     'depatureDateTime',
-    //     'arrivalDateTime',
-    //     'doSortationId',
-    //     'doSortationDetailId',
-    //     'doSortationTime',
-    //     'doSortationVehicleId',
-    //     'branchIdFrom',
-    //     'branchIdTo',
-    //   ],
-    //   where: {
-    //     doSortationId: payload.doSortationId,
-    //     isDeleted: false,
-    //     arrivalDateTime: null,
-    //   },
-    // });
 
     const sql = ` select
         dsv.do_sortation_vehicle_id,

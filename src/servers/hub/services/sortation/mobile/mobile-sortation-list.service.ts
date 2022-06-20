@@ -219,7 +219,7 @@ export class MobileSortationListService {
         try {
             const authMeta = AuthService.getAuthData();
             const paramEmployeeId = authMeta.employeeId;
-            const startDate = moment().add(-4, 'days').format('YYYY-MM-DD 00:00:00');
+            const startDate = moment().add(-2, 'days').format('YYYY-MM-DD 00:00:00');
             const endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
             const qb = createQueryBuilder();
             qb.addSelect('ds.do_sortation_id', 'doSortationId');

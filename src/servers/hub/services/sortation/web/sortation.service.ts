@@ -142,4 +142,64 @@ export class SortationService {
 
     await transactional.insert(DoSortationDetailItem, dataDoSortationDetailItem);
   }
+
+  static async createDoSortationVehicleHandover(
+    transactional: EntityManager,
+    doSortationId: string,
+    vehicleId: number,
+    vehicleNumber: string,
+    vehicleSeq: number,
+    employeeDriverId: number,
+    branchIdLogin: number,
+    userIdLogin: number,
+  ): Promise<string | null> {
+    const dataDoSortationVehicle = DoSortationVehicle.create({
+      doSortationId,
+      vehicleId,
+      vehicleNumber,
+      vehicleSeq,
+      employeeDriverId,
+      branchIdCreated: branchIdLogin,
+      userIdCreated: userIdLogin,
+      createdTime: moment().toDate(),
+      userIdUpdated: userIdLogin,
+      updatedTime: moment().toDate(),
+    });
+    const doSortationVehicle = await transactional.insert(DoSortationVehicle, dataDoSortationVehicle);
+    return doSortationVehicle.identifiers.length
+      ? doSortationVehicle.identifiers[0].doSortationVehicleId
+      : null;
+  }
+
+  static async createDoSortationHandoverHistory(
+    transactional: EntityManager,
+    doSortationId: string,
+    doSortationDetailId: string,
+    doSortationVehicleId: string,
+    doSortationTime: Date,
+    branchId: number,
+    doSortationStatusId: number,
+    reasonId: number,
+    userId: number,
+    reasonNote?: string | null,
+  ) {
+    const dataDoSortationHistory = DoSortationHistory.create({
+      doSortationId,
+      doSortationDetailId,
+      doSortationStatusId,
+      doSortationVehicleId,
+      doSortationTime,
+      branchIdFrom: branchId,
+      reasonId,
+      userIdCreated: userId,
+      createdTime: moment().toDate(),
+      userIdUpdated: userId,
+      updatedTime: moment().toDate(),
+      reasonNote,
+    });
+    const doSortationHistory = await transactional.insert(DoSortationHistory, dataDoSortationHistory);
+    return doSortationHistory.identifiers.length
+      ? doSortationHistory.identifiers[0].doSortationHistoryId
+      : null;
+  }
 }
