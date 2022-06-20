@@ -7,4 +7,5 @@ module.exports = {
     description: "SiCepat TMS Hub server",
     path: "docs",
   },
+  bullBoard: true,
 };
