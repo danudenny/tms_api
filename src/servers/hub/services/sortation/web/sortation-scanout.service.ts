@@ -260,7 +260,7 @@ export class SortationScanOutService {
         // pengecekan jika total bag/bagsortir sudah pernah scan, akan di cek kembali scan selanjutnya tidak boleh beda type bag
         if (resultDoSortaionDetail.totalBag > 0 || resultDoSortaionDetail.totalBagSortir > 0) {
           if (resultDoSortaionDetail.isSortir != isSortir) {
-            result.message = `Tipe gabung paket dengan gabung sortir tidak bisa di gabung galam 1 rute`;
+            result.message = `Tipe gabung paket dengan gabung sortir tidak bisa di gabung dalam 1 rute`;
             return result;
           }
         }
