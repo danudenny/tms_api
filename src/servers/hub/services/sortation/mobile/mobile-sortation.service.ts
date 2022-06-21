@@ -86,7 +86,7 @@ export class MobileSortationService {
 
     const validateOtw = [DO_SORTATION_STATUS.ASSIGNED, DO_SORTATION_STATUS.DRIVER_CHANGED, DO_SORTATION_STATUS.DELIVERED];
     if (!validateOtw.includes(Number(resultDoSortation.doSortationStatusIdLast))) {
-      throw new BadRequestException(`Surat Jalan bukan status ASSIGN, DRIVER_CHANGED, dan DELIVERED .`);
+      throw new UnprocessableEntityException(`Surat Jalan bukan status ASSIGN, DRIVER_CHANGED, dan DELIVERED .`);
     }
 
     if (resultDoSortation.doSortationStatusIdLast == DO_SORTATION_STATUS.ON_THE_WAY) {
@@ -371,7 +371,7 @@ export class MobileSortationService {
 
     if (resultDoSortationDetail) {
       if (resultDoSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.HAS_ARRIVED) {
-        throw new BadRequestException('DO Sortation harus ARRIVED.');
+        throw new UnprocessableEntityException('DO Sortation harus ARRIVED.');
       }
 
       await getManager().transaction(async transaction => {
@@ -604,7 +604,7 @@ export class MobileSortationService {
     if (resultSortationDetail) {
 
       if (resultSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
-        throw new BadRequestException('DO Sortation harus ON THE WAY.');
+        throw new UnprocessableEntityException('DO Sortation harus ON THE WAY.');
       }
 
       if (resultSortationDetail.depatureDateTime) {

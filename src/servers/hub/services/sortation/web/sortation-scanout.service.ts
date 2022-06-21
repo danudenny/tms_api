@@ -144,7 +144,7 @@ export class SortationScanOutService {
 
       /** validasi assign atau created */
       if (!validateAssignOrCreated.includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
-        throw new BadRequestException(`Surat Jalan bukan status Created atau Assign.`);
+        throw new UnprocessableEntityException(`Surat Jalan bukan status Created atau Assign.`);
       }
 
       const resultBranchTo = await Branch.findOne({
@@ -450,7 +450,7 @@ export class SortationScanOutService {
 
       /** validasi assign atau created */
       if (!validateAssignOrCreated.includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
-        throw new BadRequestException(`Surat Jalan bukan status Created atau Assign.`);
+        throw new UnprocessableEntityException(`Surat Jalan bukan status Created atau Assign.`);
       }
 
       /* TODO::
@@ -643,7 +643,7 @@ export class SortationScanOutService {
 
     /** validasi assign atau created */
     if (!validateAssignOrCreated.includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
-      throw new BadRequestException(`Surat Jalan bukan status Created atau Assign.`);
+      throw new UnprocessableEntityException(`Surat Jalan bukan status Created atau Assign.`);
     }
 
     const branchRemove = await Branch.findOne({
