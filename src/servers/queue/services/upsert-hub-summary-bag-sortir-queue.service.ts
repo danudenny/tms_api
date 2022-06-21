@@ -70,6 +70,8 @@ export class UpsertHubSummaryBagSortirQueueService {
                 bagItemIdIn: data.bagItemId,
                 bagIdIn: data.bagId,
                 note: data.note,
+                inIsManual: data.isManual,
+                inIsSortir: data.isSortir,
                 userIdUpdated: data.userId,
                 updatedTime: dateNow,
               },
@@ -85,6 +87,8 @@ export class UpsertHubSummaryBagSortirQueueService {
             bagIdIn: data.bagId,
             awbItemId: data.awbItemId,
             note: data.note,
+            inIsManual: data.isManual,
+            inIsSortir: data.isSortir,
             userIdCreated: data.userId,
             userIdUpdated: data.userId,
             createdTime: dateNow,
@@ -127,6 +131,8 @@ export class UpsertHubSummaryBagSortirQueueService {
     branchId: number,
     timestamp: Date,
     note: string | null = null,
+    isManual: boolean = true,
+    isSortir: boolean = true,
   ) {
     const obj = {
       bagId,
@@ -138,6 +144,8 @@ export class UpsertHubSummaryBagSortirQueueService {
       branchId,
       timestamp,
       note,
+      isManual,
+      isSortir,
     };
 
     return UpsertHubSummaryBagSortirQueueService.queue.add(obj);
