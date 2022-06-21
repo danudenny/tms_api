@@ -23,6 +23,7 @@ import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortatio
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 import { Employee } from '../../../../../shared/orm-entity/employee';
+import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
 
 const validateAssignOrCreated = [DO_SORTATION_STATUS.CREATED, DO_SORTATION_STATUS.ASSIGNED];
 
@@ -504,16 +505,28 @@ export class SortationScanOutService {
         );
       });
 
-      await SortationService.createDoSortationHistory(
-        resultDoSortaion.doSortationId,
-        null,
-        resultDoSortaion.doSortationVehicleIdLast,
-        timeNow,
-        permissonPayload.branchId,
-        DO_SORTATION_STATUS.ASSIGNED,
-        null,
-        authMeta.userId,
-      );
+      const alreadyHaveAssignedHisotry = await DoSortationHistory.findOne({
+        select: [
+          'doSortationHistoryId',
+        ],
+        where: {
+          doSortationId: resultDoSortaion.doSortationId,
+          doSortationStatusId: DO_SORTATION_STATUS.ASSIGNED,
+        },
+      });
+
+      if (!alreadyHaveAssignedHisotry) {
+        await SortationService.createDoSortationHistory(
+          resultDoSortaion.doSortationId,
+          null,
+          resultDoSortaion.doSortationVehicleIdLast,
+          timeNow,
+          permissonPayload.branchId,
+          DO_SORTATION_STATUS.ASSIGNED,
+          null,
+          authMeta.userId,
+        );
+      }
 
       const data = new SortationScanOutDonedVm();
       data.doSortationId = resultDoSortaion.doSortationId;
