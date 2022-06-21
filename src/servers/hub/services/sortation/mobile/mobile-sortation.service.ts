@@ -89,13 +89,7 @@ export class MobileSortationService {
       throw new UnprocessableEntityException(`Surat Jalan bukan status ASSIGN, DRIVER_CHANGED, dan DELIVERED .`);
     }
 
-    if (resultDoSortation.doSortationStatusIdLast == DO_SORTATION_STATUS.ON_THE_WAY) {
-      throw new UnprocessableEntityException(
-        `Status surat jalan sortation ${payload.doSortationId} sudah on the way!`,
-      );
-    }
-
-    const repo = RepositoryService.doSortationDetail;
+  const repo = RepositoryService.doSortationDetail;
     const q = repo.findOneRaw()
       .selectRaw(
         ['do_sortation_detail.doSortationDetailId', 'doSortationDetailId'],
