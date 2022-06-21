@@ -89,7 +89,7 @@ export class MobileSortationService {
       throw new UnprocessableEntityException(`Surat Jalan bukan status ASSIGN, DRIVER_CHANGED, dan DELIVERED .`);
     }
 
-  const repo = RepositoryService.doSortationDetail;
+    const repo = RepositoryService.doSortationDetail;
     const q = repo.findOneRaw()
       .selectRaw(
         ['do_sortation_detail.doSortationDetailId', 'doSortationDetailId'],
@@ -444,6 +444,7 @@ export class MobileSortationService {
       select: [
         'doSortationId',
         'doSortationVehicleIdLast',
+        'doSortationStatusIdLast',
       ],
       where: {
         doSortationId: payload.doSortationId,
@@ -453,6 +454,10 @@ export class MobileSortationService {
 
     if (!resultDoSortation) {
       throw new BadRequestException(`Can't Find DO SORTATION ID : ` + payload.doSortationId);
+    }
+
+    if (resultDoSortation.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
+      throw new UnprocessableEntityException(`DO sortation harus ON THE WAY.`);
     }
 
     const resultDoSortationArrival = await DoSortationDetail.findOne({
@@ -813,6 +818,7 @@ export class MobileSortationService {
       select: [
         'doSortationId',
         'doSortationVehicleIdLast',
+        'doSortationStatusIdLast',
       ],
       where: {
         doSortationId: payload.doSortationId,
@@ -843,6 +849,11 @@ export class MobileSortationService {
     }
 
     if (resultDoSortation) {
+
+      if (resultDoSortation.doSortationStatusIdLast != DO_SORTATION_STATUS.BACKUP_PROCESS) {
+        throw new UnprocessableEntityException(`DO Sortation harus BACKUP PROSES`);
+      }
+
       await getManager().transaction(async transaction => {
         await transaction.update(DoSortationVehicle,
             {
