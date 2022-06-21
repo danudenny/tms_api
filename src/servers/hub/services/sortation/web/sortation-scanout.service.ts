@@ -24,8 +24,11 @@ import { PinoLoggerService } from '../../../../../shared/services/pino-logger.se
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 import { Employee } from '../../../../../shared/orm-entity/employee';
 
+const validateAssignOrCreated = [DO_SORTATION_STATUS.CREATED, DO_SORTATION_STATUS.ASSIGNED];
+
 @Injectable()
 export class SortationScanOutService {
+
   static async sortationScanOutVehicle(
     payload: SortationScanOutVehiclePayloadVm)
     : Promise<SortationScanOutVehicleResponseVm> {
@@ -139,6 +142,11 @@ export class SortationScanOutService {
         throw new BadRequestException(`ID Sortation ${payload.doSortationId.toString()} tidak ditemukan`);
       }
 
+      /** validasi assign atau created */
+      if (!validateAssignOrCreated.includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
+        throw new BadRequestException(`Surat Jalan bukan status Created atau Assign.`);
+      }
+
       const resultBranchTo = await Branch.findOne({
         where: {
           branchCode: payload.branchCode,
@@ -238,6 +246,12 @@ export class SortationScanOutService {
 
       if (!resultDoSortation) {
         result.message = 'Surat Jalan tidak ada!.';
+        return result;
+      }
+
+      /** validasi assign atau created */
+      if (!validateAssignOrCreated.includes(Number(resultDoSortation.doSortationStatusIdLast))) {
+        result.message = 'Surat Jalan bukan status Created atau Assign.';
         return result;
       }
 
@@ -434,6 +448,11 @@ export class SortationScanOutService {
         throw new BadRequestException(`Surat Jalan tidak ditemukan, Gagal membuat surat jalan`);
       }
 
+      /** validasi assign atau created */
+      if (!validateAssignOrCreated.includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
+        throw new BadRequestException(`Surat Jalan bukan status Created atau Assign.`);
+      }
+
       /* TODO::
         * Phase 2
         * validation if driver sudah berangkat harus change driver
@@ -620,6 +639,11 @@ export class SortationScanOutService {
 
     if (!resultDoSortaion) {
       throw new BadRequestException(`Surat Jalan dengan detail id ${doSortationDetailId}, tidak ditemukan`);
+    }
+
+    /** validasi assign atau created */
+    if (!validateAssignOrCreated.includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
+      throw new BadRequestException(`Surat Jalan bukan status Created atau Assign.`);
     }
 
     const branchRemove = await Branch.findOne({

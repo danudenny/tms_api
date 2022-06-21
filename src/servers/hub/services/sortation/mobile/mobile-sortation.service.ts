@@ -84,6 +84,11 @@ export class MobileSortationService {
       throw new BadRequestException(`Can't Find  Do Sortation ID : ` + payload.doSortationId);
     }
 
+    const validateOtw = [DO_SORTATION_STATUS.ASSIGNED, DO_SORTATION_STATUS.DRIVER_CHANGED, DO_SORTATION_STATUS.DELIVERED];
+    if (!validateOtw.includes(Number(resultDoSortation.doSortationStatusIdLast))) {
+      throw new BadRequestException(`Surat Jalan bukan status ASSIGN, DRIVER_CHANGED, dan DELIVERED .`);
+    }
+
     if (resultDoSortation.doSortationStatusIdLast == DO_SORTATION_STATUS.ON_THE_WAY) {
       throw new UnprocessableEntityException(
         `Status surat jalan sortation ${payload.doSortationId} sudah on the way!`,
@@ -350,6 +355,7 @@ export class MobileSortationService {
       ['do_sortation_detail.doSortationTime', 'doSortationTime'],
       ['do_sortation_detail.branchIdFrom', 'branchIdFrom'],
       ['ds.doSortationVehicleIdLast', 'doSortationVehicleId'],
+      ['ds.doSortationStatusIdLast', 'doSortationStatusIdLast'],
     )
       .innerJoin(e => e.doSortation, 'ds', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -364,6 +370,10 @@ export class MobileSortationService {
     const resultDoSortationDetail = await q.exec();
 
     if (resultDoSortationDetail) {
+      if (resultDoSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.HAS_ARRIVED) {
+        throw new BadRequestException('DO Sortation harus ARRIVED.');
+      }
+
       await getManager().transaction(async transaction => {
         // update do sortation
         await transaction.update(DoSortation, {
@@ -578,6 +588,7 @@ export class MobileSortationService {
       ['do_sortation_detail.branchIdFrom', 'branchIdFrom'],
       ['do_sortation_detail.branchIdTo', 'branchIdTo'],
       ['ds.doSortationVehicleIdLast', 'doSortationVehicleId'],
+      ['ds.doSortationStatusIdLast', 'doSortationStatusIdLast'],
     )
       .innerJoin(e => e.doSortation, 'ds', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -590,8 +601,12 @@ export class MobileSortationService {
       .take(1);
 
     const resultSortationDetail = await q.exec();
-
     if (resultSortationDetail) {
+
+      if (resultSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
+        throw new BadRequestException('DO Sortation harus ON THE WAY.');
+      }
+
       if (resultSortationDetail.depatureDateTime) {
         if (resultSortationDetail.arrivalDateTime) {
           // handle status telah tiba (arrival)
