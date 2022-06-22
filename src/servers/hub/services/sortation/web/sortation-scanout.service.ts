@@ -23,9 +23,13 @@ import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortatio
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 import { Employee } from '../../../../../shared/orm-entity/employee';
+import { DoSortationHistory } from '../../../../../shared/orm-entity/do-sortation-history';
+
+const validateAssignOrCreated = [DO_SORTATION_STATUS.CREATED, DO_SORTATION_STATUS.ASSIGNED];
 
 @Injectable()
 export class SortationScanOutService {
+
   static async sortationScanOutVehicle(
     payload: SortationScanOutVehiclePayloadVm)
     : Promise<SortationScanOutVehicleResponseVm> {
@@ -139,6 +143,11 @@ export class SortationScanOutService {
         throw new BadRequestException(`ID Sortation ${payload.doSortationId.toString()} tidak ditemukan`);
       }
 
+      /** validasi assign atau created */
+      if (!validateAssignOrCreated.includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
+        throw new UnprocessableEntityException(`Surat Jalan bukan status Created atau Assign.`);
+      }
+
       const resultBranchTo = await Branch.findOne({
         where: {
           branchCode: payload.branchCode,
@@ -238,6 +247,12 @@ export class SortationScanOutService {
 
       if (!resultDoSortation) {
         result.message = 'Surat Jalan tidak ada!.';
+        return result;
+      }
+
+      /** validasi assign atau created */
+      if (!validateAssignOrCreated.includes(Number(resultDoSortation.doSortationStatusIdLast))) {
+        result.message = 'Surat Jalan bukan status Created atau Assign.';
         return result;
       }
 
@@ -434,6 +449,11 @@ export class SortationScanOutService {
         throw new BadRequestException(`Surat Jalan tidak ditemukan, Gagal membuat surat jalan`);
       }
 
+      /** validasi assign atau created */
+      if (!validateAssignOrCreated.includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
+        throw new UnprocessableEntityException(`Surat Jalan bukan status Created atau Assign.`);
+      }
+
       /* TODO::
         * Phase 2
         * validation if driver sudah berangkat harus change driver
@@ -485,16 +505,28 @@ export class SortationScanOutService {
         );
       });
 
-      await SortationService.createDoSortationHistory(
-        resultDoSortaion.doSortationId,
-        null,
-        resultDoSortaion.doSortationVehicleIdLast,
-        timeNow,
-        permissonPayload.branchId,
-        DO_SORTATION_STATUS.ASSIGNED,
-        null,
-        authMeta.userId,
-      );
+      const alreadyHaveAssignedHisotry = await DoSortationHistory.findOne({
+        select: [
+          'doSortationHistoryId',
+        ],
+        where: {
+          doSortationId: resultDoSortaion.doSortationId,
+          doSortationStatusId: DO_SORTATION_STATUS.ASSIGNED,
+        },
+      });
+
+      if (!alreadyHaveAssignedHisotry) {
+        await SortationService.createDoSortationHistory(
+          resultDoSortaion.doSortationId,
+          null,
+          resultDoSortaion.doSortationVehicleIdLast,
+          timeNow,
+          permissonPayload.branchId,
+          DO_SORTATION_STATUS.ASSIGNED,
+          null,
+          authMeta.userId,
+        );
+      }
 
       const data = new SortationScanOutDonedVm();
       data.doSortationId = resultDoSortaion.doSortationId;
@@ -620,6 +652,11 @@ export class SortationScanOutService {
 
     if (!resultDoSortaion) {
       throw new BadRequestException(`Surat Jalan dengan detail id ${doSortationDetailId}, tidak ditemukan`);
+    }
+
+    /** validasi assign atau created */
+    if (!validateAssignOrCreated.includes(Number(resultDoSortaion.doSortationStatusIdLast))) {
+      throw new UnprocessableEntityException(`Surat Jalan bukan status Created atau Assign.`);
     }
 
     const branchRemove = await Branch.findOne({
