@@ -68,25 +68,25 @@ export class LogWayzimServices {
         } else {
           await transactionManager.insert(BranchSortirLogSummary, upsertPayload);
         }
-        if (!keyAwbCheck.includes(awb)) {
-          const insertBranchSortirDetailObj = {
-            scanDate,
-            userIdCreated: 1,
-            userIdUpdated: 1,
-            branchId: payload.branch_id,
-            awbNumber: awb,
-            noChute: payload.chute_number,
-            isCod: payload.is_cod,
-            isSucceed: payload.is_succeed,
-            reason: payload.reason,
-            branchIdLastmile,
-            createdTime: dateNow,
-            updatedTime: dateNow,
-          };
-          // @ts-ignore
-          await transactionManager.insert(BranchSortirLogDetail, insertBranchSortirDetailObj);
-        }
       });
+      if (!keyAwbCheck.includes(awb)) {
+        const insertBranchSortirDetailObj = {
+          scanDate,
+          userIdCreated: 1,
+          userIdUpdated: 1,
+          branchId: payload.branch_id,
+          awbNumber: awb,
+          noChute: payload.chute_number,
+          isCod: payload.is_cod,
+          isSucceed: payload.is_succeed,
+          reason: payload.reason,
+          branchIdLastmile,
+          createdTime: dateNow,
+          updatedTime: dateNow,
+        };
+        // @ts-ignore
+        await BranchSortirLogDetail.insert(insertBranchSortirDetailObj);
+      }
 
       const result = new LogwayzimResponseVm();
       result.statusCode = HttpStatus.OK;
