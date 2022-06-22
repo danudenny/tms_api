@@ -60,15 +60,13 @@ export class LogWayzimServices {
         branchIdLastmile,
       };
 
-      await getManager().transaction(async transactionManager => {
-        if (checkExistData > 0 && !keyAwbCheck.includes(awb)) {
-          delete upsertPayload.createdTime;
-          // delete upsertPayload.branchIdLastMile;
-          await transactionManager.update(BranchSortirLogSummary, { awbNumber: payload.awb_number }, upsertPayload);
-        } else {
-          await transactionManager.insert(BranchSortirLogSummary, upsertPayload);
-        }
-      });
+      if (checkExistData > 0 && !keyAwbCheck.includes(awb)) {
+        delete upsertPayload.createdTime;
+        // delete upsertPayload.branchIdLastMile;
+        await BranchSortirLogSummary.update({ awbNumber: payload.awb_number }, upsertPayload);
+      } else {
+        await BranchSortirLogSummary.insert(upsertPayload);
+      }
       if (!keyAwbCheck.includes(awb)) {
         const insertBranchSortirDetailObj = {
           scanDate,
