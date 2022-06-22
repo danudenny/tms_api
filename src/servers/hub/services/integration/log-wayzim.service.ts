@@ -60,33 +60,31 @@ export class LogWayzimServices {
         branchIdLastmile,
       };
 
-      await getManager().transaction(async transactionManager => {
-        if (checkExistData > 0 && !keyAwbCheck.includes(awb)) {
-          delete upsertPayload.createdTime;
-          // delete upsertPayload.branchIdLastMile;
-          await transactionManager.update(BranchSortirLogSummary, { awbNumber: payload.awb_number }, upsertPayload);
-        } else {
-          await transactionManager.insert(BranchSortirLogSummary, upsertPayload);
-        }
-        if (!keyAwbCheck.includes(awb)) {
-          const insertBranchSortirDetailObj = {
-            scanDate,
-            userIdCreated: 1,
-            userIdUpdated: 1,
-            branchId: payload.branch_id,
-            awbNumber: awb,
-            noChute: payload.chute_number,
-            isCod: payload.is_cod,
-            isSucceed: payload.is_succeed,
-            reason: payload.reason,
-            branchIdLastmile,
-            createdTime: dateNow,
-            updatedTime: dateNow,
-          };
-          // @ts-ignore
-          await transactionManager.insert(BranchSortirLogDetail, insertBranchSortirDetailObj);
-        }
-      });
+      if (checkExistData > 0 && !keyAwbCheck.includes(awb)) {
+        delete upsertPayload.createdTime;
+        // delete upsertPayload.branchIdLastMile;
+        await BranchSortirLogSummary.update({ awbNumber: payload.awb_number }, upsertPayload);
+      } else {
+        await BranchSortirLogSummary.insert(upsertPayload);
+      }
+      if (!keyAwbCheck.includes(awb)) {
+        const insertBranchSortirDetailObj = {
+          scanDate,
+          userIdCreated: 1,
+          userIdUpdated: 1,
+          branchId: payload.branch_id,
+          awbNumber: awb,
+          noChute: payload.chute_number,
+          isCod: payload.is_cod,
+          isSucceed: payload.is_succeed,
+          reason: payload.reason,
+          branchIdLastmile,
+          createdTime: dateNow,
+          updatedTime: dateNow,
+        };
+        // @ts-ignore
+        await BranchSortirLogDetail.insert(insertBranchSortirDetailObj);
+      }
 
       const result = new LogwayzimResponseVm();
       result.statusCode = HttpStatus.OK;
