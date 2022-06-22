@@ -14,7 +14,7 @@ export class WebPunishmentService {
       ['t2.branch_id','branchId'],
       ['t2.branch_name','branchName'],
     );
-    q.innerJoin(e => e.branch,'t2');
+    q.leftJoin(e => e.branch,'t2');
     q.andWhere(e => e.employeeId, w => w.equals(payload.employeeId));
     const data = await q.exec();
     const result = new PunishmentBranchListResponse();
