@@ -31,12 +31,16 @@ export class UpdateBranchSortirLogSummaryQueueService {
       const data = job.data;
       try {
         PinoLoggerService.log('Update Seal Number Branch Sortir Log Process');
-        await getManager().transaction(async transactionManager => {
-          await transactionManager.update(BranchSortirLogSummary, {
-            awbNumber: data.awbNumber,
-            branchId: data.branchId,
-          }, { sealNumber: data.sealNumber, updatedTime: data.timestamp});
-        });
+        // await getManager().transaction(async transactionManager => {
+        //   await transactionManager.update(BranchSortirLogSummary, {
+        //     awbNumber: data.awbNumber,
+        //     branchId: data.branchId,
+        //   }, { sealNumber: data.sealNumber, updatedTime: data.timestamp});
+        // });
+        await BranchSortirLogSummary.update({
+              awbNumber: data.awbNumber,
+              branchId: data.branchId,
+            },{ sealNumber: data.sealNumber, updatedTime: data.timestamp});
         PinoLoggerService.log('End Update Seal Number Branch Sortir Log Process');
       } catch (error) {
         console.error('[update-branch-sortir-log-summary-queue] ### ERROR UPDATE SEAL NUMBER BRANCH SORTIR LOG', error);
