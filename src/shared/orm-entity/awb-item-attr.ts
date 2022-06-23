@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany, ManyToOne, PrimaryColumn} from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany, ManyToOne, PrimaryColumn, BeforeUpdate} from 'typeorm';
 
 import { AwbItem } from './awb-item';
 import { BagItem } from './bag-item';
@@ -271,4 +271,11 @@ export class AwbItemAttr extends BaseEntity {
   @OneToOne(() => AwbHighValueUpload)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbHighValueUpload: AwbHighValueUpload;
+
+  @BeforeUpdate()
+  assignUpdatedTimeAndUserIdUpdated() {
+    if (!this.updatedTime) {
+      this.updatedTime = new Date();
+    }
+  }
 }
