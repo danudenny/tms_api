@@ -336,22 +336,18 @@ export class FirstMileDoPodReturnService {
       ['t1.do_pod_return_date_time', 'doPodReturnDateTime'],
       ['t1.description', 'description'],
       [
-        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 25650)',
-        'totalProblem',
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 25650)','totalProblem',
       ],
       [
-        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last IN (24550, 25000))',
-        'totalSuccess',
+        'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last IN (24550, 25000))','totalSuccess',
       ],
       [
-        'COUNT (t3.awbNumber) FILTER (WHERE t3.awb_status_id_last = 14000)',
-        'totalOnProcess',
+        'COUNT (t3.awbNumber) FILTER (WHERE t3.awb_status_id_last = 14000)','totalOnProcess',
       ],
       ['COUNT (t3.awbNumber)', 'totalAssigned'],
       ['t2.fullname', 'nickname'],
       [
-        `CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`,
-        'totalCodValue',
+        `CONCAT(CAST(SUM(t4.total_cod_value) AS NUMERIC(20,2)))`,'totalCodValue',
       ],
     );
 
@@ -364,7 +360,8 @@ export class FirstMileDoPodReturnService {
     q.innerJoin(e => e.doPodReturnDetails.awb, 't4', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.groupByRaw('t1.do_pod_return_id, t2.fullname');
+    
+    q.groupByRaw('t1.do_pod_return_id,t2.fullname');
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
