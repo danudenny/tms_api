@@ -261,7 +261,7 @@ export class HubTransitDeliveryInService {
       },
     ];
 
-    let payloadBagNumber ='0';
+    let payloadBagNumber = '0';
 
     for (let i = 0; i < payload.filters.length; i++) {
       if ('bagNumber' == payload.filters[i].field) {
@@ -313,8 +313,8 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    if(bagNumber && bagSeq){
-      q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
+    if (bagNumber && bagSeq) {
+      q.andWhere(e => e.bag.bagNumber, w => w.equals(bagNumber));
       q.andWhere(e => e.bagItem.bagSeq, w => w.equals(bagSeq));
     }
 
@@ -330,7 +330,7 @@ export class HubTransitDeliveryInService {
     `);
 
     const query = await q.getQuery();
-    let data = await QueryServiceApi.executeQuery(query, false, null);
+    const data = await QueryServiceApi.executeQuery(query, false, null);
     const result = new WebScanInHubSortListResponseVm();
 
     const total = 0;
@@ -399,7 +399,7 @@ export class HubTransitDeliveryInService {
     payload.fieldResolverMap['bagSeq'] = 't3.bag_seq';
     payload.fieldResolverMap['isSmd'] = 't1.is_smd';
 
-    let payloadBagNumber ='0';
+    let payloadBagNumber = '0';
 
     for (let i = 0; i < payload.filters.length; i++) {
       if ('bagNumber' == payload.filters[i].field) {
@@ -435,13 +435,13 @@ export class HubTransitDeliveryInService {
     q.innerJoin(e => e.branch, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    if(bagNumber && bagSeq){
+    if (bagNumber && bagSeq) {
       q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
       q.andWhere(e => e.bagItem.bagSeq, w => w.equals(bagSeq));
     }
 
-    let query = await q.getQuery();
-    let data = await QueryServiceApi.executeQuery(query, false, null);
+    const query = await q.getQuery();
+    const data = await QueryServiceApi.executeQuery(query, false, null);
     for (let i = 0; i < data.length; i++) {
       data[i].totalResi = data[i].totalResi;
     }
@@ -513,8 +513,8 @@ export class HubTransitDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    let queryCount = await qCount.getQuery();
-    let cnt = await QueryServiceApi.executeQuery(queryCount, true, 'bagNumberCode');
+    const queryCount = await qCount.getQuery();
+    const cnt = await QueryServiceApi.executeQuery(queryCount, true, 'bagNumberCode');
     const total = cnt;
     result.data = null;
     result.paging = MetaService.set(payload.page, payload.limit, total);
@@ -560,7 +560,7 @@ export class HubTransitDeliveryInService {
     q.addSelect('t2.total_scan_in_bag', 'totalScanInBag');
     q.from('do_pod_detail_bag', 't1');
     q.innerJoin('do_pod', 't2', 't2.do_pod_id = t1.do_pod_id');
-    q.where('t1.bag_item_id = :bagItemId', { bagItemId: bagItemId });
+    q.where('t1.bag_item_id = :bagItemId', { bagItemId });
     q.andWhere('t1.transaction_status_id_last = 800');
     q.andWhere('t1.is_deleted = false');
     q.orderBy('t1.created_time', 'DESC');
