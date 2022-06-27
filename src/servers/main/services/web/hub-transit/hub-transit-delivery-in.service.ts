@@ -436,7 +436,7 @@ export class HubTransitDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     if (bagNumber && bagSeq) {
-      q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
+      q.andWhere(e => e.bag.bagNumber, w => w.equals(bagNumber));
       q.andWhere(e => e.bagItem.bagSeq, w => w.equals(bagSeq));
     }
 
