@@ -465,14 +465,12 @@ export class LastMileDeliveryInService {
           podScanInBranchDetailObj.isTrouble = result.trouble;
           if (usePriority) {
             if (routeInfo) {
-              if(routeInfo.status == 'ok'){
-                result.routePriority = routeInfo.routeAndPriority;
-                result.kelurahan = routeInfo.kelurahan;
-              }else{
+              result.routePriority = routeInfo.routeAndPriority;
+              result.kelurahan = routeInfo.kelurahan;
+              if(routeInfo.status != 'ok'){
                 result.status = 'warning';
                 result.trouble = false;
                 result.message = `Resi ${awbNumber} belum pernah di MANIFESTED`;
-                result.routePriority = routeInfo.routeAndPriority;
               }
               podScanInBranchDetailObj.routePriority = routeInfo.routeAndPriority;
             }
@@ -573,6 +571,7 @@ export class LastMileDeliveryInService {
         data.message = resultAwb.message;
         data.trouble = resultAwb.trouble;
         data.routeAndPriority = resultAwb.routePriority;
+        data.kelurahan = resultAwb.kelurahan;
       } else if (await BagService.isBagNumberLenght(inputNumber)) {
         resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId);
       } else {

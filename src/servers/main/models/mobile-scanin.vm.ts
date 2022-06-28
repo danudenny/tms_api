@@ -143,6 +143,9 @@ export class V2ScanInputNumberBranchVm {
 
   @ApiModelProperty()
   routeAndPriority: string;
+
+  @ApiModelProperty()
+  kelurahan: string;
 }
 export class V2MobileScanInBranchResponseVm {
   @ApiModelProperty()
