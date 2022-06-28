@@ -51,6 +51,9 @@ export class ScanBranchAwbVm extends ScanInputNumberLoadBranchVm {
 
   @ApiModelProperty()
   routePriority: string = null;
+
+  @ApiModelProperty()
+  kelurahan: string = null;
 }
 
 export class ScanInputNumberBranchVm {

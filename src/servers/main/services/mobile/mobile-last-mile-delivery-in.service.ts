@@ -467,6 +467,7 @@ export class LastMileDeliveryInService {
             if (routeInfo) {
               if(routeInfo.status == 'ok'){
                 result.routePriority = routeInfo.routeAndPriority;
+                result.kelurahan = routeInfo.kelurahan;
               }else{
                 result.status = 'warning';
                 result.trouble = false;
