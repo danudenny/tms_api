@@ -104,7 +104,6 @@ export class HubMachineService {
   }
 
   public static async getRepresentativeByAwb(nostt: string) {
-    console.log('nostt', nostt);
     const qb = createQueryBuilder();
     qb.addSelect('r.representative_code', 'representativeCode');
     qb.addSelect('r.representative_id', 'representativeId');
@@ -239,7 +238,6 @@ export class HubMachineService {
     const awbItemAttrs = await this.getAwbItemAttrs(awbNumbers);
 
     const representative = await this.getRepresentativeByAwb(awbNumbers[0]);
-    console.log('representative', representative);
     if (!representative) {
       return generateErrorResult(`Representative not found`);
     }
