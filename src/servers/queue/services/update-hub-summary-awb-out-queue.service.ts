@@ -1,9 +1,11 @@
-import { ConfigService } from '../../../shared/services/config.service';
-import { QueueBullBoard } from './queue-bull-board';
 import moment = require('moment');
-import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
 import { getManager } from 'typeorm';
 import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
+
+import { HubSummaryAwb } from '../../../shared/orm-entity/hub-summary-awb';
+import { ConfigService } from '../../../shared/services/config.service';
+import { RedisService } from '../../../shared/services/redis.service';
+import { QueueBullBoard } from './queue-bull-board';
 
 export class UpdateHubSummaryAwbOutQueueService {
   public static queue = QueueBullBoard.createQueue.add(
@@ -16,7 +18,7 @@ export class UpdateHubSummaryAwbOutQueueService {
             60 *
             60 *
             1000) /
-          +ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
+            +ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
         ),
         backoff: {
           type: 'fixed',
@@ -28,34 +30,77 @@ export class UpdateHubSummaryAwbOutQueueService {
 
   public static boot() {
     this.queue.process(5, async job => {
-      PinoLoggerService.log(`### UPDATE HUB SUMMARY AWB OUT ========= ${job.id}`);
+      PinoLoggerService.log(
+        `### UPDATE HUB SUMMARY AWB OUT ========= ${job.id}`,
+      );
       const data = job.data;
       const dateNow = moment().format('YYYY-MM-DD HH:mm:ss');
-      PinoLoggerService.log(`### UPDATE HUB SUMMARY AWB NUMBER OUT ========= ${data.awbNumber}`);
+      PinoLoggerService.log(
+        `### UPDATE HUB SUMMARY AWB NUMBER OUT ========= ${data.awbNumber}`,
+      );
 
       try {
-        await getManager().transaction(async transactional => {
-          const upsertRawHubSummaryAwbOutSql = `insert into hub_summary_awb (awb_number,user_id_updated, updated_time, branch_id,user_id_created, created_time, out_hub)
-                              values ('${escape(data.awbNumber)}', ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}', true)
-                              ON CONFLICT (awb_number,branch_id) DO UPDATE SET out_hub = true, scan_date_out_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}';`;
+        const redlock = await RedisService.redlock(
+          `redlock:hsa:out:${data.awbNumber}:${data.branchId}`,
+        );
+        if (!redlock) {
+          throw Error(`Awb ${data.awbNumber} is being processed`);
+        }
+        const hsa = await HubSummaryAwb.findOne(
+          {
+            awbNumber: data.awbNumber,
+            branchId: data.branchId,
+            isDeleted: false,
+          },
+          { select: ['hubSummaryAwbId'] },
+        );
 
-          PinoLoggerService.log(`### UPSERT HUB SUMMARY AWB OUT QUERY ========= ${upsertRawHubSummaryAwbOutSql}`);
-          await transactional.query(upsertRawHubSummaryAwbOutSql);
-          // await transactional.update(
-          //   HubSummaryAwb,
-          //   {
-          //     awbNumber: data.awbNumber,
-          //     branchId: data.branchId,
-          //   },
-          //   {
-          //     scanDateOutHub: dateNow,
-          //     outHub: true,
-          //     userIdUpdated: data.userId,
-          //     updatedTime: dateNow,
-          //   });
+        await getManager().transaction(async transactional => {
+          if (hsa) {
+            await transactional.update(
+              HubSummaryAwb,
+              {
+                awbNumber: data.awbNumber,
+                branchId: data.branchId,
+                isDeleted: false,
+              },
+              {
+                scanDateOutHub: dateNow,
+                outHub: true,
+                userIdUpdated: data.userId,
+                updatedTime: dateNow,
+              },
+            );
+            return;
+          }
+          await transactional.insert(HubSummaryAwb, {
+            scanDateOutHub: dateNow,
+            branchId: data.branchId,
+            awbNumber: data.awbNumber,
+            outHub: true,
+            bagItemIdIn: data.bagItemId,
+            bagIdIn: data.bagId,
+            awbItemId: data.awbItemId,
+            userIdCreated: data.userId,
+            userIdUpdated: data.userId,
+            inIsManual: false,
+            inIsSortir: false,
+            createdTime: dateNow,
+            updatedTime: dateNow,
+          });
+
+          // const upsertRawHubSummaryAwbOutSql = `insert into hub_summary_awb (awb_number,user_id_updated, updated_time, branch_id,user_id_created, created_time, out_hub)
+          //                     values ('${escape(data.awbNumber)}', ${data.userId}, '${dateNow}', ${data.branchId}, ${data.userId}, '${dateNow}', true)
+          //                     ON CONFLICT (awb_number,branch_id) DO UPDATE SET out_hub = true, scan_date_out_hub = '${dateNow}', user_id_updated=${data.userId}, updated_time='${dateNow}';`;
+
+          // PinoLoggerService.log(`### UPSERT HUB SUMMARY AWB OUT QUERY ========= ${upsertRawHubSummaryAwbOutSql}`);
+          // await transactional.query(upsertRawHubSummaryAwbOutSql);
         });
       } catch (error) {
-        console.error('[upsert-hub-summary-awb-out-queue] ### ERROR UPSERT', error);
+        console.error(
+          '[upsert-hub-summary-awb-out-queue] ### ERROR UPSERT',
+          error,
+        );
         // console.log('### ERROR UPSERT',error );
       }
     });

@@ -93,6 +93,9 @@ export class BagScanDoSortationQueueService {
           data.userId,
           data.branchId,
           moment().toDate(),
+          null,
+          true,
+          false,
         );
       }
     });
