@@ -80,6 +80,8 @@ export class UpsertHubSummaryAwbQueueService {
             awbItemId: data.awbItemId,
             userIdCreated: data.userId,
             userIdUpdated: data.userId,
+            inIsSortir: false,
+            inIsManual: false,
             createdTime: dateNow,
             updatedTime: dateNow,
           });
