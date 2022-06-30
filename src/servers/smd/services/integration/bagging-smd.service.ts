@@ -357,7 +357,7 @@ export class BaggingSmdService {
       }
 
       // Redlock for race condition
-      const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 10);
+      const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 300);
       if (redlock) {
         const createBagging = Bagging.create();
         createBagging.userId = authMeta.userId.toString();

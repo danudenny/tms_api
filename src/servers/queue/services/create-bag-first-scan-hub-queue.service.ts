@@ -185,6 +185,8 @@ export class CreateBagFirstScanHubQueueService {
               data.branchId,
               moment(data.timestamp).toDate(),
               data.note,
+              true,
+              true,
             );
 
             // update status awb
@@ -203,7 +205,7 @@ export class CreateBagFirstScanHubQueueService {
         console.error(`[create-bag-first-scan-hub-queue] `, error);
         throw error;
       }
-      
+
     });
 
     this.queue.on('completed', () => {
@@ -211,7 +213,7 @@ export class CreateBagFirstScanHubQueueService {
       this.queue.clean(5000);
     });
 
-    this.queue.on('cleaned', function (job, type) {
+    this.queue.on('cleaned', function(job, type) {
       PinoLoggerService.log(`Cleaned ${job.length} ${type} jobs`);
     });
   }
@@ -240,7 +242,7 @@ export class CreateBagFirstScanHubQueueService {
       userId,
       branchId,
       timestamp,
-      note
+      note,
     };
 
     return CreateBagFirstScanHubQueueService.queue.add(obj);
