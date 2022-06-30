@@ -459,6 +459,13 @@ export class MonitoringProblemListService {
         operator: 'eq',
         value: isManual ? 'true' : 'false',
       } as BaseMetaPayloadFilterVm);
+      if (!isManual) {
+        payload.filters.push({
+          field: 'isSortir',
+          operator: 'eq',
+          value: 'true',
+        } as BaseMetaPayloadFilterVm);
+      }
     }
     if (isProblem === true) {
       problemFilter = 'hsa.awb_status_id_last >= 23500 AND hsa.awb_status_id_last <= 24000';
@@ -480,6 +487,7 @@ export class MonitoringProblemListService {
       createdTime: 'hsa.scan_date_do_hub',
       branchIdFrom : 'hsa.branch_id',
       isManual : 'bi.is_manual',
+      isSortir : 'bi.is_sortir',
       outHub : 'hsa.out_hub',
     };
     const mappingSortBy = {

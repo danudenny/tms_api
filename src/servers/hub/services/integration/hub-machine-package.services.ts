@@ -339,7 +339,7 @@ export class HubMachineService {
           );
         }
       } catch (error) {
-      
+
         PinoLoggerService.log(error);
       }
 
@@ -543,6 +543,9 @@ export class HubMachineService {
         batchData.userId,
         batchData.branchId,
         moment(batchData.timestamp).toDate(),
+        null,
+        false,
+        true,
       );
 
       UpdateBranchSortirLogSummaryQueueService.perform(
