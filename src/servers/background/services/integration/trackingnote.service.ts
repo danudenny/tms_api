@@ -176,7 +176,7 @@ export class TrackingNoteService {
               request.input('ReasonName', sql.NVarChar(255), item.reasonName);
 
               request.query(`
-                insert into TmsTrackingNoteStaging (
+                insert into TmsTrackingNote (
                   AwbHistoryId, ReceiptNumber, TrackingDateTime, AwbStatusId, TrackingType, CourierName, Nik, BranchCode, NoteInternal, NotePublic, NoteTms,
                   UsrCrt, UsrUpd, DtmCrt, DtmUpd, ReceiverName, IsPublic, Latitude, Longitude, ReasonName
                   )

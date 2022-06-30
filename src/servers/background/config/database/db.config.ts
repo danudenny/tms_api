@@ -65,7 +65,7 @@ export abstract class DatabaseConfig {
   private static mysqlDbConnectionString = {
     user: 'rudydarw_damar',
     password: 'Rudybosnyasicepat168168',
-    host: 'sicepatrds-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+    host: 'sicepatrds.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
     database: 'rudydarw_sicepat',
     connectionTimeout: 12000000, // 2 minutes,
     requestTimeout: 12000000,
@@ -85,11 +85,11 @@ export abstract class DatabaseConfig {
   public static getMasterDataDbPool() {
     if (!this.masterDataDbPool) {
       this.masterDataDbPool = new Pool({
-        host: 'sicepat-tms-masterdata-staging.cchjcxaiivov.ap-southeast-1.rds.amazonaws.com',
+        host: 'pgpool-masterdata-staging-f2fb677d6129b4e5.elb.ap-southeast-1.amazonaws.com',
         port: 5432,
-        database: 'sicepatmasterdatastaging2',
-        user: 'sicepatstaging',
-        password: 's1c3p4T$t46Ingb05$sQu',
+        database: 'sicepatmasterdata',
+        user: 'pgpoolmasterdata',
+        password: 'ODaOfxF3phfosjZcK340',
         max: 20,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 30000,
