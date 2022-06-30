@@ -1,4 +1,4 @@
-import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany, ManyToOne, PrimaryColumn} from 'typeorm';
+import { BaseEntity, Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn, OneToMany, ManyToOne, PrimaryColumn, BeforeUpdate} from 'typeorm';
 
 import { AwbItem } from './awb-item';
 import { BagItem } from './bag-item';
@@ -14,9 +14,10 @@ import { CodPayment } from './cod-payment';
 import { CodTransactionDetail } from './cod-transaction-detail';
 import { AwbStatusGrpDetail } from './awb-status-grp-detail';
 import { AwbHighValueUpload } from './awb-high-value-upload';
+import { BaseActionEntity } from './base-action';
 
 @Entity('awb_item_attr', { schema: 'public' })
-export class AwbItemAttr extends BaseEntity {
+export class AwbItemAttr extends BaseActionEntity {
   @PrimaryColumn({
     type: 'uuid',
     name: 'awb_item_attr_id',
@@ -271,4 +272,11 @@ export class AwbItemAttr extends BaseEntity {
   @OneToOne(() => AwbHighValueUpload)
   @JoinColumn({ name: 'awb_item_id', referencedColumnName: 'awbItemId' })
   awbHighValueUpload: AwbHighValueUpload;
+
+  @BeforeUpdate()
+  assignUpdatedTimeAndUserIdUpdated() {
+    if (!this.updatedTime) {
+      this.updatedTime = new Date();
+    }
+  }
 }
