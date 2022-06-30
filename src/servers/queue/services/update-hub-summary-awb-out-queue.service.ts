@@ -83,6 +83,8 @@ export class UpdateHubSummaryAwbOutQueueService {
             awbItemId: data.awbItemId,
             userIdCreated: data.userId,
             userIdUpdated: data.userId,
+            inIsManual: false,
+            inIsSortir: false,
             createdTime: dateNow,
             updatedTime: dateNow,
           });
