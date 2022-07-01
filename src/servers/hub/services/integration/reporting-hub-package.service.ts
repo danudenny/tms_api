@@ -1,4 +1,4 @@
-import { BadGatewayException, BadRequestException, Injectable } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BaseMonitoringHubPackage, PayloadMonitoringHubPackageList } from '../../models/monitoring-hub-package.vm';
 
@@ -18,7 +18,7 @@ export class ReportingHubPackageService {
         respon = await this.generateReportApi(payload, 'reporting-mesin-sortir');
         break;
       default:
-        throw new BadRequestException('Jenis reporting tidak ditemukan!');
+        throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
     }
     return respon;
 
@@ -50,7 +50,7 @@ export class ReportingHubPackageService {
         respon = await this.listReportApi(payload, 'reporting-mesin-sortir');
         break;
       default:
-        throw new BadRequestException('Jenis reporting tidak ditemukan!');
+        throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
     }
     return respon;
 
