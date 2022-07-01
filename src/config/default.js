@@ -69,10 +69,10 @@ module.exports = {
     schema: 'pod',
   },
   priorityService :{
-    baseUrl : 'https://tms-awb.sicepat.io/api/lastmile/',
+    baseUrl : 'http://api-internal.sicepat.io/operation/tms-awb/api/lastmile/',
     retryCount : 2,
     delayTime : 2000,
-    slackChannel : '#pod-awb-history',
+    slackChannel : '#last-mile-alert',
     xApiKey : 'a99bca19-afa9-4b78-8ce8-2cb366664dc3',
   },
   exportService: {
