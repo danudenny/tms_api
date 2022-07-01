@@ -2,8 +2,8 @@ import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs
 import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { BaseMonitoringHubPackage, PayloadMonitoringHubPackageList } from '../../models/monitoring-hub-package.vm';
-import { ReportingHubPackageService } from '../../services/integration/reporting-hub-package.service';
+import { BaseMonitoringHubPackage, PayloadMonitoringHubPackageList } from '../../models/monitoring/monitoring-hub-package.vm';
+import { ReportingHubPackageService } from '../../services/monitoring/reporting-hub-package.service';
 
 @ApiUseTags('Monitoring Hub Package')
 @Controller('monitoring-hub-package')

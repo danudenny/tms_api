@@ -1,9 +1,9 @@
 import { integer } from 'aws-sdk/clients/lightsail';
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../../../../shared/external/nestjs-swagger';
 
 export class BaseReportingTypeHub {
   @ApiModelProperty({
-    example: 'paketHub, lebihSortir, mesinSortir',
+    example: 'reporting-mesin-sortir, reporting-paket-hub, reporting-lebih-sortir',
   })
   report_type: string;
 }
@@ -29,11 +29,11 @@ export class BaseMonitoringHubPackage extends BaseReportingTypeHub {
 
 export class PayloadMonitoringHubPackageList extends BaseReportingTypeHub {
 
-    @ApiModelProperty()
-    page: integer;
+  @ApiModelProperty()
+  page: integer;
 
-    @ApiModelProperty()
-    limit: integer;
+  @ApiModelProperty()
+  limit: integer;
 
 }
 

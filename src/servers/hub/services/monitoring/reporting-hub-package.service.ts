@@ -1,30 +1,28 @@
 import { BadGatewayException, BadRequestException, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { BaseMonitoringHubPackage, PayloadMonitoringHubPackageList } from '../../models/monitoring-hub-package.vm';
+import { BaseMonitoringHubPackage, PayloadMonitoringHubPackageList } from '../../models/monitoring/monitoring-hub-package.vm';
 
 @Injectable()
 export class ReportingHubPackageService {
 
   static async PackageHubGenerate(payload: BaseMonitoringHubPackage): Promise<any> {
-    let respon: any;
-    switch (payload.report_type) {
-      case 'paketHub':
-        respon = await this.generateReportApi(payload, 'reporting-paket-hub');
-        break;
-      case 'lebihSortir':
-        respon = await this.generateReportApi(payload, 'reporting-lebih-sortir');
-        break;
-      case 'mesinSortir':
-        respon = await this.generateReportApi(payload, 'reporting-mesin-sortir');
-        break;
-      default:
-        throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
+
+    const typeReporting = [
+      'reporting-paket-hub',
+      'reporting-lebih-sortir',
+      'reporting-mesin-sortir',
+    ];
+
+    if (!typeReporting.includes(payload.report_type)) {
+      throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
     }
-    return respon;
+
+    const responData = await this.generateReportApi(payload.report_type);
+    return responData;
 
   }
 
-  static  async generateReportApi(payload: BaseMonitoringHubPackage, report_type: string): Promise<any> {
+  static  async generateReportApi(report_type: string): Promise<any> {
     const dummyRespon = {
       code: '200000',
       statusCode: 200,
@@ -38,25 +36,22 @@ export class ReportingHubPackageService {
 
   static async PackageHubList(payload: PayloadMonitoringHubPackageList): Promise<any> {
 
-    let respon: any;
-    switch (payload.report_type) {
-      case 'paketHub':
-        respon = await this.listReportApi(payload, 'reporting-paket-hub');
-        break;
-      case 'lebihSortir':
-        respon = await this.listReportApi(payload, 'reporting-lebih-sortir');
-        break;
-      case 'mesinSortir':
-        respon = await this.listReportApi(payload, 'reporting-mesin-sortir');
-        break;
-      default:
-        throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
+    const typeReporting = [
+      'reporting-paket-hub',
+      'reporting-lebih-sortir',
+      'reporting-mesin-sortir',
+    ];
+
+    if (!typeReporting.includes(payload.report_type)) {
+      throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
     }
-    return respon;
+
+    const responData = await this.listReportApi(payload.report_type);
+    return responData;
 
   }
 
-  static  async listReportApi(payload: PayloadMonitoringHubPackageList, report_type: string): Promise<any> {
+  static  async listReportApi(report_type: string): Promise<any> {
     const dummyRespon = {
       code: '200000',
       statusCode: 200,

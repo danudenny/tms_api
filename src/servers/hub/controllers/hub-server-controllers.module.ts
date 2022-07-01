@@ -19,7 +19,7 @@ import { SortationL2ModuleController } from './sortation/web/sortation-l2-module
 import { SortationL2ListModuleController } from './sortation/web/sortation-l2-list.controller';
 import { SortationMasterdataController } from './masterdata-controller';
 import { SortationMasterdataService } from '../services/masterdata-service';
-import { ReportingHubPackage } from './integration/reporting-hub-package.controller';
+import { ReportingHubPackage } from './monitoring/reporting-hub-package.controller';
 import { HubPackagesMonitoringController } from './monitoring/monitoring-list.controller';
 
 @Module({
