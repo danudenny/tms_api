@@ -2,16 +2,16 @@ import { BadGatewayException, BadRequestException, Injectable, UnprocessableEnti
 import { AuthService } from '../../../../shared/services/auth.service';
 import { BaseMonitoringHubPackage, PayloadMonitoringHubPackageList } from '../../models/monitoring/monitoring-hub-package.vm';
 
+const typeReporting = [
+  'reporting-paket-hub',
+  'reporting-lebih-sortir',
+  'reporting-mesin-sortir',
+];
+
 @Injectable()
 export class ReportingHubPackageService {
 
   static async PackageHubGenerate(payload: BaseMonitoringHubPackage): Promise<any> {
-
-    const typeReporting = [
-      'reporting-paket-hub',
-      'reporting-lebih-sortir',
-      'reporting-mesin-sortir',
-    ];
 
     if (!typeReporting.includes(payload.report_type)) {
       throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
@@ -35,12 +35,6 @@ export class ReportingHubPackageService {
   }
 
   static async PackageHubList(payload: PayloadMonitoringHubPackageList): Promise<any> {
-
-    const typeReporting = [
-      'reporting-paket-hub',
-      'reporting-lebih-sortir',
-      'reporting-mesin-sortir',
-    ];
 
     if (!typeReporting.includes(payload.report_type)) {
       throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
