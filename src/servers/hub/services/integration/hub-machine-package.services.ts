@@ -8,7 +8,6 @@ import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { District } from '../../../../shared/orm-entity/district';
 import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
-import { Representative } from '../../../../shared/orm-entity/representative';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import {
   BagItemHistoryQueueService,
@@ -103,9 +102,9 @@ export class HubMachineService {
     return null;
   }
 
-  public static async getRepresentative(branchId: number): Promise<Representative> {
+  public static async getRepresentative(branchId: number): Promise<any> {
     const cacheKey = `cache:sorting-machine:representative:${branchId}`;
-    let data: Representative = await RedisService.get(cacheKey, true);
+    let data = await RedisService.get(cacheKey, true);
     if (data) { return data; }
 
     const qb = createQueryBuilder();
