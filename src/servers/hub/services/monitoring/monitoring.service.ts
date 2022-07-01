@@ -1,21 +1,25 @@
-import { UnprocessableEntityException } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+
 import { HubMonitoringDetailListPayloadVm } from '../../models/monitoring/monitoring-payload.vm';
 import { ExternalHubMonitoringService } from './external.monitoring.service';
 
+@Injectable()
 export class HubPackagesMonitoringService {
-  public static async getDetail(
+  constructor(private readonly extMonitoringService: ExternalHubMonitoringService) {}
+
+  public async getDetail(
     params: HubMonitoringDetailListPayloadVm,
   ): Promise<any> {
     const { type, ...payload } = params;
     this.validateDetailType(type);
-    const response = await ExternalHubMonitoringService.getDetail(
+    const response = await this.extMonitoringService.getDetail(
       type,
       payload,
     );
     return response;
   }
 
-  private static validateDetailType(type: string): void {
+  private validateDetailType(type: string): void {
     const validTypes = [
       'masuk',
       'dropoff',

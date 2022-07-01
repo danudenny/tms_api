@@ -1,22 +1,21 @@
-import axios from 'axios';
-import { ConfigService } from '../../../../shared/services/config.service';
+import { Injectable } from '@nestjs/common';
 
+import { ConfigService } from '../../../../shared/services/config.service';
+import { HttpRequestAxiosService } from '../../../../shared/services/http-request-axios.service';
 import { HubMonitoringDetailListVm } from '../../models/monitoring/monitoring-payload.vm';
 
+@Injectable()
 export class ExternalHubMonitoringService {
-  private static BASE_URL = ConfigService.get('hubMonitoring.baseUrl');
+  constructor(private readonly httpRequestService: HttpRequestAxiosService) {}
 
-  public static async getDetail(
+  private readonly BASE_URL = ConfigService.get('hubMonitoring.baseUrl');
+
+  public async getDetail(
     type: string,
     payload: HubMonitoringDetailListVm,
   ): Promise<any> {
-    const options = {
-      // headers: {},
-      url: `${this.BASE_URL}/monitoring/${type}/list`,
-      method: 'POST',
-      data: payload,
-    };
-    const response = await axios(options);
+    const url = `${this.BASE_URL}/monitoring/${type}/list`;
+    const response = await this.httpRequestService.post(url, payload);
 
     return response;
   }

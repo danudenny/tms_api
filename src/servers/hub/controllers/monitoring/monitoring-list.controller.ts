@@ -9,7 +9,9 @@ import { HubPackagesMonitoringService } from '../../services/monitoring/monitori
 @ApiUseTags('Hub Packages Monitoring')
 @Controller('monitoring-hub-package')
 export class HubPackagesMonitoringController {
-  @Post('/total/list')
+  constructor(private readonly monitoringService: HubPackagesMonitoringService) {}
+
+  @Post('total/list')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public getMonitoringTotalList() {
     return true;
@@ -21,6 +23,6 @@ export class HubPackagesMonitoringController {
     @Body() payload: HubMonitoringDetailListPayloadVm,
   ): Promise<any> {
     // pass-through response
-    return HubPackagesMonitoringService.getDetail(payload);
+    return this.monitoringService.getDetail(payload);
   }
 }
