@@ -1,3 +1,4 @@
+import { WebAwbScanPriorityResponse } from './../../models/web-awb-scan-priority-response.vm';
 // #region import
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import { BAG_STATUS } from '../../../../shared/constants/bag-status.constant';
@@ -17,16 +18,35 @@ import {
   ScanBranchAwbVm,
   ScanBranchBagVm,
   ScanInputNumberBranchVm,
+  V2ScanInputNumberBranchVm,
   MobileScanInBagBranchResponseVm,
   MobileScanInBagBranchVm,
   MobileScanInBranchResponseVm,
+  V2MobileScanInBranchResponseVm,
 } from '../../models/mobile-scanin.vm';
 import { AwbService } from '../v1/awb.service';
 import { BagService } from '../v1/bag.service';
 import moment = require('moment');
 import { getManager, createQueryBuilder } from 'typeorm';
+import { WebAwbScanPriorityService } from '../web/web-awb-scan-priority.service';
 // #endregion
+
 export class LastMileDeliveryInService {
+  private static async resultBag(
+    inputNumber: string,
+    podScanInBranchId: string,
+  ): Promise<MobileScanInBagBranchResponseVm> {
+    let bagData;
+
+    bagData = await BagService.validBagNumber(inputNumber); // check valid bagNumber
+
+    return await this.scanInBagBranch(
+      bagData,
+      inputNumber,
+      podScanInBranchId,
+    );
+  }
+
   // NOTE: scan in package on branch
   // 1. scan bag number / scan awb number
   // 2. create session per branch with insert table on pod scan in branch
@@ -97,6 +117,7 @@ export class LastMileDeliveryInService {
           inputNumber,
           payload.bagNumber,
           payload.podScanInBranchId,
+          false,
         );
         data.awbNumber = resultAwb.awbNumber;
         data.status = resultAwb.status;
@@ -329,6 +350,7 @@ export class LastMileDeliveryInService {
     awbNumber: string,
     bagNumber: string,
     podScanInBranchId: string,
+    usePriority: boolean = false,
   ): Promise<ScanBranchAwbVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
@@ -363,14 +385,30 @@ export class LastMileDeliveryInService {
         // TODO: find by check data
         let bagId = 0;
         let bagItemId = 0;
+        var podScanInBranchDetail;
+        var routeInfo = new WebAwbScanPriorityResponse;
 
-        const podScanInBranchDetail = await PodScanInBranchDetail.findOne({
-          where: {
-            podScanInBranchId,
-            awbItemId: awb.awbItemId,
-            isDeleted: false,
-          },
-        });
+        if (usePriority) {
+          [podScanInBranchDetail, routeInfo] = await Promise.all([
+            PodScanInBranchDetail.findOne({
+              where: {
+                podScanInBranchId,
+                awbItemId: awb.awbItemId,
+                isDeleted: false,
+              },
+            }),
+            WebAwbScanPriorityService.scanPriority(awbNumber)
+          ])
+
+        } else {
+          podScanInBranchDetail = await PodScanInBranchDetail.findOne({
+            where: {
+              podScanInBranchId,
+              awbItemId: awb.awbItemId,
+              isDeleted: false,
+            },
+          });
+        }
 
         if (podScanInBranchDetail) {
           result.status = 'error';
@@ -425,6 +463,18 @@ export class LastMileDeliveryInService {
           podScanInBranchDetailObj.awbNumber = awbNumber;
           podScanInBranchDetailObj.bagNumber = bagNumber;
           podScanInBranchDetailObj.isTrouble = result.trouble;
+          if (usePriority) {
+            if (routeInfo) {
+              result.routePriority = routeInfo.routeAndPriority;
+              result.kelurahan = routeInfo.kelurahan;
+              if(routeInfo.status != 'ok'){
+                result.status = 'warning';
+                result.trouble = false;
+                result.message = `Resi ${awbNumber} belum pernah di MANIFESTED`;
+              }
+              podScanInBranchDetailObj.routePriority = routeInfo.routeAndPriority;
+            }
+          }
           await PodScanInBranchDetail.save(podScanInBranchDetailObj);
 
           // AFTER Scan IN ===============================================
@@ -449,6 +499,99 @@ export class LastMileDeliveryInService {
       result.trouble = true;
       result.message = `Resi ${awbNumber} Tidak di Temukan`;
     }
+
+    return result;
+  }
+
+
+  static async scanInBranchV2(
+    payload: MobileScanInBagBranchVm,
+  ): Promise<V2MobileScanInBranchResponseVm> {
+    const isBag: boolean = false;
+    const data = new V2ScanInputNumberBranchVm();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const authMeta = AuthService.getAuthData();
+    const regexNumber = /^[0-9]+$/;
+
+    const qb = createQueryBuilder();
+    qb.addSelect('awb.awb_number', 'awbNumber');
+    qb.addSelect('awb.consignee_name', 'consigneeName');
+    qb.addSelect('awb.consignee_address', 'consigneeAddress');
+    qb.addSelect('awb.consignee_phone', 'consigneePhone');
+    qb.addSelect('awb.total_cod_value', 'totalCodValue');
+    qb.addSelect('pt.package_type_code', 'service');
+
+    qb.from('awb', 'awb');
+    qb.innerJoin(
+      'package_type',
+      'pt',
+      'pt.package_type_id = awb.package_type_id',
+    );
+    qb.innerJoin('awb_item_attr', 'aia', 'aia.awb_id = awb.awb_id');
+    qb.andWhere('awb.awb_number = :awbNumber', {
+      awbNumber: payload.scanValue,
+    });
+    const res = await qb.getRawOne();
+
+    if (res) {
+      let podScanInBranch = await PodScanInBranch.findOne({
+        where: {
+          branchId: permissonPayload.branchId,
+          transactionStatusId: 600,
+          isDeleted: false,
+          userIdCreated: authMeta.userId,
+        },
+      });
+
+      if (podScanInBranch) {
+        payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+      } else {
+        podScanInBranch = PodScanInBranch.create();
+        podScanInBranch.branchId = permissonPayload.branchId;
+        podScanInBranch.scanInType = 'bag'; // default
+        podScanInBranch.transactionStatusId = 600;
+        podScanInBranch.totalBagScan = 0;
+
+        await PodScanInBranch.save(podScanInBranch);
+        payload.podScanInBranchId = podScanInBranch.podScanInBranchId;
+      }
+
+      let inputNumber = payload.scanValue;
+      let resultBag;
+
+      if (regexNumber.test(inputNumber)) {
+        const resultAwb = await this.scanInAwbBranch(
+          inputNumber,
+          payload.bagNumber,
+          payload.podScanInBranchId,
+          true,
+        );
+        data.awbNumber = inputNumber;
+        data.status = resultAwb.status;
+        data.message = resultAwb.message;
+        data.trouble = resultAwb.trouble;
+        data.routeAndPriority = resultAwb.routePriority;
+        data.kelurahan = resultAwb.kelurahan;
+      } else if (await BagService.isBagNumberLenght(inputNumber)) {
+        resultBag = await this.resultBag(inputNumber, payload.podScanInBranchId);
+      } else {
+        data.awbNumber = inputNumber;
+        data.status = 'error';
+        data.message = 'Nomor tidak valid';
+        data.trouble = true;
+      }
+    }
+
+    const result = new V2MobileScanInBranchResponseVm();
+    result.podScanInBranchId = payload.podScanInBranchId;
+    result.data = data;
+    result.service = res.service;
+    result.awbNumber = res.awbNumber;
+    result.consigneeName = res.consigneeName;
+    result.consigneeAddress = res.consigneeAddress;
+    result.consigneePhone = res.consigneePhone;
+    result.totalCodValue = res.totalCodValue;
+    result.dateTime = moment().format('YYYY-MM-DD HH:mm:ss');
 
     return result;
   }
