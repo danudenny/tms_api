@@ -103,36 +103,22 @@ export class HubMachineService {
     return null;
   }
 
-  public static async getRepresentativeByAwb(nostt: string) {
-    const qb = createQueryBuilder();
-    qb.addSelect('r.representative_code', 'representativeCode');
-    qb.addSelect('r.representative_id', 'representativeId');
-    qb.from('temp_stt', 'ts');
-    qb.innerJoin(
-        'representative',
-        'r',
-        'ts.perwakilan = r.representative_code AND r.is_deleted = false',
-    );
-    qb.where('ts.nostt = :nostt', { nostt });
-
-    const representative = await qb.getRawMany();
-    if (representative.length > 0) {
-      return representative[0];
-    }
-    return null;
-  }
-
-  public static async getRepresentative(representativeCode: string): Promise<Representative> {
-    const cacheKey = `cache:sorting-machine:representative:${representativeCode}`;
+  public static async getRepresentative(branchId: number): Promise<Representative> {
+    const cacheKey = `cache:sorting-machine:representative:${branchId}`;
     let data: Representative = await RedisService.get(cacheKey, true);
     if (data) { return data; }
 
-    data = (await Representative.findOne({
-      where: {
-        representativeCode,
-        isDeleted: false,
-      },
-    })) as any;
+    const qb = createQueryBuilder();
+    qb.addSelect('r.representative_code', 'representativeCode');
+    qb.addSelect('r.representative_id', 'representativeId');
+    qb.from('representative', 'r');
+    qb.innerJoin(
+        'branch',
+        'b',
+        'r.representative_id = b.representative_id AND r.is_deleted = false',
+    );
+    qb.where('b.branch_id = :branchId', { branchId });
+    data = (await qb.getRawOne()) as any;
 
     if (data) {
       // cache 30 minutes
@@ -221,9 +207,11 @@ export class HubMachineService {
       return generateErrorResult(`Branch not found`);
     }
 
-    // const district = (branch.districtId)
-    //   ? await this.getDistrict(branch.districtId)
-    //   : null;
+    const representative = await this.getRepresentative(branchSortir.branchIdLastmile);
+
+    if (!representative) {
+      return generateErrorResult(`Representative not found`);
+    }
 
     const awbNumbers: string[] = chain(payload.reference_numbers)
       .groupBy(g => g)
@@ -236,11 +224,6 @@ export class HubMachineService {
     // const awbs = await this.getAwbs(awbNumbers);
     const awbs = await this.getTempStts(awbNumbers);
     const awbItemAttrs = await this.getAwbItemAttrs(awbNumbers);
-
-    const representative = await this.getRepresentativeByAwb(awbNumbers[0]);
-    if (!representative) {
-      return generateErrorResult(`Representative not found`);
-    }
 
     let totalWeight = 0;
     for (const refNumber of awbNumbers) {
