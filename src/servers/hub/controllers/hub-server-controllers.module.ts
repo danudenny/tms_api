@@ -20,6 +20,7 @@ import { SortationL2ListModuleController } from './sortation/web/sortation-l2-li
 import { SortationMasterdataController } from './masterdata-controller';
 import { SortationMasterdataService } from '../services/masterdata-service';
 import { ReportingHubPackage } from './integration/reporting-hub-package.controller';
+import { HubPackagesMonitoringController } from './monitoring/monitoring-list.controller';
 
 @Module({
   imports: [SharedModule, HubServerServicesModule],
@@ -42,6 +43,7 @@ import { ReportingHubPackage } from './integration/reporting-hub-package.control
     SortationL2ListModuleController,
     SortationMasterdataController,
     ReportingHubPackage,
+    HubPackagesMonitoringController,
   ],
 })
 export class HubServerControllersModule {}
