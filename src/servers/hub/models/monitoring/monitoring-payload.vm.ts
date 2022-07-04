@@ -23,7 +23,7 @@ export class HubMonitoringDetailListVm {
   page: number;
 }
 
-export class HubMonitoringDetailListPayloadVm extends HubMonitoringDetailListVm {
+export class ExtMonitoringDetailListPayloadVm extends HubMonitoringDetailListVm {
   @ApiModelProperty()
   type:
     | 'masuk'
