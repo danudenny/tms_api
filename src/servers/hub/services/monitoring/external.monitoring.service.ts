@@ -3,6 +3,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { HttpRequestAxiosService } from '../../../../shared/services/http-request-axios.service';
 import { ExtMonitoringDetailListPayloadVm } from '../../models/monitoring/monitoring-payload.vm';
+import { BaseMonitoringHubPackage, PayloadMonitoringHubPackageList } from '../../models/monitoring/monitoring-hub-package.vm';
 
 @Injectable()
 export class ExternalHubMonitoringService {
@@ -31,5 +32,18 @@ export class ExternalHubMonitoringService {
       }
       throw err;
     }
+  }
+
+  public async generateReportHub(report_type: string, payload: BaseMonitoringHubPackage): Promise<any> {
+    const url = `${this.BASE_URL}/reporting/${report_type}/generate`;
+
+    const response = await this.httpRequestService.post(url, payload);
+    return response;
+}
+
+  public async getListReporting(report_type: string, payload: PayloadMonitoringHubPackageList): Promise<any> {
+      const url = `${this.BASE_URL}/reporting/${report_type}/list`;
+      const response = await this.httpRequestService.post(url, payload);
+      return response;
   }
 }

@@ -19,6 +19,9 @@ export class BaseMonitoringHubPackage extends BaseReportingTypeHub {
   @ApiModelProperty()
   branch_id: string;
 
+  @ApiModelPropertyOptional()
+  employee_id: number;
+
   @ApiModelPropertyOptional({
     description : 'Used in mesinSOrtir',
     example : 'true or false',
@@ -34,6 +37,9 @@ export class PayloadMonitoringHubPackageList extends BaseReportingTypeHub {
 
   @ApiModelProperty()
   limit: integer;
+
+  @ApiModelPropertyOptional()
+  employee_id: number;
 
 }
 

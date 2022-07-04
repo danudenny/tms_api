@@ -7,6 +7,7 @@ import { HubServerServicesModule } from '../services/hub-server-services.module'
 import { SortationMasterdataService } from '../services/masterdata-service';
 import { ExternalHubMonitoringService } from '../services/monitoring/external.monitoring.service';
 import { HubPackagesMonitoringService } from '../services/monitoring/monitoring.service';
+import { ReportingHubPackageService } from '../services/monitoring/reporting-hub-package.service';
 import { CentralSortirController } from './integration/central-sortir.controller';
 import { HubMachinePackageController } from './integration/hub-machine-package.controller';
 import { HubMachineSortirController } from './integration/hub-machine-sortir.controller';
@@ -16,7 +17,7 @@ import { MonitoringProblemLebihSortirListController } from './integration/monito
 import { MonitoringProblemListController } from './integration/monitoring-problem-list.controller';
 import { SortationMasterdataController } from './masterdata-controller';
 import { HubPackagesMonitoringController } from './monitoring/monitoring-list.controller';
-import { ReportingHubPackage } from './monitoring/reporting-hub-package.controller';
+import { ReportingHubPackageController } from './monitoring/reporting-hub-package.controller';
 import { MobileSortationListController } from './sortation/mobile/mobile-sortation-list.controller';
 import { MobileSortationController } from './sortation/mobile/mobile-sortation.controller';
 import { SortationL2ListModuleController } from './sortation/web/sortation-l2-list.controller';
@@ -41,7 +42,13 @@ const providers = [
     inject: [ExternalHubMonitoringService],
     provide: HubPackagesMonitoringService,
     useFactory: (service: ExternalHubMonitoringService) =>
-      new HubPackagesMonitoringService(service),
+       new HubPackagesMonitoringService(service),
+  },
+  {
+    inject: [ExternalHubMonitoringService],
+    provide:  ReportingHubPackageService,
+    useFactory: (service: ExternalHubMonitoringService) =>
+      new ReportingHubPackageService(service),
   },
   SortationMasterdataService,
 ];
@@ -66,7 +73,7 @@ const providers = [
     SortationL2ModuleController,
     SortationL2ListModuleController,
     SortationMasterdataController,
-    ReportingHubPackage,
+    ReportingHubPackageController,
     HubPackagesMonitoringController,
   ],
 })

@@ -1,6 +1,8 @@
-import { BadGatewayException, BadRequestException, Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { MetaService } from '../../../../shared/services/meta.service';
 import { BaseMonitoringHubPackage, PayloadMonitoringHubPackageList } from '../../models/monitoring/monitoring-hub-package.vm';
+import { ExternalHubMonitoringService } from './external.monitoring.service';
 
 const typeReporting = [
   'reporting-paket-hub',
@@ -10,77 +12,43 @@ const typeReporting = [
 
 @Injectable()
 export class ReportingHubPackageService {
+  constructor(private readonly extMonitoringService: ExternalHubMonitoringService) {}
 
-  static async PackageHubGenerate(payload: BaseMonitoringHubPackage): Promise<any> {
-
-    if (!typeReporting.includes(payload.report_type)) {
-      throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
-    }
-
-    const responData = await this.generateReportApi(payload.report_type);
-    return responData;
-
-  }
-
-  static  async generateReportApi(report_type: string): Promise<any> {
-    const dummyRespon = {
-      code: '200000',
-      statusCode: 200,
-      message: 'success',
-      data: {
-        queue_id: 123,
-      },
-    };
-    return dummyRespon;
-  }
-
-  static async PackageHubList(payload: PayloadMonitoringHubPackageList): Promise<any> {
+  public async PackageHubGenerate(payload: BaseMonitoringHubPackage): Promise<any> {
+    const authMeta = AuthService.getAuthData();
 
     if (!typeReporting.includes(payload.report_type)) {
       throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
     }
 
-    const responData = await this.listReportApi(payload.report_type);
-    return responData;
+    payload.employee_id = Number(authMeta.employeeId);
+    try {
+      const responData = await this.extMonitoringService.generateReportHub(payload.report_type, payload);
+      return responData;
+    } catch (error) {
+      return error.message;
+    }
 
   }
 
-  static  async listReportApi(report_type: string): Promise<any> {
-    const dummyRespon = {
-      code: '200000',
-      statusCode: 200,
-      message: 'success',
-      data : {
-            data: [
-                {
-                    report_queue_id: 123,
-                    created_date: '2022-06-28',
-                    updated_date: '2022-06-28',
-                    employee_id: 123,
-                    file_name: 'reporting|Semua_Cabang_vendor_Magelang',
-                    status: 4,
-                    report_type: 'monitoring_paket_hub',
-                    list_url: [
-                        'http://www..',
-                        'http://www..',
-                        'http://www..',
-                    ],
-                    version: '',
-                    branch_name: 'Semua Cabang',
-                    vendor_name: 'Magelang',
-                },
-            ],
-            paging: {
-                current_page: 1,
-                next_page: 2,
-                prev_page: 0,
-                total_page: 2,
-                total_data: 18,
-                limit: 10,
-            },
-        },
-    };
+  public async PackageHubList(payload: PayloadMonitoringHubPackageList): Promise<any> {
+    const authMeta = AuthService.getAuthData();
 
-    return dummyRespon;
+    if (!typeReporting.includes(payload.report_type)) {
+      throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
+    }
+    payload.employee_id = Number(authMeta.employeeId);
+    try {
+      const responData = await this.extMonitoringService.getListReporting(payload.report_type, payload);
+      const result = {};
+      result['statusCode'] = responData.statusCode;
+      result['data'] = responData.data.data;
+      result['paging'] = MetaService.set(payload.page, payload.limit, responData.data.paging.total_data);
+
+      return result;
+    } catch (error) {
+      return error.message;
+    }
   }
+
 }

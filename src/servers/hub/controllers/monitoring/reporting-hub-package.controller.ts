@@ -7,21 +7,20 @@ import { ReportingHubPackageService } from '../../services/monitoring/reporting-
 
 @ApiUseTags('Monitoring Hub Package')
 @Controller('monitoring-hub-package')
-export class ReportingHubPackage {
-  constructor() {}
+export class ReportingHubPackageController {
+  constructor(private readonly reportHubPackage: ReportingHubPackageService) {}
 
   @Post('reporting-hub/generate')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async generateReportPackageHub(@Body() payload: BaseMonitoringHubPackage) {
-    return ReportingHubPackageService.PackageHubGenerate(payload);
+  public generateReportHub(@Body() payload: BaseMonitoringHubPackage): Promise<any>  {
+    return this.reportHubPackage.PackageHubGenerate(payload);
   }
 
   @Post('reporting-hub/list')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async generateReportPackageList(@Body() payload: PayloadMonitoringHubPackageList) {
-    return ReportingHubPackageService.PackageHubList(payload);
+  public generateReportPackageList(@Body() payload: PayloadMonitoringHubPackageList): Promise<any>  {
+    return this.reportHubPackage.PackageHubList(payload);
   }
-
 }
