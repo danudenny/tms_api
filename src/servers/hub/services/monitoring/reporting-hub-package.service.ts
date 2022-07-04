@@ -22,12 +22,8 @@ export class ReportingHubPackageService {
     }
 
     payload.employee_id = Number(authMeta.employeeId);
-    try {
-      const responData = await this.extMonitoringService.generateReportHub(payload.report_type, payload);
-      return responData;
-    } catch (error) {
-      return error.message;
-    }
+    const responData = await this.extMonitoringService.generateReportHub(payload.report_type, payload);
+    return responData;
 
   }
 
@@ -38,17 +34,15 @@ export class ReportingHubPackageService {
       throw new UnprocessableEntityException('Jenis reporting tidak ditemukan!');
     }
     payload.employee_id = Number(authMeta.employeeId);
-    try {
-      const responData = await this.extMonitoringService.getListReporting(payload.report_type, payload);
-      const result = {};
-      result['statusCode'] = responData.statusCode;
-      result['data'] = responData.data.data;
-      result['paging'] = MetaService.set(payload.page, payload.limit, responData.data.paging.total_data);
 
-      return result;
-    } catch (error) {
-      return error.message;
-    }
+    const responData = await this.extMonitoringService.getListReporting(payload.report_type, payload);
+    const result = {};
+    result['statusCode'] = responData.statusCode;
+    result['data'] = responData.data.data;
+    result['paging'] = MetaService.set(payload.page, payload.limit, responData.data.paging.total_data);
+
+    return result;
+
   }
 
 }

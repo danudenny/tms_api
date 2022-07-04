@@ -35,15 +35,56 @@ export class ExternalHubMonitoringService {
   }
 
   public async generateReportHub(report_type: string, payload: BaseMonitoringHubPackage): Promise<any> {
-    const url = `${this.BASE_URL}/reporting/${report_type}/generate`;
+    try {
+      const url = `${this.BASE_URL}/reporting/${report_type}/generate`;
+      /*const url = `https://swagger.s.sicepat.tech/operation/sortation/sortation/api/v1/reporting/${report_type}/generate`;
+      const config = { headers: {
+        'accept': 'application/json',
+        'x-username': 'username',
+        'x-source': 'source service',
+        'x-channel-id': 'channel tribe',
+        'Content-Type': 'application/json',
+      }};*/
+      const response = await this.httpRequestService.post(url, payload).toPromise();
+      return response;
+    } catch (err) {
+      if (err.response) {
+        const status = err.response.status || 400;
+        const errResponse = {
+          message: err.response.data && err.response.data.error,
+          statusCode: status,
+        };
+        throw new HttpException(errResponse, status);
+      }
+      throw err;
+    }
 
-    const response = await this.httpRequestService.post(url, payload);
-    return response;
 }
 
   public async getListReporting(report_type: string, payload: PayloadMonitoringHubPackageList): Promise<any> {
+    try {
       const url = `${this.BASE_URL}/reporting/${report_type}/list`;
-      const response = await this.httpRequestService.post(url, payload);
+      /*const url = `https://swagger.s.sicepat.tech/operation/sortation/sortation/api/v1/reporting/${report_type}/list`;
+      const config = { headers: {
+        'accept': 'application/json',
+        'x-username': 'username',
+        'x-source': 'source service',
+        'x-channel-id': 'channel tribe',
+        'Content-Type': 'application/json',
+      }};*/
+      const response = await this.httpRequestService.post(url, payload).toPromise();
       return response;
+    } catch (err) {
+      if (err.response) {
+        const status = err.response.status || 400;
+        const errResponse = {
+          message: err.response.data && err.response.data.error,
+          statusCode: status,
+        };
+        throw new HttpException(errResponse, status);
+      }
+      throw err;
+    }
+
   }
 }
