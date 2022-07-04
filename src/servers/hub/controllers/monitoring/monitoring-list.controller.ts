@@ -1,6 +1,16 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 
-import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
+import {
+  ApiOkResponse,
+  ApiUseTags,
+} from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -21,7 +31,9 @@ export class HubPackagesMonitoringController {
   }
 
   @Post('detail/list')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: HubMonitoringDetailListResponseVm })
   public getMonitoringDetailList(
     @Body() payload: BaseMetaPayloadVm,
   ): Promise<HubMonitoringDetailListResponseVm> {
