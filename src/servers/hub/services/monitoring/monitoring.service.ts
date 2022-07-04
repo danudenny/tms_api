@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import _ = require('lodash');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -94,7 +90,7 @@ export class HubPackagesMonitoringService {
       'tidak-keluar',
     ];
     if (!validTypes.includes(type)) {
-      throw new UnprocessableEntityException(`Invalid type: ${type}`);
+      throw new BadRequestException(`Invalid type: ${type}`);
     }
   }
 }
