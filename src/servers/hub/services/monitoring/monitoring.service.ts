@@ -37,7 +37,7 @@ export class HubPackagesMonitoringService {
     const filterFields = [
       'scanDate;gte;true',
       'scanDate;lt;true',
-      'branchId;eq;false',
+      'branchId;eq;true',
       'awbNumber;eq;false',
       'bagNumber;eq;false',
       'type;eq;false',
@@ -57,13 +57,11 @@ export class HubPackagesMonitoringService {
     const result = {
       start_date: filters[0].value,
       end_date: filters[1].value,
+      branch_id: filters[2].value,
       page: payload.page,
       limit: payload.limit,
     } as ExtMonitoringDetailListPayloadVm;
 
-    if (filters[2]) {
-      result.branch_id = filters[2].value;
-    }
     if (filters[3]) {
       result.awb_number = filters[3].value;
     }
