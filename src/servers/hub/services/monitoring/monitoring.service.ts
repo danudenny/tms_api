@@ -21,7 +21,7 @@ export class HubPackagesMonitoringService {
     const result = new HubMonitoringTotalListResponseVm();
     result.statusCode = response.status_code;
     result.message = 'Sukses get monitoring hub total';
-    result.data = _.get(response, 'data.list', []);
+    result.data = _.get(response, 'data.list') || [];
     result.buildPagingWithPayload(
         payload,
         _.get(response, 'data.paging.total_data', 1),
@@ -38,7 +38,7 @@ export class HubPackagesMonitoringService {
     const result = new HubMonitoringDetailListResponseVm();
     result.statusCode = response.status_code;
     result.message = 'Sukses ambil daftar detail monitoring hub';
-    result.data = _.get(response, 'data.list', []);
+    result.data = _.get(response, 'data.list') || [];
     result.buildPagingWithPayload(
       payload,
       _.get(response, 'data.paging.total_data', 1),
