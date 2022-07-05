@@ -32,24 +32,9 @@ const providers = [
     provide: HttpRequestAxiosService,
     useFactory: () => new HttpRequestAxiosService(axios.create()),
   },
-  {
-    inject: [HttpRequestAxiosService],
-    provide: ExternalHubMonitoringService,
-    useFactory: (httpRequestService: HttpRequestAxiosService) =>
-      new ExternalHubMonitoringService(httpRequestService),
-  },
-  {
-    inject: [ExternalHubMonitoringService],
-    provide: HubPackagesMonitoringService,
-    useFactory: (service: ExternalHubMonitoringService) =>
-       new HubPackagesMonitoringService(service),
-  },
-  {
-    inject: [ExternalHubMonitoringService],
-    provide:  ReportingHubPackageService,
-    useFactory: (service: ExternalHubMonitoringService) =>
-      new ReportingHubPackageService(service),
-  },
+  ExternalHubMonitoringService,
+  HubPackagesMonitoringService,
+  ReportingHubPackageService,
   SortationMasterdataService,
 ];
 
