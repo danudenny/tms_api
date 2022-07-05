@@ -87,4 +87,24 @@ export class ExternalHubMonitoringService {
     }
 
   }
+
+  public async getTotal(params: any): Promise<any> {
+    const url = `${this.BASE_URL}/monitoring/total/list`;
+    try {
+      const response = await this.httpRequestService
+          .post(url, params)
+          .toPromise();
+      return response;
+    } catch (err) {
+      if (err.response) {
+        const status = err.response.status || 400;
+        const errResponse = {
+          message: err.response.data && err.response.data.error,
+          statusCode: status,
+        };
+        throw new HttpException(errResponse, status);
+      }
+      throw err;
+    }
+  }
 }

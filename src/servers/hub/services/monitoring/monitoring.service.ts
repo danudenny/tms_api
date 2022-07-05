@@ -3,7 +3,10 @@ import _ = require('lodash');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ExtMonitoringDetailListPayloadVm } from '../../models/monitoring/monitoring-payload.vm';
-import { HubMonitoringDetailListResponseVm } from '../../models/monitoring/monitoring-response.vm';
+import {
+  HubMonitoringDetailListResponseVm,
+  HubMonitoringTotalListResponseVm,
+} from '../../models/monitoring/monitoring-response.vm';
 import { ExternalHubMonitoringService } from './external.monitoring.service';
 
 @Injectable()
@@ -11,6 +14,20 @@ export class HubPackagesMonitoringService {
   constructor(
     private readonly extMonitoringService: ExternalHubMonitoringService,
   ) {}
+
+  public async getTotal(payload: BaseMetaPayloadVm): Promise <HubMonitoringTotalListResponseVm> {
+    const extPayload = this.getExtMonitoringPayload(payload);
+    const response = await this.extMonitoringService.getTotal(extPayload);
+    const result = new HubMonitoringTotalListResponseVm();
+    result.statusCode = response.status_code;
+    result.message = 'Sukses get monitoring hub total';
+    result.data = _.get(response, 'data.list', []);
+    result.buildPagingWithPayload(
+        payload,
+        _.get(response, 'data.paging.total_data', 1),
+    );
+    return result;
+  }
 
   public async getDetail(
     payload: BaseMetaPayloadVm,

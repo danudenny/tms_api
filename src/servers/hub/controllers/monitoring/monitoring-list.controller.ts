@@ -14,7 +14,10 @@ import {
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { HubMonitoringDetailListResponseVm } from '../../models/monitoring/monitoring-response.vm';
+import {
+  HubMonitoringDetailListResponseVm,
+  HubMonitoringTotalListResponseVm,
+} from '../../models/monitoring/monitoring-response.vm';
 import { HubPackagesMonitoringService } from '../../services/monitoring/monitoring.service';
 
 @ApiUseTags('Hub Packages Monitoring')
@@ -25,9 +28,11 @@ export class HubPackagesMonitoringController {
   ) {}
 
   @Post('total/list')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public getMonitoringTotalList() {
-    return true;
+  @ApiOkResponse({ type: HubMonitoringTotalListResponseVm })
+  public getMonitoringTotalList(@Body() payload: BaseMetaPayloadVm): Promise<HubMonitoringTotalListResponseVm> {
+    return this.monitoringService.getTotal(payload);
   }
 
   @Post('detail/list')
