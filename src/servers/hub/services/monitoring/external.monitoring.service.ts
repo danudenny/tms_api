@@ -51,7 +51,7 @@ export class ExternalHubMonitoringService {
   }
 
   public getTotal(params: any): Promise<any> {
-    return this.post('/monitoring/total/list', params);
+    return this.post('/monitoring', params);
   }
 
   private async post(
