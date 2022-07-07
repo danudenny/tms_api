@@ -24,14 +24,7 @@ export class ExternalHubMonitoringService {
     report_type: string,
     payload: BaseMonitoringHubPackage,
   ): Promise<any> {
-    /*const url = `https://swagger.s.sicepat.tech/operation/sortation/sortation/api/v1/reporting/${report_type}/generate`;
-    const config = { headers: {
-      'accept': 'application/json',
-      'x-username': 'username',
-      'x-source': 'source service',
-      'x-channel-id': 'channel tribe',
-      'Content-Type': 'application/json',
-    }};*/
+    
     return this.post(`/reporting/${report_type}/generate`, payload);
   }
 
@@ -39,14 +32,7 @@ export class ExternalHubMonitoringService {
     report_type: string,
     payload: PayloadMonitoringHubPackageList,
   ): Promise<any> {
-    /*const url = `https://swagger.s.sicepat.tech/operation/sortation/sortation/api/v1/reporting/${report_type}/list`;
-    const config = { headers: {
-      'accept': 'application/json',
-      'x-username': 'username',
-      'x-source': 'source service',
-      'x-channel-id': 'channel tribe',
-      'Content-Type': 'application/json',
-    }};*/
+
     return this.post(`/reporting/${report_type}/list`, payload);
   }
 
