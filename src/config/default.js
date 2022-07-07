@@ -75,6 +75,10 @@ module.exports = {
     slackChannel : '#pod-awb-history',
     xApiKey : 'a99bca19-afa9-4b78-8ce8-2cb366664dc3',
   },
+  podProsparkService :{
+    baseUrl : 'https://api.s.sicepat.io/v1/auth/integration/login',
+    key: '57E27CF17ED84E63895EB85942A5118D',
+  },
   exportService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
   },
