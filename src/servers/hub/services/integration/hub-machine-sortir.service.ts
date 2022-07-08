@@ -73,6 +73,7 @@ export class HubMachineSortirService {
       data.push({
         state: 1,
         tracking_number: payload.tracking_number,
+        branch_id_lastmile: paramBranchIdLastmile,
       });
       result.statusCode = HttpStatus.BAD_REQUEST;
       result.message = `AWB: ` + payload.tracking_number + ` already have bag, with bag number : ` + resultCheckResiHasGS[0].bag_number;
