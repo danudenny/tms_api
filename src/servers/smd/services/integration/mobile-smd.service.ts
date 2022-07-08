@@ -1158,7 +1158,8 @@ export class MobileSmdService {
       )
       .innerJoin(e => e.doSmdVehicle, 'dsv', j =>
         j
-        .andWhere(e => e.isDeleted, w => w.isFalse),
+        .andWhere(e => e.isDeleted, w => w.isFalse)
+        .andWhere(e => e.isActive, w => w.isTrue()),
       )
       .andWhere(e => e.doSmdCode, w => w.equals(payload.do_smd_code))
       .andWhere(e => e.doSmdStatusIdLast, w => w.notEquals(DO_SORTATION_STATUS.FINISHED))
@@ -1208,7 +1209,7 @@ export class MobileSmdService {
         {
           doSmdCode : resultDoSmd.doSmdCode,
           driverId : resultDoSmd.employeeIdDriver,
-          vechileId : resultDoSmd.vehicleIdLast,
+          vehicleId : resultDoSmd.vehicleIdLast,
           createdTime : moment().toDate(),
           updatedTime : moment().toDate(),
           userIdCreated : authMeta.userId,
