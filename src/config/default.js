@@ -76,7 +76,7 @@ module.exports = {
     xApiKey : 'a99bca19-afa9-4b78-8ce8-2cb366664dc3',
   },
   podProsparkService :{
-    baseUrl : 'http://api-internal.s.sicepat.io/core/authsvc/integration/login',
+    baseUrl : 'https://api.s.sicepat.io/v1/auth/integration/login',
     key: '57E27CF17ED84E63895EB85942A5118D',
   },
   exportService: {
