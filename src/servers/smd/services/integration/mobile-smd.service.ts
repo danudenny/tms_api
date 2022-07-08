@@ -1205,7 +1205,7 @@ export class MobileSmdService {
       );
 
       // saving history module finish
-      HistoryModuleFinish.insert(
+      await HistoryModuleFinish.insert(
         {
           doSmdCode : resultDoSmd.doSmdCode,
           driverId : resultDoSmd.employeeIdDriver,
