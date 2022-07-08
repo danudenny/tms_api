@@ -208,9 +208,9 @@ export class ScanModuleFinsihVm {
   driverName: string;
 
   @ApiModelProperty()
-  driverNik: string;
+  driverNik: number;
 
   @ApiModelProperty()
-  adminNik: string;
+  adminNik: number;
 
 }
