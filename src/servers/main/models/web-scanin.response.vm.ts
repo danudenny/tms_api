@@ -117,6 +117,9 @@
 
     @ApiModelProperty()
     totalAwbScan: string;
+
+    @ApiModelProperty()
+    routePriority: string;
   }
 
   export class WebScanInHubSortResponseVm {
