@@ -40,6 +40,8 @@ import { DoSmdDetailAttachment } from '../../../../shared/orm-entity/do_smd_deta
 import { DoSmdVehicleAttachment } from '../../../../shared/orm-entity/do_smd_vehicle_attachment';
 import { map } from 'lodash';
 import { BagScanOutBranchSmdQueueService } from '../../../queue/services/bag-scan-out-branch-smd-queue.service';
+import { DO_SORTATION_STATUS } from '../../../../shared/constants/do-sortation-status.constant';
+import { HistoryModuleFinish } from '../../../../shared/orm-entity/history-module-finish';
 
 @Injectable()
 export class MobileSmdService {
@@ -1137,16 +1139,34 @@ export class MobileSmdService {
     const result = new ScanOutSmdEndManualResponseVm();
     const timeNow = moment().toDate();
     const authMeta = AuthService.getAuthData();
-
-    const resultDoSmd = await DoSmd.findOne({
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    /*const resultDoSmd = await DoSmd.findOne({
       where: {
         doSmdCode: payload.do_smd_code,
         doSmdStatusIdLast: Not(6000),
         isDeleted: false,
       },
-    });
+    });*/
+    const repo = new OrionRepositoryService(DoSmd, 'ds');
+    const q = repo.findOneRaw();
+    q.selectRaw(
+      ['ds.do_smd_id', 'doSmdId'],
+      ['ds.do_smd_code', 'doSmdCode'],
+      ['ds.branch_id', 'branchId'],
+      ['ds.vehicle_id_last', 'vehicleIdLast'],
+      ['dsv.employee_id_driver', 'employeeIdDriver'],
+      )
+      .innerJoin(e => e.doSmdVehicle, 'dsv', j =>
+        j
+        .andWhere(e => e.isDeleted, w => w.isFalse),
+      )
+      .andWhere(e => e.doSmdCode, w => w.equals(payload.do_smd_code))
+      .andWhere(e => e.doSmdStatusIdLast, w => w.notEquals(DO_SORTATION_STATUS.FINISHED))
+      .andWhere(e => e.isDeleted, w => w.isFalse())
+      .take(1);
+    const resultDoSmd = await q.exec();
 
-    if(resultDoSmd) {
+    if (resultDoSmd) {
       await DoSmd.update(
         { doSmdId : resultDoSmd.doSmdId },
         {
@@ -1182,6 +1202,21 @@ export class MobileSmdService {
         null,
         authMeta.userId,
       );
+
+      // saving history module finish
+      HistoryModuleFinish.insert(
+        {
+          doSmdCode : resultDoSmd.doSmdCode,
+          driverId : resultDoSmd.employeeIdDriver,
+          vechileId : resultDoSmd.vehicleIdLast,
+          createdTime : moment().toDate(),
+          updatedTime : moment().toDate(),
+          userIdCreated : authMeta.userId,
+          userIdUpdated : authMeta.userId,
+          branchId : permissonPayload.branchId,
+          },
+        );
+
       const data = [];
       data.push({
         do_smd_id: resultDoSmd.doSmdId,
@@ -1262,9 +1297,9 @@ export class MobileSmdService {
 
   static async unfinishedSmd(payload: any): Promise<any> {
     const employeeRawQuery = `
-      SELECT * 
-      FROM employee 
-      WHERE 
+      SELECT *
+      FROM employee
+      WHERE
         nik IN ('${payload.nik}');
     `;
     const resultDataEmployee = await RawQueryService.query(employeeRawQuery);
@@ -1300,7 +1335,7 @@ export class MobileSmdService {
         }
 
         await Promise.all(
-          resultDataDoSmdVehicle.map(async(doSmd: any) => {
+          resultDataDoSmdVehicle.map(async (doSmd: any) => {
             const doSmdRawQuery = `
               SELECT * FROM do_smd WHERE do_smd_id IN ('${doSmd.do_smd_id}') AND is_deleted = false;
             `;

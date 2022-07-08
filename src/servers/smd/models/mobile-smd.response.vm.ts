@@ -154,3 +154,63 @@ export class DoSmdCode {
   @ApiModelProperty()
   do_smd_code: string;
 }
+
+export class ScanHistoryModuleFinishResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty()
+  statusCode: number;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty({type: () => [ScanModuleFinsihVm]})
+  data: ScanModuleFinsihVm[];
+}
+
+export class ScanModuleFinsihVm {
+
+  @ApiModelProperty()
+  historyModuleFinishId: string;
+
+  @ApiModelProperty()
+  doSmdCode: string;
+
+  @ApiModelProperty()
+  vehicleId: number;
+
+  @ApiModelProperty()
+  driverId: number;
+
+  @ApiModelProperty()
+  vehicleNumber: number;
+
+  @ApiModelProperty()
+  branchId: number;
+
+  @ApiModelProperty()
+  createdTime: Date;
+
+  @ApiModelProperty()
+  updatedTime: Date;
+
+  @ApiModelProperty()
+  userIdCreated: number;
+
+  @ApiModelProperty()
+  userIdUpdated: number;
+
+  @ApiModelProperty()
+  employeeIdDriver: number;
+
+  @ApiModelProperty()
+  adminName: string;
+
+  @ApiModelProperty()
+  driverName: string;
+
+  @ApiModelProperty()
+  driverNik: string;
+
+  @ApiModelProperty()
+  adminNik: string;
+
+}

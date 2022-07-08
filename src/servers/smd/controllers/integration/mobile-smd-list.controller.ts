@@ -89,4 +89,10 @@ export class MobileSmdListController {
     );
   }
 
+  @Post('smd/list/history-module-finish')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async getHistoryModuleList(@Body() payload: BaseMetaPayloadVm) {
+      return MobileSmdListService.getHistoryModuleFinish(payload);
+  }
 }
