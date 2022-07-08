@@ -1158,7 +1158,7 @@ export class MobileSmdService {
       )
       .innerJoin(e => e.doSmdVehicle, 'dsv', j =>
         j
-        .andWhere(e => e.isDeleted, w => w.isFalse)
+        .andWhere(e => e.isDeleted, w => w.isFalse())
         .andWhere(e => e.isActive, w => w.isTrue()),
       )
       .andWhere(e => e.doSmdCode, w => w.equals(payload.do_smd_code))
