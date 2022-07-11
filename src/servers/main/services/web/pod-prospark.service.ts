@@ -47,9 +47,8 @@ export class PodProsparkService {
           response.message = request.data.message
         }
       }catch(err){
-        console.log('ERROR WHILE HIT PROSPARK >>> ',err);
         response.status = 500
-        response.message = 'Error ketika hit endpoint'
+        response.message = err
         return response
       }
     }else{
