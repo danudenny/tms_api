@@ -48,7 +48,7 @@ export class PodProsparkService {
         }
       }catch(err){
         response.status = 500
-        response.message = err
+        response.message = 'Error dalam hit services '+err
         return response
       }
     }else{
