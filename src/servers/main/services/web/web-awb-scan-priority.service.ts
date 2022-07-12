@@ -32,7 +32,7 @@ export class WebAwbScanPriorityService {
         if (await AwbService.isManifested(awb.awbNumber, awb.awbItemId)) {
           result.status = 'ok';
           result.message = 'success';
-          if(this.getPackageType.include(dataPriority.data.packageTypeCode)){
+          if(this.getPackageType.includes(dataPriority.data.packageTypeCode)){
             result.routeAndPriority = dataPriority.data.packageTypeCode+dataPriority.data.zone + dataPriority.data.priority;
           }else{
             result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;
@@ -53,7 +53,7 @@ export class WebAwbScanPriorityService {
       if (await AwbService.isManifested(awbNumber, awbItemId)) {
         result.status = 'ok';
         result.message = 'success';
-        if(this.getPackageType.include(dataPriority.data.packageTypeCode)){
+        if(this.getPackageType.includes(dataPriority.data.packageTypeCode)){
           result.routeAndPriority = dataPriority.data.packageTypeCode+dataPriority.data.zone + dataPriority.data.priority;
         }else{
           result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;
