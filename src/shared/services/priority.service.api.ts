@@ -56,8 +56,7 @@ export class PriorityServiceApi {
           data :{
             kelurahan : "",
             zone : "",
-            priority : "",
-            packageTypeCode : ""
+            priority : ""
           }
         }
       } 

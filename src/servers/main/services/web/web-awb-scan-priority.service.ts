@@ -26,7 +26,11 @@ export class WebAwbScanPriorityService {
         if (await AwbService.isManifested(awb.awbNumber, awb.awbItemId)) {
           result.status = 'ok';
           result.message = 'success';
-          result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;
+          if(dataPriority.data.packageTypeCode == 'BEST'){
+            result.routeAndPriority = dataPriority.data.packageTypeCode+dataPriority.data.zone + dataPriority.data.priority;
+          }else{
+            result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;
+          }
         } else {
           result.status = 'error';
           result.message = `Resi ${awbNumber} belum pernah di MANIFESTED`;
@@ -43,7 +47,11 @@ export class WebAwbScanPriorityService {
       if (await AwbService.isManifested(awbNumber, awbItemId)) {
         result.status = 'ok';
         result.message = 'success';
-        result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;
+        if(dataPriority.data.packageTypeCode == 'BEST'){
+          result.routeAndPriority = dataPriority.data.packageTypeCode+dataPriority.data.zone + dataPriority.data.priority;
+        }else{
+          result.routeAndPriority = dataPriority.data.zone + dataPriority.data.priority;
+        }
       } else {
         result.status = 'error';
         result.message = `Resi ${awbNumber} belum pernah di MANIFESTED`;
