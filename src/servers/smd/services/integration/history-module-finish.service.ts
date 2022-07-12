@@ -16,7 +16,7 @@ export class HistoryModuleFinishService {
 
     const repo = new OrionRepositoryService(HistoryModuleFinish, 'hmf');
     const q = repo.findAllRaw();
-
+    payload.applyToOrionRepositoryQuery(q, true);
     // SELECT CLAUSE
     const selectColumns = [
       ['hmf.history_module_finish_id', 'historyModuleFinishId'],
@@ -43,8 +43,6 @@ export class HistoryModuleFinishService {
       .innerJoin(e => e.admin.employee, 'ea', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()) );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    payload.applyToOrionRepositoryQuery(q, true);
 
     const [historyModuleFinish, count] = await Promise.all([
       q.exec(),
