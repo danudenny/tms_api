@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import _ = require('lodash');
+import moment = require('moment');
 
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { ExtMonitoringDetailListPayloadVm } from '../../models/monitoring/monitoring-payload.vm';
@@ -73,7 +74,9 @@ export class HubPackagesMonitoringService {
     });
     const result = {
       start_date: filters[0].value,
-      end_date: filters[1].value,
+      end_date: moment(filters[1].value)
+        .subtract(1, 'd')
+        .format('YYYY-MM-DD'),
       branch_id: filters[2].value,
       page: payload.page,
       limit: payload.limit,
