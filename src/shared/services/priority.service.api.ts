@@ -32,7 +32,6 @@ export class PriorityServiceApi {
       //TODO: Implement service priority here
       let data = await this.funcGetData(url, body, options);
       return data;
-
     } catch (err) {
       RequestErrorService.throwObj(
         {
@@ -51,14 +50,21 @@ export class PriorityServiceApi {
       const request = await axios.post(url, body, options);
       return request;
     }catch(err){
-      
       if(countRetry >= ConfigService.get('priorityService.retryCount')){
         await SlackUtil.sendMessage(channelSlack,"Error from hit service for check priority attempt "+countRetry,err.stack, body);
+        return{
+          data :{
+            kelurahan : "",
+            zone : "",
+            priority : "",
+            packageTypeCode : ""
+          }
+        }
       } 
       const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
       await delay(ConfigService.get('priorityService.delayTime'));
       if(countRetry < ConfigService.get('priorityService.retryCount')){
-        this.funcGetData(url, body, options, countRetry);
+        return this.funcGetData(url, body, options, countRetry);
       }
     }
   }
