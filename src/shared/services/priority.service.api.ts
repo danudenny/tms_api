@@ -13,6 +13,10 @@ export class PriorityServiceApi {
     return ConfigService.get('priorityService.xApiKey');
   }
 
+  public static get getPackageType() {
+    return ConfigService.get('priorityService.packageType');
+  }
+
   public static async checkPriority(awbNumber, branchId) {
     let url = `${this.queryServiceUrl}branch-zone-priority`;
     const options = {
@@ -48,6 +52,10 @@ export class PriorityServiceApi {
     countRetry = countRetry + 1;
     try{
       const request = await axios.post(url, body, options);
+      if(this.getPackageType.includes(request.data.packageTypeCode)){
+        request.data.zone = request.data.packageTypeCode+'-'+request.data.zone
+      }
+      
       return request;
     }catch(err){
       if(countRetry >= ConfigService.get('priorityService.retryCount')){
