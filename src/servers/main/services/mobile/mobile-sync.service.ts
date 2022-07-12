@@ -135,6 +135,13 @@ export class MobileSyncService {
         });
         // #endregion of transaction
 
+        await DoPodDeliver.update(
+          { doPodDeliverId: delivery.doPodDeliverId },
+          {
+            updatedTime: moment().toDate(),
+          },
+        );
+
         // TODO: queue by Bull need refactoring
         DoPodDetailPostMetaQueueService.createJobByMobileSync(
           awbdDelivery.awbItemId,
