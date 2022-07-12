@@ -48,6 +48,12 @@ export class ScanBranchBagVm {
 export class ScanBranchAwbVm extends ScanInputNumberLoadBranchVm {
   @ApiModelProperty({ type: [ScanBranchBagVm] })
   dataBag: ScanBranchBagVm;
+
+  @ApiModelProperty()
+  routePriority: string = null;
+
+  @ApiModelProperty()
+  kelurahan: string = null;
 }
 
 export class ScanInputNumberBranchVm {
@@ -121,3 +127,52 @@ export class MobileScanInBranchResponseVm {
   @ApiModelProperty({ type: [ScanInputNumberBranchVm] })
   data: ScanInputNumberBranchVm;
 }
+
+export class V2ScanInputNumberBranchVm {
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  trouble: boolean;
+
+  @ApiModelProperty()
+  message: string;
+
+  @ApiModelProperty()
+  routeAndPriority: string;
+
+  @ApiModelProperty()
+  kelurahan: string;
+}
+export class V2MobileScanInBranchResponseVm {
+  @ApiModelProperty()
+  service: string;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  consigneeName: string;
+
+  @ApiModelProperty()
+  consigneeAddress: string;
+
+  @ApiModelProperty()
+  consigneePhone: string;
+
+  @ApiModelProperty()
+  totalCodValue: string;
+
+  @ApiModelProperty()
+  dateTime: string;
+
+  @ApiModelProperty()
+  podScanInBranchId: string;
+
+  @ApiModelProperty({ type: [V2ScanInputNumberBranchVm] })
+  data: V2ScanInputNumberBranchVm;
+}
+
