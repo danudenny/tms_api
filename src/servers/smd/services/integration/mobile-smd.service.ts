@@ -30,7 +30,7 @@ import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
-import { createQueryBuilder, In, Not } from 'typeorm';
+import { createQueryBuilder, EntityManager, getManager, In, Not } from 'typeorm';
 import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm, ScanOutSmdEndManualResponseVm, UnfinishedSmdResponseVm } from '../../models/mobile-smd.response.vm';
 import { MobileUploadImagePayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
@@ -40,6 +40,8 @@ import { DoSmdDetailAttachment } from '../../../../shared/orm-entity/do_smd_deta
 import { DoSmdVehicleAttachment } from '../../../../shared/orm-entity/do_smd_vehicle_attachment';
 import { map } from 'lodash';
 import { BagScanOutBranchSmdQueueService } from '../../../queue/services/bag-scan-out-branch-smd-queue.service';
+import { DO_SORTATION_STATUS } from '../../../../shared/constants/do-sortation-status.constant';
+import { HistoryModuleFinish } from '../../../../shared/orm-entity/history-module-finish';
 
 @Injectable()
 export class MobileSmdService {
@@ -1137,51 +1139,95 @@ export class MobileSmdService {
     const result = new ScanOutSmdEndManualResponseVm();
     const timeNow = moment().toDate();
     const authMeta = AuthService.getAuthData();
-
-    const resultDoSmd = await DoSmd.findOne({
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    /*const resultDoSmd = await DoSmd.findOne({
       where: {
         doSmdCode: payload.do_smd_code,
         doSmdStatusIdLast: Not(6000),
         isDeleted: false,
       },
-    });
+    });*/
+    const repo = new OrionRepositoryService(DoSmd, 'ds');
+    const q = repo.findOneRaw();
+    q.selectRaw(
+      ['ds.do_smd_id', 'doSmdId'],
+      ['ds.do_smd_code', 'doSmdCode'],
+      ['ds.branch_id', 'branchId'],
+      ['ds.vehicle_id_last', 'vehicleIdLast'],
+      ['dsv.employee_id_driver', 'employeeIdDriver'],
+      )
+      .innerJoin(e => e.doSmdVehicle, 'dsv', j =>
+        j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.isActive, w => w.isTrue()),
+      )
+      .andWhere(e => e.doSmdCode, w => w.equals(payload.do_smd_code))
+      .andWhere(e => e.doSmdStatusIdLast, w => w.notEquals(DO_SORTATION_STATUS.FINISHED))
+      .andWhere(e => e.isDeleted, w => w.isFalse())
+      .take(1);
+    const resultDoSmd = await q.exec();
 
-    if(resultDoSmd) {
-      await DoSmd.update(
-        { doSmdId : resultDoSmd.doSmdId },
+    if (resultDoSmd) {
+
+      await getManager().transaction(async transaction => {
+
+         /* Set Active False yang lama */
+         await transaction.update(
+          DoSmd,
+          { doSmdId : resultDoSmd.doSmdId },
+          {
+            doSmdStatusIdLast: 6000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+
+         await transaction.update(
+          DoSmdDetail,
+          { doSmdId : resultDoSmd.doSmdId },
+          {
+            doSmdStatusIdLast: 6000,
+            arrivalTime: moment().toDate(),
+            // latitudeArrival: payload.latitude,
+            // longitudeArrival: payload.longitude,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+
+         await this.createDoSmdHistoryTransaction(
+          resultDoSmd.doSmdId,
+          null,
+          null,
+          null,
+          null,
+          moment().toDate(),
+          resultDoSmd.branchId,
+          6000,
+          null,
+          null,
+          null,
+          authMeta.userId,
+          transaction,
+        );
+
+         // saving history module finish
+         const objHistoryModuleFinish =  HistoryModuleFinish.create(
         {
-          doSmdStatusIdLast: 6000,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
+          doSmdCode : resultDoSmd.doSmdCode,
+          driverId : resultDoSmd.employeeIdDriver,
+          vehicleId : resultDoSmd.vehicleIdLast,
+          createdTime : moment().toDate(),
+          updatedTime : moment().toDate(),
+          userIdCreated : authMeta.userId,
+          userIdUpdated : authMeta.userId,
+          branchId : permissonPayload.branchId,
+          },
+        );
+         await transaction.insert(HistoryModuleFinish, objHistoryModuleFinish);
 
-      await DoSmdDetail.update(
-        { doSmdId : resultDoSmd.doSmdId },
-        {
-          doSmdStatusIdLast: 6000,
-          arrivalTime: moment().toDate(),
-          // latitudeArrival: payload.latitude,
-          // longitudeArrival: payload.longitude,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
+      });
 
-      await this.createDoSmdHistory(
-        resultDoSmd.doSmdId,
-        null,
-        null,
-        null,
-        null,
-        moment().toDate(),
-        resultDoSmd.branchId,
-        6000,
-        null,
-        null,
-        null,
-        authMeta.userId,
-      );
       const data = [];
       data.push({
         do_smd_id: resultDoSmd.doSmdId,
@@ -1237,6 +1283,45 @@ export class MobileSmdService {
       : null;
   }
 
+  private static async createDoSmdHistoryTransaction(
+    paramDoSmdId: number,
+    paramDoSmdDetailId: number,
+    paramDoSmdVehicleId: number,
+    paramLatitude: string,
+    paramLongitude: string,
+    paramDoSmdDepartureScheduleDate: Date,
+    paramBranchId: number,
+    paramDoSmdStatusId: number,
+    paramSealNumber: string,
+    paramReasonId: number,
+    paramReasonNotes: string,
+    userId: number,
+    transactional: EntityManager,
+  ) {
+    const dataDoSmdHistory = DoSmdHistory.create({
+      doSmdId: paramDoSmdId,
+      doSmdDetailId: paramDoSmdDetailId,
+      doSmdTime: paramDoSmdDepartureScheduleDate,
+      doSmdVehicleId: paramDoSmdVehicleId,
+      userId,
+      branchId: paramBranchId,
+      latitude: paramLatitude,
+      longitude: paramLongitude,
+      doSmdStatusId: paramDoSmdStatusId,
+      departureScheduleDateTime: paramDoSmdDepartureScheduleDate,
+      sealNumber: paramSealNumber,
+      reasonId: paramReasonId,
+      reasonNotes: paramReasonNotes,
+      userIdCreated: userId,
+      createdTime: moment().toDate(),
+      userIdUpdated: userId,
+      updatedTime: moment().toDate(),
+    });
+
+    await transactional.insert(DoSmdHistory, dataDoSmdHistory);
+
+  }
+
   private static async createDoSmdVehicleAttachment(
     paramDoSmdId: number,
     paramDoSmdVehicleId: number,
@@ -1262,9 +1347,9 @@ export class MobileSmdService {
 
   static async unfinishedSmd(payload: any): Promise<any> {
     const employeeRawQuery = `
-      SELECT * 
-      FROM employee 
-      WHERE 
+      SELECT *
+      FROM employee
+      WHERE
         nik IN ('${payload.nik}');
     `;
     const resultDataEmployee = await RawQueryService.query(employeeRawQuery);
@@ -1300,7 +1385,7 @@ export class MobileSmdService {
         }
 
         await Promise.all(
-          resultDataDoSmdVehicle.map(async(doSmd: any) => {
+          resultDataDoSmdVehicle.map(async (doSmd: any) => {
             const doSmdRawQuery = `
               SELECT * FROM do_smd WHERE do_smd_id IN ('${doSmd.do_smd_id}') AND is_deleted = false;
             `;

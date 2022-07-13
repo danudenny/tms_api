@@ -154,3 +154,4 @@ export class DoSmdCode {
   @ApiModelProperty()
   do_smd_code: string;
 }
+
