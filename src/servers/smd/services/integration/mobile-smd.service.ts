@@ -30,7 +30,7 @@ import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
-import { createQueryBuilder, getManager, In, Not } from 'typeorm';
+import { createQueryBuilder, EntityManager, getManager, In, Not } from 'typeorm';
 import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm, ScanOutSmdEndManualResponseVm, UnfinishedSmdResponseVm } from '../../models/mobile-smd.response.vm';
 import { MobileUploadImagePayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
@@ -1195,7 +1195,7 @@ export class MobileSmdService {
           },
         );
 
-         await this.createDoSmdHistory(
+         await this.createDoSmdHistoryTransaction(
           resultDoSmd.doSmdId,
           null,
           null,
@@ -1208,6 +1208,7 @@ export class MobileSmdService {
           null,
           null,
           authMeta.userId,
+          transaction,
         );
 
          // saving history module finish
@@ -1280,6 +1281,45 @@ export class MobileSmdService {
     return doSmdHistory.identifiers.length
       ? doSmdHistory.identifiers[0].doSmdHistoryId
       : null;
+  }
+
+  private static async createDoSmdHistoryTransaction(
+    paramDoSmdId: number,
+    paramDoSmdDetailId: number,
+    paramDoSmdVehicleId: number,
+    paramLatitude: string,
+    paramLongitude: string,
+    paramDoSmdDepartureScheduleDate: Date,
+    paramBranchId: number,
+    paramDoSmdStatusId: number,
+    paramSealNumber: string,
+    paramReasonId: number,
+    paramReasonNotes: string,
+    userId: number,
+    transactional: EntityManager,
+  ) {
+    const dataDoSmdHistory = DoSmdHistory.create({
+      doSmdId: paramDoSmdId,
+      doSmdDetailId: paramDoSmdDetailId,
+      doSmdTime: paramDoSmdDepartureScheduleDate,
+      doSmdVehicleId: paramDoSmdVehicleId,
+      userId,
+      branchId: paramBranchId,
+      latitude: paramLatitude,
+      longitude: paramLongitude,
+      doSmdStatusId: paramDoSmdStatusId,
+      departureScheduleDateTime: paramDoSmdDepartureScheduleDate,
+      sealNumber: paramSealNumber,
+      reasonId: paramReasonId,
+      reasonNotes: paramReasonNotes,
+      userIdCreated: userId,
+      createdTime: moment().toDate(),
+      userIdUpdated: userId,
+      updatedTime: moment().toDate(),
+    });
+
+    await transactional.insert(DoSmdHistory, dataDoSmdHistory);
+
   }
 
   private static async createDoSmdVehicleAttachment(
