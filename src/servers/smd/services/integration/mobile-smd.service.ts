@@ -30,7 +30,7 @@ import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
 import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
-import { createQueryBuilder, In, Not } from 'typeorm';
+import { createQueryBuilder, getManager, In, Not } from 'typeorm';
 import { ScanOutSmdDepartureResponseVm, MobileUploadImageResponseVm, ScanOutSmdProblemResponseVm, ScanOutSmdHandOverResponseVm, ScanOutSmdEndManualResponseVm, UnfinishedSmdResponseVm } from '../../models/mobile-smd.response.vm';
 import { MobileUploadImagePayloadVm, HandoverImagePayloadVm } from '../../models/mobile-smd.payload.vm';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
@@ -1168,44 +1168,50 @@ export class MobileSmdService {
     const resultDoSmd = await q.exec();
 
     if (resultDoSmd) {
-      await DoSmd.update(
-        { doSmdId : resultDoSmd.doSmdId },
-        {
-          doSmdStatusIdLast: 6000,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
 
-      await DoSmdDetail.update(
-        { doSmdId : resultDoSmd.doSmdId },
-        {
-          doSmdStatusIdLast: 6000,
-          arrivalTime: moment().toDate(),
-          // latitudeArrival: payload.latitude,
-          // longitudeArrival: payload.longitude,
-          userIdUpdated: authMeta.userId,
-          updatedTime: timeNow,
-        },
-      );
+      await getManager().transaction(async transaction => {
 
-      await this.createDoSmdHistory(
-        resultDoSmd.doSmdId,
-        null,
-        null,
-        null,
-        null,
-        moment().toDate(),
-        resultDoSmd.branchId,
-        6000,
-        null,
-        null,
-        null,
-        authMeta.userId,
-      );
+         /* Set Active False yang lama */
+         await transaction.update(
+          DoSmd,
+          { doSmdId : resultDoSmd.doSmdId },
+          {
+            doSmdStatusIdLast: 6000,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
 
-      // saving history module finish
-      await HistoryModuleFinish.insert(
+         await transaction.update(
+          DoSmdDetail,
+          { doSmdId : resultDoSmd.doSmdId },
+          {
+            doSmdStatusIdLast: 6000,
+            arrivalTime: moment().toDate(),
+            // latitudeArrival: payload.latitude,
+            // longitudeArrival: payload.longitude,
+            userIdUpdated: authMeta.userId,
+            updatedTime: timeNow,
+          },
+        );
+
+         await this.createDoSmdHistory(
+          resultDoSmd.doSmdId,
+          null,
+          null,
+          null,
+          null,
+          moment().toDate(),
+          resultDoSmd.branchId,
+          6000,
+          null,
+          null,
+          null,
+          authMeta.userId,
+        );
+
+         // saving history module finish
+         await HistoryModuleFinish.insert(
         {
           doSmdCode : resultDoSmd.doSmdCode,
           driverId : resultDoSmd.employeeIdDriver,
@@ -1217,6 +1223,8 @@ export class MobileSmdService {
           branchId : permissonPayload.branchId,
           },
         );
+
+      });
 
       const data = [];
       data.push({
