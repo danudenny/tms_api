@@ -1211,7 +1211,7 @@ export class MobileSmdService {
         );
 
          // saving history module finish
-         await HistoryModuleFinish.insert(
+         const objHistoryModuleFinish =  HistoryModuleFinish.create(
         {
           doSmdCode : resultDoSmd.doSmdCode,
           driverId : resultDoSmd.employeeIdDriver,
@@ -1223,6 +1223,7 @@ export class MobileSmdService {
           branchId : permissonPayload.branchId,
           },
         );
+         await transaction.insert(HistoryModuleFinish, objHistoryModuleFinish);
 
       });
 
