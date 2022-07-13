@@ -100,7 +100,6 @@ export class MobileSmdController {
   }
 
   @Post('smd/end-manual')
-  @Transactional()
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async scanInEndManualMobile(@Req() request: any, @Body() payload: MobileSmdEndManuallPayloadVm) {
