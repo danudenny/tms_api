@@ -40,6 +40,13 @@ export class AuthService {
     password: string,
     email?: string,
   ): Promise<AuthLoginResultMetadata> {
+
+    if (ConfigService.get('flag.disableLoginV1')) {
+      RequestErrorService.throwObj({
+        message: 'This API is disabled',
+      });
+    }
+
     // find by email or username on table users
     const user = await this.userRepository.findByEmailOrUsername(
       email,

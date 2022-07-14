@@ -293,6 +293,8 @@ export class ReportPodService {
         'Pengirim',
       ],
       [`t8.nik||' - '||t8.fullname`, 'User Update'],
+      ['att_rtc.url', 'photoRtc'],
+      ['att_rtn.url', 'photoRtn'],
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
@@ -316,6 +318,25 @@ export class ReportPodService {
     q.leftJoin(e => e.returnAwb.awbStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoinRaw(
+      'pod_awb_attachment',
+      'paa_rtc',
+      `"t1_originAwb"."awb_item_id" = "paa_rtc"."awb_item_id" and "paa_rtc"."photo_type" = 'photoRTC' and "paa_rtc"."is_deleted" = false`);
+    q.leftJoinRaw(
+      'attachment_tms',
+      'att_rtc',
+      '"att_rtc"."attachment_tms_id" = "paa_rtc"."attachment_tms_id"'
+    );
+    q.leftJoinRaw(
+      'pod_awb_attachment',
+      'paa_rtn',
+      `"t1_originAwb"."awb_item_id" = "paa_rtn"."awb_item_id" and "paa_rtn"."photo_type" = 'photoRTN' and "paa_rtn"."is_deleted" = false`);
+    q.leftJoinRaw(
+      'attachment_tms',
+      'att_rtn',
+      '"att_rtn"."attachment_tms_id" = "paa_rtn"."attachment_tms_id"'
+    );
+
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     return q.getQuery();

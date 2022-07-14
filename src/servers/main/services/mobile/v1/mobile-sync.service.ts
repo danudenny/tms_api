@@ -178,6 +178,13 @@ export class V1MobileSyncService {
           });
           // #endregion of transaction
 
+          await DoPodDeliver.update(
+            { doPodDeliverId: delivery.doPodDeliverId },
+            {
+              updatedTime: moment().toDate(),
+            },
+          );
+
           // NOTE: queue by Bull
           DoPodDetailPostMetaQueueService.createJobV1MobileSync(
             awbdDelivery.awbItemId,

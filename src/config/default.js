@@ -74,6 +74,7 @@ module.exports = {
     delayTime : 2000,
     slackChannel : '#last-mile-alert',
     xApiKey : 'a99bca19-afa9-4b78-8ce8-2cb366664dc3',
+    packageType : ['BEST']
   },
   exportService: {
     baseUrl : 'http://api-internal.sicepat.io/operation/reporting-service/v1',
@@ -85,6 +86,9 @@ module.exports = {
   },
   activityLog: {
     baseUrl: 'http://api-internal.sicepat.io/core/logger',
+  },
+  flag: {
+    disableLoginV1: false,
   },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
