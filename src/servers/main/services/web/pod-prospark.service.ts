@@ -16,12 +16,16 @@ export class PodProsparkService {
   public static async getCallback() {
     const authMeta = AuthService.getAuthData();
     const response = new PodProsparkResponse();
-    let employee = await Employee.findOne({
-      select : ['nik'],
-      where :{
-        employeeId : authMeta.employeeId,
-      }
-    });
+    // let employee = await Employee.findOne({
+    //   select : ['nik'],
+    //   where :{
+    //     employeeId : authMeta.employeeId,
+    //   }
+    // });
+
+    let employee ={
+      nik : '06022019',
+    }
 
     if(employee.nik){
       const url = `${this.prosparkUrl}`;
@@ -39,8 +43,6 @@ export class PodProsparkService {
 
       try{
         const request = await axios.post(url, body, options);
-        console.log(request.data);
-        console.log(request.status);
         response.status = request.status
         if(request.status == 200){
           response.message = 'ok'
@@ -48,6 +50,7 @@ export class PodProsparkService {
         }else{
           response.message = request.data.message
         }
+        return response;
       }catch(err){
         response.status = 500
         response.message = 'Error dalam hit services '+err
