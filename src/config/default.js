@@ -86,6 +86,9 @@ module.exports = {
   activityLog: {
     baseUrl: 'http://api-internal.s.sicepat.io/core/logger',
   },
+  flag: {
+    disableLoginV1: false,
+  },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
     ttlToken: 1000,
