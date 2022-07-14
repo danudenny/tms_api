@@ -56,8 +56,8 @@ export class PartnerMerchantService {
         partnerMerchant.pickupTime = '08:00';
         partnerMerchant.pickupType = 'TIME WINDOW';
         partnerMerchant.branchId = p.branch_id_assigned;
-        partnerMerchant.locationId = p.location_id;
-        partnerMerchant.shopId = p.shop_id;
+        partnerMerchant.locationId = p.location_id || 0;
+        partnerMerchant.shopId = p.shop_id || 0;
 
         partnerMerchant.userIdCreated = 0;
         partnerMerchant.userIdUpdated = 0;
