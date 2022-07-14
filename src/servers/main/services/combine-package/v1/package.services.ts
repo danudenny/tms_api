@@ -29,6 +29,7 @@ import {
 import { BagService } from '../../v1/bag.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import moment = require('moment');
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 // #endregion
 const uuidv1 = require('uuid/v1');
 
@@ -790,6 +791,7 @@ export class V1PackageService {
     const branchId: number = payload.branchId;
     const result = new Object();
     const troubleDesc: String[] = [];
+    const permissionPayload = AuthService.getPermissionTokenPayload();
 
     let bagWeight: number = 0;
     let bagSeq: number = 0;
@@ -834,26 +836,63 @@ export class V1PackageService {
     };
 
     if (awbItemAttr.isPackageCombined) {
-      isAllow = false;
       // throw new BadRequestException('Nomor resi sudah digabung sortir');
       // check data bag item awb
-      const bagItemAwb = await BagItemAwb.findOne({
-        awbItemId: awbItemAttr.awbItemId,
-        isSortir: true,
-        isDeleted: false,
-      });
-      if (bagItemAwb) {
-        const bagItem = await BagService.getBagNumber(bagItemAwb.bagItemId);
-        if (bagItem) {
-          bagNumber =
-            bagItem.bag.bagNumber + bagItem.bagSeq.toString().padStart(3, '0');
-          bagItemId = bagItem.bagItemId;
-          bagWeight = bagItem.weight;
-          bagSeq = bagItem.bagSeq;
-          message = `Nomor resi sudah digabung sortir di ${bagNumber}`;
-        }
+      const repo = new OrionRepositoryService(BagItemAwb, 'bia');
+      const q = repo.findOneRaw();
+      q.selectRaw(
+        ['b.bag_number', 'bagNumber'],
+        ['bi.bag_item_id', 'bagItemId'],
+        ['bi.weight', 'weight'],
+        ['bi.bag_seq', 'bagSeq'],
+      )
+        .innerJoin(e => e.bagItem, 'bi', j =>
+          j.andWhere(e => e.isDeleted, w => w.isFalse()),
+        )
+        .innerJoin(e => e.bagItem.bag, 'b', j =>
+          j
+            .andWhere(
+              e => e.branchId,
+              w => w.equals(permissionPayload.branchId),
+            )
+            .andWhere(e => e.isDeleted, w => w.isFalse()),
+        )
+        .andWhere(e => e.awbItemId, w => w.equals(awbItemAttr.awbItemId))
+        .andWhere(e => e.isSortir, w => w.isTrue())
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .take(1);
+
+      const bagItem = await q.exec();
+      if (bagItem) {
+        isAllow = false;
+        bagNumber =
+          bagItem.bagNumber +
+          bagItem.bagSeq.toString().padStart(3, '0');
+        bagItemId = bagItem.bagItemId;
+        bagWeight = bagItem.weight;
+        bagSeq = bagItem.bagSeq;
+        message = `Nomor resi sudah digabung sortir di ${bagNumber}`;
       }
-    } else {
+      // const bagItemAwb = await BagItemAwb.findOne({
+      //   awbItemId: awbItemAttr.awbItemId,
+      //   isSortir: true,
+      //   isDeleted: false,
+      // });
+      // if (bagItemAwb) {
+      //   const bagItem = await BagService.getBagNumber(bagItemAwb.bagItemId);
+      //   if (bagItem) {
+      //     bagNumber =
+      //       bagItem.bag.bagNumber +
+      //       bagItem.bagSeq.toString().padStart(3, '0');
+      //     bagItemId = bagItem.bagItemId;
+      //     bagWeight = bagItem.weight;
+      //     bagSeq = bagItem.bagSeq;
+      //     message = `Nomor resi sudah digabung sortir di ${bagNumber}`;
+      //   }
+      // }
+    }
+
+    if (isAllow) {
       // assign data payload
       assign(payload, {
         awbItemId: awbItemAttr.awbItemId,
