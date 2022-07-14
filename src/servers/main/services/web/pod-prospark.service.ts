@@ -16,16 +16,12 @@ export class PodProsparkService {
   public static async getCallback() {
     const authMeta = AuthService.getAuthData();
     const response = new PodProsparkResponse();
-    // let employee = await Employee.findOne({
-    //   select : ['nik'],
-    //   where :{
-    //     employeeId : authMeta.employeeId,
-    //   }
-    // });
-
-    let employee ={
-      nik : '06022019',
-    }
+    let employee = await Employee.findOne({
+      select : ['nik'],
+      where :{
+        employeeId : authMeta.employeeId,
+      }
+    });
 
     if(employee.nik){
       const url = `${this.prosparkUrl}`;
