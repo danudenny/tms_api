@@ -39,6 +39,7 @@ export class PodProsparkService {
 
       try{
         const request = await axios.post(url, body, options);
+        console.log(request.data);
         response.status = request.status
         if(request.status == 200){
           response.message = 'ok'
