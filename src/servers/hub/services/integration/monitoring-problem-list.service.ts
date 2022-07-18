@@ -705,7 +705,7 @@ export class MonitoringProblemListService {
         const bagNumber = payload.filters[i].value;
         const checkBagNumber = await BagService.validBagNumber(bagNumber);
         if (!checkBagNumber) {
-          throw new BadRequestException('Bag number tidak ditemukan');
+          throw new BadRequestException('No. Gabung Paket/Gabung Sortir tidak ditemukan');
         }
 
         payload.filters[i].value = checkBagNumber.bag.bagNumber;
