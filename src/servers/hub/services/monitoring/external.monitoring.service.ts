@@ -52,6 +52,7 @@ export class ExternalHubMonitoringService {
       const response = await this.httpRequestService
         .post(url, payload, config)
         .toPromise();
+      console.log('response: ', response);
       return response;
     } catch (err) {
       if (err.response) {
