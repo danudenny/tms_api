@@ -140,14 +140,18 @@ export class MasterDataService {
     const repo = new OrionRepositoryService(DoSmdStatus, 'dss');
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
-    const statuses = await q
-      .selectRaw(
-        ['dss.do_smd_status_id', 'statusId'],
-        ['dss.do_smd_status_title', 'statusTitle'],
-      )
-      .andWhere(e => e.isDeleted, w => w.isFalse());
+    q.selectRaw(
+      ['dss.do_smd_status_id', 'do_smd_status_id'],
+      ['dss.do_smd_status_title', 'do_smd_status_title'],
+    ).andWhere(e => e.isDeleted, w => w.isFalse());
+    const [statuses, count] = await Promise.all([
+      q.exec(),
+      q.countWithoutTakeAndSkip(),
+    ]);
+
     const result = new DoSmdStatusResponseVm();
     result.data = statuses;
+    result.buildPagingWithPayload(payload, count);
 
     return result;
   }

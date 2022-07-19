@@ -30,10 +30,10 @@ export class MappingVendorResponseVm extends BaseMetaResponseVm {
 
 class DoSmdStatusVm {
   @ApiModelProperty()
-  statusId: string;
+  do_smd_status_id: string;
 
   @ApiModelProperty()
-  statusTitle: string;
+  do_smd_status_title: string;
 }
 
 export class DoSmdStatusResponseVm extends BaseMetaResponseVm {
