@@ -593,8 +593,8 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     if (payload.bag_item_number.length > 15) {
 
       // check regex
-      const checkSinglequotes = /['"]+/g;
-      const validateBagItem = checkSinglequotes.test(payload.bag_item_number);
+      const checkQuotes = /['"]+/g;
+      const validateBagItem = checkQuotes.test(payload.bag_item_number);
       if (validateBagItem) {
         throw new UnprocessableEntityException('Nomor Bag item / Surjal tidak sesuai.');
       }
