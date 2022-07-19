@@ -37,6 +37,7 @@ export class ExternalHubMonitoringService {
   }
 
   public getTotal(params: any): Promise<any> {
+    console.log("params : ", params);
     return this.post('/monitoring', params);
   }
 
@@ -47,6 +48,7 @@ export class ExternalHubMonitoringService {
   ): Promise<any> {
     try {
       const url = `${this.BASE_URL}${path}`;
+      console.log('url', url);
       const response = await this.httpRequestService
         .post(url, payload, config)
         .toPromise();
