@@ -83,7 +83,7 @@ export class ReportPodService {
           HttpStatus.BAD_REQUEST,
         );
     }
-
+    
     //send to report service
     const options = {
       headers: {
@@ -131,6 +131,9 @@ export class ReportPodService {
     payload.fieldResolverMap['packageTypeId'] = 't10.package_type_id';
     payload.fieldResolverMap['packageTypeName'] = 't10.package_type_name';
     payload.fieldResolverMap['packageTypeCode'] = 't10.package_type_code';
+    payload.fieldResolverMap['perwakilan'] = 'bos2.perwakilan';
+    payload.fieldResolverMap['oversla'] = 't10.slamaxdatetimeinternal';
+    payload.fieldResolverMap['slamaxDateTimeInternal'] = 'bos.slamaxdatetimeinternal';
 
     payload.globalSearchFields = [
       {
@@ -162,6 +165,9 @@ export class ReportPodService {
       ['t11.representative_code', 'Perwakilan Asal'],
       ['t12.pickup_merchant', 'Seller'],
       ['t13.district_name', 'Tujuan Kecematan'],
+      ['bos2.perwakilan', 'Perwakilan Tujuan'],
+      ['(case when bos.status=1 and DATEDIFF(day, bos.slamaxdatetimeinternal, bos.lastvalidtrackingdatetime) > 0 then 1 else 0 end)', 'Oversla'],
+      ['to_char(bos.slamaxdatetimeinternal,\'DD/MM/YYYY\')', 'Oversla Maksimal'],
     );
     q.innerJoin(e => e.pickupRequestDetail, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -210,6 +216,9 @@ export class ReportPodService {
     q.leftJoin(e => e.awbItemAttr.awb.districtTo, 't13', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+
+    q.leftJoinRaw('bosicepat_spartantrackingnotesummary','bos','bos.receiptnumber = t1.awb_number');
+    q.leftJoinRaw('bosicepat_stt','bos2','bos2.nostt = t1.awb_number');
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
     q.andWhere(e => e.userIdUploaded, w => w.equals(1));
@@ -284,6 +293,8 @@ export class ReportPodService {
         'Pengirim',
       ],
       [`t8.nik||' - '||t8.fullname`, 'User Update'],
+      ['att_rtc.url', 'photoRtc'],
+      ['att_rtn.url', 'photoRtn'],
     );
 
     q.innerJoin(e => e.originAwb.awbStatus, 't2', j =>
@@ -307,6 +318,25 @@ export class ReportPodService {
     q.leftJoin(e => e.returnAwb.awbStatus, 't9', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
+    q.leftJoinRaw(
+      'pod_awb_attachment',
+      'paa_rtc',
+      `"t1_originAwb"."awb_item_id" = "paa_rtc"."awb_item_id" and "paa_rtc"."photo_type" = 'photoRTC' and "paa_rtc"."is_deleted" = false`);
+    q.leftJoinRaw(
+      'attachment_tms',
+      'att_rtc',
+      '"att_rtc"."attachment_tms_id" = "paa_rtc"."attachment_tms_id"'
+    );
+    q.leftJoinRaw(
+      'pod_awb_attachment',
+      'paa_rtn',
+      `"t1_originAwb"."awb_item_id" = "paa_rtn"."awb_item_id" and "paa_rtn"."photo_type" = 'photoRTN' and "paa_rtn"."is_deleted" = false`);
+    q.leftJoinRaw(
+      'attachment_tms',
+      'att_rtn',
+      '"att_rtn"."attachment_tms_id" = "paa_rtn"."attachment_tms_id"'
+    );
+
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     return q.getQuery();

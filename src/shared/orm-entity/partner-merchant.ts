@@ -24,6 +24,18 @@ export class PartnerMerchant extends TmsBaseEntity {
 
   @Column('character varying', {
     length: 255,
+    name: 'shop_id',
+  })
+  shopId: string;
+
+  @Column('character varying', {
+    length: 255,
+    name: 'location_id',
+  })
+  locationId: string;
+
+  @Column('character varying', {
+    length: 255,
     name: 'partner_merchant_code',
   })
   partnerMerchantCode: string;

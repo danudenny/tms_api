@@ -147,6 +147,12 @@ export class WebScanInBagBranchResponseVm {
 export class ScanBranchAwbVm extends ScanInputNumberLoadBranchVm {
   @ApiModelProperty({ type: [ScanBranchBagVm] })
   dataBag: ScanBranchBagVm;
+  
+  @ApiModelProperty()
+  routePriority: string = null;
+
+  @ApiModelProperty()
+  kelurahan: string = null;
 }
 
 export class WebScanInBranchResponseVm {

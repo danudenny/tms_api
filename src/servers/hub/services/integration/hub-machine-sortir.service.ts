@@ -56,18 +56,29 @@ export class HubMachineSortirService {
     let paramChute;
     let cod_nilai;
     let tujuan;
-
     const dateNow = moment().toDate();
-    // const rawQueryAwb = `
-    //   SELECT
-    //     is_cod,
-    //     awb_number,
-    //     to_id
-    //   FROM awb
-    //   WHERE
-    //     awb_number = '${escape(payload.tracking_number)}'
-    //   ;
-    // `;
+
+    const checkResiHasGsQuery = `SELECT
+      b.bag_number
+    FROM
+      bag_item_awb bia
+      INNER JOIN bag_item bi ON bi.bag_item_id = bia.bag_item_id AND bi.is_deleted = FALSE
+      INNER JOIN bag b ON b.bag_id = bi.bag_id AND b.branch_id = ${payload.sorting_branch_id} AND b.is_deleted = FALSE
+      INNER JOIN awb_item ai ON ai.awb_item_id = bia.awb_item_id AND ai.awb_number = '${escape(payload.tracking_number)}' AND ai.is_deleted = FALSE
+    WHERE bia.is_sortir = TRUE
+    AND bia.is_deleted = FALSE LIMIT 1`;
+    const resultCheckResiHasGS = await RawQueryService.query(checkResiHasGsQuery);
+    if (resultCheckResiHasGS.length > 0 ) {
+      data.push({
+        state: 1,
+        tracking_number: payload.tracking_number,
+        branch_id_lastmile: paramBranchIdLastmile,
+      });
+      result.statusCode = HttpStatus.BAD_REQUEST;
+      result.message = `AWB: ` + payload.tracking_number + ` already have bag, with bag number : ` + resultCheckResiHasGS[0].bag_number;
+      result.data = data;
+      return result;
+    }
 
     const rawQueryAwb = `
       SELECT

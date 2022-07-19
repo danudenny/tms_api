@@ -1,4 +1,4 @@
-import { EntityManager, getConnection, In } from 'typeorm';
+import {createQueryBuilder, EntityManager, getConnection, In} from 'typeorm';
 
 import { HttpStatus } from '@nestjs/common';
 import { Awb } from '../../../../shared/orm-entity/awb';
@@ -8,19 +8,16 @@ import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { District } from '../../../../shared/orm-entity/district';
 import { PodScanInHub } from '../../../../shared/orm-entity/pod-scan-in-hub';
-import { Representative } from '../../../../shared/orm-entity/representative';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import {
   BagItemHistoryQueueService,
 } from '../../../queue/services/bag-item-history-queue.service';
 import { MachinePackageResponseVm } from '../../models/hub-gabungan.response.vm';
 import moment = require('moment');
-import { PackageMachinePayloadVm } from '../../models/hub-gabungan-mesin-payload.vm';
 import { BranchSortir } from '../../../../shared/orm-entity/branch-sortir';
 import { AwbService } from '../../../main/services/v1/awb.service';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { flatMap, chunk, sampleSize, chain, result } from 'lodash';
-import _ from 'lodash';
 // import { DoPodDetailPostMetaQueueService } from '../../../../servers/queue/services/do-pod-detail-post-meta-queue.service';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 // import { HubSummaryAwb } from '../../../../shared/orm-entity/hub-summary-awb';
@@ -105,17 +102,22 @@ export class HubMachineService {
     return null;
   }
 
-  public static async getRepresentative(representativeCode: string): Promise<Representative> {
-    const cacheKey = `cache:sorting-machine:representative:${representativeCode}`;
-    let data: Representative = await RedisService.get(cacheKey, true);
+  public static async getRepresentative(branchId: number): Promise<any> {
+    const cacheKey = `cache:sorting-machine:representative:${branchId}`;
+    let data = await RedisService.get(cacheKey, true);
     if (data) { return data; }
 
-    data = (await Representative.findOne({
-      where: {
-        representativeCode,
-        isDeleted: false,
-      },
-    })) as any;
+    const qb = createQueryBuilder();
+    qb.addSelect('r.representative_code', 'representativeCode');
+    qb.addSelect('r.representative_id', 'representativeId');
+    qb.from('representative', 'r');
+    qb.innerJoin(
+        'branch',
+        'b',
+        'r.representative_id = b.representative_id AND r.is_deleted = false',
+    );
+    qb.where('b.branch_id = :branchId', { branchId });
+    data = (await qb.getRawOne()) as any;
 
     if (data) {
       // cache 30 minutes
@@ -204,9 +206,11 @@ export class HubMachineService {
       return generateErrorResult(`Branch not found`);
     }
 
-    const district = (branch.districtId)
-      ? await this.getDistrict(branch.districtId)
-      : null;
+    const representative = await this.getRepresentative(branchSortir.branchIdLastmile);
+
+    if (!representative) {
+      return generateErrorResult(`Representative not found`);
+    }
 
     const awbNumbers: string[] = chain(payload.reference_numbers)
       .groupBy(g => g)
@@ -249,12 +253,12 @@ export class HubMachineService {
     }
 
     const mCurrentTime = moment.utc().add(7, 'hours');
-    const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
+    // const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
     const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
 
     try {
       const trxResults = await getConnection().transaction(async transactionManager => {
-        const createBagResult = await this.createBagV2(transactionManager, branch, branchSortir, district, tagSeal, totalWeight, mCurrentTime, chuteNumber);
+        const createBagResult = await this.createBagV2(transactionManager, branch, branchSortir, representative, tagSeal, totalWeight, mCurrentTime, chuteNumber);
 
         const bagAwbBatch: CreateBagFirstScanHubQueueServiceBatch = {
           bagId: createBagResult.bag.bagId,
@@ -339,7 +343,7 @@ export class HubMachineService {
           );
         }
       } catch (error) {
-      
+
         PinoLoggerService.log(error);
       }
 
@@ -356,7 +360,7 @@ export class HubMachineService {
     }
   }
 
-  private static async createBagV2(transactionManager, branch: Branch, branchSortir: BranchSortir, district: District, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment, chuteNumber: string): Promise<CreateBagResult> {
+  private static async createBagV2(transactionManager, branch: Branch, branchSortir: BranchSortir, representative, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment, chuteNumber: string): Promise<CreateBagResult> {
     const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
     const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
 
@@ -364,14 +368,12 @@ export class HubMachineService {
     // Prefix ZA for tangerang, ZB for BDO
     const randomBagNumber = 'ZA' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 8).join('');
     const refBranchCode = branch ? branch.branchCode : '';
-    const representativeCode = district ? district.districtCode.substring(0, 3) : null;
-    const representative = await this.getRepresentative(representativeCode);
 
     const bagQueryData = Bag.create({
       bagNumber: randomBagNumber,
       branchIdTo: branchSortir.branchIdLastmile,
-      refRepresentativeCode: representative ? representative.representativeCode : null,
-      representativeIdTo: representative ? representative.representativeId : null,
+      refRepresentativeCode: representative.representativeCode,
+      representativeIdTo: representative.representativeId,
       refBranchCode,
       bagType: 'branch',
       branchId: branch.branchId,
@@ -433,80 +435,80 @@ export class HubMachineService {
     };
   }
 
-  private static async createBag(transactionManager, branch: Branch, branchSortir: BranchSortir, district: District, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment): Promise<CreateBagResult> {
-    const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
-    const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
-
-    // generate bag number
-    const randomBagNumber = 'Z' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 6).join('');
-    const refBranchCode = branch ? branch.branchCode : '';
-    const representativeCode = district ? district.districtCode.substring(0, 3) : null;
-    const representative = await this.getRepresentative(representativeCode);
-
-    const bagQueryData = Bag.create({
-      bagNumber: randomBagNumber,
-      branchIdTo: branchSortir.branchIdLastmile,
-      refRepresentativeCode: representative ? representative.representativeCode : null,
-      representativeIdTo: representative ? representative.representativeId : null,
-      refBranchCode,
-      bagType: 'branch',
-      branchId: branch.branchId,
-      bagDate: currentDateStr,
-      bagDateReal: currentTimeStr,
-      createdTime: currentTimeStr,
-      updatedTime: currentTimeStr,
-      userIdCreated: 1,
-      userIdUpdated: 1,
-      isSortir: true,
-      isManual: false,
-      sealNumber,
-    });
-
-    const bag = await transactionManager.getRepository(Bag).save(bagQueryData);
-    const bagId = bag.bagId;
-    const sequence = 1;
-
-    const bagSeq: string = sequence.toString().padStart(3, '0');
-
-    // INSERT INTO TABLE BAG ITEM
-    const bagItemQueryData = BagItem.create({
-      bagId,
-      bagSeq: sequence,
-      branchIdLast: branch.branchId,
-      bagItemStatusIdLast: 3000,
-      userIdCreated: 1,
-      weight: totalWeight,
-      createdTime: currentTimeStr,
-      updatedTime: currentTimeStr,
-      userIdUpdated: 1,
-      isSortir: true,
-    });
-
-    const bagItem = await transactionManager.getRepository(BagItem).save(bagItemQueryData);
-
-    // insert into pod scan in hub
-    // 100 = inprogress, 200 = done
-    const podScanInHubQueryData = transactionManager.getRepository(PodScanInHub).create({
-      branchId: branch.branchId,
-      scanInType: 'BAG',
-      transactionStatusId: 200,
-      userIdCreated: 1,
-      createdTime: currentTimeStr,
-      updatedTime: currentTimeStr,
-      userIdUpdated: 1,
-    });
-
-    const podScanInHub = await transactionManager.getRepository(PodScanInHub).save(podScanInHubQueryData);
-
-    return {
-      randomBagNumber,
-      fullBagNumber: `${randomBagNumber}${bagSeq}`,
-      bagSeq: sequence,
-      bag,
-      bagItem,
-      podScanInHub,
-    };
-  }
+  // private static async createBag(transactionManager, branch: Branch, branchSortir: BranchSortir, district: District, sealNumber: string, totalWeight: number, mCurrentTime: moment.Moment): Promise<CreateBagResult> {
+  //   const currentDateStr = mCurrentTime.format('YYYY-MM-DD');
+  //   const currentTimeStr = mCurrentTime.format('YYYY-MM-DD HH:mm:ss');
+  //
+  //   // generate bag number
+  //   const randomBagNumber = 'Z' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 6).join('');
+  //   const refBranchCode = branch ? branch.branchCode : '';
+  //   const representativeCode = district ? district.districtCode.substring(0, 3) : null;
+  //   const representative = await this.getRepresentative(representativeCode);
+  //
+  //   const bagQueryData = Bag.create({
+  //     bagNumber: randomBagNumber,
+  //     branchIdTo: branchSortir.branchIdLastmile,
+  //     refRepresentativeCode: representative ? representative.representativeCode : null,
+  //     representativeIdTo: representative ? representative.representativeId : null,
+  //     refBranchCode,
+  //     bagType: 'branch',
+  //     branchId: branch.branchId,
+  //     bagDate: currentDateStr,
+  //     bagDateReal: currentTimeStr,
+  //     createdTime: currentTimeStr,
+  //     updatedTime: currentTimeStr,
+  //     userIdCreated: 1,
+  //     userIdUpdated: 1,
+  //     isSortir: true,
+  //     isManual: false,
+  //     sealNumber,
+  //   });
+  //
+  //   const bag = await transactionManager.getRepository(Bag).save(bagQueryData);
+  //   const bagId = bag.bagId;
+  //   const sequence = 1;
+  //
+  //   const bagSeq: string = sequence.toString().padStart(3, '0');
+  //
+  //   // INSERT INTO TABLE BAG ITEM
+  //   const bagItemQueryData = BagItem.create({
+  //     bagId,
+  //     bagSeq: sequence,
+  //     branchIdLast: branch.branchId,
+  //     bagItemStatusIdLast: 3000,
+  //     userIdCreated: 1,
+  //     weight: totalWeight,
+  //     createdTime: currentTimeStr,
+  //     updatedTime: currentTimeStr,
+  //     userIdUpdated: 1,
+  //     isSortir: true,
+  //   });
+  //
+  //   const bagItem = await transactionManager.getRepository(BagItem).save(bagItemQueryData);
+  //
+  //   // insert into pod scan in hub
+  //   // 100 = inprogress, 200 = done
+  //   const podScanInHubQueryData = transactionManager.getRepository(PodScanInHub).create({
+  //     branchId: branch.branchId,
+  //     scanInType: 'BAG',
+  //     transactionStatusId: 200,
+  //     userIdCreated: 1,
+  //     createdTime: currentTimeStr,
+  //     updatedTime: currentTimeStr,
+  //     userIdUpdated: 1,
+  //   });
+  //
+  //   const podScanInHub = await transactionManager.getRepository(PodScanInHub).save(podScanInHubQueryData);
+  //
+  //   return {
+  //     randomBagNumber,
+  //     fullBagNumber: `${randomBagNumber}${bagSeq}`,
+  //     bagSeq: sequence,
+  //     bag,
+  //     bagItem,
+  //     podScanInHub,
+  //   };
+  // }
 
   private static async createOrUpdateDetailDatas(
     transactionManager: EntityManager,
@@ -543,6 +545,9 @@ export class HubMachineService {
         batchData.userId,
         batchData.branchId,
         moment(batchData.timestamp).toDate(),
+        null,
+        false,
+        true,
       );
 
       UpdateBranchSortirLogSummaryQueueService.perform(

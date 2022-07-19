@@ -25,6 +25,9 @@ export class DoPodReturnService {
         moment().toDate(),
       );
     }
+
+    const uuidv1 = require('uuid/v1');
+    doPod.doPodReturnId = uuidv1();
     doPod.userIdDriver = userIdDriver || null;
     doPod.doPodReturnDateTime = moment().toDate();
     doPod.doPodReturnDate = moment().toDate();

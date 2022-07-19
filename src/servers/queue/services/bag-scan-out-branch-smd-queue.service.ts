@@ -170,19 +170,14 @@ export class BagScanOutBranchSmdQueueService {
       }
       tempBag.push(Number(item.bag_item_id));
 
-      if (Number(item.bag_item_status_id) == BAG_STATUS.OUT_LINE_HAUL && item.branch_id) {
-        // failed to update
-        // do nothing
-      } else {
-        // branch next
-        if (item.branch_id_to) {
-          const branchNext = await SharedService.getDataBranchCity(
-            item.branch_id_to,
-          );
-          if (branchNext) {
-            branchNameNext = branchNext.branchName;
-          }
+      if (item.branch_id_to) {
+        const branchNext = await SharedService.getDataBranchCity(
+          item.branch_id_to,
+        );
+        if (branchNext) {
+          branchNameNext = branchNext.branchName;
         }
+      }
 
         const bagItemsAwb = await BagItemAwb.find({
           where: {
@@ -201,42 +196,108 @@ export class BagScanOutBranchSmdQueueService {
         resultbagItemHistory.createdTime = moment().toDate();
         resultbagItemHistory.userIdUpdated = Number(data.userId);
         resultbagItemHistory.updatedTime = moment().toDate();
-        await BagItemHistory.insert(resultbagItemHistory);
+        const bagItemHistory = await BagItemHistory.insert(resultbagItemHistory);
 
         await BagItem.update(
           { bagItemId : item.bag_item_id },
           {
             bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
             branchIdLast: data.branchId,
-            bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
+            bagItemHistoryId: bagItemHistory.identifiers[0].bagItemHistoryId,
             userIdUpdated: data.userId,
             updatedTime: moment().toDate(),
             branchIdNext : item.branch_id_to,
           },
         );
 
-        if (bagItemsAwb && bagItemsAwb.length) {
-          for (const itemAwb of bagItemsAwb) {
-            if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
-              // handle duplikat resi dalam beberapa gabung paket
-              tempAwb.push(itemAwb.awbItemId);
+      if (bagItemsAwb && bagItemsAwb.length) {
+        for (const itemAwb of bagItemsAwb) {
+          if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
+            // handle duplikat resi dalam beberapa gabung paket
+            tempAwb.push(itemAwb.awbItemId);
 
-              DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
-                Number(itemAwb.awbItemId),
-                Number(data.branchId),
-                Number(data.userId),
-                Number(employeeIdDriver),
-                employeeNameDriver,
-                AWB_STATUS.OUT_LINE_HAUL,
-                branchName,
-                cityName,
-                Number(item.branch_id_to),
-                branchNameNext,
-              );
-            }
+            DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
+              Number(itemAwb.awbItemId),
+              Number(data.branchId),
+              Number(data.userId),
+              Number(employeeIdDriver),
+              employeeNameDriver,
+              AWB_STATUS.OUT_LINE_HAUL,
+              branchName,
+              cityName,
+              Number(item.branch_id_to),
+              branchNameNext,
+            );
           }
         }
       }
+
+      // if (Number(item.bag_item_status_id) == BAG_STATUS.OUT_LINE_HAUL && item.branch_id) {
+      //   // failed to update
+      //   // do nothing
+      // } else {
+      //   // branch next
+      //   if (item.branch_id_to) {
+      //     const branchNext = await SharedService.getDataBranchCity(
+      //       item.branch_id_to,
+      //     );
+      //     if (branchNext) {
+      //       branchNameNext = branchNext.branchName;
+      //     }
+      //   }
+      //
+      //   const bagItemsAwb = await BagItemAwb.find({
+      //     where: {
+      //       bagItemId: Number(item.bag_item_id),
+      //       isDeleted: false,
+      //     },
+      //   });
+      //   // console.log(bagItemsAwb);
+      //   const resultbagItemHistory = BagItemHistory.create();
+      //   resultbagItemHistory.bagItemId = item.bag_item_id.toString();
+      //   resultbagItemHistory.userId = data.userId.toString();
+      //   resultbagItemHistory.branchId = data.branchId.toString();
+      //   resultbagItemHistory.historyDate = moment().toDate();
+      //   resultbagItemHistory.bagItemStatusId = BAG_STATUS.OUT_LINE_HAUL.toString();
+      //   resultbagItemHistory.userIdCreated = Number(data.userId);
+      //   resultbagItemHistory.createdTime = moment().toDate();
+      //   resultbagItemHistory.userIdUpdated = Number(data.userId);
+      //   resultbagItemHistory.updatedTime = moment().toDate();
+      //   await BagItemHistory.insert(resultbagItemHistory);
+      //
+      //   await BagItem.update(
+      //     { bagItemId : item.bag_item_id },
+      //     {
+      //       bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
+      //       branchIdLast: data.branchId,
+      //       bagItemHistoryId: Number(resultbagItemHistory.bagItemHistoryId),
+      //       userIdUpdated: data.userId,
+      //       updatedTime: moment().toDate(),
+      //     },
+      //   );
+      //
+      //   if (bagItemsAwb && bagItemsAwb.length) {
+      //     for (const itemAwb of bagItemsAwb) {
+      //       if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
+      //         // handle duplikat resi dalam beberapa gabung paket
+      //         tempAwb.push(itemAwb.awbItemId);
+      //
+      //         DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
+      //           Number(itemAwb.awbItemId),
+      //           Number(data.branchId),
+      //           Number(data.userId),
+      //           Number(employeeIdDriver),
+      //           employeeNameDriver,
+      //           AWB_STATUS.OUT_LINE_HAUL,
+      //           branchName,
+      //           cityName,
+      //           Number(item.branch_id_to),
+      //           branchNameNext,
+      //         );
+      //       }
+      //     }
+      //   }
+      // }
     }
   }
 
@@ -253,57 +314,102 @@ export class BagScanOutBranchSmdQueueService {
     const tempBag = [];
 
     for (const item of resultQuery) {
-      if (Number(item.bag_representative_status_id_last) == BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL) {
-        // failed to update
-        // do nothing
-      } else {
-        // branch next
-        if (item.branch_id_to) {
-          const branchNext = await SharedService.getDataBranchCity(
-            item.branch_id_to,
-          );
-          if (branchNext) {
-            branchNameNext = branchNext.branchName;
-          }
-        }
-
-        // check if not duplicate bag_representative_id then create history bag rep.
-        if (!tempBag.includes(Number(item.bag_representative_id))) {
-          const historyBag = BagRepresentativeHistory.create();
-          historyBag.bagRepresentativeCode = item.bag_representative_code;
-          historyBag.bagRepresentativeDate = moment(item.bag_representative_date).toDate();
-          historyBag.bagRepresentativeId = item.bag_representative_id;
-          historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL.toString();
-          historyBag.branchId = data.branchId.toString();
-          historyBag.representativeIdTo = item.representative_id_to;
-          historyBag.totalItem = item.total_item;
-          historyBag.totalWeight = item.total_weight;
-          historyBag.userIdCreated = data.userId.toString();
-          historyBag.createdTime = moment().toDate();
-          historyBag.userIdUpdated = data.userId.toString();
-          historyBag.updatedTime = moment().toDate();
-          await BagRepresentativeHistory.insert(historyBag);
-        }
-        tempBag.push(Number(item.bag_representative_id)); // handle duplicate
-
-        if (!tempAwb.includes(item.awb_item_id)) {
-          // handle duplikat resi dalam beberapa gabung paket
-          tempAwb.push(item.awb_item_id);
-
-          DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
-            Number(item.awb_item_id),
-            Number(data.branchId),
-            Number(data.userId),
-            Number(employeeIdDriver),
-            employeeNameDriver,
-            AWB_STATUS.OUT_LINE_HAUL,
-            branchName,
-            cityName,
-            Number(item.branch_id_to),
-            branchNameNext,
-          );
+      if (item.branch_id_to) {
+        const branchNext = await SharedService.getDataBranchCity(
+          item.branch_id_to,
+        );
+        if (branchNext) {
+          branchNameNext = branchNext.branchName;
         }
       }
+
+      // check if not duplicate bag_representative_id then create history bag rep.
+      if (!tempBag.includes(Number(item.bag_representative_id))) {
+        const historyBag = BagRepresentativeHistory.create();
+        historyBag.bagRepresentativeCode = item.bag_representative_code;
+        historyBag.bagRepresentativeDate = moment(item.bag_representative_date).toDate();
+        historyBag.bagRepresentativeId = item.bag_representative_id;
+        historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL.toString();
+        historyBag.branchId = data.branchId.toString();
+        historyBag.representativeIdTo = item.representative_id_to;
+        historyBag.totalItem = item.total_item;
+        historyBag.totalWeight = item.total_weight;
+        historyBag.userIdCreated = data.userId.toString();
+        historyBag.createdTime = moment().toDate();
+        historyBag.userIdUpdated = data.userId.toString();
+        historyBag.updatedTime = moment().toDate();
+        await BagRepresentativeHistory.insert(historyBag);
+      }
+      tempBag.push(Number(item.bag_representative_id)); // handle duplicate
+
+      if (!tempAwb.includes(item.awb_item_id)) {
+        // handle duplikat resi dalam beberapa gabung paket
+        tempAwb.push(item.awb_item_id);
+
+        DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
+          Number(item.awb_item_id),
+          Number(data.branchId),
+          Number(data.userId),
+          Number(employeeIdDriver),
+          employeeNameDriver,
+          AWB_STATUS.OUT_LINE_HAUL,
+          branchName,
+          cityName,
+          Number(item.branch_id_to),
+          branchNameNext,
+        );
+      }
+      // if (Number(item.bag_representative_status_id_last) == BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL) {
+      //   // failed to update
+      //   // do nothing
+      // } else {
+      //   // branch next
+      //   if (item.branch_id_to) {
+      //     const branchNext = await SharedService.getDataBranchCity(
+      //       item.branch_id_to,
+      //     );
+      //     if (branchNext) {
+      //       branchNameNext = branchNext.branchName;
+      //     }
+      //   }
+      //
+      //   // check if not duplicate bag_representative_id then create history bag rep.
+      //   if (!tempBag.includes(Number(item.bag_representative_id))) {
+      //     const historyBag = BagRepresentativeHistory.create();
+      //     historyBag.bagRepresentativeCode = item.bag_representative_code;
+      //     historyBag.bagRepresentativeDate = moment(item.bag_representative_date).toDate();
+      //     historyBag.bagRepresentativeId = item.bag_representative_id;
+      //     historyBag.bagRepresentativeStatusIdLast = BAG_REPRESENTATIVE_STATUS.OUT_LINE_HAUL.toString();
+      //     historyBag.branchId = data.branchId.toString();
+      //     historyBag.representativeIdTo = item.representative_id_to;
+      //     historyBag.totalItem = item.total_item;
+      //     historyBag.totalWeight = item.total_weight;
+      //     historyBag.userIdCreated = data.userId.toString();
+      //     historyBag.createdTime = moment().toDate();
+      //     historyBag.userIdUpdated = data.userId.toString();
+      //     historyBag.updatedTime = moment().toDate();
+      //     await BagRepresentativeHistory.insert(historyBag);
+      //   }
+      //   tempBag.push(Number(item.bag_representative_id)); // handle duplicate
+      //
+      //   if (!tempAwb.includes(item.awb_item_id)) {
+      //     // handle duplikat resi dalam beberapa gabung paket
+      //     tempAwb.push(item.awb_item_id);
+      //
+      //     DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
+      //       Number(item.awb_item_id),
+      //       Number(data.branchId),
+      //       Number(data.userId),
+      //       Number(employeeIdDriver),
+      //       employeeNameDriver,
+      //       AWB_STATUS.OUT_LINE_HAUL,
+      //       branchName,
+      //       cityName,
+      //       Number(item.branch_id_to),
+      //       branchNameNext,
+      //     );
+      //   }
+      // }
     }
   }
 

@@ -56,6 +56,8 @@ export class PartnerMerchantService {
         partnerMerchant.pickupTime = '08:00';
         partnerMerchant.pickupType = 'TIME WINDOW';
         partnerMerchant.branchId = p.branch_id_assigned;
+        partnerMerchant.locationId = p.location_id || 0;
+        partnerMerchant.shopId = p.shop_id || 0;
 
         partnerMerchant.userIdCreated = 0;
         partnerMerchant.userIdUpdated = 0;
@@ -82,7 +84,8 @@ export class PartnerMerchantService {
   }
 
   private static async getPickupRequest(pid: number, isReprocess: boolean = false): Promise<any> {
-    const select = 'pr.merchant_code, pr.pickup_request_name, pr.pickup_request_address, pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned';
+    const select = 'pr.merchant_code, pr.pickup_request_name, pr.pickup_request_address, pr.pickup_request_email, pr.pickup_request_contact_no, ' +
+      'pr.partner_id, pr.location_id, pr.shop_id, branch_id_assigned';
     const select_encrypt = `
       MD5(CONCAT(
         pr.merchant_code, pr.pickup_request_name, MD5(pr.pickup_request_address), pr.pickup_request_email, pr.pickup_request_contact_no, pr.partner_id, branch_id_assigned
