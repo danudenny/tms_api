@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { MappingDoSmdResponseVm, MappingVendorResponseVm } from '../../models/mapping-do-smd.response.vm';
+import { DoSmdStatusResponseVm, MappingDoSmdResponseVm, MappingVendorResponseVm } from '../../models/mapping-do-smd.response.vm';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 
 import moment = require('moment');
 import {DoSmd} from '../../../../shared/orm-entity/do_smd';
 import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
 import {Vendor} from '../../../../shared/orm-entity/vendor';
+import { DoSmdStatus } from '../../../../shared/orm-entity/do_smd_status';
 
 @Injectable()
 export class MasterDataService {
@@ -131,6 +132,22 @@ export class MasterDataService {
     const result = new MappingVendorResponseVm();
     result.data = data;
     result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
+  }
+
+  static async getDoSmdStatus(payload: BaseMetaPayloadVm): Promise<DoSmdStatusResponseVm> {
+    const repo = new OrionRepositoryService(DoSmdStatus, 'dss');
+    const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+    const statuses = await q
+      .selectRaw(
+        ['dss.do_smd_status_id', 'statusId'],
+        ['dss.do_smd_status_title', 'statusTitle'],
+      )
+      .andWhere(e => e.isDeleted, w => w.isFalse());
+    const result = new DoSmdStatusResponseVm();
+    result.data = statuses;
 
     return result;
   }
