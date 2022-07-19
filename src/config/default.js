@@ -177,6 +177,9 @@ module.exports = {
     codAdmin: [115, 136], //Ops - Admin COD, Ops - Admin Operational ( COD )
     codManual: [174], //Admin FORCE MAJEURE
   },
+  codTransferBranch: {
+    version : 2,
+  },
   korwil: {
     korwilRoleId: [38, 155],
     smdRoleId: 117,
