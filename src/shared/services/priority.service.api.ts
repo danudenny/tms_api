@@ -13,6 +13,10 @@ export class PriorityServiceApi {
     return ConfigService.get('priorityService.xApiKey');
   }
 
+  public static get getPackageType() {
+    return ConfigService.get('priorityService.packageType');
+  }
+
   public static async checkPriority(awbNumber, branchId) {
     let url = `${this.queryServiceUrl}branch-zone-priority`;
     const options = {
@@ -32,7 +36,6 @@ export class PriorityServiceApi {
       //TODO: Implement service priority here
       let data = await this.funcGetData(url, body, options);
       return data;
-
     } catch (err) {
       RequestErrorService.throwObj(
         {
@@ -49,16 +52,26 @@ export class PriorityServiceApi {
     countRetry = countRetry + 1;
     try{
       const request = await axios.post(url, body, options);
+      if(this.getPackageType.includes(request.data.packageTypeCode)){
+        request.data.zone = request.data.packageTypeCode+'-'+request.data.zone
+      }
+      
       return request;
     }catch(err){
-      
       if(countRetry >= ConfigService.get('priorityService.retryCount')){
         await SlackUtil.sendMessage(channelSlack,"Error from hit service for check priority attempt "+countRetry,err.stack, body);
+        return{
+          data :{
+            kelurahan : "",
+            zone : "",
+            priority : ""
+          }
+        }
       } 
       const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
       await delay(ConfigService.get('priorityService.delayTime'));
       if(countRetry < ConfigService.get('priorityService.retryCount')){
-        this.funcGetData(url, body, options, countRetry);
+        return this.funcGetData(url, body, options, countRetry);
       }
     }
   }

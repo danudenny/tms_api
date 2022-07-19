@@ -1058,6 +1058,13 @@ export class LastMileDeliveryOutService {
                 );
               });
 
+              await DoPodDeliver.update(
+                { doPodDeliverId: awbDeliver.doPodDeliverId },
+                {
+                  updatedTime: moment().toDate(),
+                },
+              );
+
               totalSuccess += 1;
               // remove key holdRedis
               RedisService.del(`hold:scanout-transfer:${awbDeliver.awbItemId}`);

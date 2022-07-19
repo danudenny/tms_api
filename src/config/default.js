@@ -74,6 +74,7 @@ module.exports = {
     delayTime : 2000,
     slackChannel : '#pod-awb-history',
     xApiKey : 'a99bca19-afa9-4b78-8ce8-2cb366664dc3',
+    packageType : ['BEST']
   },
   exportService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
@@ -85,6 +86,9 @@ module.exports = {
   },
   activityLog: {
     baseUrl: 'http://api-internal.s.sicepat.io/core/logger',
+  },
+  flag: {
+    disableLoginV1: false,
   },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
