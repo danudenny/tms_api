@@ -41,22 +41,10 @@ export class HubMonitoringTotalList {
   branch_name: string;
 
   @ApiModelProperty({nameCase: 'camelCase'})
-  scan_date: string;
-
-  @ApiModelProperty({nameCase: 'camelCase'})
-  problem: number;
-
-  @ApiModelProperty({nameCase: 'camelCase'})
-  do_hub: number;
-
-  @ApiModelProperty({nameCase: 'camelCase'})
-  manual_sortir: number;
-
-  @ApiModelProperty({nameCase: 'camelCase'})
-  machine_sortir: number;
-
-  @ApiModelProperty({nameCase: 'camelCase'})
   branch_code: string;
+
+  @ApiModelProperty({nameCase: 'camelCase'})
+  created_time: string;
 
   @ApiModelProperty({nameCase: 'camelCase'})
   branch_id: number;
@@ -65,10 +53,31 @@ export class HubMonitoringTotalList {
   city_name: string;
 
   @ApiModelProperty({nameCase: 'camelCase'})
-  scan_out: number;
+  masuk: number;
 
   @ApiModelProperty({nameCase: 'camelCase'})
-  not_scan_out: number;
+  keluar: number;
+
+  @ApiModelProperty({nameCase: 'camelCase'})
+  sortir_mesin: number;
+
+  @ApiModelProperty({nameCase: 'camelCase'})
+  sortir_manual: number;
+
+  @ApiModelProperty({nameCase: 'camelCase'})
+  total_sortir: number;
+
+  @ApiModelProperty({nameCase: 'camelCase'})
+  tidak_sortir: number;
+
+  @ApiModelProperty({nameCase: 'camelCase'})
+  dropoff: number;
+
+  @ApiModelProperty({nameCase: 'camelCase'})
+  lebih_sortir: number;
+
+  @ApiModelProperty({nameCase: 'camelCase'})
+  tidak_keluar: number;
 }
 
 export class HubMonitoringTotalListResponseVm extends BaseMetaResponseVm {
