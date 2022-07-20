@@ -10,29 +10,17 @@ import {
 } from '../../../models/sortation/web/sortation-l2-module-search.payload.vm';
 import { SortationL2ModuleService } from '../../../services/sortation/web/sortation-l2-module.service';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { SortationL2ListModuleService } from '../../../services/sortation/web/sortation-l2-list.service';
 
 @ApiUseTags('L2 Module')
-@Controller('sortation/module')
-export class SortationL2ModuleController {
+@Controller('sortation/list')
+export class SortationL2ListModuleController {
   constructor() {
   }
 
-  @Post('search')
+  @Post('module/finish')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async searchSortation(@Body() payload: SortationL2ModuleSearchPayloadVm) {
-    return SortationL2ModuleService.searchSortation(payload);
+  public async finishListSortation(@Body() payload: BaseMetaPayloadVm) {
+    return SortationL2ListModuleService.finishListSortation(payload);
   }
-
-  @Post('finish')
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async finishManualSortation(@Body() payload: SortationL2ModuleFinishManualPayloadVm) {
-    return SortationL2ModuleService.finishManualSortation(payload);
-  }
-
-  @Post('handover')
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async handoverSortation(@Body() payload: SortationL2ModuleHandoverPayloadVm) {
-    return SortationL2ModuleService.handoverModuleSortation(payload);
-  }
-
 }
