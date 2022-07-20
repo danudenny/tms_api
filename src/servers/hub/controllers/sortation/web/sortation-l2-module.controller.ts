@@ -9,6 +9,7 @@ import {
   SortationL2ModuleSearchPayloadVm,
 } from '../../../models/sortation/web/sortation-l2-module-search.payload.vm';
 import { SortationL2ModuleService } from '../../../services/sortation/web/sortation-l2-module.service';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('L2 Module')
 @Controller('sortation/module')
@@ -30,7 +31,13 @@ export class SortationL2ModuleController {
 
   @Post('handover')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async handoverSortation(@Body() payload: SortationL2ModuleHandoverPayloadVm){
+  public async handoverSortation(@Body() payload: SortationL2ModuleHandoverPayloadVm) {
     return SortationL2ModuleService.handoverModuleSortation(payload);
+  }
+
+  @Post('finish/list')
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  public async finishListSortation(@Body() payload: BaseMetaPayloadVm) {
+    return SortationL2ModuleService.finishListSortation(payload);
   }
 }
