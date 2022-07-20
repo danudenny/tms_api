@@ -46,6 +46,7 @@ export class SortationScanOutListService {
       branchToName: 'ds.branch_name_to_list',
       branchFromName: 'bf.branch_name',
       doSortationStatusTitle: 'dss.do_sortation_status_title',
+      doSortationStatusId: 'ds.do_sortation_status_id_last',
       vehicleNumber: 'dsv.vehicle_number',
       nickName: 'e.nickname',
       fullName: 'e.fullname',
