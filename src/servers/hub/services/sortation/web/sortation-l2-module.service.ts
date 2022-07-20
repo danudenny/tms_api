@@ -289,13 +289,4 @@ export class SortationL2ModuleService {
     return resultDataDoSortationVehicle;
   }
 
-  public static async finishListSortation(payload: BaseMetaPayloadVm) {
-    payload.sortBy = payload.sortBy || 'createdTime';
-
-    payload.fieldResolverMap['createdTime'] = 'sfh.created_time';
-
-    const repo = new OrionRepositoryService(SortationFinishHistory, 'sfh');
-    const q = repo.findAllRaw();
-    payload.applyToOrionRepositoryQuery(q, true);
-  }
 }
