@@ -10,4 +10,3 @@ export class SortationL2ModuleSearchResponseVm {
   @ApiModelProperty()
   data: any[];
 }
-
