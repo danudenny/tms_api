@@ -7,7 +7,7 @@ import { BaseMetaPayloadVm } from '../../../shared/models/base-meta-payload.vm';
 import { SortationMasterdataService } from '../services/masterdata-service';
 
 @ApiUseTags('Sortation Masterdata')
-@Controller('sortation/masterdata')
+@Controller('masterdata')
 export class SortationMasterdataController {
   constructor(private readonly service: SortationMasterdataService) {}
 
