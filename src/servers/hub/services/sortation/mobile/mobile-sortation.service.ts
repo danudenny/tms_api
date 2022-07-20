@@ -56,6 +56,7 @@ import {
 import {
   MobileSortationHanoverImageResponseVm,
 } from '../../../models/sortation/mobile/mobile-sortation-hanover-image.response.vm';
+import {NearlyBranchService} from "../../../../../shared/services/nearly-branch.service";
 
 @Injectable()
 export class MobileSortationService {
@@ -244,6 +245,9 @@ export class MobileSortationService {
     const resultDoSortationDetail = await q.exec();
 
     if (resultDoSortationDetail) {
+      // validated nearly branch
+      await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultDoSortationDetail.branchIdTo);
+
       const resultSortationDetailArrival = await DoSortationDetail.findOne({
         select: [
           'doSortationId',

@@ -42,6 +42,7 @@ import { map } from 'lodash';
 import { BagScanOutBranchSmdQueueService } from '../../../queue/services/bag-scan-out-branch-smd-queue.service';
 import { DO_SORTATION_STATUS } from '../../../../shared/constants/do-sortation-status.constant';
 import { HistoryModuleFinish } from '../../../../shared/orm-entity/history-module-finish';
+import {NearlyBranchService} from "../../../../shared/services/nearly-branch.service";
 
 @Injectable()
 export class MobileSmdService {
@@ -375,6 +376,7 @@ export class MobileSmdService {
     });
 
     if (resultDoSmdDetail) {
+      await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultDoSmdDetail.branchIdTo);
       const resultDoSmdDetailArrival = await DoSmdDetail.findOne({
         where: {
           doSmdId: resultDoSmdDetail.doSmdId,
