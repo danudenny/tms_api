@@ -18,7 +18,7 @@ export class SortationL2ListModuleController {
   constructor() {
   }
 
-  @Post('module/finish')
+  @Post('module-finish')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async finishListSortation(@Body() payload: BaseMetaPayloadVm) {
     return SortationL2ListModuleService.finishListSortation(payload);
