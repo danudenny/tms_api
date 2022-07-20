@@ -1,6 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { SortationFinishHistoryResponVm } from '../../../models/sortation/web/sortation-l2-module-list.response.vm';
-import moment = require('moment');
 import { SortationFinishHistory } from '../../../../../shared/orm-entity/sortation-finish-history';
 import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
