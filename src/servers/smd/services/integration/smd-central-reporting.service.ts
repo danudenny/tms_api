@@ -119,6 +119,7 @@ export class SmdCentralReportingService {
         filename,
         reportType: type,
       };
+
       return this.generateQueueRequest(params, formData);
     } catch (e) {
       throw e.message;
@@ -221,7 +222,7 @@ export class SmdCentralReportingService {
     }
 
     query = query + ` AND ds.is_deleted = 'false' \n
-    GROUP BY ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title, ds.is_intercity, ds.branch_to_name_list \n`;
+    GROUP BY ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.nik, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title, ds.is_intercity, ds.branch_to_name_list \n`;
 
     query = query + ` ORDER BY ds.do_smd_time DESC`;
 
