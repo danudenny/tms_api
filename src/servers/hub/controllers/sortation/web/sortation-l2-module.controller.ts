@@ -9,7 +9,6 @@ import {
   SortationL2ModuleSearchPayloadVm,
 } from '../../../models/sortation/web/sortation-l2-module-search.payload.vm';
 import { SortationL2ModuleService } from '../../../services/sortation/web/sortation-l2-module.service';
-import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
 
 @ApiUseTags('L2 Module')
 @Controller('sortation/module')
