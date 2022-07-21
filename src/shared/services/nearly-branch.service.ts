@@ -1,6 +1,6 @@
 import {BadRequestException, Injectable} from '@nestjs/common';
-import {RawQueryService} from "./raw-query.service";
-import {ConfigService} from "./config.service";
+import {RawQueryService} from './raw-query.service';
+import {ConfigService} from './config.service';
 
 @Injectable()
 export class NearlyBranchService {
