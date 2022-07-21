@@ -11,7 +11,7 @@ export class NearlyBranchService {
 
     public static async validateNearlyBranch(lat, long, branchId): Promise<any> {
         const radius: number = ConfigService.get('nearlyBranch.radius'); // in kilometer
-        const nearbyLotLang = await this.getNearbyLatLong(parseFloat(lat), parseFloat(long), radius);
+        const nearbyLotLang = await this.getRangeCoordinate(parseFloat(lat), parseFloat(long), radius);
 
         const res = await RawQueryService.query(`SELECT branch_id, latitude, longitude FROM branch
           WHERE branch_id = ${branchId} AND longitude IS NOT NULL AND latitude IS NOT NULL AND is_deleted = false`);
@@ -28,7 +28,7 @@ export class NearlyBranchService {
         }
     }
 
-    private static async getNearbyLatLong(lat, long, radius) {
+    private static async getRangeCoordinate(lat, long, radius) {
         // offsets in kilometers
         const dn = radius;
         const de = radius;
