@@ -29,6 +29,7 @@ export class SortationL2ListModuleService {
       ['ea.nik', 'adminNik'],
       ['dsv.employee_driver_id', 'driverId'],
       ['e.fullname', 'driverName'],
+      ['e.nik', 'driverNik'],
     ];
 
     q.selectRaw(...selectColumn)
