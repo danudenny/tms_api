@@ -1,5 +1,6 @@
 import {BadRequestException, Injectable} from '@nestjs/common';
 import {RawQueryService} from "./raw-query.service";
+import {ConfigService} from "./config.service";
 
 @Injectable()
 export class NearlyBranchService {
@@ -9,20 +10,22 @@ export class NearlyBranchService {
     static E_RADIUS = 6372.8;
 
     public static async validateNearlyBranch(lat, long, branchId): Promise<any> {
-        const radius: number = 0.5; // in kilometer
+        const radius: number = ConfigService.get('nearlyBranch.radius'); // in kilometer
         const nearbyLotLang = await this.getNearbyLatLong(parseFloat(lat), parseFloat(long), radius);
 
-        const res = await RawQueryService.query(`SELECT branch_id FROM branch WHERE is_deleted = false
-          AND longitude IS NOT NULL AND latitude IS NOT NULL
-          AND latitude::float >= ${nearbyLotLang[0]}
-          AND latitude::float <= ${nearbyLotLang[2]}
-          AND longitude::float >= ${nearbyLotLang[1]}
-          AND longitude::float <= ${nearbyLotLang[3]}
-          AND branch_id = ${branchId}`);
-        if (res.length == 0) {
+        const res = await RawQueryService.query(`SELECT branch_id, latitude, longitude FROM branch
+          WHERE branch_id = ${branchId} AND longitude IS NOT NULL AND latitude IS NOT NULL AND is_deleted = false`);
+        if (
+            (res.length > 0) &&
+            (parseFloat(res.latitude) >= nearbyLotLang[0]) &&
+            (parseFloat(res.latitude) <= nearbyLotLang[2]) &&
+            (parseFloat(res.longitude) >= nearbyLotLang[1]) &&
+            (parseFloat(res.longitude) >= nearbyLotLang[3])
+        ) {
+            return res.length;
+        } else {
             throw new BadRequestException('Your location does not match the branch location');
         }
-        return res.length;
     }
 
     private static async getNearbyLatLong(lat, long, radius) {
