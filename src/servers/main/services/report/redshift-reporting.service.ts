@@ -26,7 +26,7 @@ export class RedshiftReportingService {
 
     const options = {
       params: {
-        employee: authMeta.userId,
+        employee_id: authMeta.userId,
         report_type: reportType,
         limit: size,
         offset,
@@ -65,25 +65,21 @@ export class RedshiftReportingService {
     //send to report service
     const options = {
       headers: {
-        accept: 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      params: {
-        employee: authMeta.userId,
-      },
+        'Content-Type': 'application/json'
+      }
     };
 
-    const qs = require('querystring');
     const body = {
+      employee_id: authMeta.userId,
       query_encoded: Buffer.from(queryParam).toString('base64'),
       filename,
-      report_type: reportType,
+      report_type: reportType
     };
 
     try {
       const response = await axios.post(
         url,
-        qs.stringify(body),
+        body,
         options,
       );
       return response.data;
