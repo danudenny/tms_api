@@ -53,6 +53,7 @@ import { WebAwbDeliverController } from './web/web-awb-deliver.controller';
 import { WebAwbFilterController } from './web/web-awb-filter.controller';
 import { WebAwbPodController } from './web/web-awb-pod.controller';
 import { WebAwbScanPriorityController } from './web/web-awb-scan-priority.controller';
+import { MobileRebuildPickupPod } from './mobile/mobile-rebuild-pick-up.controller'
 import { WebAwbReturnController } from './web/web-awb-return.controller';
 import { WebAwbReturnCancelController } from './web/web-awb-return-cancel.controller';
 import { WebLastMileUploadController } from './web/web-last-mile-upload.controller';
@@ -116,6 +117,7 @@ import { V2MobileDeliveryInController } from './mobile/v2/mobile-delivery-in.con
     WebAwbCountController,
     WebFirstMileController,
     WebAwbScanPriorityController,
+    MobileRebuildPickupPod,
     WebAwbReturnController,
     WebAwbReturnCancelController,
     WebLastMileUploadController,

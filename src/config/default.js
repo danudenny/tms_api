@@ -150,6 +150,9 @@ module.exports = {
       "filesvc": {
         destination: "/core/filesvc"
       },
+      "rebuild-pickup": {
+        destination: "/core/filesvc" //wait for rebuild pickup
+      },
     }
   },
   reportingService: {
