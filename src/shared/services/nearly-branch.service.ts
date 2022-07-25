@@ -17,10 +17,10 @@ export class NearlyBranchService {
           WHERE branch_id = ${branchId} AND longitude IS NOT NULL AND latitude IS NOT NULL AND is_deleted = false`);
         if (
             (res.length > 0) &&
-            (parseFloat(res.latitude) >= nearbyLotLang[0]) &&
-            (parseFloat(res.latitude) <= nearbyLotLang[2]) &&
-            (parseFloat(res.longitude) >= nearbyLotLang[1]) &&
-            (parseFloat(res.longitude) >= nearbyLotLang[3])
+            (parseFloat(res[0].latitude) >= nearbyLotLang[0]) &&
+            (parseFloat(res[0].latitude) <= nearbyLotLang[2]) &&
+            (parseFloat(res[0].longitude) >= nearbyLotLang[1]) &&
+            (parseFloat(res[0].longitude) >= nearbyLotLang[3])
         ) {
             return res.length;
         } else {
