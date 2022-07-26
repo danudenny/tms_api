@@ -150,17 +150,8 @@ module.exports = {
       "filesvc": {
         destination: "/core/filesvc"
       },
-      "pickup-work-orders": {
-        destination: "/work-orders" 
-      },
-      "pickup-reasons": {
-        destination: "/pickup-reasons" 
-      },
-      "pickup-work-order": {
-        destination: "/work-order" 
-      },
-      "pickup-scans": {
-        destination: "/scans" 
+      "pickup": {
+        destination: "/operation/pickup-coresvc" 
       },
     }
   },

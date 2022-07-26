@@ -13,6 +13,7 @@ import {
 import { Response } from 'express';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { GatewayService } from '../../services/proxy/gateway.service';
+import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 
 @ApiUseTags('POD Proxy API')
 @Controller('pod-proxy')
@@ -25,35 +26,35 @@ export class PodProxyController {
 
   @Get('*')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async proxyGet(@Request() req, @Res() resp: Response) {
     return this.gatewayService.routeRequest(req, resp);
   }
 
   @Post('*')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async proxyPost(@Request() req, @Res() resp: Response) {
     return this.gatewayService.routeRequest(req, resp);
   }
 
   @Patch('*')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async proxyPatch(@Request() req, @Res() resp: Response) {
     return this.gatewayService.routeRequest(req, resp);
   }
 
   @Put('*')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async proxyPut(@Request() req, @Res() resp: Response) {
     return this.gatewayService.routeRequest(req, resp);
   }
 
   @Delete('*')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthenticatedGuard)
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async proxyDelete(@Request() req, @Res() resp: Response) {
     return this.gatewayService.routeRequest(req, resp);
   }
