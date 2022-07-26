@@ -11,12 +11,12 @@ import { MobileRebuildPickUpServicePayload } from '../../models/mobile-rebuild-p
 @ApiUseTags('Mobile Rebuild Pickup Pod')
 @Controller('mobile/v1/pod/rebuild-pick-up')
 export class MobileRebuildPickupPod {
-  @Post('getDeliveryAndCodAmmount')
+  @Post('getDeliveryAndCodAmount')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   @ApiOkResponse({ type: MobileRebuildPickUpServiceResponse })
   public async scanOutCreate(@Body() payload: MobileRebuildPickUpServicePayload) {
-    return MobileRebuildPickUpService.getDeliveryandCodAmmount(payload);
+    return MobileRebuildPickUpService.getDeliveryandCodAmount(payload);
   }
 }

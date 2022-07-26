@@ -5,7 +5,7 @@ import { createQueryBuilder } from 'typeorm';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 
 export class MobileRebuildPickUpService {
-  static async getDeliveryandCodAmmount(payload: MobileRebuildPickUpServicePayload): Promise<MobileRebuildPickUpServiceResponse> {
+  static async getDeliveryandCodAmount(payload: MobileRebuildPickUpServicePayload): Promise<MobileRebuildPickUpServiceResponse> {
     const authMeta = AuthService.getAuthData();
     const q = createQueryBuilder();
     q.addSelect('a.total_cod_value');
