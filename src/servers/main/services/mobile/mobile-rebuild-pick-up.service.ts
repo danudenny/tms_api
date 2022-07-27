@@ -8,7 +8,7 @@ export class MobileRebuildPickUpService {
   static async getDeliveryandCodAmount(payload: MobileRebuildPickUpServicePayload): Promise<MobileRebuildPickUpServiceResponse> {
     const authMeta = AuthService.getAuthData();
     const q = createQueryBuilder();
-    q.addSelect('a.total_cod_value');
+    q.addSelect('c.total_cod_value');
     q.from('do_pod_deliver', 'a');
     q.innerJoin('do_pod_deliver_detail', 'b', 'a.do_pod_deliver_id = b.do_pod_deliver_id');
     q.innerJoin('awb', 'c', 'b.awb_id = c.awb_id');
