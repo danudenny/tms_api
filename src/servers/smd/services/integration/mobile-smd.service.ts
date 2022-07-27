@@ -170,7 +170,7 @@ export class MobileSmdService {
                                     doSmdStatusIdLast: 4000,
                                     userIdUpdated: authMeta.userId,
                                     updatedTime: timeNow,
-                                    arrivalDateTime: moment().toDate(),
+                                    arrivalDateTime: timeNow,
                                 },
                             );
                         } else {
@@ -180,7 +180,7 @@ export class MobileSmdService {
                                     doSmdStatusIdLast: 4000,
                                     userIdUpdated: authMeta.userId,
                                     updatedTime: timeNow,
-                                    transitDateTime: moment().toDate(),
+                                    transitDateTime: timeNow,
                                 },
                             );
                         }
@@ -191,7 +191,7 @@ export class MobileSmdService {
                                 doSmdStatusIdLast: 4000,
                                 userIdUpdated: authMeta.userId,
                                 updatedTime: timeNow,
-                                arrivalDateTime: moment().toDate(),
+                                arrivalDateTime: timeNow,
                             },
                         );
                     }
@@ -208,7 +208,7 @@ export class MobileSmdService {
                         },
                     );
 
-                    const paramDoSmdHistoryId = await this.createDoSmdHistory(
+                    await this.createDoSmdHistoryArrival(
                         resultDoSmdDetail.doSmdId,
                         null,
                         null,
@@ -221,6 +221,7 @@ export class MobileSmdService {
                         null,
                         null,
                         authMeta.userId,
+                        timeNow,
                     );
 
                     const data = [];
@@ -1263,6 +1264,46 @@ export class MobileSmdService {
             createdTime: moment().toDate(),
             userIdUpdated: userId,
             updatedTime: moment().toDate(),
+        });
+        const doSmdHistory = await DoSmdHistory.insert(dataDoSmdHistory);
+        return doSmdHistory.identifiers.length
+            ? doSmdHistory.identifiers[0].doSmdHistoryId
+            : null;
+    }
+
+    private static async createDoSmdHistoryArrival(
+        paramDoSmdId: number,
+        paramDoSmdDetailId: number,
+        paramDoSmdVehicleId: number,
+        paramLatitude: string,
+        paramLongitude: string,
+        paramDoSmdDepartureScheduleDate: Date,
+        paramBranchId: number,
+        paramDoSmdStatusId: number,
+        paramSealNumber: string,
+        paramReasonId: number,
+        paramReasonNotes: string,
+        userId: number,
+        timeNow: Date,
+    ) {
+        const dataDoSmdHistory = DoSmdHistory.create({
+            doSmdId: paramDoSmdId,
+            doSmdDetailId: paramDoSmdDetailId,
+            doSmdTime: paramDoSmdDepartureScheduleDate,
+            doSmdVehicleId: paramDoSmdVehicleId,
+            userId,
+            branchId: paramBranchId,
+            latitude: paramLatitude,
+            longitude: paramLongitude,
+            doSmdStatusId: paramDoSmdStatusId,
+            departureScheduleDateTime: paramDoSmdDepartureScheduleDate,
+            sealNumber: paramSealNumber,
+            reasonId: paramReasonId,
+            reasonNotes: paramReasonNotes,
+            userIdCreated: userId,
+            createdTime: timeNow,
+            userIdUpdated: userId,
+            updatedTime: timeNow,
         });
         const doSmdHistory = await DoSmdHistory.insert(dataDoSmdHistory);
         return doSmdHistory.identifiers.length
