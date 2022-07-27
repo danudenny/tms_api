@@ -9,13 +9,13 @@ export class MobileRebuildPickUpService {
     const authMeta = AuthService.getAuthData();
     const q = createQueryBuilder();
     q.addSelect('a.total_cod_value');
-    q.from('awb', 'a');
-    q.innerJoin('do_pod_deliver_detail', 'b', 'a.awb_id = b.awb_id');
-    q.innerJoin('do_pod_deliver', 'c', 'b.do_pod_deliver_id = c.do_pod_deliver_id');
-    q.andWhere(`c.user_id_driver = ${authMeta.userId}`);
+    q.from('do_pod_deliver', 'a');
+    q.innerJoin('do_pod_deliver_detail', 'b', 'a.do_pod_deliver_id = b.do_pod_deliver_id');
+    q.innerJoin('awb', 'c', 'b.awb_id = c.awb_id');
+    q.andWhere(`a.user_id_driver = ${authMeta.userId}`);
     q.andWhere(`b.awb_status_id_last = ${AWB_STATUS.DLV}`)
-    q.andWhere(`c.do_pod_deliver_date >='${payload.dateStart}'`);
-    q.andWhere(`c.do_pod_deliver_date <= '${payload.dateEnd}'`);
+    q.andWhere(`a.do_pod_deliver_date >='${payload.dateStart}'`);
+    q.andWhere(`a.do_pod_deliver_date <= '${payload.dateEnd}'`);
     const data = await q.getRawMany();
     const result = new MobileRebuildPickUpServiceResponse();
     let hitungData = 0;
