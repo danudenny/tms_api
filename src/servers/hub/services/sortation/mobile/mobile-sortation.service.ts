@@ -61,6 +61,7 @@ import {
 export class MobileSortationService {
 
   static async scanOutMobileSortation(payload: MobileSortationDepaturePayloadVm) {
+    console.log('MobileSortationService - scanOutMobileSortation - START DEPARTURE');
     const authMeta = AuthService.getAuthData();
     const result = new MobileSortationDepatureResponseVm();
     const timeNow = moment().toDate();
@@ -79,6 +80,8 @@ export class MobileSortationService {
         isDeleted: false,
       },
     });
+
+    console.log('MobileSortationService - scanOutMobileSortation - RESULT DO SORTATION : ', JSON.stringify(resultDoSortation));
 
     if (!resultDoSortation) {
       throw new BadRequestException(`Can't Find  Do Sortation ID : ` + payload.doSortationId);
@@ -111,8 +114,11 @@ export class MobileSortationService {
 
     const departedDetail = await q.exec();
 
+    console.log('MobileSortationService - scanOutMobileSortation - RESULT DO SORTATION DETAIL : ', JSON.stringify(departedDetail));
+
     await getManager().transaction(async transaction => {
       if (resultDoSortation.depatureDateTime) {
+        console.log('MobileSortationService - scanOutMobileSortation - DEPARTURE DATE TIME IS NOT NULL / ALREADY DEPARTURE - UPDATE DO SORTATION');
         await transaction.update(
           DoSortation,
           {
@@ -124,7 +130,9 @@ export class MobileSortationService {
             updatedTime: timeNow,
           },
         );
+        console.log('MobileSortationService - scanOutMobileSortation - DEPARTURE DATE TIME IS NOT NULL / ALREADY DEPARTURE - END UPDATE DO SORTATION');
       } else {
+        console.log('MobileSortationService - scanOutMobileSortation - DEPARTURE DATE TIME IS NULL / UPDATE DEPARTURE TIME DO SORTATION - UPDATE DO SORTATION');
         await transaction.update(
           DoSortation,
           {
@@ -138,7 +146,8 @@ export class MobileSortationService {
           },
         );
       }
-
+      console.log('MobileSortationService - scanOutMobileSortation - DEPARTURE DATE TIME IS NULL / UPDATE DEPARTURE TIME DO SORTATION - END UPDATE DO SORTATION');
+      console.log('MobileSortationService - scanOutMobileSortation - UPDATE DO SORTATION DETAIL');
       await transaction.update(
         DoSortationDetail,
         {
@@ -154,7 +163,7 @@ export class MobileSortationService {
           updatedTime: timeNow,
         },
       );
-
+      console.log('MobileSortationService - scanOutMobileSortation - END UPDATE DO SORTATION DETAIL');
       await this.createDoSortationHistory(
         transaction,
         resultDoSortation.doSortationId,
@@ -170,6 +179,7 @@ export class MobileSortationService {
     });
 
     if (!departedDetail) {
+      console.log('MobileSortationService - scanOutMobileSortation - CHECK HAS PROBLEM IN DO SORTATION HISTORY');
       // check has problem
       const checkDoSortationHistory = await DoSortationHistory.findOne({
         select: [
@@ -180,13 +190,16 @@ export class MobileSortationService {
           doSortationStatusId: DO_SORTATION_STATUS.PROBLEM,
         },
       });
+      console.log('MobileSortationService - scanOutMobileSortation - RESULT HAS PROBLEM IN DO SORTATION HISTORY : ', JSON.stringify(checkDoSortationHistory));
       if (!checkDoSortationHistory) {
         // update status AWB & Bag queue
+        console.log('MobileSortationService - scanOutMobileSortation - CALL BULL BagScanOutBranchSortirQueueService');
         await BagScanOutBranchSortirQueueService.perform(
             payload.doSortationId,
             resultDoSortation.branchIdFrom,
             authMeta.userId,
         );
+        console.log('MobileSortationService - scanOutMobileSortation - END CALL BULL BagScanOutBranchSortirQueueService');
       }
     }
 
@@ -199,6 +212,7 @@ export class MobileSortationService {
     result.statusCode = HttpStatus.OK;
     result.message = 'Sortation Success Departure';
     result.data = data;
+    console.log('MobileSortationService - scanOutMobileSortation - END DEPARTURE');
     return result;
   }
 
@@ -571,6 +585,7 @@ export class MobileSortationService {
   }
 
   static async scanInMobileSortation(payload: MobileSortationArrivalPayloadVm) {
+    console.log('MobileSortationService - scanInMobileSortation - START ARRIVAL');
     const authMeta = AuthService.getAuthData();
     const result = new MobileSortationArrivalResponseVm();
     const timeNow = moment().toDate();
@@ -600,6 +615,7 @@ export class MobileSortationService {
       .take(1);
 
     const resultSortationDetail = await q.exec();
+    console.log('MobileSortationService - scanInMobileSortation - RESULT SORTATION DETAIL : ', JSON.stringify(resultSortationDetail));
     if (resultSortationDetail) {
 
       if (resultSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
@@ -621,6 +637,7 @@ export class MobileSortationService {
         } else {
           await getManager().transaction(async transaction => {
             // Ubah Status 4000 Arrived
+            console.log('MobileSortationService - scanInMobileSortation - UPDATE DO SORTATION');
             await transaction.update(DoSortation,
               {
                 doSortationId: resultSortationDetail.doSortationId,
@@ -632,7 +649,8 @@ export class MobileSortationService {
                 arrivalDateTime: timeNow,
               },
             );
-
+            console.log('MobileSortationService - scanInMobileSortation - END UPDATE DO SORTATION');
+            console.log('MobileSortationService - scanInMobileSortation - UPDATE DO SORTATION DETAIL');
             await transaction.update(DoSortationDetail, {
                 doSortationDetailId: payload.doSortationDetailId,
                 arrivalDateTime: null,
@@ -645,6 +663,7 @@ export class MobileSortationService {
                 userIdUpdated: authMeta.userId,
                 updatedTime: timeNow,
               });
+            console.log('MobileSortationService - scanInMobileSortation - END UPDATE DO SORTATION DETAIL');
 
             await this.createDoSortationHistory(
               transaction,
@@ -668,6 +687,7 @@ export class MobileSortationService {
             arrivalDateTime: resultSortationDetail.arrivalDateTime,
           });
           result.data = data;
+          console.log('MobileSortationService - scanInMobileSortation - END ARRIVAL');
           return result;
         }
       } else {
@@ -1001,6 +1021,8 @@ export class MobileSortationService {
     reasonNote: string,
     userId: number,
   ) {
+
+    console.log('MobileSortationService - createDoSortationHistory - CREATE DO SORTATION HISTORY');
     const dataDoSortationHistory = transaction.create(DoSortationHistory, {
       doSortationId,
       doSortationDetailId,
@@ -1017,5 +1039,6 @@ export class MobileSortationService {
     });
 
     await DoSortationHistory.insert(dataDoSortationHistory);
+    console.log('MobileSortationService - createDoSortationHistory - END CREATE DO SORTATION HISTORY');
   }
 }
