@@ -159,7 +159,7 @@ module.exports = {
   reportingService: {
     baseUrl : 'http://api-internal.sicepat.io/operation/reporting-service', //https://swagger.sicepat.tech/operation/reporting-service
     path: {
-      report: '/v1/reporting/report',
+      report: '/v2/report',
     }
   },
   codReportType: {
@@ -176,6 +176,9 @@ module.exports = {
     codMerge: [117, 82], //Admin COD - Merger, Ops - Last Mile Koordinator Sigesit (COD)
     codAdmin: [103, 147], //Ops - Admin COD, Ops - Admin Operational ( COD )
     codManual: [212], //Admin FORCE MAJEURE
+  },
+  codTransferBranch: {
+    version : 2,
   },
   korwil: {
     korwilRoleId: [38, 155],
