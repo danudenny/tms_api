@@ -26,8 +26,8 @@ module.exports = {
     cloudSecretAccessKey: 'a+R/bJ/Nl7Wt1EW6RuBNeOxS6SQxpe3xkCAC/KHt',
   },
   printerHelper: {
-    url: 'http://jsreport.sicepat.com/wcpp',
-    urlApiJsReport: 'http://jsreport.sicepat.com/api/report',
+    url: 'https://jsreport.sicepat.com/wcpp',
+    urlApiJsReport: 'https://jsreport.sicepat.com/api/report',
     username: 'admin',
     password: '@S1cepat!',
   },
