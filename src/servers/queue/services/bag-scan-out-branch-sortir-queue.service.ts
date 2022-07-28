@@ -63,7 +63,7 @@ export class BagScanOutBranchSortirQueueService {
       `);
       const tempBag = [];
       const dataResultBagItemBranch = [];
-      console.log('RESULT QUERY BAG ITEM BY BRANCH : ', resultBagItemBranch);
+      console.log('BagScanOutBranchSortirQueueService - boot - RESULT QUERY BAG ITEM BY BRANCH : ', resultBagItemBranch);
       for (const item of resultBagItemBranch) {
         if (tempBag.includes(Number(item.bag_item_id))) {
           continue;
@@ -71,7 +71,7 @@ export class BagScanOutBranchSortirQueueService {
         tempBag.push(Number(item.bag_item_id));
         dataResultBagItemBranch.push(item);
       }
-      console.log('INCLUDE BAG ITEM ID TO TEMP COSTANT ', tempBag);
+      console.log('BagScanOutBranchSortirQueueService - boot - INCLUDE BAG ITEM ID TO TEMP COSTANT ', tempBag);
       const resultDriver = await RawQueryService.query(`
          SELECT
           e.employee_id AS employee_driver_id,
@@ -82,7 +82,7 @@ export class BagScanOutBranchSortirQueueService {
         LIMIT 1
       `);
 
-      console.log('GET DRIVER : ', resultDriver);
+      console.log('BagScanOutBranchSortirQueueService - boot - GET DRIVER : ', resultDriver);
 
       if (resultDriver.length > 0) {
         employeeIdDriver = resultDriver[0].employee_driver_id;
@@ -90,7 +90,7 @@ export class BagScanOutBranchSortirQueueService {
       }
 
       const branch = await SharedService.getDataBranchCity(data.branchId);
-      console.log('GET BRANCH : ', branch);
+      console.log('BagScanOutBranchSortirQueueService - boot - GET BRANCH : ', branch);
       if (branch) {
         branchName = branch.branchName;
         cityName = branch.district ? branch.district.city.cityName : '';
@@ -152,9 +152,9 @@ export class BagScanOutBranchSortirQueueService {
           AND is_deleted=FALSE
       `);
 
-      console.log('RESULT QUERY BAG ITEM AWB', bagItemsAwb);
+      console.log('BagScanOutBranchSortirQueueService - createHistoryCombinePackageAwb - RESULT QUERY BAG ITEM AWB', bagItemsAwb);
 
-      console.log('INSERT BAG ITEM HISTORY');
+      console.log('BagScanOutBranchSortirQueueService - createHistoryCombinePackageAwb - INSERT BAG ITEM HISTORY');
       const resultbagItemHistory = BagItemHistory.create();
       resultbagItemHistory.bagItemId = item.bag_item_id.toString();
       resultbagItemHistory.userId = data.userId.toString();
@@ -165,11 +165,10 @@ export class BagScanOutBranchSortirQueueService {
       resultbagItemHistory.createdTime = moment().toDate();
       resultbagItemHistory.userIdUpdated = Number(data.userId);
       resultbagItemHistory.updatedTime = moment().toDate();
-      console.log('PARAMS INSERT BAG ITEM HISTORY', resultbagItemHistory);
       await BagItemHistory.insert(resultbagItemHistory);
-      console.log('END INSERT BAG ITEM HISTORY');
+      console.log('BagScanOutBranchSortirQueueService - createHistoryCombinePackageAwb - END INSERT BAG ITEM HISTORY');
 
-      console.log('UPDATE BAG ITEM');
+      console.log('BagScanOutBranchSortirQueueService - createHistoryCombinePackageAwb - UPDATE BAG ITEM');
       await BagItem.update(
         { bagItemId : item.bag_item_id },
         {
@@ -181,21 +180,21 @@ export class BagScanOutBranchSortirQueueService {
           updatedTime: moment().toDate(),
         },
       );
-      console.log('END UPDATE BAG ITEM');
+      console.log('BagScanOutBranchSortirQueueService - createHistoryCombinePackageAwb - END UPDATE BAG ITEM');
 
       if (bagItemsAwb && bagItemsAwb.length) {
         for (const itemAwb of bagItemsAwb) {
           if (itemAwb.awbItemId && !tempAwb.includes(itemAwb.awbItemId)) {
             tempAwb.push(itemAwb.awbItemId);
 
-            console.log('CALL BULL UpdateHubSummaryAwbOutQueueService');
+            console.log('BagScanOutBranchSortirQueueService - createHistoryCombinePackageAwb - CALL BULL UpdateHubSummaryAwbOutQueueService');
             UpdateHubSummaryAwbOutQueueService.perform(
                 data.branchId,
                 itemAwb.awbNumber,
                 data.userId,
             );
-            console.log('END CALL BULL UpdateHubSummaryAwbOutQueueService');
-            console.log('CALL BULL createJobByScanOutBag');
+            console.log('BagScanOutBranchSortirQueueService - createHistoryCombinePackageAwb - END CALL BULL UpdateHubSummaryAwbOutQueueService');
+            console.log('BagScanOutBranchSortirQueueService - createHistoryCombinePackageAwb - CALL BULL createJobByScanOutBag');
             DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
               Number(itemAwb.awbItemId),
               Number(data.branchId),
@@ -208,7 +207,7 @@ export class BagScanOutBranchSortirQueueService {
               Number(item.branch_id_to),
               branchNameNext,
             );
-            console.log('END CALL BULL createJobByScanOutBag');
+            console.log('BagScanOutBranchSortirQueueService - createHistoryCombinePackageAwb - END CALL BULL createJobByScanOutBag');
           }
         }
       }
