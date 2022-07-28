@@ -81,7 +81,7 @@ export class MobileSortationService {
       },
     });
 
-    console.log('MobileSortationService - scanOutMobileSortation - RESULT DO SORTATION : ', resultDoSortation);
+    console.log('MobileSortationService - scanOutMobileSortation - RESULT DO SORTATION : ', JSON.stringify(resultDoSortation));
 
     if (!resultDoSortation) {
       throw new BadRequestException(`Can't Find  Do Sortation ID : ` + payload.doSortationId);
@@ -114,7 +114,7 @@ export class MobileSortationService {
 
     const departedDetail = await q.exec();
 
-    console.log('MobileSortationService - scanOutMobileSortation - RESULT DO SORTATION DETAIL : ', departedDetail);
+    console.log('MobileSortationService - scanOutMobileSortation - RESULT DO SORTATION DETAIL : ', JSON.stringify(departedDetail));
 
     await getManager().transaction(async transaction => {
       if (resultDoSortation.depatureDateTime) {
@@ -190,7 +190,7 @@ export class MobileSortationService {
           doSortationStatusId: DO_SORTATION_STATUS.PROBLEM,
         },
       });
-      console.log('MobileSortationService - scanOutMobileSortation - RESULT HAS PROBLEM IN DO SORTATION HISTORY : ', checkDoSortationHistory);
+      console.log('MobileSortationService - scanOutMobileSortation - RESULT HAS PROBLEM IN DO SORTATION HISTORY : ', JSON.stringify(checkDoSortationHistory));
       if (!checkDoSortationHistory) {
         // update status AWB & Bag queue
         console.log('MobileSortationService - scanOutMobileSortation - CALL BULL BagScanOutBranchSortirQueueService');
@@ -615,7 +615,7 @@ export class MobileSortationService {
       .take(1);
 
     const resultSortationDetail = await q.exec();
-    console.log('MobileSortationService - scanInMobileSortation - RESULT SORTATION DETAIL : ', resultSortationDetail);
+    console.log('MobileSortationService - scanInMobileSortation - RESULT SORTATION DETAIL : ', JSON.stringify(resultSortationDetail));
     if (resultSortationDetail) {
 
       if (resultSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {

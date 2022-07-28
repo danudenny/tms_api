@@ -63,7 +63,7 @@ export class BagScanOutBranchSortirQueueService {
       `);
       const tempBag = [];
       const dataResultBagItemBranch = [];
-      console.log('BagScanOutBranchSortirQueueService - boot - RESULT QUERY BAG ITEM BY BRANCH : ', resultBagItemBranch);
+      console.log('BagScanOutBranchSortirQueueService - boot - RESULT QUERY BAG ITEM BY BRANCH : ', JSON.stringify(resultBagItemBranch));
       for (const item of resultBagItemBranch) {
         if (tempBag.includes(Number(item.bag_item_id))) {
           continue;
@@ -71,7 +71,7 @@ export class BagScanOutBranchSortirQueueService {
         tempBag.push(Number(item.bag_item_id));
         dataResultBagItemBranch.push(item);
       }
-      console.log('BagScanOutBranchSortirQueueService - boot - INCLUDE BAG ITEM ID TO TEMP COSTANT ', tempBag);
+      console.log('BagScanOutBranchSortirQueueService - boot - INCLUDE BAG ITEM ID TO TEMP COSTANT ', JSON.stringify(tempBag));
       const resultDriver = await RawQueryService.query(`
          SELECT
           e.employee_id AS employee_driver_id,
@@ -82,7 +82,7 @@ export class BagScanOutBranchSortirQueueService {
         LIMIT 1
       `);
 
-      console.log('BagScanOutBranchSortirQueueService - boot - GET DRIVER : ', resultDriver);
+      console.log('BagScanOutBranchSortirQueueService - boot - GET DRIVER : ', JSON.stringify(resultDriver));
 
       if (resultDriver.length > 0) {
         employeeIdDriver = resultDriver[0].employee_driver_id;
@@ -90,7 +90,7 @@ export class BagScanOutBranchSortirQueueService {
       }
 
       const branch = await SharedService.getDataBranchCity(data.branchId);
-      console.log('BagScanOutBranchSortirQueueService - boot - GET BRANCH : ', branch);
+      console.log('BagScanOutBranchSortirQueueService - boot - GET BRANCH : ', JSON.stringify(branch));
       if (branch) {
         branchName = branch.branchName;
         cityName = branch.district ? branch.district.city.cityName : '';
