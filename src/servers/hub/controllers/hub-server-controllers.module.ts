@@ -19,6 +19,7 @@ import { SortationL2ModuleController } from './sortation/web/sortation-l2-module
 import { SortationL2ListModuleController } from './sortation/web/sortation-l2-list.controller';
 import { SortationMasterdataController } from './masterdata-controller';
 import { SortationMasterdataService } from '../services/masterdata-service';
+import { SortationReportController } from './sortation/web/sortation-report-controller';
 
 @Module({
   imports: [SharedModule, HubServerServicesModule],
@@ -40,6 +41,7 @@ import { SortationMasterdataService } from '../services/masterdata-service';
     SortationL2ModuleController,
     SortationL2ListModuleController,
     SortationMasterdataController,
+    SortationReportController,
   ],
 })
 export class HubServerControllersModule {}
