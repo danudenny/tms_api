@@ -3,6 +3,7 @@ import Axios from 'axios';
 import moment = require('moment');
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { AuthService } from '../../../../../shared/services/auth.service';
+import { ConfigService } from '../../../../../shared/services/config.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
 import { GenerateQueueFormDataPayloadVm, GenerateQueueOptionPayloadVm } from '../../../../smd/models/smd-central-reporting.payload.vm';
 import { SortationReportGeneratePayloladVm, SortationReportListPayloadVm } from '../../../models/sortation/web/sortation-report-payload.vm';
@@ -10,7 +11,7 @@ import { SortationReportGeneratePayloladVm, SortationReportListPayloadVm } from 
 const type = 'sortation_berangkat';
 export class SortationReportService {
   private static get baseUrlInternal() {
-    return 'http://api-internal.s.sicepat.io/operation/reporting-service';
+    return ConfigService.get('sortationReporting.baseUrl');
   }
 
   public static async sortationListReport(payload: SortationReportListPayloadVm) {
@@ -47,13 +48,7 @@ export class SortationReportService {
       result['paging'] = MetaService.set(payload.page, payload.limit, total);
       return result;
     } catch (err) {
-      const status = err.response.status || HttpStatus.BAD_REQUEST;
-      const errResponse = {
-        error: err.response.data && err.response.data.error,
-        message: err.response.data && err.response.data.message,
-        statusCode: status,
-      };
-      throw new HttpException(errResponse, status);
+      throw err.message;
     }
   }
 
@@ -145,15 +140,9 @@ export class SortationReportService {
 
     try {
       const request = await Axios.post(url, qs.stringify(body), options);
-      
+      return { status: request.status, ...request.data };
     } catch (err) {
-      const status = err.response.status || HttpStatus.BAD_REQUEST;
-      const errResponse = {
-        error: err.response.data && err.response.data.error,
-        message: err.response.data && err.response.data.message,
-        statusCode: status,
-      };
-      throw new HttpException(errResponse, status);
+      throw err.message;
     }
 
   }

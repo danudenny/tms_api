@@ -56,4 +56,7 @@ module.exports = {
     tags: ['API-POD-DEV'],
   },
   servers: getAllServerConfigurations('default.js'),
+  sortationReporting: {
+    baseUrl: 'http://api-internal.s.sicepat.io/operation/reporting-service'
+  },
 };

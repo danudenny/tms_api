@@ -214,4 +214,7 @@ module.exports = {
     checkingConfig: true,
     disableChannel: "sms|wa"
   },
+  sortationReporting: {
+    baseUrl: 'http://api-internal.s.sicepat.io/operation/reporting-service'
+  },
 };
