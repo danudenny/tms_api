@@ -14,7 +14,7 @@ export class MobileRebuildPickupPod {
   @Post('getDeliveryAndCodAmount')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @UseGuards(AuthenticatedGuard)
   @ApiOkResponse({ type: MobileRebuildPickUpServiceResponse })
   public async scanOutCreate(@Body() payload: MobileRebuildPickUpServicePayload) {
     return MobileRebuildPickUpService.getDeliveryandCodAmount(payload);
