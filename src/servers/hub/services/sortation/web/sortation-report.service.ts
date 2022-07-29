@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import Axios from 'axios';
-import moment from 'moment';
+import moment = require('moment');
 import { Branch } from '../../../../../shared/orm-entity/branch';
 import { AuthService } from '../../../../../shared/services/auth.service';
 import { MetaService } from '../../../../../shared/services/meta.service';
@@ -115,14 +115,12 @@ export class SortationReportService {
           "ds"."do_sortation_time" >= '${moment(payload.startDate).format('YYYY-MM-DD')}'
           AND "ds"."do_sortation_time" < '${moment(payload.endDate).format('YYYY-MM-DD')}'
         )`;
-
-    if (payload.branchId !== null && payload.branchId !== 0) {
+    if (payload.branchId && payload.branchId !== 0) {
             query = query + ` AND ds.branch_id_from = '${payload.branchId}' \n`;
           }
     query = query + `AND "ds"."is_deleted" = 'false'
       ORDER BY
-        "ds"."created_time" DESC
-      LIMIT 10;`;
+        "ds"."created_time" DESC ;`;
 
     return Buffer.from(query).toString('base64');
   }
@@ -147,7 +145,7 @@ export class SortationReportService {
 
     try {
       const request = await Axios.post(url, qs.stringify(body), options);
-      return { status: request.status, ...request.data };
+      
     } catch (err) {
       const status = err.response.status || HttpStatus.BAD_REQUEST;
       const errResponse = {
