@@ -16,6 +16,6 @@ export class SortationReportGeneratePayloladVm {
   @ApiModelProperty()
   endDate: string;
 
-  @ApiModelPropertyOptional({default : null})
+  @ApiModelProperty()
   branchId: number;
 }
