@@ -56,8 +56,8 @@ export class HubPackagesMonitoringService {
       'scanDate;gte;true',
       'scanDate;lt;true',
       'branchId;eq;true',
-      'awbNumber;eq;false',
-      'bagNumber;eq;false',
+      'awbNumber;ilike;false',
+      'bagNumber;ilike;false',
       'type;eq;false',
     ];
     const filters = filterFields.map(fieldName => {
