@@ -246,8 +246,6 @@ export class MobileSortationService {
 
     if (resultDoSortationDetail) {
       // validated nearly branch
-      await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultDoSortationDetail.branchIdTo);
-
       const resultSortationDetailArrival = await DoSortationDetail.findOne({
         select: [
           'doSortationId',
@@ -621,7 +619,7 @@ export class MobileSortationService {
     const resultSortationDetail = await q.exec();
     console.log('MobileSortationService - scanInMobileSortation - RESULT SORTATION DETAIL : ', JSON.stringify(resultSortationDetail));
     if (resultSortationDetail) {
-
+      await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultSortationDetail.branchIdTo);
       if (resultSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
         throw new UnprocessableEntityException('DO Sortation harus ON THE WAY.');
       }
