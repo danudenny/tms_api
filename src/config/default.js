@@ -218,6 +218,9 @@ module.exports = {
     disableChannel: "sms|wa"
   },
   nearlyBranch: {
-    radius: 0.5
+    radius: {
+      smd: 0.5,
+      sortation: 0.5
+    }
   }
 };
