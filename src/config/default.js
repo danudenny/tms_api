@@ -216,8 +216,8 @@ module.exports = {
   },
   nearlyBranch: {
     radius: {
-      smd: 0.5,
-      sortation: 0.5
+      smd: 1,
+      sortation: 1
     }
   }
 };
