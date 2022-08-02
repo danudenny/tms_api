@@ -138,6 +138,7 @@ export class MobileSmdService {
         });
 
         if (resultDoSmdDetail) {
+            await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultDoSmdDetail.branchIdTo);
             if (resultDoSmdDetail.departureTime) {
                 if (resultDoSmdDetail.arrivalTime) {
                     // handle cek arrival smd berkali-kali
@@ -362,7 +363,6 @@ export class MobileSmdService {
         });
 
         if (resultDoSmdDetail) {
-            await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultDoSmdDetail.branchIdTo);
             const resultDoSmdDetailArrival = await DoSmdDetail.findOne({
                 where: {
                     doSmdId: resultDoSmdDetail.doSmdId,
