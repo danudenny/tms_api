@@ -9,8 +9,7 @@ export class NearlyBranchService {
 
     static E_RADIUS = 6372.8;
 
-    public static async validateNearlyBranch(lat, long, branchId): Promise<any> {
-        const radius: number = ConfigService.get('nearlyBranch.radius'); // in kilometer
+    public static async validateNearlyBranch(lat, long, branchId, radius): Promise<any> {
         const nearbyLotLang = await this.getRangeCoordinate(parseFloat(lat), parseFloat(long), radius);
         const res = await RawQueryService.query(`
           SELECT branch_id FROM branch
@@ -22,7 +21,7 @@ export class NearlyBranchService {
         if (res.length > 0) {
             return res.length;
         } else {
-            throw new BadRequestException('Your location does not match the branch location');
+            throw new BadRequestException(`Jarak Anda saat ini dengan tujuan lebih dari ${radius} km`);
         }
     }
 
