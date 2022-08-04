@@ -24,8 +24,15 @@ export class GatewayService {
     options.url = this.config.apiInternalBaseUrl + this.getDestination(req.url);
 
     const authMeta = AuthService.getAuthMetadata();
-    options.headers['x-user-id'] = authMeta.userId.toString();
-    options.headers['x-channel-id'] = authMeta.clientId.toString();
+    if(options.url.includes('pickup')){
+      const permissonPayload = AuthService.getPermissionTokenPayload();
+      options.headers['employeeID'] = authMeta.employeeId;
+      options.headers['branchID'] = permissonPayload.branchId;
+    }else{
+      options.headers['x-user-id'] = authMeta.userId.toString();
+      options.headers['x-channel-id'] = authMeta.clientId.toString();
+    }
+    
     delete options.headers['host'];
 
     const fileSvcAuth = req.headers['x-filesvc-auth'];
