@@ -17,6 +17,9 @@ import { SortationHandoverResponseVm } from '../../../models/sortation/web/sorta
 import { RawQueryService } from '../../../../../shared/services/raw-query.service';
 import { DoSortationVehicle } from '../../../../../shared/orm-entity/do-sortation-vehicle';
 import { SortationService } from './sortation.service';
+import { SortationFinishHistory } from '../../../../../shared/orm-entity/sortation-finish-history';
+import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payload.vm';
+import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 
 @Injectable()
 export class SortationL2ModuleService {
@@ -62,6 +65,16 @@ export class SortationL2ModuleService {
           null,
           authMeta.userId,
         );
+
+        // insert to history sortation finish
+        const objSortationHistory = SortationFinishHistory.create({
+          doSortationId : findDoSortation.doSortationId ,
+          createdTime : moment().toDate(),
+          updatedTime : moment().toDate(),
+          userIdCreated : authMeta.userId,
+          userIdUpdated : authMeta.userId,
+        });
+        await transaction.insert(SortationFinishHistory, objSortationHistory);
       });
 
       const resultData = [];
@@ -275,4 +288,5 @@ export class SortationL2ModuleService {
     const resultDataDoSortationVehicle = await RawQueryService.query(rawQuery);
     return resultDataDoSortationVehicle;
   }
+
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm, BaseMetaPayloadFilterVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
@@ -704,6 +704,10 @@ export class MonitoringProblemListService {
       if (field == 'bagSortir' || field == 'bagNumber') {
         const bagNumber = payload.filters[i].value;
         const checkBagNumber = await BagService.validBagNumber(bagNumber);
+        if (!checkBagNumber) {
+          throw new BadRequestException('No. Gabung Paket/Gabung Sortir tidak ditemukan');
+        }
+
         payload.filters[i].value = checkBagNumber.bag.bagNumber;
         if (checkBagNumber.bag.bagNumber.length === 10) {
           payload.filters[i].field = field;

@@ -1,4 +1,4 @@
-import { Injectable, Param, PayloadTooLargeException } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import moment = require('moment');
 import { BadRequestException } from '@nestjs/common';
 import { RedisService } from '../../../../shared/services/redis.service';
@@ -21,7 +21,6 @@ import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { BagScanInBranchSmdQueueService } from '../../../queue/services/bag-scan-in-branch-smd-queue.service';
 import { ScanInSmdMorePayloadVm, ScanInSmdPayloadVm, ScaninDetailScanPayloadVm } from '../../models/scanin-smd.payload.vm';
 import { getManager, createQueryBuilder, EntityManager } from 'typeorm';
-import { Todos } from '../../../../shared/orm-entity/todos';
 import { DoPod } from '../../../../shared/orm-entity/do-pod';
 import { BagService } from '../../../main/services/v1/bag.service';
 
@@ -592,6 +591,14 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
     if (payload.bag_item_number.length > 15) {
+
+      // check regex
+      const checkQuotes = /['"]+/g;
+      const validateBagItem = checkQuotes.test(payload.bag_item_number);
+      if (validateBagItem) {
+        throw new UnprocessableEntityException('Nomor Bag item / Surjal tidak sesuai.');
+      }
+
       // check type surat jalan
       const sliceSuratJalan = payload.bag_item_number.slice(0, 3);
       let rawQueryBag = `
@@ -1043,7 +1050,7 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     let lastNumber = 0;
     const timeNow = moment().toDate();
     prefix = `TB/${moment(receivedBagTime).format('YYMM')}/`;
-  
+
     const code = await SysCounter.findOne({
       where: {
         key: prefix,
@@ -1103,17 +1110,17 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     return result;
   }
 
-  private static async getDoPodByBagItem(bagItemId: number){
+  private static async getDoPodByBagItem(bagItemId: number) {
     const q = createQueryBuilder();
-      q.addSelect('t2.do_pod_id', 'doPodId');
-      q.addSelect('t2.total_scan_in_bag', 'totalScanInBag');
-      q.from('do_pod_detail_bag', 't1');
-      q.innerJoin('do_pod', 't2', 't2.do_pod_id = t1.do_pod_id');
-      q.where('t1.bag_item_id = :bagItemId', {bagItemId: bagItemId});
-      q.andWhere('t1.transaction_status_id_last = 800');
-      q.andWhere('t1.is_deleted = false');
-      q.orderBy('t1.created_time', 'DESC' );
-      q.limit(1);
+    q.addSelect('t2.do_pod_id', 'doPodId');
+    q.addSelect('t2.total_scan_in_bag', 'totalScanInBag');
+    q.from('do_pod_detail_bag', 't1');
+    q.innerJoin('do_pod', 't2', 't2.do_pod_id = t1.do_pod_id');
+    q.where('t1.bag_item_id = :bagItemId', {bagItemId});
+    q.andWhere('t1.transaction_status_id_last = 800');
+    q.andWhere('t1.is_deleted = false');
+    q.orderBy('t1.created_time', 'DESC' );
+    q.limit(1);
     return await q.getRawOne();
   }
 
@@ -1121,7 +1128,7 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     doPodDetailBag: any,
     userId: number,
     timeNow: Date,
-    transactional: EntityManager){
+    transactional: EntityManager) {
       doPodDetailBag.totalScanInBag += 1;
       if (doPodDetailBag.totalScanInBag == 1) {
         await transactional.update(
@@ -1135,7 +1142,7 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
             userIdUpdated: userId,
           },
         );
-      }else{
+      } else {
         await transactional.update(
           DoPod,
           { doPodId: doPodDetailBag.doPodId },
