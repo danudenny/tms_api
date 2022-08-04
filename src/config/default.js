@@ -220,4 +220,10 @@ module.exports = {
     checkingConfig: true,
     disableChannel: "wa"
   },
+  nearlyBranch: {
+    radius: {
+      smd: 1,
+      sortation: 1
+    }
+  }
 };

@@ -85,6 +85,7 @@ export class MonitoringSmdServices {
       .addSelect('ds.arrival_date_time', 'arrival_date_time')
       .addSelect(`ds.employee_driver_name`, 'employee_driver_name')
       .addSelect(`ds.employee_id_driver`, 'employee_id_driver')
+      .addSelect('ds.nik', 'nik')
       .addSelect(`ds.is_intercity`, 'is_intercity')
       .addSelect(`ds.do_smd_intercity`, 'do_smd_intercity')
       .addSelect(`ds.representative_code`, 'representative_code')
@@ -104,6 +105,7 @@ export class MonitoringSmdServices {
           .addSelect(`'T' || ds.counter_trip`, 'smd_trip')
           .addSelect(`e.fullname`, 'employee_driver_name')
           .addSelect(`e.employee_id`, 'employee_id_driver')
+          .addSelect('e.nik', 'nik')
           .addSelect(`(
                       select
                         sum(bi.weight)
@@ -153,15 +155,15 @@ export class MonitoringSmdServices {
           )
           .innerJoin('do_smd_detail',
             'dot',
-            'dot.do_smd_id = ds.do_smd_id and dot.is_deleted = false'
+            'dot.do_smd_id = ds.do_smd_id and dot.is_deleted = false',
           )
           .innerJoin('branch',
             'bd',
-            'bd.branch_id = dot.branch_id_to and bd.is_deleted = false'
+            'bd.branch_id = dot.branch_id_to and bd.is_deleted = false',
           )
           .innerJoin('representative',
             'rd',
-            'rd.representative_id = bd.representative_id and rd.is_deleted = false'
+            'rd.representative_id = bd.representative_id and rd.is_deleted = false',
           );
 
         payload.applyFiltersToQueryBuilder(subQuery, ['departure_date_time']);

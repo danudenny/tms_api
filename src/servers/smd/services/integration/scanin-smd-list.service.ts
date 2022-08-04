@@ -26,6 +26,7 @@ export class ScaninSmdListService {
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
     payload.fieldResolverMap['arrival_time'] = 'dsd.arrival_time';
     payload.fieldResolverMap['is_intercity'] = 'ds.is_intercity';
+    payload.fieldResolverMap.do_smd_status_id = 'ds.do_smd_status_id_last';
 
     payload.globalSearchFields = [
       {
@@ -64,6 +65,7 @@ export class ScaninSmdListService {
       ['dsd.arrival_time', 'arrival_time'],
       ['e.fullname', 'fullname'],
       ['e.employee_id', 'employee_id'],
+      ['e.nik', 'nik'],
       ['dsv.vehicle_number', 'vehicle_number'],
       ['bf.branch_name', 'branch_from_name'],
       ['bt.branch_name', 'branch_to_name'],

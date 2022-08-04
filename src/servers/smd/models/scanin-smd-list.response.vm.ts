@@ -19,7 +19,6 @@ export class ScanInSmdListVm {
 
   @ApiModelProperty()
   do_smd_intercity: string;
-  
 
   @ApiModelProperty()
   do_smd_time: Date;
@@ -32,6 +31,9 @@ export class ScanInSmdListVm {
 
   @ApiModelProperty()
   employee_id: number;
+
+  @ApiModelProperty()
+  nik: string;
 
   @ApiModelProperty()
   vehicle_number: string;
