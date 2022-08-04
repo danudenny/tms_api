@@ -26,7 +26,7 @@ export class GatewayService {
     const authMeta = AuthService.getAuthMetadata();
     if(options.url.includes('pickup')){
       const permissonPayload = AuthService.getPermissionTokenPayload();
-      options.headers['employeeID'] = authMeta.userId;
+      options.headers['employeeID'] = authMeta.employeeID;
       options.headers['branchID'] = permissonPayload.branchId;
     }else{
       options.headers['x-user-id'] = authMeta.userId.toString();
