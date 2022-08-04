@@ -17,9 +17,12 @@ import { SortationScanOutMonitoringController } from './sortation/web/sortation-
 import { SortationPrintController } from './sortation/web/sortation-scanout-print.controller';
 import { SortationL2ModuleController } from './sortation/web/sortation-l2-module.controller';
 import { SortationL2ListModuleController } from './sortation/web/sortation-l2-list.controller';
+import { SortationMasterdataController } from './masterdata-controller';
+import { SortationMasterdataService } from '../services/masterdata-service';
 
 @Module({
   imports: [SharedModule, HubServerServicesModule],
+  providers: [SortationMasterdataService],
   controllers: [
     HubMachineSortirController,
     HubMachinePackageController,
@@ -36,6 +39,7 @@ import { SortationL2ListModuleController } from './sortation/web/sortation-l2-li
     MobileSortationListController,
     SortationL2ModuleController,
     SortationL2ListModuleController,
+    SortationMasterdataController,
   ],
 })
 export class HubServerControllersModule {}
