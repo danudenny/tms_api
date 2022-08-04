@@ -30,7 +30,8 @@ export class SortationL2ModuleController {
 
   @Post('handover')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public async handoverSortation(@Body() payload: SortationL2ModuleHandoverPayloadVm){
+  public async handoverSortation(@Body() payload: SortationL2ModuleHandoverPayloadVm) {
     return SortationL2ModuleService.handoverModuleSortation(payload);
   }
+
 }
