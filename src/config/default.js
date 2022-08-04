@@ -154,6 +154,9 @@ module.exports = {
       "filesvc": {
         destination: "/core/filesvc"
       },
+      "pickup": {
+        destination: "/operation/pickup-coresvc" 
+      },
     }
   },
   reportingService: {
