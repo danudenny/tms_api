@@ -56,8 +56,8 @@ import {
 import {
   MobileSortationHanoverImageResponseVm,
 } from '../../../models/sortation/mobile/mobile-sortation-hanover-image.response.vm';
-import {NearlyBranchService} from "../../../../../shared/services/nearly-branch.service";
-import {ConfigService} from "../../../../../shared/services/config.service";
+import {NearlyBranchService} from '../../../../../shared/services/nearly-branch.service';
+import {ConfigService} from '../../../../../shared/services/config.service';
 
 @Injectable()
 export class MobileSortationService {
@@ -620,8 +620,8 @@ export class MobileSortationService {
     const resultSortationDetail = await q.exec();
     console.log('MobileSortationService - scanInMobileSortation - RESULT SORTATION DETAIL : ', JSON.stringify(resultSortationDetail));
     if (resultSortationDetail) {
-      const radius: number = ConfigService.get('nearlyBranch.radius.sortation'); // in kilometer
-      await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultSortationDetail.branchIdTo, radius);
+      // const radius: number = ConfigService.get('nearlyBranch.radius.sortation'); // in kilometer
+      // await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultSortationDetail.branchIdTo, radius);
       if (resultSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
         throw new UnprocessableEntityException('DO Sortation harus ON THE WAY.');
       }
