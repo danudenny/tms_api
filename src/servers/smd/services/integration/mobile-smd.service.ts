@@ -28,7 +28,7 @@ import {BagScanOutBranchSmdQueueService} from '../../../queue/services/bag-scan-
 import {DO_SORTATION_STATUS} from '../../../../shared/constants/do-sortation-status.constant';
 import {HistoryModuleFinish} from '../../../../shared/orm-entity/history-module-finish';
 import {NearlyBranchService} from '../../../../shared/services/nearly-branch.service';
-import {ConfigService} from "../../../../shared/services/config.service";
+import {ConfigService} from '../../../../shared/services/config.service';
 
 @Injectable()
 export class MobileSmdService {
@@ -139,8 +139,8 @@ export class MobileSmdService {
         });
 
         if (resultDoSmdDetail) {
-            const radius: number = ConfigService.get('nearlyBranch.radius.smd'); // in kilometer
-            await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultDoSmdDetail.branchIdTo, radius);
+            // const radius: number = ConfigService.get('nearlyBranch.radius.smd'); // in kilometer
+            // await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultDoSmdDetail.branchIdTo, radius);
             if (resultDoSmdDetail.departureTime) {
                 if (resultDoSmdDetail.arrivalTime) {
                     // handle cek arrival smd berkali-kali
