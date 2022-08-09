@@ -542,7 +542,7 @@ export class SortationScanOutService {
   static async sortaionScanOutDeleted(doSortationId: string) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-
+    const timeNow = moment().toDate();
     if (!doSortationId) {
       throw new BadRequestException(`ID Surat Jalan Sortation harus di isi`);
     }
@@ -574,7 +574,7 @@ export class SortationScanOutService {
           { doSortationId: resultDoSortaion.doSortationId},
           {
             userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
+            updatedTime: timeNow,
             isDeleted: true,
           },
       );
@@ -583,7 +583,7 @@ export class SortationScanOutService {
           { doSortationId: resultDoSortaion.doSortationId},
           {
             userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
+            updatedTime: timeNow,
             isDeleted: true,
           },
       );
@@ -593,7 +593,7 @@ export class SortationScanOutService {
           { doSortationId: resultDoSortaion.doSortationId},
           {
             userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
+            updatedTime: timeNow,
             isDeleted: true,
           },
         );
@@ -603,7 +603,7 @@ export class SortationScanOutService {
             { doSortationDetailId: detail.doSortationDetailId},
             {
               userIdUpdated: authMeta.userId,
-              updatedTime: moment().toDate(),
+              updatedTime: timeNow,
               isDeleted: true,
             },
           );
@@ -627,7 +627,7 @@ export class SortationScanOutService {
   static async sortationScanOutRouteDelete(doSortationDetailId: string) {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-
+    const timeNow = moment().toDate();
     if (!doSortationDetailId) {
       throw new BadRequestException(`ID Surat Jalan Sortation Detail harus di isi`);
     }
@@ -682,7 +682,7 @@ export class SortationScanOutService {
           totalBagSortir: resultDoSortaion.totalBagSortir - resultDoSortaionDetail.totalBagSortir,
           branchIdToList,
           branchNameToList,
-          updatedTime: moment().toDate(),
+          updatedTime: timeNow,
           userIdUpdated: authMeta.userId,
         },
       );
@@ -691,7 +691,7 @@ export class SortationScanOutService {
           { doSortationDetailId: resultDoSortaionDetail.doSortationDetailId},
           {
             userIdUpdated: authMeta.userId,
-            updatedTime: moment().toDate(),
+            updatedTime: timeNow,
             isDeleted: true,
           },
       );
@@ -700,7 +700,7 @@ export class SortationScanOutService {
         { doSortationDetailId: resultDoSortaionDetail.doSortationDetailId},
         {
           userIdUpdated: authMeta.userId,
-          updatedTime: moment().toDate(),
+          updatedTime: timeNow,
           isDeleted: true,
         },
       );
@@ -833,7 +833,7 @@ export class SortationScanOutService {
   public static async sortationHandover(payload: SortationHandoverPayloadVm): Promise<SortationHandoverResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissonPayload = AuthService.getPermissionTokenPayload();
-
+    const timeNow =  moment().toDate();
     const result = new SortationHandoverResponseVm();
     const data = [];
 
@@ -910,7 +910,7 @@ export class SortationScanOutService {
                 {
                   isActive: false,
                   userIdUpdated: authMeta.userId,
-                  updatedTime: moment().toDate(),
+                  updatedTime: timeNow,
                 },
               );
 
@@ -942,7 +942,7 @@ export class SortationScanOutService {
                 {doSortationId : item.doSortationId},
                 {
                   doSortationStatusIdLast : DO_SORTATION_STATUS.BACKUP_PROCESS,
-                  updatedTime : moment().toDate(),
+                  updatedTime : timeNow,
                   userIdUpdated : authMeta.userId,
           // doSortationVehicleIdLast : paramDoSortationVehicleId,
                 },
@@ -956,7 +956,7 @@ export class SortationScanOutService {
                 {
                   doSortationStatusIdLast: DO_SORTATION_STATUS.BACKUP_PROCESS,
                   userIdUpdated: authMeta.userId,
-                  updatedTime: moment().toDate(),
+                  updatedTime: timeNow,
                 },
               );
 
@@ -1018,12 +1018,13 @@ export class SortationScanOutService {
     userId: number,
     transactional: EntityManager,
   ) {
+    const timeNow = moment().toDate();
     if (isSortir) {
       await transactional.update(DoSortation,
         { doSortationId: resultDoSortationDetail.doSortationId},
         {
           totalBagSortir: resultDoSortation.totalBagSortir + 1,
-          updatedTime: moment().toDate(),
+          updatedTime: timeNow,
           userIdUpdated: userId,
         });
 
@@ -1032,7 +1033,7 @@ export class SortationScanOutService {
         {
           isSortir: true,
           totalBagSortir: resultDoSortationDetail.totalBagSortir + 1,
-          updatedTime: moment().toDate(),
+          updatedTime: timeNow,
           userIdUpdated: userId,
         });
     } else {
@@ -1040,14 +1041,14 @@ export class SortationScanOutService {
         { doSortationId: resultDoSortationDetail.doSortationId},
         {
           totalBag: resultDoSortation.totalBag + 1,
-          updatedTime: moment().toDate(),
+          updatedTime: timeNow,
           userIdUpdated: userId,
         });
       await transactional.update(DoSortationDetail,
         {doSortationDetailId: resultDoSortationDetail.doSortationDetailId},
         {
           totalBag: resultDoSortationDetail.totalBag + 1,
-          updatedTime: moment().toDate(),
+          updatedTime: timeNow,
           userIdUpdated: userId,
         });
     }

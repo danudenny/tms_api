@@ -144,7 +144,7 @@ export class MobileSortationService {
             doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
-            depatureDateTime: moment().toDate(),
+            depatureDateTime: timeNow,
           },
         );
       }
@@ -158,7 +158,7 @@ export class MobileSortationService {
         },
         {
           doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-          depatureDateTime: moment().toDate(),
+          depatureDateTime: timeNow,
           latitudeDeparture: payload.latitude,
           longitudeDeparture: payload.longitude,
           userIdUpdated: authMeta.userId,
@@ -341,7 +341,7 @@ export class MobileSortationService {
       data.push({
         doSortationId: resultDoSortationDetail.doSortationId,
         doSortationDetailId: resultDoSortationDetail.doSortationDetailId,
-        arrivalDateTime: moment().toDate(),
+        arrivalDateTime: timeNow,
       });
       result.statusCode = HttpStatus.OK;
       result.message = 'Sortation Success Finished';
@@ -1025,7 +1025,7 @@ export class MobileSortationService {
     reasonNote: string,
     userId: number,
   ) {
-
+    const timeNow = moment().toDate();
     console.log('MobileSortationService - createDoSortationHistory - CREATE DO SORTATION HISTORY');
     const dataDoSortationHistory = transaction.create(DoSortationHistory, {
       doSortationId,
@@ -1038,8 +1038,8 @@ export class MobileSortationService {
       reasonNote,
       userIdCreated: userId,
       userIdUpdated: userId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
+      createdTime: timeNow,
+      updatedTime: timeNow,
     });
 
     await DoSortationHistory.insert(dataDoSortationHistory);
