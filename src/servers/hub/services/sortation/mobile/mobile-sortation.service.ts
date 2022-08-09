@@ -581,7 +581,7 @@ export class MobileSortationService {
       reasonDate: timeNow,
     });
     result.statusCode = HttpStatus.OK;
-    result.message = 'Sortation - Sukeses Pelaporan Masalah';
+    result.message = 'Sortation - Sukses Pelaporan Masalah';
     result.data = data;
     return result;
 
@@ -754,7 +754,7 @@ export class MobileSortationService {
         });
 
         result.statusCode = HttpStatus.OK;
-        result.message = 'Sortation - Sulses Slide lanjut berangkat';
+        result.message = 'Sortation - Sukses Slide lanjut berangkat';
         result.data = data;
         return result;
       } else {
