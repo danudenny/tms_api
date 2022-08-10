@@ -226,7 +226,4 @@ module.exports = {
       sortation: 1
     }
   },
-  sortationReporting: {
-    baseUrl: 'http://api-internal.s.sicepat.io/operation/reporting-service'
-  },
 };

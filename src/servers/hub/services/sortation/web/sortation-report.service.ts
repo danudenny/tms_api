@@ -11,7 +11,7 @@ import { SortationReportGeneratePayloladVm, SortationReportListPayloadVm } from 
 const type = 'sortation_berangkat';
 export class SortationReportService {
   private static get baseUrlInternal() {
-    return ConfigService.get('sortationReporting.baseUrl');
+    return ConfigService.get('reportingService.baseUrl');
   }
 
   public static async sortationListReport(payload: SortationReportListPayloadVm) {
