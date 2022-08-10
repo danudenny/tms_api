@@ -88,6 +88,7 @@ export class SortationReportService {
         ds.do_sortation_time AS "TglDibuat", \n
         ds.departure_date_time AS "tglBerangkat", \n
         ds.arrival_date_time AS "TglTiba", \n
+        e.nik AS "Nik", \n
         e.fullname AS "Handover", \n
         dsv.vehicle_number AS "Kendaraan", \n
         bf.branch_name AS "GeraiAsal", \n
