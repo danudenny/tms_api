@@ -1,5 +1,5 @@
 import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
-import {BaseMetaResponseVm} from '../../../shared/models/base-meta-response.vm';
+import { BaseMetaResponseVm } from '../../../shared/models/base-meta-response.vm';
 
 export class MappingDoSmdVm {
   @ApiModelProperty()
@@ -26,4 +26,17 @@ export class MappingVendor {
 export class MappingVendorResponseVm extends BaseMetaResponseVm {
   @ApiModelProperty({ type: () => [MappingVendor] })
   data: MappingVendor[];
+}
+
+class DoSmdStatusVm {
+  @ApiModelProperty()
+  do_smd_status_id: string;
+
+  @ApiModelProperty()
+  do_smd_status_title: string;
+}
+
+export class DoSmdStatusResponseVm extends BaseMetaResponseVm {
+  @ApiModelProperty({ type: () => [DoSmdStatusVm] })
+  data: DoSmdStatusVm[];
 }

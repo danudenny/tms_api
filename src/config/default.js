@@ -154,12 +154,15 @@ module.exports = {
       "filesvc": {
         destination: "/core/filesvc"
       },
+      "pickup": {
+        destination: "/operation/pickup-coresvc" 
+      },
     }
   },
   reportingService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service', //https://swagger.s.sicepat.tech/operation/reporting-service
     path: {
-      report: '/v1/reporting/report',
+      report: '/v2/report',
     }
   },
   codReportType: {
@@ -176,6 +179,9 @@ module.exports = {
     codMerge: [120, 147], //Admin COD - Merger, Ops - Koordinator Sigesit Antar (COD)
     codAdmin: [115, 136], //Ops - Admin COD, Ops - Admin Operational ( COD )
     codManual: [174], //Admin FORCE MAJEURE
+  },
+  codTransferBranch: {
+    version : 2,
   },
   korwil: {
     korwilRoleId: [38, 155],
@@ -213,6 +219,12 @@ module.exports = {
     bypassCode: "815413",
     checkingConfig: true,
     disableChannel: "sms|wa"
+  },
+  nearlyBranch: {
+    radius: {
+      smd: 1,
+      sortation: 1
+    }
   },
   sortationReporting: {
     baseUrl: 'http://api-internal.s.sicepat.io/operation/reporting-service'
