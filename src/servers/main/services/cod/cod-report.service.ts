@@ -73,7 +73,7 @@ export class CodReportService {
       }
 
       if (filter.field == 'branchLast' && filter.value && this.isNumber(filter.value)) {
-        queryParam += `AND ctd.branch_id = ${filter.value} `;
+        queryParam += `AND ctd.current_position_id = ${filter.value} `;
       }
 
       if (filter.field == 'transactionStatus' && filter.value && this.isNumber(filter.value)) {
@@ -317,7 +317,7 @@ export class CodReportService {
         queryParam += `AND ctd_branch.representative_id = ${filter.value} `;
       }
       if (filter.field == 'branchIdFinal' && filter.value && this.isNumber(filter.value)) {
-        queryParam += `AND ctd.branch_id = ${filter.value} `;
+        queryParam += `AND ctd.current_position_id = ${filter.value} `;
       }
       if (filter.field == 'awbStatusIdFinal' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND aia.awb_status_id_final = ${filter.value} `;
