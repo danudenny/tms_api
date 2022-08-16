@@ -59,7 +59,7 @@ export class CodReportService {
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment
-          .utc(filter.value).add(1, 'days')
+          .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00')
         queryParam += `AND ctd.updated_time < '${d}' `;
       }
@@ -277,7 +277,7 @@ export class CodReportService {
       }
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment
-          .utc(filter.value).add(1, 'days')
+          .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00')
         queryParam += `AND ctd.pod_date < '${d}' `;
       }
@@ -291,7 +291,7 @@ export class CodReportService {
 
       if (filter.field == 'transactionEnd' && filter.value) {
         const d = moment
-          .utc(filter.value).add(1, 'days')
+          .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00')
         queryParam += `AND ctd.updated_time < '${d}' `;
       }
@@ -305,7 +305,7 @@ export class CodReportService {
 
       if (filter.field == 'manifestedEnd' && filter.value) {
         const d = moment
-          .utc(filter.value).add(1, 'days')
+          .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00')
         queryParam += `AND ctd.awb_date < '${d}' `;
       }
