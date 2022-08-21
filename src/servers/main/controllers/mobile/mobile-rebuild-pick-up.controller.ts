@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards, Get, Param } from '@nestjs/common';
 import {
   ApiBearerAuth, ApiOkResponse, ApiUseTags,
 } from '../../../../shared/external/nestjs-swagger';
@@ -18,5 +18,14 @@ export class MobileRebuildPickupPod {
   @ApiOkResponse({ type: MobileRebuildPickUpServiceResponse })
   public async scanOutCreate(@Body() payload: MobileRebuildPickUpServicePayload) {
     return MobileRebuildPickUpService.getDeliveryandCodAmount(payload);
+  }
+
+  @Get('getPickupAmount/:dateStart/:dateEnd')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: MobileRebuildPickUpServiceResponse })
+  public async getPickupAmount(@Param('dateStart') dateStart: string, @Param('dateEnd') dateEnd: string) {
+    return MobileRebuildPickUpService.getPickupAmount(dateStart, dateEnd);
   }
 }

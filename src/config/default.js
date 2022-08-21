@@ -76,6 +76,9 @@ module.exports = {
     xApiKey : 'a99bca19-afa9-4b78-8ce8-2cb366664dc3',
     packageType : ['BEST']
   },
+  rebuildPickupService: {
+    baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1'
+  },
   exportService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
   },
