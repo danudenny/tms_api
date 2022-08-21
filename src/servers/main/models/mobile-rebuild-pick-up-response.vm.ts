@@ -7,3 +7,8 @@ export class MobileRebuildPickUpServiceResponse {
   @ApiModelProperty()
   codAmount: number;
 }
+
+export class MobileRebuildPickUpWorkOrderServiceResponse {
+  @ApiModelProperty()
+  pickup: number;
+}

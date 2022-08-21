@@ -5,7 +5,7 @@ import {
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { MobileRebuildPickUpService } from '../../services/mobile/mobile-rebuild-pick-up.service';
-import { MobileRebuildPickUpServiceResponse } from '../../models/mobile-rebuild-pick-up-response.vm';
+import { MobileRebuildPickUpServiceResponse, MobileRebuildPickUpWorkOrderServiceResponse } from '../../models/mobile-rebuild-pick-up-response.vm';
 import { MobileRebuildPickUpServicePayload } from '../../models/mobile-rebuild-pick-up-payload.vm';
 
 @ApiUseTags('Mobile Rebuild Pickup Pod')
@@ -20,12 +20,12 @@ export class MobileRebuildPickupPod {
     return MobileRebuildPickUpService.getDeliveryandCodAmount(payload);
   }
 
-  @Get('getPickupAmount/:dateStart/:dateEnd')
+  @Post('getPickupAmount/:dateStart/:dateEnd')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: MobileRebuildPickUpServiceResponse })
-  public async getPickupAmount(@Param('dateStart') dateStart: string, @Param('dateEnd') dateEnd: string) {
-    return MobileRebuildPickUpService.getPickupAmount(dateStart, dateEnd);
+  @ApiOkResponse({ type: MobileRebuildPickUpWorkOrderServiceResponse })
+  public async getPickupAmount(@Body() payload: MobileRebuildPickUpServicePayload) {
+    return MobileRebuildPickUpService.getPickupAmount(payload);
   }
 }

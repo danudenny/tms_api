@@ -1,4 +1,4 @@
-import { MobileRebuildPickUpServiceResponse } from '../../models/mobile-rebuild-pick-up-response.vm';
+import { MobileRebuildPickUpServiceResponse,MobileRebuildPickUpWorkOrderServiceResponse } from '../../models/mobile-rebuild-pick-up-response.vm';
 import { MobileRebuildPickUpServicePayload } from '../../models/mobile-rebuild-pick-up-payload.vm';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { createQueryBuilder } from 'typeorm';
@@ -39,7 +39,7 @@ export class MobileRebuildPickUpService {
     return result;
   }
 
-  static async getPickupAmount(date_start: string, date_end: string) {
+  static async getPickupAmount(payload: MobileRebuildPickUpServicePayload): Promise<MobileRebuildPickUpWorkOrderServiceResponse> {
     let url = `${this.rebuildPickupServiceURL}work-order/count-pickup`;
     const authMeta = AuthService.getAuthData();
     const options = {
@@ -49,15 +49,17 @@ export class MobileRebuildPickUpService {
         'employeid': authMeta.employeeId
       },
       params :{
-        date_start : date_start,
-        date_end : date_end,
+        date_start : payload.dateStart,
+        date_end : payload.dateEnd,
       }
     };
 
     try {
       //TODO: Implement service priority here
       const request = await axios.get(url, options);
-      return request;
+      const result = new MobileRebuildPickUpWorkOrderServiceResponse();
+      result.pickup = request.data.pickup;
+      return result;
     } catch (err) {
       RequestErrorService.throwObj(
         {

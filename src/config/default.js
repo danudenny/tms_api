@@ -77,7 +77,7 @@ module.exports = {
     packageType : ['BEST']
   },
   rebuildPickupService: {
-    baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1'
+    baseUrl : 'http://api-internal.s.sicepat.io//operation/pickup-coresvc'
   },
   exportService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
