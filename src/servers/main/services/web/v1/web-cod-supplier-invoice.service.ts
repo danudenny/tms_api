@@ -307,6 +307,7 @@ export class V1WebCodSupplierInvoiceService {
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
             supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
+            isDeleted: false,
           },
           {
             supplierInvoiceStatusId: TRANSACTION_STATUS.PAIDHO,
