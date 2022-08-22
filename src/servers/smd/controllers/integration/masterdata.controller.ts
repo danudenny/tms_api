@@ -7,7 +7,7 @@ import { PermissionTokenGuard } from '../../../../shared/guards/permission-token
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import {MasterDataService} from '../../services/integration/masterdata.service';
-import {MappingDoSmdResponseVm, MappingVendorResponseVm} from '../../models/mapping-do-smd.response.vm';
+import {DoSmdStatusResponseVm, MappingDoSmdResponseVm, MappingVendorResponseVm} from '../../models/mapping-do-smd.response.vm';
 
 @ApiUseTags('MASTER DATA')
 @Controller('smd/masterdata')
@@ -45,5 +45,15 @@ export class MasterDataController {
   @ApiOkResponse({ type: MappingVendorResponseVm })
   public async mappingVendor(@Req() request: any, @Body() payload: BaseMetaPayloadVm) {
     return MasterDataService.mappingVendor(payload);
+  }
+
+  @Post('doSmd/status/list')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: DoSmdStatusResponseVm })
+  public async getDoSmdStatus(
+    @Body() payload: BaseMetaPayloadVm,
+  ): Promise<DoSmdStatusResponseVm> {
+    return MasterDataService.getDoSmdStatus(payload);
   }
 }

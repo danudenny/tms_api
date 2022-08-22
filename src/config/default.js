@@ -154,6 +154,9 @@ module.exports = {
       "filesvc": {
         destination: "/core/filesvc"
       },
+      "pickup": {
+        destination: "/operation/pickup-coresvc" 
+      },
     }
   },
   reportingService: {
@@ -217,4 +220,10 @@ module.exports = {
     checkingConfig: true,
     disableChannel: "sms|wa"
   },
+  nearlyBranch: {
+    radius: {
+      smd: 1,
+      sortation: 1
+    }
+  }
 };

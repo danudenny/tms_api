@@ -100,7 +100,7 @@ export class SmdCentralReportingService {
         }
         if (type === 'smd_vendor') {
           let vendor = 'Semua_Vendor';
-    
+
           if (payload.vendorName !== '') {
             vendor = payload.vendorName;
             vendor = vendor.replace(/ /g, '_');
@@ -119,6 +119,7 @@ export class SmdCentralReportingService {
         filename,
         reportType: type,
       };
+
       return this.generateQueueRequest(params, formData);
     } catch (e) {
       throw e.message;
@@ -167,6 +168,7 @@ export class SmdCentralReportingService {
       ds.do_smd_time AS do_smd_time, \n
       dsd.arrival_time AS arrival_time, \n
       e.fullname AS fullname, \n
+      e.nik AS NIK, \n
       dsv.vehicle_number AS vehicle_number, \n
       bf.branch_name AS branch_from_name, \n
       bt.branch_name AS branch_to_name, \n
@@ -198,6 +200,7 @@ export class SmdCentralReportingService {
     CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END AS Jenis_SJ, \n
     TO_CHAR(ds.do_smd_time, 'DD Mon YYYY HH24:MI') AS Tanggal_di_Buat, \n
     e.fullname AS Handover, \n
+    e.nik AS NIK, \n
     dsv.vehicle_number AS Kendaraan, \n
     b.branch_name AS Gerai_Asal, \n
     ds.branch_to_name_list AS Gerai_Tujuan, \n
@@ -219,28 +222,27 @@ export class SmdCentralReportingService {
     }
 
     query = query + ` AND ds.is_deleted = 'false' \n
-    GROUP BY ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title, ds.is_intercity, ds.branch_to_name_list \n`;
+    GROUP BY ds.do_smd_id, ds.do_smd_code, ds.do_smd_time, e.fullname, e.nik, e.employee_id, dsv.vehicle_number, b.branch_name, ds.total_bag, ds.total_bagging, ds.total_bag_representative, dss.do_smd_status_title, ds.is_intercity, ds.branch_to_name_list \n`;
 
     query = query + ` ORDER BY ds.do_smd_time DESC`;
 
-  
     return Buffer.from(query).toString('base64');
   }
 
-  static async queryDaftarGsk(payload: GenerateQueueDaftarGsk): Promise<any>{
-    let query = `SELECT \n 
+  static async queryDaftarGsk(payload: GenerateQueueDaftarGsk): Promise<any> {
+    let query = `SELECT \n
           t1.bag_representative_code AS bagRepresentativeCode, \n
           t1.bag_representative_id AS bagRepresentativeId, \n
           TO_CHAR(t1.bag_representative_date, 'dd-mm-YYYY HH24:MI:SS') AS bagRepresentativeDate, \n
           COUNT(t4.bag_representative_item_id) AS totalItem, \n
           CAST(t1.total_weight AS DECIMAL(18,2)) AS totalWeight, \n
-          t2.representative_code AS representativeCode, \n 
-          t2.representative_name AS representativeName, \n 
-          t3.branch_name AS branchBagging \n 
-        FROM public.bag_representative t1 \n 
-        LEFT JOIN public.representative t2 ON t2.representative_id=t1.representative_id_to \n  
-        INNER JOIN public.branch t3 ON t3.branch_id=t1.branch_id AND (t3.is_deleted = 'false') \n 
-        INNER JOIN public.bag_representative_item t4 ON t4.bag_representative_id=t1.bag_representative_id AND (t4.is_deleted = 'false') \n 
+          t2.representative_code AS representativeCode, \n
+          t2.representative_name AS representativeName, \n
+          t3.branch_name AS branchBagging \n
+        FROM public.bag_representative t1 \n
+        LEFT JOIN public.representative t2 ON t2.representative_id=t1.representative_id_to \n
+        INNER JOIN public.branch t3 ON t3.branch_id=t1.branch_id AND (t3.is_deleted = 'false') \n
+        INNER JOIN public.bag_representative_item t4 ON t4.bag_representative_id=t1.bag_representative_id AND (t4.is_deleted = 'false') \n
     WHERE (t1.bag_representative_date >= '${moment(payload.startDate).format('YYYY-MM-DD')}' AND t1.bag_representative_date < '${moment(payload.endDate).format('YYYY-MM-DD')}')`;
     if (payload.representativeCode != '') {
       query = query + ` AND t2.representative_code = '${payload.representativeCode}' \n`;
@@ -264,7 +266,7 @@ ORDER BY t1.created_time DESC`;
     let query = `SELECT \n
     b.bag_id AS bag_id, \n
     bi.bag_item_id AS bag_item_id, \n
-    b.bag_number || LPAD(bi.bag_seq::text, 3, '0') AS bag_number_seq, \n 
+    b.bag_number || LPAD(bi.bag_seq::text, 3, '0') AS bag_number_seq, \n
     TO_CHAR(b.created_time, 'dd-mm-YYYY HH24:MI:SS') AS bagging_datetime, \n
     CASE  \n
       WHEN bhin.history_date IS NULL THEN 'Belum Scan IN' \n
@@ -303,68 +305,69 @@ ORDER BY t1.created_time DESC`;
   }
 
   static async queryMonitoringSmd(payload) {
-    let query = `SELECT \n 
-    ds.do_smd_code AS nomor_smd, \n
-  ds.departure_date_time AS tanggal_berangkat, \n
-  ds.do_smd_intercity AS surat_sj, \n
-  ds.transit_date_time AS tanggal_transit, \n
-  ds.arrival_date_time AS tanggal_tiba, \n
-  ds.vehicle_number AS nomor_polisi, \n
-  ds.vehicle_name AS type_kendaraan, \n
-  ds.employee_driver_name AS nama_driver, \n
-  ds.trip AS trip, \n 
-  ds.smd_trip AS rute, \n
-  ds.branch_name_from AS hub_asal, \n
-  ds.branch_name_to AS hub_tujuan, \n
-  ds.seal_number_last AS nomor_segel, \n
-  ds.total_colly AS total_colly, \n
-  COALESCE(ds.total_weight::integer, 0) AS aktual_berat, \n
-  COALESCE(ds.vehicle_capacity::integer, 0) AS kapasitas, \n
-  COALESCE((total_weight / vehicle_capacity::integer) * 100, 0.00) AS load, \n
-  ds.representative_code as perwakilan_tujuan 
-   \n  
-    FROM ( \n
-    SELECT ds.trip AS trip, \n 
-    ds.do_smd_code, \n
-    ds.is_intercity AS is_intercity, \n
-    CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END AS do_smd_intercity, \n 
-    bf.branch_name AS branch_name_from, \n 
-    ds.branch_to_name_list AS branch_name_to, \n 
-    dsv.vehicle_number AS vehicle_number, \n
-    v.vehicle_name AS vehicle_name, \n
-    ds.seal_number_last AS seal_number_last, \n 
-    'T' || ds.counter_trip AS smd_trip, \n
-    e.fullname AS employee_driver_name, \n
-    ( \n
-        select \n
-            sum(bi.weight) \n
-        from do_smd_detail dsd \n
-        inner join do_smd_detail_item dsdi on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsdi.is_deleted = false \n
-        left join bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = false \n
-        where dsd.do_smd_id = ds.do_smd_id \n
-        group by dsd.do_smd_id \n
-    ) AS total_weight, \n
-    ds.total_item AS total_colly, \n 
-    v.vehicle_capacity AS vehicle_capacity, \n 
-    ds.departure_date_time AS departure_date_time, \n 
-    ds.transit_date_time AS transit_date_time, \n
-    ds.arrival_date_time AS arrival_date_time, \n
-    r.representative_code as representative_code \n
-  FROM public.do_smd ds \n
-  INNER JOIN public.do_smd_vehicle dsv ON ds.vehicle_id_last = dsv.do_smd_vehicle_id and dsv.is_deleted = false \n   
-  LEFT JOIN public.branch bf ON ds.branch_id = bf.branch_id and bf.is_deleted = false \n 
-  LEFT JOIN public.vehicle v ON dsv.vehicle_number = v.vehicle_number and v.is_deleted = false \n   
-  LEFT JOIN public.employee e ON dsv.employee_id_driver = e.employee_id and e.is_deleted = false \n
-  INNER JOIN "public"."do_smd_detail" dsd2 ON dsd2.do_smd_id = ds.do_smd_id and dsd2.is_deleted = false \n
-  INNER JOIN "public"."branch" b ON b.branch_id = dsd2.branch_id_to and b.is_deleted = false \n
-  INNER JOIN "public"."representative" r ON r.representative_id = b.representative_id and r.is_deleted = false\n
-  WHERE ( \n
-    ds.departure_date_time >= '${moment(payload.startDate).format('YYYY-MM-DD 00:00:00')}' \n 
-    AND ds.departure_date_time < '${moment(payload.endDate).format('YYYY-MM-DD 00:00:00')}' \n
-    ) 
-    AND ds.is_vendor = false \n
-    AND ds.is_deleted = false \n
-    ) ds \n`;
+    let query = `SELECT \n
+      ds.do_smd_code AS nomor_smd, \n
+      ds.departure_date_time AS tanggal_berangkat, \n
+      ds.do_smd_intercity AS surat_sj, \n
+      ds.transit_date_time AS tanggal_transit, \n
+      ds.arrival_date_time AS tanggal_tiba, \n
+      ds.vehicle_number AS nomor_polisi, \n
+      ds.vehicle_name AS type_kendaraan, \n
+      ds.employee_driver_name AS nama_driver, \n
+      ds.nik AS NIK, \n
+      ds.trip AS trip, \n
+      ds.smd_trip AS rute, \n
+      ds.branch_name_from AS hub_asal, \n
+      ds.branch_name_to AS hub_tujuan, \n
+      ds.seal_number_last AS nomor_segel, \n
+      ds.total_colly AS total_colly, \n
+      COALESCE(ds.total_weight::integer, 0) AS aktual_berat, \n
+      COALESCE(ds.vehicle_capacity::integer, 0) AS kapasitas, \n
+      COALESCE((total_weight / vehicle_capacity::integer) * 100, 0.00) AS load, \n
+      ds.representative_code as perwakilan_tujuan \n
+      FROM ( \n
+        SELECT ds.trip AS trip, \n
+          ds.do_smd_code, \n
+          ds.is_intercity AS is_intercity, \n
+          CASE WHEN ds.is_intercity = 1 THEN 'DALAM KOTA' ELSE 'LUAR KOTA' END AS do_smd_intercity, \n
+          bf.branch_name AS branch_name_from, \n
+          ds.branch_to_name_list AS branch_name_to, \n
+          dsv.vehicle_number AS vehicle_number, \n
+          v.vehicle_name AS vehicle_name, \n
+          ds.seal_number_last AS seal_number_last, \n
+          'T' || ds.counter_trip AS smd_trip, \n
+          e.fullname AS employee_driver_name, \n
+          e.nik AS nik, \n
+          ( \n
+              select \n
+                  sum(bi.weight) \n
+              from do_smd_detail dsd \n
+              inner join do_smd_detail_item dsdi on dsd.do_smd_detail_id = dsdi.do_smd_detail_id and dsdi.is_deleted = false \n
+              left join bag_item bi on dsdi.bag_item_id = bi.bag_item_id and bi.is_deleted = false \n
+              where dsd.do_smd_id = ds.do_smd_id \n
+              group by dsd.do_smd_id \n
+          ) AS total_weight, \n
+          ds.total_item AS total_colly, \n
+          v.vehicle_capacity AS vehicle_capacity, \n
+          ds.departure_date_time AS departure_date_time, \n
+          ds.transit_date_time AS transit_date_time, \n
+          ds.arrival_date_time AS arrival_date_time, \n
+          r.representative_code as representative_code \n
+        FROM public.do_smd ds \n
+        INNER JOIN public.do_smd_vehicle dsv ON ds.vehicle_id_last = dsv.do_smd_vehicle_id and dsv.is_deleted = false \n
+        LEFT JOIN public.branch bf ON ds.branch_id = bf.branch_id and bf.is_deleted = false \n
+        LEFT JOIN public.vehicle v ON dsv.vehicle_number = v.vehicle_number and v.is_deleted = false \n
+        LEFT JOIN public.employee e ON dsv.employee_id_driver = e.employee_id and e.is_deleted = false \n
+        INNER JOIN "public"."do_smd_detail" dsd2 ON dsd2.do_smd_id = ds.do_smd_id and dsd2.is_deleted = false \n
+        INNER JOIN "public"."branch" b ON b.branch_id = dsd2.branch_id_to and b.is_deleted = false \n
+        INNER JOIN "public"."representative" r ON r.representative_id = b.representative_id and r.is_deleted = false\n
+        WHERE ( \n
+          ds.departure_date_time >= '${moment(payload.startDate).format('YYYY-MM-DD 00:00:00')}' \n
+          AND ds.departure_date_time < '${moment(payload.endDate).format('YYYY-MM-DD 00:00:00')}' \n
+        )
+        AND ds.is_vendor = false \n
+        AND ds.is_deleted = false \n
+        ) ds \n`;
     if (payload.isIntercity == 1) {
       query = query + `WHERE (ds.is_intercity = 1) \n`;
     } else if (payload.isIntercity == 2) {
