@@ -165,6 +165,7 @@ export class V1WebCodSupplierInvoiceService {
             transactionStatusId: TRANSACTION_STATUS.TRMHO,
             codSupplierInvoiceId: IsNull(),
             isVoid: false,
+            isDeleted: false,
           },
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
