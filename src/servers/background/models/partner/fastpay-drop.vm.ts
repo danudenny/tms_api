@@ -177,6 +177,9 @@ export class DropPickupRequestResponseVM {
 
   @ApiModelProperty()
   pickupProcessed: boolean;
+
+  @ApiModelProperty()
+  pickupRequestType: string;
 }
 
 export class DropCreateWorkOrderPayloadVM {
