@@ -77,8 +77,8 @@ module.exports = {
     packageType : ['BEST']
   },
   podProsparkService :{
-    baseUrl : 'http://api-internal.s.sicepat.io/core/authsvc/integration/login',
-    key: '57E27CF17ED84E63895EB85942A5118D',
+    baseUrl : 'https://api.sicepat.io/v1/auth/integration/login',
+    key: '3D031A17E11D4529981C2B78680EFA94',
   },
   exportService: {
     baseUrl : 'http://api-internal.sicepat.io/operation/reporting-service/v1',
