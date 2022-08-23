@@ -4,15 +4,17 @@ import { Type } from 'class-transformer';
 export class WebDeliveryVendorOutPayload {
   @ApiModelProperty()
   @Type(() => String)
-  awbNumber: string[];
+  scanValue: string[];
 }
 
 export class WebDeliveryVendorOutSendPayload {
   @ApiModelProperty()
   vendor_id: string;
 
+  @ApiModelProperty()
+  order_vendor_code: string;
 
   @ApiModelProperty()
   @Type(() => String)
-  awbNumber: string[];
+  scanValue: string[];
 }

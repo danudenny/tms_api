@@ -57,7 +57,8 @@ import { MobileRebuildPickupPod } from './mobile/mobile-rebuild-pick-up.controll
 import { WebAwbReturnController } from './web/web-awb-return.controller';
 import { WebAwbReturnCancelController } from './web/web-awb-return-cancel.controller';
 import { WebLastMileUploadController } from './web/web-last-mile-upload.controller';
-import { WebPunishmentController } from './web/web-last-mile-punishment.controller'
+import { WebPunishmentController } from './web/web-last-mile-punishment.controller';
+import  {WebAwbDeliveryVendorController} from './web/web-delivery-vendor-out.controller'
 import { WebAwbUpdateStatusController } from './web/web-awb-update-status.controller';
 import { WebBagPodController } from './web/web-bag-pod.controller';
 import { WebDeliveryInController } from './web/web-delivery-in.controller';
@@ -123,6 +124,7 @@ import { V2MobileDeliveryInController } from './mobile/v2/mobile-delivery-in.con
     WebAwbReturnCancelController,
     WebLastMileUploadController,
     WebPunishmentController,
+    WebAwbDeliveryVendorController,
     ProvincesController,
     CitiesController,
     DistrictsController,

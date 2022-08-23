@@ -14,14 +14,14 @@ export class WebDeliveryVendorOutService {
   static async validateAWB(payload : WebDeliveryVendorOutPayload): Promise<WebDeliveryVendorOutResponseVm>{
     const result = new WebDeliveryVendorOutResponseVm();
     const dataItem = [];
-    for (const awbNumber of payload.awbNumber) {
+    for (const awbNumber of payload.scanValue) {
       const awb = await AwbService.validAwbNumber(awbNumber);
       const response = new WebDeliveryVendorOutResponse();
       if(awb){
         const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false);
-        if(checkValidAwbStatusIdLast){
+        if(checkValidAwbStatusIdLast.isValid){
           response.status = 'ok';
-          response.message = 'Resi ${awbNumber} Berhasil di Validasi';
+          response.message = `Resi ${awbNumber} Berhasil di Validasi`;
         }else{
           response.status = 'error';
           response.message = checkValidAwbStatusIdLast.message;
@@ -43,7 +43,7 @@ export class WebDeliveryVendorOutService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
     const dataItem = [];
-    for (const awbNumber of payload.awbNumber) {
+    for (const awbNumber of payload.scanValue) {
       const response = new WebDeliveryVendorOutResponse();
       const awb = await AwbItemAttr.findOne({
         select :['awbNumber','awbItemId'],
@@ -68,6 +68,8 @@ export class WebDeliveryVendorOutService {
             authMeta.userId,
             null,
             null,
+            payload.vendor_id,
+            payload.order_vendor_code,
           )
           response.status = 'ok';
           response.message = `Resi ${awbNumber} sudah di proses.`;

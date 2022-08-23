@@ -12,6 +12,7 @@ import { User } from '../../../shared/orm-entity/user';
 import { Reason } from '../../../shared/orm-entity/reason';
 import { SharedService } from '../../../shared/services/shared.service';
 import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
+import { VendorLogisticService } from '../../../shared/services/vendor.logistic.service';
 
 export class AwbDeliveryVendorQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-vendor', {
@@ -68,6 +69,7 @@ export class AwbDeliveryVendorQueueService {
             location: data.location,
           });
           await AwbHistory.insert(awbHistory);
+          VendorLogisticService.sendVendor(awbItemAttr.awbNumber, data.vendorId, data.orderVendorCode);
 
         }
       // }); // end transaction
@@ -97,6 +99,8 @@ export class AwbDeliveryVendorQueueService {
     userId: number,
     employeeIdDriver: number,
     employeeName: string,
+    vendorId : string,
+    orderVendorCode : string,
   ) {
     const noteInternal = `Paket dibawa [SIGESIT - ${employeeName}]`;
     const notePublic = `Paket dibawa [SIGESIT - ${employeeName}]`;
@@ -113,6 +117,8 @@ export class AwbDeliveryVendorQueueService {
       timestamp: moment().toDate(),
       noteInternal,
       notePublic,
+      vendorId,
+      orderVendorCode
     };
     return AwbDeliveryVendorQueueService.queue.add(obj);
   }

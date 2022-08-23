@@ -24,10 +24,15 @@ export class VendorLogisticService {
       vendor_id: vendorId,
       order_vendor_code : orderVendorCode
     };
-
+    
     try{
-      const request = await axios.post(url, body, options);
-      return request;
+      // const request = await axios.post(url, body, options);
+      // return request;
+      console.log(body);
+      return {
+        status : 200,
+        message : 'ok',
+      }
     }catch(err){
       RequestErrorService.throwObj(
         {
