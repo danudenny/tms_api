@@ -26,6 +26,11 @@ import { SortationScanOutListController } from './sortation/web/sortation-scanou
 import { SortationScanOutMonitoringController } from './sortation/web/sortation-scanout-monitoring.controller';
 import { SortationPrintController } from './sortation/web/sortation-scanout-print.controller';
 import { SortationScanOutController } from './sortation/web/sortation-scanout.controller';
+import { SortationL2ModuleController } from './sortation/web/sortation-l2-module.controller';
+import { SortationL2ListModuleController } from './sortation/web/sortation-l2-list.controller';
+import { SortationMasterdataController } from './masterdata-controller';
+import { SortationMasterdataService } from '../services/masterdata-service';
+import { SortationReportController } from './sortation/web/sortation-report-controller';
 
 const providers = [
   {
@@ -60,6 +65,7 @@ const providers = [
     SortationMasterdataController,
     ReportingHubPackageController,
     HubPackagesMonitoringController,
+    SortationReportController,
   ],
 })
 export class HubServerControllersModule {}

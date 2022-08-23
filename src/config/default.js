@@ -228,5 +228,5 @@ module.exports = {
       smd: 1,
       sortation: 1
     }
-  }
+  },
 };
