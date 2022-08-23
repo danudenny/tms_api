@@ -217,7 +217,7 @@ export class LastMileDeliveryService {
     );
     // TODO: fix query
     const dateFrom = moment(datePod, 'YYYY-MM-DD').toDate();
-    const dateTo = moment(new Date().setDate(dateFrom.getDate() + 1)).format("YYYY-MM-DD");
+    const dateTo = moment(new Date(dateFrom.getTime() + 86400000)).format("YYYY-MM-DD");
 
     q.andWhereRaw(`t1.do_pod_deliver_date_time >= '${datePod}'`);
     q.andWhereRaw(`t1.do_pod_deliver_date_time < '${dateTo}'`);
