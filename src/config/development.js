@@ -56,4 +56,7 @@ module.exports = {
     tags: ['API-POD-DEV'],
   },
   servers: getAllServerConfigurations('default.js'),
+  hubMonitoring: {
+    baseUrl: 'http://api-internal.s.sicepat.io/operation/sortation/sortation/api/v1'
+  },
 };

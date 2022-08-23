@@ -195,6 +195,9 @@ module.exports = {
   hubSortation:{
     sortationDriverRoleId: [1240],
   },
+  hubMonitoring: {
+    baseUrl: 'http://api-internal.sicepat.io/operation/sortation/sortation/api/v1'
+  },
   masterData: {
     apiKey:
       'af8cf9bafac713ae8c6d5119346d783239e07552281e93c01785b1ed9611cec373cd7cbe24236c711512bf366e36b164ed27c874e85dfa7d97f4358df122b213',
