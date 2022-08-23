@@ -221,7 +221,7 @@ export class V1WebCodBankStatementService {
         .createQueryBuilder(CodTransaction, 'ct')
         .setQueryRunner(masterCodBranchQueryRunner)
         .where(
-          'ct.codTransactionId IN  (:...codTransactionId) AND ct.codBankStatementId IS NULL AND ct.isDeleted = false',
+          'ct.codTransactionId IN  (:...codTransactionId) AND ct.isDeleted = false',
           { codTransactionId: payload.dataTransactionId },
         )
         .getMany();
