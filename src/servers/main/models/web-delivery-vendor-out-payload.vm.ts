@@ -6,3 +6,13 @@ export class WebDeliveryVendorOutPayload {
   @Type(() => String)
   awbNumber: string[];
 }
+
+export class WebDeliveryVendorOutSendPayload {
+  @ApiModelProperty()
+  vendor_id: string;
+
+
+  @ApiModelProperty()
+  @Type(() => String)
+  awbNumber: string[];
+}

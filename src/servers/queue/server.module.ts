@@ -68,6 +68,7 @@ import { UpdatePackageCombineHubQueueService } from './services/update-package-c
 import { DoMutationQueueService } from './services/do-mutation-queue.service';
 import { BagScanDoSortationQueueService } from './services/bag-scan-do-sortation-queue.service';
 import { BagScanOutBranchSortirQueueService } from './services/bag-scan-out-branch-sortir-queue.service';
+import {AwbDeliveryVendorQueueService} from './services/awb-delivery-vendor-queue.service';
 
 // #endregion import
 @Module({
@@ -188,6 +189,7 @@ export class QueueServerModule extends MultiServerAppModule
         CreateBagFirstScanHubQueueService.boot();
         CreateBagAwbScanHubQueueService.boot();
         UpdatePackageCombineHubQueueService.boot();
+        AwbDeliveryVendorQueueService.boot();
       }
       if (serverConfig.bullCod) {
         CodFirstTransactionQueueService.boot();
