@@ -69,8 +69,8 @@ export class SortationL2ModuleService {
         // insert to history sortation finish
         const objSortationHistory = SortationFinishHistory.create({
           doSortationId : findDoSortation.doSortationId ,
-          createdTime : moment().toDate(),
-          updatedTime : moment().toDate(),
+          createdTime : timeNow,
+          updatedTime : timeNow,
           userIdCreated : authMeta.userId,
           userIdUpdated : authMeta.userId,
         });
@@ -130,7 +130,7 @@ export class SortationL2ModuleService {
   public static async handoverModuleSortation(payload: SortationL2ModuleHandoverPayloadVm): Promise<SortationHandoverResponseVm> {
     const authMeta = AuthService.getAuthData();
     const permissionPayload = AuthService.getPermissionTokenPayload();
-
+    const timeNow = moment().toDate();
     const result = new SortationHandoverResponseVm();
     const data = [];
 
@@ -194,7 +194,7 @@ export class SortationL2ModuleService {
                 {
                   isActive: false,
                   userIdUpdated: authMeta.userId,
-                  updatedTime: moment().toDate(),
+                  updatedTime: timeNow,
                 });
 
               /* Create Vehicle Dulu dan jangan update ke do_sortation*/
@@ -225,7 +225,7 @@ export class SortationL2ModuleService {
                 },
                 {
                   doSortationStatusIdLast : DO_SORTATION_STATUS.BACKUP_PROCESS,
-                  updatedTime : moment().toDate(),
+                  updatedTime : timeNow,
                   userIdUpdated : authMeta.userId,
                   doSortationVehicleIdLast : paramDoSortationVehicleId,
                 },
@@ -239,7 +239,7 @@ export class SortationL2ModuleService {
                 {
                   doSortationStatusIdLast: DO_SORTATION_STATUS.BACKUP_PROCESS,
                   userIdUpdated: authMeta.userId,
-                  updatedTime: moment().toDate(),
+                  updatedTime: timeNow,
                 },
               );
 
