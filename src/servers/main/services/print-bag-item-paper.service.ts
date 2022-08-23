@@ -36,7 +36,7 @@ export class PrintBagItemPaperService {
               awbNumber: true,
               consigneeName: true,
               consigneeNumber: true,
-              totalWeightReal: true,
+              totalWeightFinalRounded: true,
             },
           },
         },
