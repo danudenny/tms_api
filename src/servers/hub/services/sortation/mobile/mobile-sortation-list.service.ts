@@ -234,7 +234,7 @@ export class MobileSortationListService {
             qb.innerJoin(
               'do_sortation_detail',
               'dsd',
-              `ds.do_sortation_id = dsd.do_sortation_id and dsd.do_sortation_status_id_last not in (${DO_SORTATION_STATUS.FINISHED}, ${DO_SORTATION_STATUS.DELIVERED}) and dsd.is_deleted = false `,
+              `ds.do_sortation_id = dsd.do_sortation_id and dsd.do_sortation_status_id_last not in (${DO_SORTATION_STATUS.FINISHED}, ${DO_SORTATION_STATUS.DELIVERED}, ${DO_SORTATION_STATUS.CREATED}) and dsd.is_deleted = false `,
             );
             qb.innerJoin(
               'do_sortation_vehicle',
