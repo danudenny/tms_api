@@ -161,7 +161,7 @@ export class BagCityService {
         a.awb_number as ref_awb_number,
         r.representative_id,
         r.representative_code,
-        a.total_weight_rounded as weight,
+        a.total_weight_real as weight,
         ai.awb_item_id
       FROM temp_stt ts
       INNER JOIN awb a ON ts.nostt = a.awb_number AND a.is_deleted = FALSE
