@@ -18,15 +18,15 @@ export class AwbDeliveryVendorQueueService {
     defaultJobOptions: {
       timeout: 0,
       attempts: Math.round(
-        (+ConfigService.get('queue.awbVendor.keepRetryInHours') *
+        (+ConfigService.get('queue.doPodDetailPostMeta.keepRetryInHours') *
           60 *
           60 *
           1000) /
-          +ConfigService.get('queue.awbVendor.retryDelayMs'),
+          +ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
       ),
       backoff: {
         type: 'fixed',
-        delay: ConfigService.get('queue.awbVendor.retryDelayMs'),
+        delay: ConfigService.get('queue.doPodDetailPostMeta.retryDelayMs'),
       },
     },
   });
@@ -68,7 +68,7 @@ export class AwbDeliveryVendorQueueService {
             location: data.location,
           });
           await AwbHistory.insert(awbHistory);
-          
+
         }
       // }); // end transaction
       } catch (error) {
@@ -90,7 +90,7 @@ export class AwbDeliveryVendorQueueService {
   }
 
   // NOTE: ONLY awb status ANT but by vendor
-  public static async createJobByAwbDeliver(
+  public static async createJobSendVendor(
     awbItemId: number,
     awbStatusId: number,
     branchId: number,
