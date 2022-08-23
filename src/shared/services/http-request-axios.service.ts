@@ -1,6 +1,8 @@
+import { Injectable } from '@nestjs/common';
 import Axios, { AxiosInstance, AxiosPromise, AxiosRequestConfig, CancelTokenStatic } from 'axios';
 import { Observable } from 'rxjs';
 
+@Injectable()
 export class HttpRequestAxiosService {
   private cancelToken: CancelTokenStatic = Axios.CancelToken;
 

@@ -19,6 +19,7 @@ export class SortationService {
     note: string,
     doSortationStatusIdLast: number,
   ) {
+    const timeNow = moment().toDate();
     const dataDoSortation = DoSortation.create({
       doSortationCode,
       doSortationTime,
@@ -27,9 +28,9 @@ export class SortationService {
       branchIdFrom: branchIdLogin,
       note,
       userIdCreated: userIdLogin,
-      createdTime: moment().toDate(),
+      createdTime: timeNow,
       userIdUpdated: userIdLogin,
-      updatedTime: moment().toDate(),
+      updatedTime: timeNow,
       doSortationStatusIdLast,
     });
     const doSortation = await DoSortation.insert(dataDoSortation);
@@ -47,6 +48,7 @@ export class SortationService {
     branchIdLogin: number,
     userIdLogin: number,
   ): Promise<string | null> {
+    const timeNow = moment().toDate();
     const dataDoSortationVehicle = DoSortationVehicle.create({
       doSortationId,
       vehicleId,
@@ -55,9 +57,9 @@ export class SortationService {
       employeeDriverId,
       branchIdCreated: branchIdLogin,
       userIdCreated: userIdLogin,
-      createdTime: moment().toDate(),
+      createdTime: timeNow,
       userIdUpdated: userIdLogin,
-      updatedTime: moment().toDate(),
+      updatedTime: timeNow,
     });
     const doSortationVehicle = await DoSortationVehicle.insert(dataDoSortationVehicle);
     return doSortationVehicle.identifiers.length
@@ -76,6 +78,7 @@ export class SortationService {
     userId: number,
     reasonNote?: string | null,
   ) {
+    const timeNow = moment().toDate();
     const dataDoSortationHistory = DoSortationHistory.create({
       doSortationId,
       doSortationDetailId,
@@ -85,9 +88,9 @@ export class SortationService {
       branchIdFrom: branchId,
       reasonId,
       userIdCreated: userId,
-      createdTime: moment().toDate(),
+      createdTime: timeNow,
       userIdUpdated: userId,
-      updatedTime: moment().toDate(),
+      updatedTime: timeNow,
       reasonNote,
     });
     const doSortationHistory = await DoSortationHistory.insert(dataDoSortationHistory);
@@ -105,6 +108,7 @@ export class SortationService {
     userId: number,
     doSortationStatusIdLast: number,
   ) {
+    const timeNow = moment().toDate();
     const dataDoSortationDetail = DoSortationDetail.create({
       doSortationId,
       doSortationVehicleId,
@@ -112,9 +116,9 @@ export class SortationService {
       branchIdFrom: branchIdLogin,
       branchIdTo,
       userIdCreated: userId,
-      createdTime: moment().toDate(),
+      createdTime: timeNow,
       userIdUpdated: userId,
-      updatedTime: moment().toDate(),
+      updatedTime: timeNow,
       doSortationStatusIdLast,
     });
     const doSortationDetail = await DoSortationDetail.insert(dataDoSortationDetail);
@@ -130,14 +134,15 @@ export class SortationService {
     userId: number,
     transactional: EntityManager,
   ) {
+    const timeNow = moment().toDate();
     const dataDoSortationDetailItem = DoSortationDetailItem.create({
       doSortationDetailId,
       bagItemId,
       isSortir: isSortir ? isSortir : false,
       userIdCreated: userId,
-      createdTime: moment().toDate(),
+      createdTime: timeNow,
       userIdUpdated: userId,
-      updatedTime: moment().toDate(),
+      updatedTime: timeNow,
     });
 
     await transactional.insert(DoSortationDetailItem, dataDoSortationDetailItem);
@@ -153,6 +158,7 @@ export class SortationService {
     branchIdLogin: number,
     userIdLogin: number,
   ): Promise<string | null> {
+    const timeNow = moment().toDate();
     const dataDoSortationVehicle = DoSortationVehicle.create({
       doSortationId,
       vehicleId,
@@ -161,9 +167,9 @@ export class SortationService {
       employeeDriverId,
       branchIdCreated: branchIdLogin,
       userIdCreated: userIdLogin,
-      createdTime: moment().toDate(),
+      createdTime: timeNow,
       userIdUpdated: userIdLogin,
-      updatedTime: moment().toDate(),
+      updatedTime: timeNow,
     });
     const doSortationVehicle = await transactional.insert(DoSortationVehicle, dataDoSortationVehicle);
     return doSortationVehicle.identifiers.length
@@ -183,6 +189,7 @@ export class SortationService {
     userId: number,
     reasonNote?: string | null,
   ) {
+    const timeNow = moment().toDate();
     const dataDoSortationHistory = DoSortationHistory.create({
       doSortationId,
       doSortationDetailId,
@@ -192,9 +199,9 @@ export class SortationService {
       branchIdFrom: branchId,
       reasonId,
       userIdCreated: userId,
-      createdTime: moment().toDate(),
+      createdTime: timeNow,
       userIdUpdated: userId,
-      updatedTime: moment().toDate(),
+      updatedTime: timeNow,
       reasonNote,
     });
     const doSortationHistory = await transactional.insert(DoSortationHistory, dataDoSortationHistory);

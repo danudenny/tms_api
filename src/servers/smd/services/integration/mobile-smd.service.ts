@@ -114,11 +114,11 @@ export class MobileSmdService {
                 departure_date_time: payload.departure_date_time,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Success Departure';
+            result.message = 'SMD - Berhasil Slide Berangkat';
             result.data = data;
             return result;
         } else {
-            throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+            throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` Tidak di temukan`);
         }
 
     }
@@ -234,16 +234,16 @@ export class MobileSmdService {
                         arrival_date_time: payload.arrival_date_time,
                     });
                     result.statusCode = HttpStatus.OK;
-                    result.message = 'SMD Success Arrival';
+                    result.message = 'SMD - Sukses Slide Tiba';
                     result.data = data;
                     return result;
                 }
             } else {
-                throw new BadRequestException(`DO SMD Detail Id : ` + payload.do_smd_detail_id.toString() + ' Has Not Departure Date');
+                throw new BadRequestException(`DO SMD Detail Id : ` + payload.do_smd_detail_id.toString() + ' Belum Slide Berangkat');
             }
 
         } else {
-            throw new BadRequestException(`DO SMD Detail Id : ` + payload.do_smd_detail_id.toString() + ' Not Found');
+            throw new BadRequestException(`DO SMD Detail Id : ` + payload.do_smd_detail_id.toString() + ' Tidak di temukan');
         }
 
     }
@@ -341,11 +341,11 @@ export class MobileSmdService {
                 arrival_date_time: payload.arrival_date_time,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Success Cancel Arrival';
+            result.message = 'SMD - Berhasil Slide Batal Berangkat';
             result.data = data;
             return result;
         } else {
-            throw new BadRequestException(`Can't Find  DO SMD Detail ID : ` + payload.do_smd_detail_id.toString());
+            throw new BadRequestException(`DO SMD Detail ID : ` + payload.do_smd_detail_id.toString() + ` Tidak di temukan`);
         }
 
     }
@@ -497,11 +497,11 @@ export class MobileSmdService {
                 arrival_date_time: moment().toDate(),
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Success Arrival';
+            result.message = 'SMD - Sukses Slide Tiba';
             result.data = data;
             return result;
         } else {
-            throw new BadRequestException(`Can't Find  DO SMD Detail ID : ` + payload.do_smd_detail_id.toString());
+            throw new BadRequestException(`DO SMD Detail ID : ` + payload.do_smd_detail_id.toString() + ` Tidak di temukan`);
         }
 
     }
@@ -626,7 +626,7 @@ export class MobileSmdService {
 
             //
         } else {
-            throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` already arrival`);
+            throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` Telah Tiba`);
         }
 
         if (resultDoSmd) {
@@ -692,11 +692,11 @@ export class MobileSmdService {
                 reason_date: timeNow,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Success Created Problem';
+            result.message = 'SMD - Sukses Report Problem';
             result.data = data;
             return result;
         } else {
-            throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+            throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` Tidak di temukan`);
         }
 
     }
@@ -756,11 +756,11 @@ export class MobileSmdService {
                 do_smd_id: resultDoSmd.doSmdId,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Success Created Continue';
+            result.message = 'SMD - Sukses Slide Continue';
             result.data = data;
             return result;
         } else {
-            throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+            throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` Tidak di temukan`);
         }
 
     }
@@ -918,11 +918,11 @@ export class MobileSmdService {
                 handover_date: timeNow,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Success Handover';
+            result.message = 'SMD - Sukses Handover';
             result.data = data;
             return result;
         } else {
-            throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+            throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` Tidak di temukan`);
         }
 
     }
@@ -949,7 +949,7 @@ export class MobileSmdService {
         });
 
         if (!resultDoSmdDetail) {
-            throw new BadRequestException(`All SMD Already Arrival`);
+            throw new BadRequestException(`Semua SMD Telah Tiba`);
         }
 
         const result = new ScanOutSmdHandOverResponseVm();
@@ -980,7 +980,7 @@ export class MobileSmdService {
                     );
                 }
             } else {
-                throw new BadRequestException(`All SMD Already Arrival`);
+                throw new BadRequestException(`Semua SMD Telah Tiba`);
             }
 
             await DoSmdVehicle.update(
@@ -1044,11 +1044,11 @@ export class MobileSmdService {
                 handover_date: timeNow,
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Success Handover';
+            result.message = 'SMD - Sukses Handover';
             result.data = data;
             return result;
         } else {
-            throw new BadRequestException(`Can't Find  DO SMD ID : ` + payload.do_smd_id.toString());
+            throw new BadRequestException(`DO SMD ID : ` + payload.do_smd_id.toString() + ` Tidak di temukan`);
         }
 
     }
@@ -1077,7 +1077,7 @@ export class MobileSmdService {
         });
 
         if (!resultDoSmdDetail) {
-            throw new BadRequestException(`All SMD Already Arrival`);
+            throw new BadRequestException(`Semua SMD Telah Tiba`);
         }
 
         let url = null;
@@ -1225,11 +1225,11 @@ export class MobileSmdService {
                 arrival_date_time: moment().toDate(),
             });
             result.statusCode = HttpStatus.OK;
-            result.message = 'SMD Success End Manual';
+            result.message = 'SMD - Sukses Slide Selesai Manual';
             result.data = data;
             return result;
         } else {
-            throw new BadRequestException(`Can't Find  DO SMD CODE : ` + payload.do_smd_code);
+            throw new BadRequestException(`DO SMD CODE : ` + payload.do_smd_code + ` Tidak di temukan`);
         }
 
     }
@@ -1385,7 +1385,7 @@ export class MobileSmdService {
         const resultDataEmployee = await RawQueryService.query(employeeRawQuery);
 
         if (!resultDataEmployee.length) {
-            throw new BadRequestException(`Can't Find Employee NIK : ` + payload.nik);
+            throw new BadRequestException(`Employee NIK : ` + payload.nik + ` Tidak di temukan`);
         }
 
         let resultDataDoSmd = [];
@@ -1430,7 +1430,7 @@ export class MobileSmdService {
         const result = new UnfinishedSmdResponseVm();
 
         result.statusCode = HttpStatus.OK;
-        result.message = 'SMD Available';
+        result.message = 'SMD - Tersedia';
         result.data = resultDataDoSmd;
 
         return result;

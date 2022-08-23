@@ -86,12 +86,12 @@ export class MobileSortationService {
     console.log('MobileSortationService - scanOutMobileSortation - RESULT DO SORTATION : ', JSON.stringify(resultDoSortation));
 
     if (!resultDoSortation) {
-      throw new BadRequestException(`Can't Find  Do Sortation ID : ` + payload.doSortationId);
+      throw new BadRequestException(`Do Sortation ID : ` + payload.doSortationId + ` Tidak di temukan`);
     }
 
     const validateOtw = [DO_SORTATION_STATUS.ASSIGNED, DO_SORTATION_STATUS.DRIVER_CHANGED, DO_SORTATION_STATUS.DELIVERED];
     if (!validateOtw.includes(Number(resultDoSortation.doSortationStatusIdLast))) {
-      throw new UnprocessableEntityException(`Surat Jalan bukan status ASSIGN, DRIVER_CHANGED, dan DELIVERED .`);
+      throw new UnprocessableEntityException(`Status Terakhir Sortation Bukan ASSIGN, DRIVER_CHANGED, atau DELIVERED .`);
     }
 
     const repo = RepositoryService.doSortationDetail;
@@ -144,7 +144,7 @@ export class MobileSortationService {
             doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
             userIdUpdated: authMeta.userId,
             updatedTime: timeNow,
-            depatureDateTime: moment().toDate(),
+            depatureDateTime: timeNow,
           },
         );
       }
@@ -158,7 +158,7 @@ export class MobileSortationService {
         },
         {
           doSortationStatusIdLast: DO_SORTATION_STATUS.ON_THE_WAY,
-          depatureDateTime: moment().toDate(),
+          depatureDateTime: timeNow,
           latitudeDeparture: payload.latitude,
           longitudeDeparture: payload.longitude,
           userIdUpdated: authMeta.userId,
@@ -212,7 +212,7 @@ export class MobileSortationService {
     });
 
     result.statusCode = HttpStatus.OK;
-    result.message = 'Sortation Success Departure';
+    result.message = 'Sortation - Sukses Slide Berangkat';
     result.data = data;
     console.log('MobileSortationService - scanOutMobileSortation - END DEPARTURE');
     return result;
@@ -341,14 +341,14 @@ export class MobileSortationService {
       data.push({
         doSortationId: resultDoSortationDetail.doSortationId,
         doSortationDetailId: resultDoSortationDetail.doSortationDetailId,
-        arrivalDateTime: moment().toDate(),
+        arrivalDateTime: timeNow,
       });
       result.statusCode = HttpStatus.OK;
-      result.message = 'Sortation Success Finished';
+      result.message = 'Sortation - Sukses Slide Selesai';
       result.data = data;
       return result;
     } else {
-      throw new BadRequestException(`Can't Find  Do Sortation Detail ID : ` + payload.doSortationDetailId);
+      throw new BadRequestException(`Do Sortation Detail ID : ` + payload.doSortationDetailId + ` Tidak di temukan`);
     }
   }
 
@@ -382,7 +382,7 @@ export class MobileSortationService {
 
     if (resultDoSortationDetail) {
       if (resultDoSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.HAS_ARRIVED) {
-        throw new UnprocessableEntityException('DO Sortation harus ARRIVED.');
+        throw new UnprocessableEntityException('Status Terakhir Sortation harus ARRIVED');
       }
 
       await getManager().transaction(async transaction => {
@@ -441,11 +441,11 @@ export class MobileSortationService {
         arrivalDateTime: timeNow,
       });
       result.statusCode = HttpStatus.OK;
-      result.message = 'Sortation Success Cancel Arrival';
+      result.message = 'Sortation - Sukses Slide batal Tiba';
       result.data = data;
       return result;
     } else {
-      throw new BadRequestException(`Can't Find  DO Sortation Detail ID : ` + payload.doSortationDetailId);
+      throw new BadRequestException(`DO Sortation Detail ID : ` + payload.doSortationDetailId + ` Tidak di temukan`);
     }
   }
 
@@ -470,11 +470,11 @@ export class MobileSortationService {
     });
 
     if (!resultDoSortation) {
-      throw new BadRequestException(`Can't Find DO SORTATION ID : ` + payload.doSortationId);
+      throw new BadRequestException(`DO SORTATION ID : ` + payload.doSortationId + ` Tidak di temukan`);
     }
 
     if (resultDoSortation.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
-      throw new UnprocessableEntityException(`DO sortation harus ON THE WAY.`);
+      throw new UnprocessableEntityException(`Status Terakhir sortation harus ON THE WAY.`);
     }
 
     const resultDoSortationArrival = await DoSortationDetail.findOne({
@@ -533,7 +533,7 @@ export class MobileSortationService {
           await transaction.save(DoSortationAttachment, doSortationDelivereyAttachment);
         }
       } else {
-        throw new BadRequestException(`DO Sortation ID : ` + payload.doSortationId + ` already arrival`);
+        throw new BadRequestException(`DO Sortation ID : ` + payload.doSortationId + ` Sudah Tiba`);
       }
 
       await transaction.update(DoSortation, {
@@ -581,7 +581,7 @@ export class MobileSortationService {
       reasonDate: timeNow,
     });
     result.statusCode = HttpStatus.OK;
-    result.message = 'Sortation Success Created Problem';
+    result.message = 'Sortation - Sukses Pelaporan Masalah';
     result.data = data;
     return result;
 
@@ -623,14 +623,14 @@ export class MobileSortationService {
       // const radius: number = ConfigService.get('nearlyBranch.radius.sortation'); // in kilometer
       // await NearlyBranchService.validateNearlyBranch(payload.latitude, payload.longitude, resultSortationDetail.branchIdTo, radius);
       if (resultSortationDetail.doSortationStatusIdLast != DO_SORTATION_STATUS.ON_THE_WAY) {
-        throw new UnprocessableEntityException('DO Sortation harus ON THE WAY.');
+        throw new UnprocessableEntityException('Status Terakhir Sortation harus ON THE WAY.');
       }
 
       if (resultSortationDetail.depatureDateTime) {
         if (resultSortationDetail.arrivalDateTime) {
           // handle status telah tiba (arrival)
           result.statusCode = HttpStatus.OK;
-          result.message = 'Sortation Already Arrived';
+          result.message = 'Sortation - Telah Tiba';
           data.push({
             doSortationId: resultSortationDetail.doSortationId,
             doSortationDetailId: resultSortationDetail.doSortationDetailId,
@@ -684,7 +684,7 @@ export class MobileSortationService {
           });
 
           result.statusCode = HttpStatus.OK;
-          result.message = 'Sortation Success Arrival';
+          result.message = 'Sortation - Sukses Slide Tiba';
           data.push({
             doSortationId: resultSortationDetail.doSortationId,
             doSortationDetailId: resultSortationDetail.doSortationDetailId,
@@ -695,10 +695,10 @@ export class MobileSortationService {
           return result;
         }
       } else {
-        throw new BadRequestException(`DO Sortation Detail Id : ` + payload.doSortationDetailId + ' Has Not Departure Date');
+        throw new BadRequestException(`DO Sortation Detail Id : ` + payload.doSortationDetailId + ' Belum Slide Berangkat');
       }
     } else {
-      throw new BadRequestException(`DO Sortation Detail Id : ` + payload.doSortationDetailId + ' Not Found');
+      throw new BadRequestException(`DO Sortation Detail Id : ` + payload.doSortationDetailId + ' Tidak di temukan');
     }
   }
 
@@ -754,11 +754,11 @@ export class MobileSortationService {
         });
 
         result.statusCode = HttpStatus.OK;
-        result.message = 'Sortation Success Created Continue';
+        result.message = 'Sortation - Sukses Slide lanjut berangkat';
         result.data = data;
         return result;
       } else {
-        throw new BadRequestException(`Can't Find  Do Sortation ID : ` + payload.doSortationId);
+        throw new BadRequestException(`Do Sortation ID : ` + payload.doSortationId + ` Tidak di temukan`);
       }
     } catch (e) {
       throw e.error;
@@ -787,7 +787,7 @@ export class MobileSortationService {
     const resultDoSortationDetail = await RawQueryService.query(sql);
 
     if (resultDoSortationDetail.length === 0) {
-      throw new BadRequestException(`All Sortation Has Arrival`);
+      throw new BadRequestException(`Semua Sortation Telah Tiba`);
     }
 
     let attachment = await AttachmentTms.findOne({
@@ -829,7 +829,7 @@ export class MobileSortationService {
       attachmentId,
     });
     result.statusCode = HttpStatus.OK;
-    result.message = 'Sortation upload image Handover';
+    result.message = 'Sortation - Berhasil Upload Gambar Handover';
     result.data = data;
     return result;
   }
@@ -869,13 +869,13 @@ export class MobileSortationService {
     });
 
     if (!resultDoSortationDetail) {
-      throw new BadRequestException(`All Sortation Has Arrival`);
+      throw new BadRequestException(`Semua Sortation Telah Tiba`);
     }
 
     if (resultDoSortation) {
 
       if (resultDoSortation.doSortationStatusIdLast != DO_SORTATION_STATUS.BACKUP_PROCESS) {
-        throw new UnprocessableEntityException(`DO Sortation harus BACKUP PROSES`);
+        throw new UnprocessableEntityException(`Status Terakhir Sortation harus BACKUP PROSES`);
       }
 
       await getManager().transaction(async transaction => {
@@ -939,11 +939,11 @@ export class MobileSortationService {
         handoverDate: timeNow,
       });
       result.statusCode = HttpStatus.OK;
-      result.message = 'Sortation Success Handover';
+      result.message = 'Sortation - Berhasil Handover';
       result.data = data;
       return result;
     } else {
-      throw new BadRequestException(`Can't Find  DO SORTATION ID : ` + payload.doSortationId);
+      throw new BadRequestException(`DO SORTATION ID : ` + payload.doSortationId + ` Tidak di temukan`);
     }
 
   }
@@ -1008,7 +1008,7 @@ export class MobileSortationService {
       attachmentId,
     });
     result.statusCode = HttpStatus.OK;
-    result.message = 'Sortation upload image Continue';
+    result.message = 'Sortation - Berhasil Upload Image Continue';
     result.data = data;
     return result;
   }
@@ -1025,7 +1025,7 @@ export class MobileSortationService {
     reasonNote: string,
     userId: number,
   ) {
-
+    const timeNow = moment().toDate();
     console.log('MobileSortationService - createDoSortationHistory - CREATE DO SORTATION HISTORY');
     const dataDoSortationHistory = transaction.create(DoSortationHistory, {
       doSortationId,
@@ -1038,8 +1038,8 @@ export class MobileSortationService {
       reasonNote,
       userIdCreated: userId,
       userIdUpdated: userId,
-      createdTime: moment().toDate(),
-      updatedTime: moment().toDate(),
+      createdTime: timeNow,
+      updatedTime: timeNow,
     });
 
     await DoSortationHistory.insert(dataDoSortationHistory);
