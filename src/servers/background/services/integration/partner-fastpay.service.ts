@@ -116,7 +116,8 @@ export class PartnerFastpayService {
       }
 
       if (pickupRequest) {
-        if (pickupRequest.pickupRequestType != 'DROP') {
+        if (dropPartnerType != null && dropPartnerType == 'CASHLESS'
+          && pickupRequest.pickupRequestType != 'DROP') {
           throw new BadRequestException(
             `Tipe Pickup Bukan Drop - Tidak dapat melakukan Drop!`);
         }
