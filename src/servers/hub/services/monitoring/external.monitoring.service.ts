@@ -3,6 +3,7 @@ import { AxiosRequestConfig } from 'axios';
 
 import { ConfigService } from '../../../../shared/services/config.service';
 import { HttpRequestAxiosService } from '../../../../shared/services/http-request-axios.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import {
   BaseMonitoringHubPackage,
   PayloadMonitoringHubPackageList,
@@ -24,7 +25,6 @@ export class ExternalHubMonitoringService {
     report_type: string,
     payload: BaseMonitoringHubPackage,
   ): Promise<any> {
-    
     return this.post(`/reporting/${report_type}/generate`, payload);
   }
 
@@ -32,7 +32,6 @@ export class ExternalHubMonitoringService {
     report_type: string,
     payload: PayloadMonitoringHubPackageList,
   ): Promise<any> {
-
     return this.post(`/reporting/${report_type}/list`, payload);
   }
 
@@ -59,8 +58,18 @@ export class ExternalHubMonitoringService {
           message: err.response.data && err.response.data.message,
           statusCode: status,
         };
+        if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+          PinoLoggerService.error(
+            `[ExternalMonitoringService] Response Error: ${
+              errResponse.message
+            }`,
+          );
+        }
         throw new HttpException(errResponse, status);
       }
+      PinoLoggerService.error(
+        `[ExternalMonitoringService] Request Error: ${err.message}`,
+      );
       throw err;
     }
   }
