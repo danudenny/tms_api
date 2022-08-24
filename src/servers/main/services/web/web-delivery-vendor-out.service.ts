@@ -63,7 +63,7 @@ export class WebDeliveryVendorOutService {
         try {
           AwbDeliveryVendorQueueService.createJobSendVendor(
             awb.awbItemId,
-            AWB_STATUS.ANT,
+            AWB_STATUS.OUT_BRANCH,
             permissonPayload.branchId,
             authMeta.userId,
             null,

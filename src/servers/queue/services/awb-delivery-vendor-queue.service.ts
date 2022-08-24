@@ -110,7 +110,7 @@ export class AwbDeliveryVendorQueueService {
       userId,
       branchId,
       awbStatusId,
-      awbStatusIdLastPublic: AWB_STATUS.OUT_BRANCH,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
       userIdCreated: userId,
       userIdUpdated: userId,
       employeeIdDriver,
