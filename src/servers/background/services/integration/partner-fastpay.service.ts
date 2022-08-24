@@ -15,7 +15,6 @@ import { BranchPartner } from '../../../../shared/orm-entity/branch-partner';
 import { BranchChildPartner } from '../../../../shared/orm-entity/branch-child-partner';
 import { PickupRequest } from '../../../../shared/orm-entity/pickup-request';
 
-
 export class PartnerFastpayService {
 
   static async checkDataPickupRequest(
@@ -33,6 +32,11 @@ export class PartnerFastpayService {
     }
 
     if (pickupRequest) {
+      if (pickupRequest.pickupRequestType != 'DROP') {
+        throw new BadRequestException(
+          `Tipe Pickup Bukan Drop - Tidak dapat melakukan Drop!`);
+      }
+
       if (pickupRequest.pickupRequestStatus == 150) {
         throw new BadRequestException(
           'Status Resi Cancel - Tidak dapat melakukan Drop!',
@@ -112,6 +116,12 @@ export class PartnerFastpayService {
       }
 
       if (pickupRequest) {
+        if (dropPartnerType != null && dropPartnerType == 'CASHLESS'
+          && pickupRequest.pickupRequestType != 'DROP') {
+          throw new BadRequestException(
+            `Tipe Pickup Bukan Drop - Tidak dapat melakukan Drop!`);
+        }
+
         if (pickupRequest.pickupRequestStatus == 150) {
           throw new BadRequestException(
             'Status Resi Cancel - Tidak dapat melakukan Drop!',
@@ -218,7 +228,7 @@ export class PartnerFastpayService {
                 workOrderIdLast: workOrderId,
                 userIdUpdated: 1,
                 updatedTime: timeNow,
-              }
+              },
             );
           }
 
@@ -379,7 +389,8 @@ export class PartnerFastpayService {
             pr.pickup_request_contact_no as "pickupPhone",
             pr.pickup_request_email as "pickupEmail",
             pr.pickup_request_notes as "pickupNotes",
-            pr.pickup_request_status_id as "pickupRequestStatus"
+            pr.pickup_request_status_id as "pickupRequestStatus",
+            pr.pickup_request_type as "pickupRequestType"
       FROM pickup_request_detail prd
         JOIN pickup_request pr ON pr.pickup_request_id = prd.pickup_request_id
         JOIN partner p ON pr.partner_id = p.partner_id
@@ -423,7 +434,8 @@ export class PartnerFastpayService {
             pr.pickup_request_contact_no as "pickupPhone",
             pr.pickup_request_email as "pickupEmail",
             pr.pickup_request_notes as "pickupNotes",
-            pr.pickup_request_status_id as "pickupRequestStatus"
+            pr.pickup_request_status_id as "pickupRequestStatus",
+            pr.pickup_request_type as "pickupRequestType"
       FROM pickup_request pr
         JOIN pickup_request_detail prd ON pr.pickup_request_id = prd.pickup_request_id
         JOIN partner p ON pr.partner_id = p.partner_id
@@ -468,10 +480,10 @@ static async getBranchList(
         isDeleted: false,
       },
     });
-    
-    if(branchPartner) {
+
+    if (branchPartner) {
       const branchPartnerHeader = await this.getDataBranchPartner(partner.partnerId);
-      if(branchPartnerHeader) {
+      if (branchPartnerHeader) {
         for (const itemBranchPartner of branchPartnerHeader) {
           const dataChild = [];
           const branchChildartner = await BranchChildPartner.find({
@@ -482,8 +494,8 @@ static async getBranchList(
             },
           });
 
-          if(branchChildartner && branchChildartner.length) {
-            for(const itemBranchChild of branchChildartner) {
+          if (branchChildartner && branchChildartner.length) {
+            for (const itemBranchChild of branchChildartner) {
               dataChild.push({
                 branch_child_partner_code: itemBranchChild.branchChildPartnerCode,
                 branch_child_partner_name: itemBranchChild.branchChildPartnerName,
@@ -509,8 +521,7 @@ static async getBranchList(
         result.status_code = 200;
         result.data = data;
         return result;
-      }
-      else {
+      } else {
         throw new BadRequestException('List Data Gerai tidak ditemukan!');
       }
     } else {
@@ -530,7 +541,7 @@ static async getBranchList(
         b.branch_name
       FROM branch_partner bp
       LEFT JOIN branch b ON bp.branch_id = b.branch_id AND b.is_deleted = FALSE
-      WHERE 
+      WHERE
         bp.partner_id = :partnerId AND
         bp.is_active = TRUE AND
         bp.is_deleted = FALSE

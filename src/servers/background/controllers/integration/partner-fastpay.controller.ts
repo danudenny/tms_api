@@ -34,16 +34,16 @@ export class PartnerFastpayController {
     return PartnerFastpayService.dropCash(payload);
   }
 
-  // @Post('dropCashless')
-  // @HttpCode(HttpStatus.OK)
-  // @ApiImplicitHeader({ name: 'x-api-key' })
-  // @UseGuards(AuthXAPIKeyGuard)
-  // @ApiOkResponse({ type: DropSuccessResponseVm })
-  // public async dropCashless(@Body() payload: DropCashlessVm) {
-  //   // NOTE: handle for message disable this service
-  //   // await ResponseMaintenanceService.dropService();
-  //   return PartnerFastpayService.dropCashless(payload);
-  // }
+  @Post('dropCashless')
+  @HttpCode(HttpStatus.OK)
+  @ApiImplicitHeader({ name: 'x-api-key' })
+  @UseGuards(AuthXAPIKeyGuard)
+  @ApiOkResponse({ type: DropSuccessResponseVm })
+  public async dropCashless(@Body() payload: DropCashlessVm) {
+    // NOTE: handle for message disable this service
+    // await ResponseMaintenanceService.dropService();
+    return PartnerFastpayService.dropCashless(payload);
+  }
 
   @Post('list')
   @HttpCode(HttpStatus.OK)
