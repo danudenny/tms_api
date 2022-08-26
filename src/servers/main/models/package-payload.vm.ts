@@ -114,6 +114,9 @@ export class AwbScanPackageDetailVm {
   totalWeightRealRounded: number;
 
   @ApiModelProperty()
+  totalWeightReal: number;
+
+  @ApiModelProperty()
   refReseller: string;
 
   @ApiModelProperty()
