@@ -1057,6 +1057,7 @@ export class V1PackageService {
   }
 
   private static getRejectScanInType(type: string) {
-    return `BAG-${type.toUpperCase().substring(0, 2)}`;
+    type = type.toUpperCase();
+    return type === 'BAG' ? type : `BAG-${type.substring(0, 2)}`;
   }
 }
