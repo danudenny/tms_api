@@ -53,7 +53,6 @@ export class AwbPatchStatusService {
 
           const awbAttr = await AwbItemAttr.findOne({
             awbNumber: awb,
-            awbStatusIdLast: AWB_STATUS.ANT,
             isDeleted: false,
           });
 
