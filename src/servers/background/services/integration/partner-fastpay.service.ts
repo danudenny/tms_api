@@ -32,9 +32,10 @@ export class PartnerFastpayService {
     }
 
     if (pickupRequest) {
-      if (pickupRequest.pickupRequestType != 'DROP') {
-        throw new BadRequestException(
-          `Tipe Pickup Bukan Drop - Tidak dapat melakukan Drop!`);
+      if (!await this.isValidateToped(pickupRequest.partner, pickupRequest.pickupRequestStatus)
+        && pickupRequest.pickupRequestType != 'DROP') {
+          throw new BadRequestException(
+           `Tipe Pickup Bukan Drop - Tidak dapat melakukan Drop!`);
       }
 
       if (pickupRequest.pickupRequestStatus == 150) {
@@ -116,10 +117,9 @@ export class PartnerFastpayService {
       }
 
       if (pickupRequest) {
-        if (dropPartnerType != null && dropPartnerType == 'CASHLESS'
-          && pickupRequest.pickupRequestType != 'DROP') {
-          throw new BadRequestException(
-            `Tipe Pickup Bukan Drop - Tidak dapat melakukan Drop!`);
+        if (!await this.isValidateToped(pickupRequest.partner, pickupRequest.pickupRequestStatus)
+          && await this.isValidateDropCashless(dropPartnerType, pickupRequest.pickupRequestType)) {
+            throw new BadRequestException(`Tipe Pickup Bukan Drop - Tidak dapat melakukan Drop!`);
         }
 
         if (pickupRequest.pickupRequestStatus == 150) {
@@ -245,6 +245,20 @@ export class PartnerFastpayService {
     } else {
       throw new BadRequestException('Data gerai tidak ditemukan!');
     }
+  }
+
+  private static async isValidateToped(partnerName: string, pickupRequestStatusId: number): Promise<boolean> {
+    if (partnerName.toString() === 'Tokopedia' && Number(pickupRequestStatusId) === 100) {
+      return true;
+    }
+    return false;
+  }
+
+  private static async isValidateDropCashless(dropPartnerType: string, pickupRequestType: string): Promise<boolean> {
+    if (dropPartnerType != null && dropPartnerType == 'CASHLESS' && pickupRequestType != 'DROP') {
+      return true;
+    }
+    return false;
   }
 
   private static async handleResult(
