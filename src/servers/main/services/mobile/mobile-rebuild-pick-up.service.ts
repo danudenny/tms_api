@@ -56,14 +56,17 @@ export class MobileRebuildPickUpService {
 
     try {
       //TODO: Implement service priority here
+      console.log(url)
+      console.log(options)
       const request = await axios.get(url, options);
       const result = new MobileRebuildPickUpWorkOrderServiceResponse();
       result.pickup = request.data.pickup;
       return result;
     } catch (err) {
+      console.log(err)
       RequestErrorService.throwObj(
         {
-          message: 'Error while hit service priority',
+          message: 'Error while hit service rebuild pickup',
           error: err
         },
         HttpStatus.BAD_REQUEST,
