@@ -20,7 +20,7 @@ export class MobileRebuildPickupPod {
     return MobileRebuildPickUpService.getDeliveryandCodAmount(payload);
   }
 
-  @Post('getPickupAmount/:dateStart/:dateEnd')
+  @Post('getPickupAmount')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthenticatedGuard)
