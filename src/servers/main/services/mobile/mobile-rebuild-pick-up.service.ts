@@ -46,7 +46,7 @@ export class MobileRebuildPickUpService {
       headers: {
         'accept': 'application/json',
         'Content-Type': 'application/json',
-        'employeid': authMeta.employeeId
+        'employeeID': authMeta.employeeId
       },
       params :{
         date_start : payload.dateStart,
