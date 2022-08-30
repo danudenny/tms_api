@@ -51,7 +51,7 @@ export class AwbDeliveryVendorQueueService {
             refAwbNumber: awbItemAttr.awbNumber,
             userId: data.userId,
             branchId: data.branchId,
-            employeeIdDriver: data.employeeIdDriver,
+            // employeeIdDriver: data.employeeIdDriver,
             historyDate: data.timestamp,
             awbStatusId: data.awbStatusId,
             awbHistoryIdPrev: awbItemAttr.awbHistoryIdLast,
@@ -97,13 +97,12 @@ export class AwbDeliveryVendorQueueService {
     awbStatusId: number,
     branchId: number,
     userId: number,
-    employeeIdDriver: number,
-    employeeName: string,
+    vendorName: string,
     vendorId : string,
     orderVendorCode : string,
   ) {
-    const noteInternal = `Paket dibawa [SIGESIT - ${employeeName}]`;
-    const notePublic = `Paket dibawa [SIGESIT - ${employeeName}]`;
+    const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName} dengan no resi -`;
+    const notePublic = `Pengiriman dilanjutkan oleh ${vendorName} dengan no resi - `;
     // provide data
     const obj = {
       awbItemId,
@@ -113,7 +112,6 @@ export class AwbDeliveryVendorQueueService {
       awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
       userIdCreated: userId,
       userIdUpdated: userId,
-      employeeIdDriver,
       timestamp: moment().toDate(),
       noteInternal,
       notePublic,

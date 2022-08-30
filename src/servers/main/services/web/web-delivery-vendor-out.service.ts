@@ -5,6 +5,7 @@ import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbStatusService } from '../master/awb-status.service';
 import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
+import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 import { RedisService } from '../../../../shared/services/redis.service';
 import { AwbDeliveryVendorQueueService } from '../../../queue/services/awb-delivery-vendor-queue.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
@@ -53,36 +54,53 @@ export class WebDeliveryVendorOutService {
         }
       });
 
-      const holdRedis = await RedisService.lockingWithExpire(
-        `hold:scanoutvendor:${awb.awbItemId}`,
-        'locking',
-        60,
-      );
-
-      if (holdRedis) {
-        try {
-          AwbDeliveryVendorQueueService.createJobSendVendor(
-            awb.awbItemId,
-            AWB_STATUS.OUT_BRANCH,
-            permissonPayload.branchId,
-            authMeta.userId,
-            null,
-            null,
-            payload.vendor_id,
-            payload.order_vendor_code,
-          )
-          response.status = 'ok';
-          response.message = `Resi ${awbNumber} sudah di proses.`;
-          RedisService.del(`hold:scanoutvendor:${awb.awbItemId}`);
-        }catch(err){
-          response.status = 'error';
-          response.message = `Gangguan Server: ${err.message}`;
+      const vendor = await PartnerLogistic.findOne({
+        select :['partnerLogisticId','partnerLogisticName'],
+        where :{
+          partnerLogisticId : payload.vendor_id,
+          isDeleted : false,
         }
-      }else{
-        response.status = 'error';
-        response.message = `Server Busy: Resi ${awbNumber} sedang di proses.`;
-      }
+      });
       
+      if(awb && vendor){
+        const holdRedis = await RedisService.lockingWithExpire(
+          `hold:scanoutvendor:${awb.awbItemId}`,
+          'locking',
+          60,
+        );
+  
+        if (holdRedis) {
+          try {
+            AwbDeliveryVendorQueueService.createJobSendVendor(
+              awb.awbItemId,
+              AWB_STATUS.OUT_BRANCH,
+              permissonPayload.branchId,
+              authMeta.userId,
+              vendor.partnerLogisticName,
+              payload.vendor_id,
+              payload.order_vendor_code,
+            )
+            response.status = 'ok';
+            response.message = `Resi ${awbNumber} berhasil di proses.`;
+            RedisService.del(`hold:scanoutvendor:${awb.awbItemId}`);
+          }catch(err){
+            response.status = 'error';
+            response.message = `Gangguan Server: ${err.message}`;
+          }
+        }else{
+          response.status = 'error';
+          response.message = `Server Busy: Resi ${awbNumber} sedang di proses.`;
+        }  
+      }else{
+        if(vendor){
+          response.status = 'error';
+          response.message = `Resi ${awbNumber} tidak ditemukan.`;
+        }else{
+          response.status = 'error';
+          response.message = `Vendor tidak ditemukan.`;
+        } 
+      }
+
       dataItem.push(response);
     }
 
