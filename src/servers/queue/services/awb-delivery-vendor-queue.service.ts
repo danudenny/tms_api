@@ -101,8 +101,8 @@ export class AwbDeliveryVendorQueueService {
     vendorId : string,
     orderVendorCode : string,
   ) {
-    const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName} dengan no resi -`;
-    const notePublic = `Pengiriman dilanjutkan oleh ${vendorName} dengan no resi - `;
+    const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName}`;
+    const notePublic = `Pengiriman dilanjutkan oleh ${vendorName}`;
     // provide data
     const obj = {
       awbItemId,
