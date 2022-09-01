@@ -10,6 +10,7 @@ import { RedisService } from '../../../../shared/services/redis.service';
 import { AwbDeliveryVendorQueueService } from '../../../queue/services/awb-delivery-vendor-queue.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import e = require('express');
+import { PrinterService } from '../../../../shared/services/printer.service';
 
 export class WebDeliveryVendorOutService {
   static async validateAWB(payload : WebDeliveryVendorOutPayload): Promise<WebDeliveryVendorOutResponseVm>{
@@ -106,5 +107,9 @@ export class WebDeliveryVendorOutService {
 
     result.data = dataItem;
     return result;
+  }
+
+  static async printVendor(res: e.Response, vendorCode : string){
+
   }
 }
