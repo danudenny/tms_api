@@ -35,7 +35,9 @@ export class WebAwbDeliveryVendorController {
   @Get('scanOut/printVendor/:vendorCode')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
-  public async printVendor(@Response() serverResponse: express.Response, @Param('versionApp') vendorCode: string) {
+  @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
+  @ApiOkResponse({ type: WebDeliveryVendorOutResponseVm })
+  public async printVendor(@Response() serverResponse: express.Response, @Param('vendorCode') vendorCode: string) {
     return WebDeliveryVendorOutService.printVendor(serverResponse, vendorCode);
   }
 }
