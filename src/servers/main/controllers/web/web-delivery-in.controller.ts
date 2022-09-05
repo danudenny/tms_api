@@ -111,16 +111,6 @@ export class WebDeliveryInController {
     return this.webDeliveryService.findAllHubSortInByRequest(payload);
   }
 
-  @Post('hubSortList/count')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthenticatedGuard)
-  @ApiOkResponse({ type: WebScanInHubSortListResponseVm })
-  // @ResponseSerializerOptions({ disable: true })
-  public async findAllHubSortListCount(@Body() payload: BaseMetaPayloadVm) {
-    return this.webDeliveryService.findAllHubSortInByRequestCount(payload);
-  }
-
   @Post('hubSortListDetail')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
