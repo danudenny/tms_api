@@ -70,7 +70,7 @@ export class AwbDeliveryVendorQueueService {
           });
           await AwbHistory.insert(awbHistory);
           try{
-            VendorLogisticService.sendVendor(awbItemAttr.awbNumber, data.vendorId, data.orderVendorCode);
+            VendorLogisticService.sendVendor(awbItemAttr.awbNumber, data.vendorId, data.orderVendorCode, data.userId, data.tokenPayload);
           }catch(err){
             console.error(`[awb-history-while-send-vendor-queue] `, err);
             throw err;
@@ -104,6 +104,7 @@ export class AwbDeliveryVendorQueueService {
     vendorName: string,
     vendorId : string,
     orderVendorCode : string,
+    tokenPayload : string
   ) {
     const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName}`;
     const notePublic = `Pengiriman dilanjutkan oleh ${vendorName}`;
@@ -120,7 +121,8 @@ export class AwbDeliveryVendorQueueService {
       noteInternal,
       notePublic,
       vendorId,
-      orderVendorCode
+      orderVendorCode,
+      tokenPayload
     };
     return AwbDeliveryVendorQueueService.queue.add(obj);
   }

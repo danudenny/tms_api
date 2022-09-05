@@ -47,8 +47,9 @@ export class WebDeliveryVendorOutService {
 
   static async scanVendor(payload: WebDeliveryVendorOutSendPayload): Promise<WebDeliveryVendorOutResponseVm> {
     const result = new WebDeliveryVendorOutResponseVm();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthData();
+    const permissonPayload = AuthService.getPermissionTokenPayload();
+    const permissonPayloadToken = AuthService.getPermissionToken();
     const dataItem = [];
     for (const awbNumber of payload.scanValue) {
       const response = new WebDeliveryVendorOutResponse();
@@ -85,6 +86,7 @@ export class WebDeliveryVendorOutService {
               vendor.partnerLogisticName,
               payload.vendor_id,
               payload.order_vendor_code,
+              permissonPayloadToken
             )
             response.status = 'ok';
             response.message = `Resi ${awbNumber} berhasil di proses.`;
