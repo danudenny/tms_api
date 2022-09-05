@@ -1,6 +1,7 @@
 import { AwbService } from '../v1/awb.service';
-import { WebDeliveryVendorOutPayload, WebDeliveryVendorOutSendPayload } from '../../models/web-delivery-vendor-out-payload.vm';
-import { WebDeliveryVendorOutResponseVm, WebDeliveryVendorOutResponse } from '../../models/web-delivery-vendor-out-response.vm';
+import { WebDeliveryVendorOutPayload, WebDeliveryVendorOutSendPayload, ScanOutPropertyAwbPayloadVm } from '../../models/web-delivery-vendor-out-payload.vm';
+import { WebDeliveryVendorOutResponseVm, WebDeliveryVendorOutResponse, ScanOutPropertyAwbResponseVm, ScanOutPropertyAwbResponse} from '../../models/web-delivery-vendor-out-response.vm';
+import { PrintVendorOutPayloadQueryVm} from '../../models/print-vendor-out-payload.vm';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbStatusService } from '../master/awb-status.service';
@@ -113,11 +114,9 @@ export class WebDeliveryVendorOutService {
     return result;
   }
 
-  static async printVendor(res: e.Response, vendorCode: string) {
-    const authMeta = AuthService.getAuthMetadata();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
+  static async printVendor(res: e.Response, queryParams: PrintVendorOutPayloadQueryVm) {
     const currentBranch = await RepositoryService.branch
-      .loadById(permissonPayload.branchId)
+      .loadById(queryParams.branchId)
       .select({
         branchName: true,
     });
@@ -129,7 +128,7 @@ export class WebDeliveryVendorOutService {
     }
 
     const currentUser = await RepositoryService.user
-      .loadById(authMeta.userId)
+      .loadById(queryParams.userId)
       .select({
         userId: true, 
         employee: {
@@ -143,10 +142,10 @@ export class WebDeliveryVendorOutService {
       });
     }
 
-    let data = await VendorLogisticService.getDataSuratJalan(vendorCode);
+    let data = await VendorLogisticService.getDataSuratJalan(queryParams.orderVendorCode);
     let dataPrint = {
       data : {
-        vendorCode : vendorCode,
+        vendorCode : queryParams.orderVendorCode,
         userDriver : {
           nameDriver : data.data.vendor_name,
           vehicleNumber: '-'
@@ -198,6 +197,7 @@ export class WebDeliveryVendorOutService {
       listPrinterName,
     });
   }
+  
   static async awb(
     payload: ScanOutPropertyAwbPayloadVm,
   ): Promise<ScanOutPropertyAwbResponseVm> {
