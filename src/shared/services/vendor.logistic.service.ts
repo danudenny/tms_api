@@ -11,26 +11,25 @@ export class VendorLogisticService {
   }
 
   public static async sendVendor(awbNumber, vendorId, orderVendorCode) {
-    const authMeta = AuthService.getAuthMetadata();
-    const permissonPayload = AuthService.getPermissionToken();
-    let url = `${this.queryServiceUrl}order/vendor`;
-    const options = {
-      headers: {
-        'accept': 'application/json',
-        'Content-Type': 'application/json',
-        'x-user-id' : authMeta.userId.toString(),
-        'x-channel-id' : authMeta.clientId.toString(),
-        'x-permission-token' : permissonPayload
-      }
-    };
-
-    const body = {
-      awb_no: awbNumber,
-      vendor_id: vendorId,
-      order_vendor_code : orderVendorCode
-    };
-    
     try{
+      const authMeta = AuthService.getAuthMetadata();
+      const permissonPayload = AuthService.getPermissionToken();
+      let url = `${this.queryServiceUrl}order/vendor`;
+      const options = {
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+          'x-user-id' : authMeta.userId,
+          'x-channel-id' : authMeta.clientId,
+          'x-permission-token' : permissonPayload
+        }
+      };
+
+      const body = {
+        awb_no: awbNumber,
+        vendor_id: vendorId,
+        order_vendor_code : orderVendorCode
+      };
       const request = await axios.post(url, body, options);
       console.log(request.data)
       return request.data;
