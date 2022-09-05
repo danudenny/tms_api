@@ -41,4 +41,11 @@ export class WebAwbDeliveryVendorController {
   public async printVendor(@Response() serverResponse: express.Response, @Query() queryParams: PrintVendorOutPayloadQueryVm) {
     return WebDeliveryVendorOutService.printVendor(serverResponse, queryParams);
   }
+  @Post('scanOut/propertyAWB')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthBackdoorApiKeyGuard)
+  @ApiOkResponse({ type: ScanOutPropertyAwbResponseVm })
+  public async awbNumber(@Body() payload: ScanOutPropertyAwbPayloadVm) {
+    return WebDeliveryVendorOutService.awb(payload);
+  }
 }
