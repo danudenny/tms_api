@@ -142,7 +142,7 @@ export class WebDeliveryVendorOutService {
       });
     }
 
-    let data = await VendorLogisticService.getDataSuratJalan(queryParams.orderVendorCode);
+    let data = await VendorLogisticService.getDataSuratJalan(queryParams.orderVendorCode, queryParams.userId);
     let dataPrint = {
       data : {
         vendorCode : queryParams.orderVendorCode,
@@ -197,7 +197,7 @@ export class WebDeliveryVendorOutService {
       listPrinterName,
     });
   }
-  
+
   static async awb(
     payload: ScanOutPropertyAwbPayloadVm,
   ): Promise<ScanOutPropertyAwbResponseVm> {

@@ -37,10 +37,10 @@ export class WebAwbDeliveryVendorController {
   @Get('scanOut/printVendor')
   @ApiBearerAuth()
   @ResponseSerializerOptions({ disable: true })
-  @ApiOkResponse({ type: WebDeliveryVendorOutResponseVm })
   public async printVendor(@Response() serverResponse: express.Response, @Query() queryParams: PrintVendorOutPayloadQueryVm) {
     return WebDeliveryVendorOutService.printVendor(serverResponse, queryParams);
   }
+  
   @Post('scanOut/propertyAWB')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthBackdoorApiKeyGuard)

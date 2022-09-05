@@ -45,15 +45,14 @@ export class VendorLogisticService {
     }
   }
 
-  public static async getDataSuratJalan(orderVendorCode) {
+  public static async getDataSuratJalan(orderVendorCode, userId) {
     let url = `${this.queryServiceUrl}vendor/order/detail`;
-    const authMeta = AuthService.getAuthMetadata();
     const options = {
       headers: {
         'accept': 'application/json',
         'Content-Type': 'application/json',
-        'x-user-id' : authMeta.userId.toString(),
-        'x-channel-id' : authMeta.clientId.toString()
+        'x-user-id' : userId,
+        'x-channel-id' : 'web'
       },
       params: {
         order_vendor_code: orderVendorCode,
