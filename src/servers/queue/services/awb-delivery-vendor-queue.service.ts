@@ -69,8 +69,12 @@ export class AwbDeliveryVendorQueueService {
             location: data.location,
           });
           await AwbHistory.insert(awbHistory);
-          VendorLogisticService.sendVendor(awbItemAttr.awbNumber, data.vendorId, data.orderVendorCode);
-
+          try{
+            VendorLogisticService.sendVendor(awbItemAttr.awbNumber, data.vendorId, data.orderVendorCode);
+          }catch(err){
+            console.error(`[awb-history-while-send-vendor-queue] `, err);
+            throw err;
+          }
         }
       // }); // end transaction
       } catch (error) {
