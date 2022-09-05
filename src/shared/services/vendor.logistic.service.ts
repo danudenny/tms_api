@@ -36,7 +36,7 @@ export class VendorLogisticService {
     }catch(err){
       RequestErrorService.throwObj(
         {
-          message: 'Error while hit service priority',
+          message: 'Error while hit service send vendor',
           error: err
         },
         HttpStatus.BAD_REQUEST,
@@ -53,22 +53,23 @@ export class VendorLogisticService {
         'Content-Type': 'application/json',
         'x-user-id' : authMeta.userId.toString(),
         'x-channel-id' : authMeta.clientId.toString()
+      },
+      params: {
+        order_vendor_code: orderVendorCode,
+        page : 0,
+        limit : 0
       }
     };
 
-    const params = {
-      order_vendor_code: orderVendorCode,
-      page : 0,
-      limit : 0
-    };
-    
+    console.log(options);
     try{
       const request = await axios.get(url, options);
       return request.data;
     }catch(err){
+      console.log(err)
       RequestErrorService.throwObj(
         {
-          message: 'Error while hit service priority',
+          message: 'Error while hit service get data vendor detail',
           error: err
         },
         HttpStatus.BAD_REQUEST,
