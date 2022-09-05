@@ -24,7 +24,7 @@ export class VendorLogisticService {
       };
 
       const body = {
-        awb_no: awbNumber,
+        awb_no: [awbNumber],
         vendor_id: vendorId,
         order_vendor_code : orderVendorCode
       };
