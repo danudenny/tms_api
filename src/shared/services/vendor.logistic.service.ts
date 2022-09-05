@@ -32,6 +32,7 @@ export class VendorLogisticService {
     
     try{
       const request = await axios.post(url, body, options);
+      console.log(request.data)
       return request.data;
     }catch(err){
       RequestErrorService.throwObj(
@@ -64,6 +65,7 @@ export class VendorLogisticService {
     console.log(options);
     try{
       const request = await axios.get(url, options);
+      console.log(request.data)
       return request.data;
     }catch(err){
       console.log(err)
