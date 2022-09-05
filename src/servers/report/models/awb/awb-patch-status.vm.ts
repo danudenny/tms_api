@@ -19,5 +19,7 @@ export class AwbPatchStatusSuccessResponseVm {
 export class AwbPatch3PLResiPayloadVm {
   @ApiModelProperty()
   resi: string[];
+
+  @ApiModelProperty()
   resiPengganti: string[];
 }
