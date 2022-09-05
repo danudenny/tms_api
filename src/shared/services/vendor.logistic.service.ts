@@ -12,13 +12,15 @@ export class VendorLogisticService {
 
   public static async sendVendor(awbNumber, vendorId, orderVendorCode) {
     const authMeta = AuthService.getAuthMetadata();
+    const permissonPayload = AuthService.getPermissionToken();
     let url = `${this.queryServiceUrl}order/vendor`;
     const options = {
       headers: {
         'accept': 'application/json',
         'Content-Type': 'application/json',
         'x-user-id' : authMeta.userId.toString(),
-        'x-channel-id' : authMeta.clientId.toString()
+        'x-channel-id' : authMeta.clientId.toString(),
+        'x-permission-token' : permissonPayload
       }
     };
 
