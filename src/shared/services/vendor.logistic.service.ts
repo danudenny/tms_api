@@ -12,7 +12,7 @@ export class VendorLogisticService {
 
   public static async sendVendor(awbNumber, vendorId, orderVendorCode, userId, tokenPayload) {
     try{
-      let url = `${this.queryServiceUrl}order/vendor`;
+      let url = `${this.queryServiceUrl}vendor/order?is_retry=false`;
       const options = {
         headers: {
           'accept': 'application/json',
@@ -58,7 +58,7 @@ export class VendorLogisticService {
         limit : 0
       }
     };
-    
+
     try{
       const request = await axios.get(url, options);
       console.log(request.data)
