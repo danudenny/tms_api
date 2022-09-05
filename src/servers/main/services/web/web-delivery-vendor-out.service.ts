@@ -36,6 +36,7 @@ export class WebDeliveryVendorOutService {
         response.message = `Resi ${awbNumber} Tidak di Temukan`;
       }
 
+      response.awbNumber = awbNumber;
       dataItem.push(response);
     }
 
@@ -104,7 +105,7 @@ export class WebDeliveryVendorOutService {
           response.message = `Vendor tidak ditemukan.`;
         }
       }
-
+      response.awbNumber = awbNumber;
       dataItem.push(response);
     }
 
