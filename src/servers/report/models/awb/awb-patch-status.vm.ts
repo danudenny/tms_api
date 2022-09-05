@@ -15,3 +15,9 @@ export class AwbPatchStatusSuccessResponseVm {
   @ApiModelProperty({ example: 200 })
   status: number;
 }
+
+export class AwbPatch3PLResiPayloadVm {
+  @ApiModelProperty()
+  resi: string[];
+  resiPengganti: string[];
+}
