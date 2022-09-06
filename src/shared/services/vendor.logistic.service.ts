@@ -29,10 +29,8 @@ export class VendorLogisticService {
         order_vendor_code : orderVendorCode
       };
       const request = await axios.post(url, body, options);
-      console.log(request.data)
-      return request.data;
+      return request;
     }catch(err){
-      console.log(err)
       RequestErrorService.throwObj(
         {
           message: 'Error while hit service send vendor',
@@ -61,10 +59,8 @@ export class VendorLogisticService {
 
     try{
       const request = await axios.get(url, options);
-      console.log(request.data)
-      return request.data;
+      return request;
     }catch(err){
-      console.log(err)
       RequestErrorService.throwObj(
         {
           message: 'Error while hit service get data vendor detail',
