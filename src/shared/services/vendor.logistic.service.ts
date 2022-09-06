@@ -59,7 +59,7 @@ export class VendorLogisticService {
 
     try{
       const request = await axios.get(url, options);
-      return request;
+      return request.data;
     }catch(err){
       RequestErrorService.throwObj(
         {

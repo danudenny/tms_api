@@ -170,11 +170,12 @@ export class WebDeliveryVendorOutService {
       })
     }
     //remapping
+    const currentDate = moment();
     let dataMeta ={
       meta :{
         currentBranchName : currentBranch.branchName,
-        date : '12',
-        time : '12',
+        date: currentDate.format('DD/MM/YY'),
+        time: currentDate.format('HH:mm'),
         currentUserName : currentUser.employee.nickname,
         totalItems : totalItem,
         totalCod : totalCod
