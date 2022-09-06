@@ -45,4 +45,13 @@ export class BranchController {
   ) {
     return this.branchService.findAllByRequestCod(payload, Boolean(params.merger));
   }
+
+  @Post('list/sortation')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthenticatedGuard)
+  @ApiOkResponse({ type: BranchFindAllResponseVm })
+  public async findSortationBranchName(@Body() payload: BaseMetaPayloadVm) {
+    return this.branchService.findSortationBranch(payload);
+  }
 }
