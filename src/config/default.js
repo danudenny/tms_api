@@ -169,7 +169,10 @@ module.exports = {
     allowedService: {
       "cod-invoice": {
         destination: "/finance/cod-invoice"
-      }
+      },
+      "cod-payment": {
+        destination: "/finance/cod-payment" 
+      },
     }
   },
   reportingService: {
