@@ -161,6 +161,9 @@ module.exports = {
       "pickup": {
         destination: "/operation/pickup-coresvc" 
       },
+      "cod-payment": {
+        destination: "/finance/cod-payment" 
+      },
     }
   },
   reportingService: {
