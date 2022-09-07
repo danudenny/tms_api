@@ -145,15 +145,48 @@ export class WebDeliveryVendorOutService {
     }
 
     let data = await VendorLogisticService.getDataSuratJalan(queryParams.orderVendorCode, queryParams.userId);
-    let dataPrint = {
-      data : {
-        vendorCode : queryParams.orderVendorCode,
-        userDriver : {
-          nameDriver : data.data.vendor_name,
-          vehicleNumber: '-'
-        }
-      }
-    }
+    console.log(data.data)
+  //   let data = {
+  //     "data": {
+  //         "order_vendor_code": "SAP12345",
+  //         "delivery_date": "2022-08-21T11:22:08Z",
+  //         "vendor_id": "443614be-241d-11ed-9891-a15adc6ec386",
+  //         "vendor_name": "SAP",
+  //         "details": [
+  //             {
+  //                 "awb_no": "100018551113",
+  //                 "order_status": "done",
+  //                 "message": "",
+  //                 "cod_value": 0,
+  //                 "pickup_name": "Head Office Juanda",
+  //                 "receiver_name": "Bambang",
+  //                 "receiver_address": "Sulses",
+  //                 "receiver_phone": "085214235212"
+  //             },
+  //             {
+  //                 "awb_no": "100018551114",
+  //                 "order_status": "failed",
+  //                 "message": "Ada kesalahan data",
+  //                 "cod_value": 150000,
+  //                 "pickup_name": "Head Office Juanda",
+  //                 "receiver_name": "Bambang",
+  //                 "receiver_address": "Sulses",
+  //                 "receiver_phone": "085214235212"
+  //             }
+  //         ],
+  //         "paging": {
+  //             "currentPage": 1,
+  //             "nextPage": 0,
+  //             "prevPage": 0,
+  //             "totalPage": 1,
+  //             "totalData": 2,
+  //             "limit": 2
+  //         }
+  //     },
+  //     "code": "200000",
+  //     "statusCode": 200,
+  //     "latency": "6.64 ms"
+  // }
 
     let awb = [];
     let totalItem = 0;
@@ -171,7 +204,15 @@ export class WebDeliveryVendorOutService {
     }
     //remapping
     const currentDate = moment();
-    let dataMeta ={
+    const jsreportParams = {
+      data : {
+        vendorCode : queryParams.orderVendorCode,
+        userDriver : {
+          nameDriver : data.data.vendor_name,
+          vehicleNumber: '-'
+        },
+        dataAWB : awb
+      },
       meta :{
         currentBranchName : currentBranch.branchName,
         date: currentDate.format('DD/MM/YY'),
@@ -180,13 +221,9 @@ export class WebDeliveryVendorOutService {
         totalItems : totalItem,
         totalCod : totalCod
       }
-    }
-
-    const jsreportParams = {
-      dataPrint,
-      dataMeta,
     };
 
+    console.log(jsreportParams)
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
