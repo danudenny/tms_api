@@ -13,10 +13,13 @@ import {
 } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { AwbPatchDataSuccessResponseVm } from '../../models/awb/awb-patch-data.vm';
 import {
-    AwbPatchStatusPayloadVm, AwbPatchStatusSuccessResponseVm,
+    AwbPatchStatusPayloadVm, AwbPatchStatusSuccessResponseVm, AwbPatch3PLResiPayloadVm,
 } from '../../models/awb/awb-patch-status.vm';
 import moment = require('moment');
 import { AwbItem } from '../../../../shared/orm-entity/awb-item';
+import { DoPodDetail } from '../../../../shared/orm-entity/do-pod-detail';
+import { DoPod } from '../../../../shared/orm-entity/do-pod';
+import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic';
 
 // ref: https://orkhan.gitbook.io/typeorm/docs/insert-query-builder
 export class AwbPatchStatusService {
@@ -53,7 +56,6 @@ export class AwbPatchStatusService {
 
           const awbAttr = await AwbItemAttr.findOne({
             awbNumber: awb,
-            awbStatusIdLast: AWB_STATUS.ANT,
             isDeleted: false,
           });
 
@@ -98,6 +100,74 @@ export class AwbPatchStatusService {
     result.status = 200;
     return result;
   }
+
+  static async patchData3PL(payload: AwbPatch3PLResiPayloadVm): Promise<AwbPatchStatusSuccessResponseVm> {
+    const userID = 1; //superadmin
+    const branchID = 121; //Kantor Pusat 1
+
+    if (payload.resi.length != payload.resiPengganti.length) {
+      throw new BadRequestException('Data Resi dan Resi Pengganti tidak sama');
+    }
+
+    const errorMsg = [];
+    let totalSuccess = 0;
+
+    for (let i = 0; i < payload.resi.length; i++) { 
+      let message = null;
+      let resi = payload.resi[i];
+      let resiPengganti = payload.resiPengganti[i];
+
+      if (resi.length == 12) {
+        const doPodDetail = await DoPodDetail.findOne({ awbNumber: resi, isDeleted: false});
+        if (doPodDetail) {
+          doPodDetail.awbSubstitute = resiPengganti;
+          doPodDetail.updatedTime = moment().toDate();
+          doPodDetail.userIdUpdated = userID;
+          await doPodDetail.save();
+
+          // NOTE: INSERT TO AWB HISTORY
+          const doPod = await DoPod.findOne({ doPodId: doPodDetail.doPodId });
+          if (doPod.partnerLogisticId) {
+            let partnerLogisticName = '';
+            if (doPod.partnerLogisticName) {
+              partnerLogisticName = doPod.partnerLogisticName;
+            } else {
+              const partnerLogistic = await PartnerLogistic.findOne({ partnerLogisticId: doPod.partnerLogisticId });
+              partnerLogisticName = partnerLogistic.partnerLogisticName;
+            }
+            DoPodDetailPostMetaQueueService.createJobByTransitPartnerAwb(
+              doPodDetail.awbItemId,
+              AWB_STATUS.THP,
+              branchID,
+              userID,
+              partnerLogisticName,
+              resiPengganti,
+            );
+
+            totalSuccess += 1;
+          } else {
+            message = `logistic partner resi ${resi}-${resiPengganti} tidak ditemukan`;  
+          }
+        } else {
+          message = `resi ${resi}-${resiPengganti} tidak ditemukan`;
+        }
+
+      } else {
+        message = `panjang resi ${resi}-${resiPengganti} tidak valid`;
+      }
+      
+      if (message) {
+        errorMsg.push(message);
+      }
+    }
+
+    const result = new AwbPatchStatusSuccessResponseVm();
+    result.errors = errorMsg;
+    result.message = `Update Status Success ${totalSuccess} Resi`;
+    result.status = 200;
+    return result;
+  }
+
 
   static async patchDataTable(payload: any): Promise<AwbPatchDataSuccessResponseVm> {
     // validation table has retention

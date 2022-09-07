@@ -59,7 +59,7 @@ export class CodReportService {
 
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment
-          .utc(filter.value).add(1, 'days')
+          .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00')
         queryParam += `AND ctd.updated_time < '${d}' `;
       }
@@ -73,7 +73,7 @@ export class CodReportService {
       }
 
       if (filter.field == 'branchLast' && filter.value && this.isNumber(filter.value)) {
-        queryParam += `AND ctd.branch_id = ${filter.value} `;
+        queryParam += `AND ctd.current_position_id = ${filter.value} `;
       }
 
       if (filter.field == 'transactionStatus' && filter.value && this.isNumber(filter.value)) {
@@ -277,7 +277,7 @@ export class CodReportService {
       }
       if (filter.field == 'periodEnd' && filter.value) {
         const d = moment
-          .utc(filter.value).add(1, 'days')
+          .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00')
         queryParam += `AND ctd.pod_date < '${d}' `;
       }
@@ -291,7 +291,7 @@ export class CodReportService {
 
       if (filter.field == 'transactionEnd' && filter.value) {
         const d = moment
-          .utc(filter.value).add(1, 'days')
+          .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00')
         queryParam += `AND ctd.updated_time < '${d}' `;
       }
@@ -305,7 +305,7 @@ export class CodReportService {
 
       if (filter.field == 'manifestedEnd' && filter.value) {
         const d = moment
-          .utc(filter.value).add(1, 'days')
+          .utc(filter.value)
           .format('YYYY-MM-DD 00:00:00')
         queryParam += `AND ctd.awb_date < '${d}' `;
       }
@@ -317,7 +317,7 @@ export class CodReportService {
         queryParam += `AND ctd_branch.representative_id = ${filter.value} `;
       }
       if (filter.field == 'branchIdFinal' && filter.value && this.isNumber(filter.value)) {
-        queryParam += `AND ctd.branch_id = ${filter.value} `;
+        queryParam += `AND ctd.current_position_id = ${filter.value} `;
       }
       if (filter.field == 'awbStatusIdFinal' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND aia.awb_status_id_final = ${filter.value} `;

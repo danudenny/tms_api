@@ -294,6 +294,13 @@ export class WebAwbDeliverService {
       });
       // #endregion of transaction
 
+      await DoPodDeliver.update(
+        { doPodDeliverId: delivery.doPodDeliverId },
+        {
+          updatedTime: moment().toDate(),
+        },
+      );
+
       // NOTE: queue by Bull need refactoring
       const reasonId = delivery.reasonId == 0 ? null : delivery.reasonId;
       DoPodDetailPostMetaQueueService.createJobV2ByManual(

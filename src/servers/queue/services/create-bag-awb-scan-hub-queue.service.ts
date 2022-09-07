@@ -86,7 +86,7 @@ export class CreateBagAwbScanHubQueueService {
             // );
 
             // INSERT INTO TABLE BAG ITEM AWB
-            const bagItemAwbDetail = BagItemAwb.create({
+          const bagItemAwbDetail = BagItemAwb.create({
               bagItemId: data.bagItemId,
               awbNumber: data.awbNumber,
               weight: data.totalWeight,
@@ -97,10 +97,10 @@ export class CreateBagAwbScanHubQueueService {
               userIdUpdated: data.userId,
               isSortir: true,
             });
-            await transactional.insert(BagItemAwb, bagItemAwbDetail);
+          await transactional.insert(BagItemAwb, bagItemAwbDetail);
 
             // insert into pod scan in hub detail
-            const podScanInHubDetailData = PodScanInHubDetail.create({
+          const podScanInHubDetailData = PodScanInHubDetail.create({
               podScanInHubId: data.podScanInHubId,
               bagId: data.bagId,
               bagItemId: data.bagItemId,
@@ -113,14 +113,14 @@ export class CreateBagAwbScanHubQueueService {
               createdTime: data.timestamp,
               updatedTime: data.timestamp,
             });
-            await transactional.insert(PodScanInHubDetail, podScanInHubDetailData);
+          await transactional.insert(PodScanInHubDetail, podScanInHubDetailData);
 
             // Update Pod scan in hub bag
             // const podScanInHubBag = await PodScanInHubBag.findOne({
             //   where: { bagItemId: data.bagItemId },
             // });
             // Pindahin di atas transaction
-            if (podScanInHubBag) {
+          if (podScanInHubBag) {
               await transactional.update(
                 PodScanInHubBag,
                 {
@@ -179,9 +179,8 @@ export class CreateBagAwbScanHubQueueService {
             //
             // await transactional.query(upsertRawHubSummaryAwbSql);
 
-
-            PinoLoggerService.log('### CREATE BAG SCAN HUB ========= UPSERT HUB SUMMARY BAG SORTIR');
-            UpsertHubSummaryBagSortirQueueService.perform(
+          PinoLoggerService.log('### CREATE BAG SCAN HUB ========= UPSERT HUB SUMMARY BAG SORTIR');
+          UpsertHubSummaryBagSortirQueueService.perform(
               data.bagId,
               data.bagItemId,
               data.bagNumber,
@@ -191,10 +190,12 @@ export class CreateBagAwbScanHubQueueService {
               data.branchId,
               moment(data.timestamp).toDate(),
               data.note,
+              true,
+              true,
             );
 
             // update status awb
-            DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+          DoPodDetailPostMetaQueueService.createJobByAwbFilter(
               data.awbItemId,
               data.branchId,
               data.userId,
@@ -212,7 +213,6 @@ export class CreateBagAwbScanHubQueueService {
         throw error;
       }
     });
-
 
     this.queue.on('completed', () => {
       // cleans all jobs that completed over 5 seconds ago.

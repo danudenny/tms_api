@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm, BaseMetaPayloadFilterVm } from '../../../../shared/models/base-meta-payload.vm';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
@@ -459,6 +459,13 @@ export class MonitoringProblemListService {
         operator: 'eq',
         value: isManual ? 'true' : 'false',
       } as BaseMetaPayloadFilterVm);
+      if (!isManual) {
+        payload.filters.push({
+          field: 'isSortir',
+          operator: 'eq',
+          value: 'true',
+        } as BaseMetaPayloadFilterVm);
+      }
     }
     if (isProblem === true) {
       problemFilter = 'hsa.awb_status_id_last >= 23500 AND hsa.awb_status_id_last <= 24000';
@@ -480,6 +487,7 @@ export class MonitoringProblemListService {
       createdTime: 'hsa.scan_date_do_hub',
       branchIdFrom : 'hsa.branch_id',
       isManual : 'bi.is_manual',
+      isSortir : 'bi.is_sortir',
       outHub : 'hsa.out_hub',
     };
     const mappingSortBy = {
@@ -696,6 +704,10 @@ export class MonitoringProblemListService {
       if (field == 'bagSortir' || field == 'bagNumber') {
         const bagNumber = payload.filters[i].value;
         const checkBagNumber = await BagService.validBagNumber(bagNumber);
+        if (!checkBagNumber) {
+          throw new BadRequestException('No. Gabung Paket/Gabung Sortir tidak ditemukan');
+        }
+
         payload.filters[i].value = checkBagNumber.bag.bagNumber;
         if (checkBagNumber.bag.bagNumber.length === 10) {
           payload.filters[i].field = field;

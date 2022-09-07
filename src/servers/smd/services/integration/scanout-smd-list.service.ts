@@ -52,7 +52,7 @@ import { DoSmdHistory } from '../../../../shared/orm-entity/do_smd_history';
 export class ScanoutSmdListService {
   static async scanoutEmptyDelete(doSmdId: number): Promise<any> {
     try {
-      //const doSmdCode = payload.do_smd_code;
+      // const doSmdCode = payload.do_smd_code;
       const result = new ScanOutSmdEmptyDelete();
       // check data exist
       const checkDataIsExist = await DoSmd.findOne({
@@ -188,6 +188,7 @@ export class ScanoutSmdListService {
     payload.fieldResolverMap['branch_id_to'] = 'dsd.branch_id_to';
     payload.fieldResolverMap['do_smd_code'] = 'ds.do_smd_code';
     payload.fieldResolverMap['is_intercity'] = 'ds.is_intercity';
+    payload.fieldResolverMap.do_smd_status_id = 'ds.do_smd_status_id_last';
 
     payload.globalSearchFields = [
       {

@@ -104,12 +104,12 @@ export class DoMutationQueueService {
           outHistory.historyDate = nextMinute;
           outHistory.createdTime = nextMinute;
           outHistory.updatedTime = nextMinute;
-          await BagItemHistory.insert(outHistory);
+          const bagItemHistoryOut = await BagItemHistory.insert(outHistory);
           await BagItem.update(
             { bagItemId, isDeleted: false },
             {
               bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
-              bagItemHistoryId: Number(outHistory.bagItemHistoryId),
+              bagItemHistoryId: bagItemHistoryOut.identifiers[0].bagItemHistoryId,
               userIdUpdated: userId,
               updatedTime: nextMinute,
             },
@@ -120,7 +120,7 @@ export class DoMutationQueueService {
         console.error(`[do-mutation-queue] `, error);
         throw error;
       }
-      
+
     });
 
     this.queue.on('completed', job => {

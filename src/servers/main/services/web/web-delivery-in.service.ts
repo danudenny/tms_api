@@ -474,6 +474,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['branchId'] = 't3.branch_id';
     payload.fieldResolverMap['branchName'] = 't4.branch_name';
     payload.fieldResolverMap['totalWeightFinal'] = 't3.total_weight';
+    payload.fieldResolverMap['routePriority'] = 't1.route_priority';
     payload.fieldResolverMap['podScanInBranchId'] = 't1.pod_scan_in_branch_id';
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -519,6 +520,7 @@ export class WebDeliveryInService {
         `CONCAT(CAST(t3.total_weight AS NUMERIC(20,2)),' Kg')`,
         'totalWeightFinal',
       ],
+      ['t1.route_priority', 'routePriority'],
     );
 
     q.innerJoin(e => e.Awb, 't3', j =>

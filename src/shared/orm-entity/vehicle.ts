@@ -9,7 +9,7 @@ export class Vehicle extends TmsBaseEntity {
     type: 'bigint',
     name: 'vehicle_id',
   })
-  reasonId: number;
+  vehicleId: number;
 
   @Column('bigint', {
     nullable: false,

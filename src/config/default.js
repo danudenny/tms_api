@@ -68,6 +68,18 @@ module.exports = {
     baseUrl : 'http://api-internal.s.sicepat.io/core/query-service/api/v1/',
     schema: 'pod',
   },
+  priorityService :{
+    baseUrl : 'https://tms-awb.sicepat.io/api/lastmile/',
+    retryCount : 2,
+    delayTime : 2000,
+    slackChannel : '#pod-awb-history',
+    xApiKey : 'a99bca19-afa9-4b78-8ce8-2cb366664dc3',
+    packageType : ['BEST']
+  },
+  podProsparkService :{
+    baseUrl : 'http://api-internal.s.sicepat.io/core/authsvc/integration/login',
+    key: '57E27CF17ED84E63895EB85942A5118D',
+  },
   exportService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
   },
@@ -78,6 +90,9 @@ module.exports = {
   },
   activityLog: {
     baseUrl: 'http://api-internal.s.sicepat.io/core/logger',
+  },
+  flag: {
+    disableLoginV1: false,
   },
   servers: getAllServerConfigurations('default.js'),
   posIndonesia: {
@@ -143,21 +158,24 @@ module.exports = {
       "filesvc": {
         destination: "/core/filesvc"
       },
+      "pickup": {
+        destination: "/operation/pickup-coresvc" 
+      },
     }
   },
   codProxy: {
     apiInternalBaseUrl: 'http://api-internal.s.sicepat.io',
     apiTimeoutMs: 15000,
     allowedService: {
-      "cod-invoice-svc": {
-        destination: "/operation/cod-invoice-svc"
+      "cod-invoice": {
+        destination: "/finance/cod-invoice"
       }
     }
   },
   reportingService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service', //https://swagger.s.sicepat.tech/operation/reporting-service
     path: {
-      report: '/v1/reporting/report',
+      report: '/v2/report',
     }
   },
   codReportType: {
@@ -175,6 +193,9 @@ module.exports = {
     codAdmin: [115, 136], //Ops - Admin COD, Ops - Admin Operational ( COD )
     codManual: [174], //Admin FORCE MAJEURE
   },
+  codTransferBranch: {
+    version : 2,
+  },
   korwil: {
     korwilRoleId: [38, 155],
     smdRoleId: 117,
@@ -183,6 +204,12 @@ module.exports = {
   },
   retur: {
     returnRoleId: [15],
+  },
+  hubSortation:{
+    sortationDriverRoleId: [1240],
+  },
+  hubMonitoring: {
+    baseUrl: 'http://api-internal.sicepat.io/operation/sortation/sortation/api/v1'
   },
   masterData: {
     apiKey:
@@ -208,5 +235,11 @@ module.exports = {
     bypassCode: "815413",
     checkingConfig: true,
     disableChannel: "sms|wa"
+  },
+  nearlyBranch: {
+    radius: {
+      smd: 1,
+      sortation: 1
+    }
   },
 };

@@ -43,7 +43,7 @@ export class LastMileDeliveryService {
       ['t1.user_id_driver', 'userIdDriver'],
       ['t5.branch_name', 'branchName'],
       ['t1.branch_id', 'branchId'],
-      ['t2.fullname', 'nickname'],
+      ["t1_userDriver.username || ' - ' || t2.fullname", 'nickname'],
       ['COUNT(t3.awb_number)', 'totalAwb'],
       [
         'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last = 14000)',
@@ -57,6 +57,9 @@ export class LastMileDeliveryService {
         'COUNT(t3.awb_number) FILTER (WHERE t3.awb_status_id_last <> 30000 AND t3.awb_status_id_last <> 14000)',
         'totalProblem',
       ],
+      ['"t1_userDriver"."user_id"'],
+      ['t5.branch_id'],
+      ['t2.employee_id']
     );
 
     q2.innerJoin(e => e.userDriver.employee, 't2', j =>
@@ -70,7 +73,7 @@ export class LastMileDeliveryService {
     );
 
     q2.groupByRaw(
-      '"datePOD", t1.user_id_driver, t1.branch_id, t2.fullname, t5.branch_name',
+      '"datePOD", t1.user_id_driver, t1.branch_id, t2.employee_id, t5.branch_id, "t1_userDriver"."user_id"',
     );
     const data = await q2.exec();
     const total = 0;
@@ -214,7 +217,7 @@ export class LastMileDeliveryService {
     );
     // TODO: fix query
     const dateFrom = moment(datePod, 'YYYY-MM-DD').toDate();
-    const dateTo = moment(new Date().setDate(dateFrom.getDate() + 1)).format("YYYY-MM-DD");
+    const dateTo = moment(new Date(dateFrom.getTime() + 86400000)).format("YYYY-MM-DD");
 
     q.andWhereRaw(`t1.do_pod_deliver_date_time >= '${datePod}'`);
     q.andWhereRaw(`t1.do_pod_deliver_date_time < '${dateTo}'`);

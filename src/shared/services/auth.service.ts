@@ -40,6 +40,13 @@ export class AuthService {
     password: string,
     email?: string,
   ): Promise<AuthLoginResultMetadata> {
+
+    if (ConfigService.get('flag.disableLoginV1')) {
+      RequestErrorService.throwObj({
+        message: 'This API is disabled',
+      });
+    }
+
     // find by email or username on table users
     const user = await this.userRepository.findByEmailOrUsername(
       email,
@@ -109,7 +116,7 @@ export class AuthService {
     const failedPasswordRetry = 3;
 
     let checkBlock : any = await RedisService.ttl(await this.fetchLoginBlockKey(username));
-    
+
     const failedCounter = await RedisService.get(await this.fetchLoginCounterKey(username));
     if (failedCounter >= failedPasswordRetry) {
       await RedisService.setex(
@@ -239,6 +246,7 @@ export class AuthService {
     const authMeta = AuthService.getAuthMetadata();
     const configKorwil = ConfigService.get('korwil');
     const configRetur = ConfigService.get('retur');
+    const configDriverSortation = ConfigService.get('hubSortation');
 
     if (authMeta) {
       const user = await RepositoryService.user
@@ -286,6 +294,7 @@ export class AuthService {
       result.isPalkur = false;
       result.isSmd = false;
       result.isSigesitReturn = false;
+      result.isSortationDriver = false;
 
       // Role Id Korwil (38, 155), role Id palkur (40, 41), korwil HRD 154
       if (configKorwil.korwilRoleId.includes(Number(roleId)) || roleId == configKorwil.korwilHrdRoleId) {
@@ -300,6 +309,11 @@ export class AuthService {
       if (configRetur.returnRoleId.includes(Number(roleId))) {
         result.isSigesitReturn = true;
       }
+
+      if (configDriverSortation.sortationDriverRoleId.includes(Number(roleId))) {
+        result.isSortationDriver = true;
+      }
+
       // Populate return value
       result.userId = authMeta.userId;
       result.clientId = authMeta.clientId;
