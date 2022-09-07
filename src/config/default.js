@@ -163,6 +163,18 @@ module.exports = {
       },
     }
   },
+  codProxy: {
+    apiInternalBaseUrl: 'http://api-internal.s.sicepat.io',
+    apiTimeoutMs: 15000,
+    allowedService: {
+      "cod-invoice": {
+        destination: "/finance/cod-invoice"
+      },
+      "cod-payment": {
+        destination: "/finance/cod-payment" 
+      },
+    }
+  },
   reportingService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service', //https://swagger.s.sicepat.tech/operation/reporting-service
     path: {
