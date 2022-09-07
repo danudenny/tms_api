@@ -753,6 +753,23 @@ export class V2WebAwbCodService {
         (type === 'cash' && awbValid) ||
         (type === 'cashless' && awbValid)
       ) {
+        const ctd = await getConnection()
+          .createQueryBuilder(CodTransactionDetail, 'ctd')
+          .setQueryRunner(masterQueryRunner)
+          .select([
+            'ctd.codTransactionDetailId',
+          ])
+          .where(
+            'ctd.awbItemId = :awbItemId AND ctd.isDeleted = false',
+            { awbItemId: awbValid.awbItemId },
+          )
+          .getOne();
+
+        if (ctd) {
+          // cod_transaction_detail already exist
+          return false;
+        }
+
         return true;
       } else {
         return false;
