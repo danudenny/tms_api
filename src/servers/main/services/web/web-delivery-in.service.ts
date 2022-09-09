@@ -618,7 +618,7 @@ export class WebDeliveryInService {
       ['t3.branch_id', 'branchId'],
       ['t5.branch_name', 'branchScanName'], // Hub Sortir
       ['t5.branch_id', 'branchScanId'],
-      ['COUNT (t4.*)', 'totalAwb'],
+      ['bagItem.awbCount', 'totalAwb'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t1.seal_number', 'sealNumber'],
     );
@@ -626,12 +626,19 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItems, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.branchTo, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoinRaw(
+      'branch',
+      't3',
+      `t3.branch_id = t1.branch_id_to AND t3.is_deleted = false
+      INNER JOIN LATERAL(
+        select
+            count(bia.bag_item_awb_id) as awbCount
+        from
+            bag_item_awb bia
+        where
+            bia.bag_item_id = t2.bag_item_id
+            AND bia.is_deleted = false
+      )  as bagItem ON true AND bagItem.awbCount > 0` ),
     // branch created bag
     q.leftJoin(e => e.branch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -646,89 +653,8 @@ export class WebDeliveryInService {
       q.andWhere(e => e.sealNumber, w => w.equals(payloadSealNumber));
     }
 
-    q.groupByRaw(`
-      t1.created_time,
-      t2.bag_seq,
-      t2.bag_item_id,
-      t1.bag_number,
-      t1.ref_representative_code,
-      t2.weight,
-      t3.branch_name,
-      t3.branch_id,
-      t5.branch_id,
-      t5.branch_name,
-      t1.seal_number
-    `);
-
-    // query count data
-    const repoCount = new OrionRepositoryService(Bag, 't1');
-    const qCount = repoCount.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(qCount, false);
-
-    qCount.selectRaw(
-      ['t1.bag_number', 'bagNumber'],
-      [
-        `SUBSTRING(CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`,
-        'bagNumberCode',
-      ],
-      ['t1.ref_representative_code', 'representativeCode'],
-      ['t2.bag_seq', 'bagSeq'],
-      ['t2.bag_item_id::text', 'bagItemId'],
-      [`t1.created_time - INTERVAL '7 HOUR'`, 'createdTime'],
-      ['t3.branch_name', 'branchName'], // Gerai Tujuan
-      ['t3.branch_id', 'branchId'],
-      ['t5.branch_name', 'branchScanName'], // Hub Sortir
-      ['t5.branch_id', 'branchScanId'],
-      ['COUNT (t4.*)', 'totalAwb'],
-      [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
-      ['t1.seal_number', 'sealNumber'],
-    );
-
-    qCount.innerJoin(e => e.bagItems, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    qCount.innerJoin(e => e.branchTo, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    qCount.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    // branch created bag
-    qCount.leftJoin(e => e.branch, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    qCount.andWhere(e => e.branchIdTo, w => w.isNotNull);
-    qCount.andWhere(e => e.isSortir ,  w => w.isTrue());
-    if (bagNumber && bagSeq) {
-      qCount.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
-      qCount.andWhere(e => e.bagItems.bagSeq, w => w.equals(bagSeq));
-    }
-    if (payloadSealNumber) {
-      qCount.andWhere(e => e.sealNumber, w => w.equals(payloadSealNumber));
-    }
-
-    qCount.groupByRaw(`
-      t1.created_time,
-      t2.bag_seq,
-      t2.bag_item_id,
-      t1.bag_number,
-      t1.ref_representative_code,
-      t2.weight,
-      t3.branch_name,
-      t3.branch_id,
-      t5.branch_id,
-      t5.branch_name,
-      t1.seal_number
-    `);
-
-    // const data = await q.exec();
-    // const total = await q.countWithoutTakeAndSkip();
-    const query = await q.getQuery();
-    const queryCount = await qCount.getQuery();
-    const data = await QueryServiceApi.executeQuery(query, false, null);
-    const cnt = await QueryServiceApi.executeQuery(queryCount, true, null);
-    const total = cnt;
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
     const result = new WebScanInHubSortListResponseVm();
 
     result.data = data;
