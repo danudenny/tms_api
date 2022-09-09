@@ -652,6 +652,7 @@ export class WebDeliveryInService {
     if (payloadSealNumber) {
       q.andWhere(e => e.sealNumber, w => w.equals(payloadSealNumber));
     }
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
