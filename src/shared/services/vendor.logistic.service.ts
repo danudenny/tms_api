@@ -33,7 +33,7 @@ export class VendorLogisticService {
       const request = await axios.post(url, body, options);
       return request;
     } catch (err) {
-      await SlackUtil.sendMessage(channelSlack, "Error from hit service for send vendor - awb : "+awbNumber, err.stack, body);
+      await SlackUtil.sendMessage(channelSlack, "Error from hit service for send vendor - awb : "+awbNumber, err.stack, body, null, null, url);
       RequestErrorService.throwObj(
         {
           message: 'Error while hit service send vendor',
@@ -65,7 +65,7 @@ export class VendorLogisticService {
       const request = await axios.get(url, options);
       return request.data;
     } catch (err) {
-      await SlackUtil.sendMessage(channelSlack,"Error from hit service for get vendor detail",err.stack, options);
+      await SlackUtil.sendMessage(channelSlack,"Error from hit service for get vendor detail",err.stack, options, null, null, url);
       RequestErrorService.throwObj(
         {
           message: 'Error while hit service get data vendor detail',
