@@ -613,7 +613,7 @@ export class WebDeliveryInService {
       ['t1.ref_representative_code', 'representativeCode'],
       ['t2.bag_seq', 'bagSeq'],
       ['t2.bag_item_id::text', 'bagItemId'],
-      [`t1.created_time - INTERVAL '7 HOUR'`, 'createdTime'],
+      [`t1.created_time`, 'createdTime'],
       ['t3.branch_name', 'branchName'], // Gerai Tujuan
       ['t3.branch_id', 'branchId'],
       ['t5.branch_name', 'branchScanName'], // Hub Sortir
