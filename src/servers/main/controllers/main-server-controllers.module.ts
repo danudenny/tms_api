@@ -84,6 +84,7 @@ import { WebAwbCodReportController } from './web/v1/web-awb-cod-report.controlle
 import { WebAwbCodRedshiftController } from './web/v1/web-awb-cod-redshift.controller';
 import { V2WebDeliveryInController } from './web/v2/web-delivery-in.controller';
 import { V2MobileDeliveryInController } from './mobile/v2/mobile-delivery-in.controller';
+import { CodProxyController } from './proxy/cod-proxy.controller';
 // #endregion
 @Module({
   imports: [SharedModule, MainServerServicesModule],
@@ -174,6 +175,7 @@ import { V2MobileDeliveryInController } from './mobile/v2/mobile-delivery-in.con
     WebAwbCodRedshiftController,
     V2WebDeliveryInController,
     V2MobileDeliveryInController,
+    CodProxyController,
   ],
 })
 export class MainServerControllersModule {}
