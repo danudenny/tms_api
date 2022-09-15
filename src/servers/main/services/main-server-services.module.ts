@@ -31,6 +31,7 @@ import { GatewayService } from './proxy/gateway.service';
 import { CodReportService } from './cod/cod-report.service';
 import { RedshiftReportingService } from './report/redshift-reporting.service';
 import { CodRedshiftService } from './cod/cod-redshift.service';
+import { CodGatewayService } from './proxy/cod-gateway.service';
 
 @Module({
   imports: [SharedModule],
@@ -66,6 +67,7 @@ import { CodRedshiftService } from './cod/cod-redshift.service';
     CodReportService,
     RedshiftReportingService,
     CodRedshiftService,
+    CodGatewayService,
   ],
   exports: [
     AwbStatusService,
@@ -99,6 +101,7 @@ import { CodRedshiftService } from './cod/cod-redshift.service';
     CodReportService,
     RedshiftReportingService,
     CodRedshiftService,
+    CodGatewayService,
   ],
 })
 export class MainServerServicesModule {}
