@@ -24,7 +24,6 @@ export class ExternalHubMonitoringService {
     report_type: string,
     payload: BaseMonitoringHubPackage,
   ): Promise<any> {
-    
     return this.post(`/reporting/${report_type}/generate`, payload);
   }
 
@@ -32,7 +31,6 @@ export class ExternalHubMonitoringService {
     report_type: string,
     payload: PayloadMonitoringHubPackageList,
   ): Promise<any> {
-
     return this.post(`/reporting/${report_type}/list`, payload);
   }
 
@@ -56,7 +54,9 @@ export class ExternalHubMonitoringService {
         const status = err.response.status || HttpStatus.BAD_REQUEST;
         const errResponse = {
           error: err.response.data && err.response.data.error,
-          message: err.response.data && err.response.data.message,
+          message:
+            err.response.data &&
+            (err.response.data.message || err.response.data.error),
           statusCode: status,
         };
         throw new HttpException(errResponse, status);
