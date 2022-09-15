@@ -171,6 +171,7 @@ export class V1WebCodSupplierInvoiceService {
             supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
+            isInvoiceCreated: true,
           },
         );
       });
