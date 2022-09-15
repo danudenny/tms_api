@@ -168,7 +168,7 @@ module.exports = {
   },
   codProxy: {
     apiInternalBaseUrl: 'http://api-internal.sicepat.io',
-    apiTimeoutMs: 15000,
+    apiTimeoutMs: 30000,
     allowedService: {
       "cod-invoice": {
         destination: "/finance/cod-invoice"
