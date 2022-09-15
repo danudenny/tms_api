@@ -45,6 +45,11 @@ export class V1WebCodBankStatementService {
     let attachmentId = null;
     const dataError = [];
 
+    const checkSameMethod = await this.validateSamePaymentMethod(payload);
+    if (!checkSameMethod) {
+      throw new BadRequestException('tidak valid/terdapat metode pembayaran yang berbeda');
+    }
+
     // validate data
     let redlock = true;
     for (const transactionId of payload.dataTransactionId) {
@@ -202,6 +207,40 @@ export class V1WebCodBankStatementService {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  static async validateSamePaymentMethod(payload: WebCodTransferHeadOfficePayloadVm): Promise<boolean> {
+    let codTransactions: CodTransaction[];
+
+    const masterCodBranchQueryRunner = getConnection().createQueryRunner(
+      'master',
+    );
+
+    try {
+      codTransactions = await getConnection()
+        .createQueryBuilder(CodTransaction, 'ct')
+        .setQueryRunner(masterCodBranchQueryRunner)
+        .where(
+          'ct.codTransactionId IN  (:...codTransactionId) AND ct.isDeleted = false',
+          { codTransactionId: payload.dataTransactionId },
+        )
+        .getMany();
+    } finally {
+      await masterCodBranchQueryRunner.release();
+    }
+
+    if (codTransactions.length == 0) {
+      return false;
+    } else {
+      const firstMethod = codTransactions[0].transactionType.toLowerCase();
+      for (const codTransaction of codTransactions) {
+        if (codTransaction.transactionType.toLowerCase() != firstMethod) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 
   static async transactionBranchByBankStatementId(
