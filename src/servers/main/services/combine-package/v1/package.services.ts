@@ -686,8 +686,8 @@ export class V1PackageService {
     // delay get data from replication
     // TODO: change method update data weight bag ??
     if (bagDetail) {
-      const totalWeightRealRounded = Number(payload.awbDetail.totalWeightRealRounded);
-      const bagWeightFinalFloat = parseFloat(totalWeightRealRounded.toFixed(5));
+      const totalWeightReal = Number(payload.awbDetail.totalWeightReal);
+      const bagWeightFinalFloat = parseFloat(totalWeightReal.toFixed(5));
 
       try {
         // proses store on redis
@@ -823,8 +823,8 @@ export class V1PackageService {
     // NOTE: change totalWeightFinalRounded : awb.totalWeightRealRounded
     const detail = {
       awbNumber: awbItemAttr.awbNumber,
-      totalWeightRealRounded: awbItemAttr.totalWeightRealRounded,
-      totalWeightFinalRounded: awbItemAttr.totalWeightRealRounded,
+      totalWeightReal: awbItemAttr.totalWeightReal,
+      totalWeightFinalRounded: awbItemAttr.totalWeightReal,
       consigneeName: awbItemAttr.consigneeName,
       consigneeNumber: awbItemAttr.consigneeNumber,
       awbItemId: awbItemAttr.awbItemId,
@@ -967,13 +967,13 @@ export class V1PackageService {
     // issue delay get data from replication
     // TODO: change method update data weight bag ??
     if (bagDetail) {
-      const totalWeightRealRounded = Number(
-        payload.awbDetail.totalWeightRealRounded,
+      const totalWeightReal = Number(
+        payload.awbDetail.totalWeightReal,
       );
 
       await RedisService.incrbyfloat(
         `package:combine:bagItemId:${payload.bagItemId}`,
-        parseFloat(totalWeightRealRounded.toFixed(5)),
+        parseFloat(totalWeightReal.toFixed(5)),
       );
 
       try {
@@ -986,7 +986,7 @@ export class V1PackageService {
           payload.awbItemId,
           payload.awbDetail.awbNumber,
           payload.podScanInHubId,
-          payload.awbDetail.totalWeightRealRounded,
+          payload.awbDetail.totalWeightReal,
           authMeta.userId,
           permissonPayload.branchId,
           moment().toDate(),
@@ -1029,7 +1029,7 @@ export class V1PackageService {
     qb.addSelect('t1.is_package_combined', 'isPackageCombined');
 
     qb.addSelect('t2.to_id', 'toId');
-    qb.addSelect('t2.total_weight_real_rounded', 'totalWeightRealRounded');
+    qb.addSelect('t2.total_weight_real', 'totalWeightReal');
     qb.addSelect('t2.consignee_name', 'consigneeName');
     qb.addSelect('t2.consignee_phone', 'consigneeNumber');
     qb.addSelect('t2.customer_account_id', 'customerAccountId');
@@ -1057,6 +1057,7 @@ export class V1PackageService {
   }
 
   private static getRejectScanInType(type: string) {
-    return `BAG-${type.toUpperCase().substring(0, 2)}`;
+    type = type.toUpperCase();
+    return type === 'BAG' ? type : `BAG-${type.substring(0, 2)}`;
   }
 }
