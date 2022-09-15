@@ -280,10 +280,10 @@ export class WebDeliveryVendorOutService {
         response.volumetric = dataAwb.volumetric;
         response.description_item = dataAwb.description_item;
         response.item_value = parseInt(dataAwb.item_value);
-        response.insurance_flag = parseInt(dataAwb.insurance_flag);
-        response.insurance_type_code = dataAwb.insurance_type_code;
-        response.insurance_value = parseInt(dataAwb.insurance_value);
-        response.cod_flag = parseInt(dataAwb.cod_flag);
+        response.insurance_flag = (parseInt(dataAwb.insurance_flag) == 0 ? 1 : 2);
+        response.insurance_type_code = (response.insurance_flag == 2 ? "INS01" : "");
+        response.insurance_value = parseFloat(dataAwb.insurance_value);
+        response.cod_flag = (parseInt(dataAwb.cod_flag) == 1 ? 1 : 2);
         response.cod_value = parseInt(dataAwb.cod_value);
         response.shipper_name = dataAwb.shipper_name;
         response.shipper_phone = dataAwb.shipper_phone;
@@ -320,10 +320,9 @@ export class WebDeliveryVendorOutService {
         concat(ai.length,'x',ai.width,'x', ai.height) as volumetric,
         ai.item_description as description_item,
         prd.parcel_value as item_value,
-        case when prd.insurance_value = 0 then 1 else 2 end as insurance_flag,
-        case when prd.insurance_value != 0 then 'INS01' else null end as insurance_type_code,
-        prd.insurance_value as insurance_value, --kasih kondisi kalau 0 = 1
-        case when a.is_cod = true then 1 else 2 end as cod_flag,
+        prd.insurance_value as insurance_flag,
+        prd.insurance_value as insurance_value,
+        a.is_cod as cod_flag,
         ai.cod_value as cod_value,
         a.consignee_name as receiver_name,
         a.consignee_address as receiver_address,
