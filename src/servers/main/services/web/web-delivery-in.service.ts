@@ -202,10 +202,10 @@ export class WebDeliveryInService {
       },
     ];
 
-    let timeFrom = null; 
-    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
+    let timeFrom = null;
+    const timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format('YYYY-MM-DD'));
 
-    for (let data of payload.filters) {
+    for (const data of payload.filters) {
       if (data.field == 'createdTime') {
         if (data.operator == 'gte') {
           timeFrom = data.value;
@@ -230,11 +230,11 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
       j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
       j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
-    }
+    },
     );
 
     q.innerJoin(e => e.branch, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -276,8 +276,8 @@ export class WebDeliveryInService {
     ];
 
     let timeFrom = null;
-    let timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format("YYYY-MM-DD"));
-    for (let data of payload.filters) {
+    const timeTo = new Date(moment(new Date().setDate(new Date().getDate() + 1)).format('YYYY-MM-DD'));
+    for (const data of payload.filters) {
       if (data.field == 'createdTime') {
         if (data.operator == 'gte') {
           timeFrom = data.value;
@@ -302,11 +302,11 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse());
       j.andWhere(e => e.createdTime, w => w.greaterThanOrEqual(timeFrom));
       j.andWhere(e => e.createdTime, w => w.lessThan(timeTo));
-    }
+    },
     );
 
     q.innerJoin(e => e.branch, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
@@ -491,7 +491,7 @@ export class WebDeliveryInService {
     ];
 
     let validPayload = false;
-    for (let data of payload.filters) {
+    for (const data of payload.filters) {
       if (data.field == 'podScanInBranchId') {
         if (data.value) {
           validPayload = true;
@@ -500,7 +500,7 @@ export class WebDeliveryInService {
     }
 
     if (!validPayload) {
-      throw new BadRequestException("payload invalid");
+      throw new BadRequestException('payload invalid');
     }
 
     const repo = new OrionRepositoryService(PodScanInBranchDetail, 't1');
@@ -546,7 +546,7 @@ export class WebDeliveryInService {
     payload: BaseMetaPayloadVm,
   ): Promise<WebScanInHubSortListResponseVm> {
     // mapping field
-    payload.fieldResolverMap['createdTime'] = 't2.created_time';
+    payload.fieldResolverMap['createdTime'] = 't1.created_time';
     payload.fieldResolverMap['branchId'] = 't3.branch_id';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['bagNumberCode'] = '"bagNumberCode"';
@@ -577,7 +577,7 @@ export class WebDeliveryInService {
       },
     ];
 
-    let payloadBagNumber ='0';
+    let payloadBagNumber = '0';
     let payloadSealNumber;
 
     for (let i = 0; i < payload.filters.length; i++) {
@@ -607,18 +607,18 @@ export class WebDeliveryInService {
     q.selectRaw(
       ['t1.bag_number', 'bagNumber'],
       [
-        `SUBSTR(CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`,
+        `SUBSTRING(CONCAT(t1.bag_number, LPAD(t2.bag_seq::text, 3, '0')), 1, 10)`,
         'bagNumberCode',
       ],
       ['t1.ref_representative_code', 'representativeCode'],
       ['t2.bag_seq', 'bagSeq'],
-      ['t2.bag_item_id', 'bagItemId'],
-      ['t2.created_time', 'createdTime'],
+      ['t2.bag_item_id::text', 'bagItemId'],
+      [`t1.created_time`, 'createdTime'],
       ['t3.branch_name', 'branchName'], // Gerai Tujuan
       ['t3.branch_id', 'branchId'],
       ['t5.branch_name', 'branchScanName'], // Hub Sortir
       ['t5.branch_id', 'branchScanId'],
-      ['COUNT (t4.*)', 'totalAwb'],
+      ['bagItem.awbCount', 'totalAwb'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t1.seal_number', 'sealNumber'],
     );
@@ -626,43 +626,36 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.bagItems, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    q.innerJoin(e => e.branchTo, 't3', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoin(e => e.bagItems.bagItemAwbs, 't4', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
+    q.innerJoinRaw(
+      'branch',
+      't3',
+      `t3.branch_id = t1.branch_id_to AND t3.is_deleted = false
+      INNER JOIN LATERAL(
+        select
+            count(bia.bag_item_awb_id) as awbCount
+        from
+            bag_item_awb bia
+        where
+            bia.bag_item_id = t2.bag_item_id
+            AND bia.is_deleted = false
+      )  as bagItem ON true AND bagItem.awbCount > 0` ),
     // branch created bag
     q.leftJoin(e => e.branch, 't5', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
-    if(bagNumber && bagSeq){
+    q.andWhere(e => e.isSortir ,  w => w.isTrue());
+    if (bagNumber && bagSeq) {
       q.andWhere(e => e.bagNumber, w => w.equals(bagNumber));
       q.andWhere(e => e.bagItems.bagSeq, w => w.equals(bagSeq));
     }
-    if(payloadSealNumber){
+    if (payloadSealNumber) {
       q.andWhere(e => e.sealNumber, w => w.equals(payloadSealNumber));
     }
-
-
-    q.groupByRaw(`
-      t2.created_time,
-      t2.bag_seq,
-      t2.bag_item_id,
-      t1.bag_number,
-      t1.ref_representative_code,
-      t2.weight,
-      t3.branch_name,
-      t3.branch_id,
-      t5.branch_id,
-      t5.branch_name,
-      t1.seal_number
-    `);
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
-
     const result = new WebScanInHubSortListResponseVm();
 
     result.data = data;
@@ -716,7 +709,7 @@ export class WebDeliveryInService {
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    
+
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
 
@@ -1425,7 +1418,7 @@ export class WebDeliveryInService {
       where: {
         podScanInBranchId: payload.podScanInBranchId,
         isDeleted: false,
-        isActive: true
+        isActive: true,
       },
     });
 
@@ -1448,7 +1441,7 @@ export class WebDeliveryInService {
         branchId: permissonPayload.branchId,
         transactionStatusId: 600,
         isDeleted: false,
-        isActive: true
+        isActive: true,
       },
     });
 
@@ -1594,7 +1587,7 @@ export class WebDeliveryInService {
     );
 
     const query = await q.getQuery();
-    let data = await QueryServiceApi.executeQuery(query, false, null);
+    const data = await QueryServiceApi.executeQuery(query, false, null);
 
     const result = new WebDeliveryListResponseVm();
 
@@ -1620,8 +1613,8 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    let queryCount = await qCount.getQuery();
-    let cnt = await QueryServiceApi.executeQuery(queryCount, true, 'awbNumber');
+    const queryCount = await qCount.getQuery();
+    const cnt = await QueryServiceApi.executeQuery(queryCount, true, 'awbNumber');
     const total = cnt;
 
     result.data = data;
