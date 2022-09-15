@@ -161,6 +161,21 @@ module.exports = {
       "pickup": {
         destination: "/operation/pickup-coresvc" 
       },
+      "cod-payment": {
+        destination: "/finance/cod-payment" 
+      },
+    }
+  },
+  codProxy: {
+    apiInternalBaseUrl: 'http://api-internal.s.sicepat.io',
+    apiTimeoutMs: 15000,
+    allowedService: {
+      "cod-invoice": {
+        destination: "/finance/cod-invoice"
+      },
+      "cod-payment": {
+        destination: "/finance/cod-payment" 
+      },
     }
   },
   reportingService: {

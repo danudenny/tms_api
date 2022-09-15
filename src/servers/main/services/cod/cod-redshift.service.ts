@@ -27,6 +27,7 @@ export class CodRedshiftService {
 
     payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
     payload.fieldResolverMap['transactionDate'] = 't1.created_time';
+    payload.fieldResolverMap['paymentMethod'] = 't1.cod_payment_method'
 
     if (payload.sortBy === '') {
       payload.sortBy = 'driverName';
@@ -63,7 +64,7 @@ export class CodRedshiftService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     q.groupByRaw(
-      't3.user_id, t4.branch_id, t3.first_name, t4.branch_name'
+      't3.user_id, t4.branch_id, t3.first_name, t4.branch_name, t1.cod_payment_method'
     );
 
     const query = await q.getQuery();
@@ -84,6 +85,7 @@ export class CodRedshiftService {
   
     payload.fieldResolverMap['branchIdFinal'] = 't4.branch_id';
     payload.fieldResolverMap['transactionDate'] = 't1.created_time';
+    payload.fieldResolverMap['paymentMethod'] = 't1.cod_payment_method'
 
     if (payload.sortBy === '') {
       payload.sortBy = 'driverName';
@@ -120,7 +122,7 @@ export class CodRedshiftService {
     q.andWhere(e => e.isDeleted, w => w.isFalse());
 
     q.groupByRaw(
-      't3.user_id, t4.branch_id, t3.first_name, t4.branch_name'
+      't3.user_id, t4.branch_id, t3.first_name, t4.branch_name, t1.cod_payment_method'
     );
 
     let queryCount = await q.getQuery();
@@ -154,6 +156,12 @@ export class CodRedshiftService {
     branchFilter.operator = 'eq';
     branchFilter.value = params.branchIdFinal
     filters.push(branchFilter);
+
+    const paymentMethodFilter = new BaseMetaPayloadFilterVm();
+    paymentMethodFilter.field = 'paymentMethod';
+    paymentMethodFilter.operator = 'eq';
+    paymentMethodFilter.value = params.paymentMethod
+    filters.push(paymentMethodFilter);
 
     const transactionStartFilter = new BaseMetaPayloadFilterVm();
     transactionStartFilter.field = "transactionDate";

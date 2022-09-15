@@ -5,15 +5,15 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { AuthService } from '../../../../shared/services/auth.service';
 
 @Injectable()
-export class GatewayService {
+export class CodGatewayService {
 
   private config;
 
   constructor() {
-    this.config = ConfigService.get('proxy');
+    this.config = ConfigService.get('codProxy');
   }
 
-  public async routeRequest(req: any, resp: Response) {
+  async routeRequest(req: any, resp: Response) {
     const options: AxiosRequestConfig = {
       method: req.method,
       headers: req.headers,
@@ -23,17 +23,22 @@ export class GatewayService {
 
     options.url = this.config.apiInternalBaseUrl + this.getDestination(req.url);
 
+    const permissionPayload = AuthService.getPermissionTokenPayload();
     const authMeta = AuthService.getAuthMetadata();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
-    if(options.url.includes('pickup')){
-      options.headers['employeeID'] = authMeta.employeeId;
-      options.headers['branchID'] = permissonPayload.branchId;
-    }else{
-      options.headers['x-user-id'] = authMeta.userId.toString();
-      options.headers['x-channel-id'] = authMeta.clientId.toString();
-      options.headers['x-branch-id'] = permissonPayload.branchId;
-    }
+
+    options.headers['x-user-id'] = authMeta.userId.toString();
+    options.headers['x-channel-id'] = authMeta.clientId.toString();
     
+    options.headers['x-role-id'] = permissionPayload.roleId;
+    options.headers['x-role-name'] = permissionPayload.roleName;
+    options.headers['x-branch-id'] = permissionPayload.branchId;
+    options.headers['x-is-head-office'] = permissionPayload.isHeadOffice;
+    
+    const uuidv1 = require('uuid/v1');
+    const requestId = uuidv1();
+   
+    options.headers['x-request-id'] = requestId;
+
     delete options.headers['host'];
 
     const fileSvcAuth = req.headers['x-filesvc-auth'];
@@ -64,7 +69,7 @@ export class GatewayService {
         }
       })
       .catch(function(err) {
-        console.log('[Pod-Proxy-Gateway] error api ',
+        console.log('[Cod-Proxy-Gateway] error api ',
           options.url,
           '\n payload: ',
           options,
@@ -81,9 +86,9 @@ export class GatewayService {
 
   private getDestination(path: string) {
     let destPath;
-    const url = path.replace('/pod-proxy', '');
+    const url = path.replace('/cod-proxy', '');
     const service = url.split('/')[1];
-
+    
     const cfg = this.config.allowedService[service];
 
     if (!cfg) {
