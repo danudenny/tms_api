@@ -36,17 +36,24 @@ export class PrintBagItemPaperService {
               awbNumber: true,
               consigneeName: true,
               consigneeNumber: true,
-              totalWeightFinalRounded: true,
+              totalWeightReal: true,
             },
           },
         },
       })
       .where(e => e.bagItemId, w => w.equals(queryParams.id))
       .andWhere(e => e.bagItemAwbs.isDeleted, w => w.isFalse());
-
     if (!bagItem) {
       RequestErrorService.throwObj({
         message: 'Gabung paket tidak ditemukan',
+      });
+    }
+    // handle legacy query
+    if (bagItem.bagItemAwbs) {
+      bagItem.bagItemAwbs.forEach(bia => {
+        if (bia.awbItem && bia.awbItem.awb) {
+          bia.awbItem.awb.totalWeightFinalRounded = bia.awbItem.awb.totalWeightReal;
+        }
       });
     }
     let newBagSeq = bagItem.bagSeq.toString();

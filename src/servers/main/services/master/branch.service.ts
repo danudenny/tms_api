@@ -126,4 +126,41 @@ export class BranchService {
 
     return result;
   }
+
+  async findSortationBranch(
+    payload: BaseMetaPayloadVm,
+  ): Promise<BranchFindAllResponseVm> {
+    // mapping search field and operator default ilike
+    payload.globalSearchFields = [
+      {
+        field: 'branchCode',
+      },
+      {
+        field: 'branchName',
+      },
+    ];
+
+    const q = RepositoryService.branch.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
+
+    q.selectRaw(
+      ['branch.branch_id', 'branchId'],
+      ['branch.branch_name', 'branchName'],
+      ['branch.branch_code', 'branchCode'],
+    );
+
+    q.andWhere(e => e.branchTypeId, w => w.equals(4));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.andWhere(e => e.isActive, w => w.isTrue());
+
+    const data = await q.exec();
+    const total = await q.countWithoutTakeAndSkip();
+
+    const result = new BranchFindAllResponseVm();
+    result.data = data;
+
+    result.buildPaging(payload.page, payload.limit, total);
+
+    return result;
+  }
 }
