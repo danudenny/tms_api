@@ -232,4 +232,7 @@ export class BaseAwbCodDlvV2PayloadVm {
   @ApiModelProperty()
   branchIdFinal: number;
 
+  @ApiModelProperty()
+  paymentMethod: string;
+
 }

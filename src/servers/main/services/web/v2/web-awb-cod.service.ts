@@ -1229,7 +1229,7 @@ export class V2WebAwbCodService {
       codBranchCashless.codTransactionId = uuidString;
       codBranchCashless.transactionCode = randomCode;
       codBranchCashless.transactionDate = timestamp;
-      codBranchCashless.transactionStatusId = TRANSACTION_STATUS.TRF;
+      codBranchCashless.transactionStatusId = TRANSACTION_STATUS.TRM;
       codBranchCashless.transactionType = 'CASHLESS';
       codBranchCashless.totalCodValue = totalCodValueCashless;
       codBranchCashless.totalAwb = dataPrintCashless.length;
