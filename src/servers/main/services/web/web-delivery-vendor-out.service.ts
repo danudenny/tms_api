@@ -51,6 +51,7 @@ export class WebDeliveryVendorOutService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
     const permissonPayloadToken = AuthService.getPermissionToken();
     const dataItem = [];
+    let awbSendVendor = [];
     for (const awbNumber of payload.scanValue) {
       const response = new WebDeliveryVendorOutResponse();
       const awb = await AwbItemAttr.findOne({
@@ -88,6 +89,7 @@ export class WebDeliveryVendorOutService {
               payload.order_vendor_code,
               permissonPayloadToken
             )
+            awbSendVendor.push(awbNumber)
             response.status = 'ok';
             response.message = `Resi ${awbNumber} berhasil di proses.`;
             RedisService.del(`hold:scanoutvendor:${awb.awbItemId}`);
@@ -110,6 +112,14 @@ export class WebDeliveryVendorOutService {
       }
       response.awbNumber = awbNumber;
       dataItem.push(response);
+    }
+
+    try{
+      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken);
+    }catch(err){
+      RequestErrorService.throwObj({
+        message: 'Gagal mengirimkan data ke vendor',
+      });
     }
 
     result.data = dataItem;

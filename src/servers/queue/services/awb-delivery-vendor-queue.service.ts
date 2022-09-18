@@ -69,12 +69,12 @@ export class AwbDeliveryVendorQueueService {
             location: data.location,
           });
           await AwbHistory.insert(awbHistory);
-          try{
-            VendorLogisticService.sendVendor(awbItemAttr.awbNumber, data.vendorId, data.orderVendorCode, data.userId, data.tokenPayload);
-          }catch(err){
-            console.error(`[awb-history-while-send-vendor-queue] `, err);
-            throw err;
-          }
+          // try{
+          //   VendorLogisticService.sendVendor(awbItemAttr.awbNumber, data.vendorId, data.orderVendorCode, data.userId, data.tokenPayload);
+          // }catch(err){
+          //   console.error(`[awb-history-while-send-vendor-queue] `, err);
+          //   throw err;
+          // }
         }
       // }); // end transaction
       } catch (error) {
