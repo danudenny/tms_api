@@ -284,11 +284,11 @@ export class CodReportService {
       }
 
       if (filter.field == 'manifestedStart' && filter.value) {
-        queryParam += `AND aia.awb_history_date_pickdrop >= '${filter.value}' `;
+        queryParam += `AND a.awb_date >= '${filter.value}' `;
       }
 
       if (filter.field == 'manifestedEnd' && filter.value) {
-        queryParam += `AND aia.awb_history_date_pickdrop < '${filter.value}' `;
+        queryParam += `AND a.awb_date < '${filter.value}' `;
       }
 
       if (filter.field == 'partnerId' && filter.value && this.isNumber(filter.value)) {
