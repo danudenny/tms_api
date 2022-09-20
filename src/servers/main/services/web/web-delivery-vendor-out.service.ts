@@ -254,16 +254,19 @@ export class WebDeliveryVendorOutService {
   ): Promise<ScanOutPropertyAwbResponseVm> {
     const result = new ScanOutPropertyAwbResponseVm();
     const dataItem = [];
-    const pickupData = await this.getPickupData(payload.user_id);
-    for (const awbNumber of payload.awbNumber) {
-      const dataAwb = await this.getRawAwb(awbNumber);
+    const [pickupData, dataAwb] = await Promise.all([
+      this.getPickupData(payload.user_id),
+      this.getRawAwb(payload.awbNumber)
+    ]);
+
+    for (const dataAwbx of dataAwb) {
       const response = new ScanOutPropertyAwbResponse();
-      if (dataAwb) {
+      if (dataAwbx) {
         // mapping data
-        response.awbNumber = dataAwb.awbnumber;
+        response.awbNumber = dataAwbx.awbnumber;
         response.status = "ok";
-        response.message = "Resi " + dataAwb.awbnumber + " berhasil mendapatkan datanya";
-        response.reference_no = dataAwb.reference_no;
+        response.message = "Resi " + dataAwbx.awbnumber + " berhasil mendapatkan datanya";
+        response.reference_no = dataAwbx.reference_no;
         response.pickup_name = pickupData.pickup_name;
         response.pickup_address = pickupData.pickup_adress;
         response.pickup_phone = pickupData.pickup_phone;
@@ -274,34 +277,34 @@ export class WebDeliveryVendorOutService {
         response.pickup_longitude = pickupData.pickup_longitude;
         response.pickup_district_id = parseInt(pickupData.pickup_district_id);
         response.pickup_district_code = pickupData.pickup_district_code;
-        response.service_type_code = dataAwb.service_type_code;
-        response.quantity = parseInt(dataAwb.quantity);
-        response.total_item = parseInt(dataAwb.total_item);
-        response.weight = parseInt(dataAwb.weight);
-        response.volumetric = dataAwb.volumetric;
-        response.description_item = dataAwb.description_item;
-        response.item_value = parseInt(dataAwb.item_value);
-        response.insurance_flag = (parseInt(dataAwb.insurance_flag) == 0 ? 1 : 2);
-        response.insurance_type_code = (response.insurance_flag == 2 ? "INS01" : "");
-        response.insurance_value = parseFloat(dataAwb.insurance_value);
-        response.cod_flag = (parseInt(dataAwb.cod_flag) == 1 ? 1 : 2);
-        response.cod_value = parseInt(dataAwb.cod_value);
-        response.shipper_name = dataAwb.shipper_name;
-        response.shipper_phone = dataAwb.shipper_phone;
-        response.shipper_email = dataAwb.shipper_email;
-        response.shipper_contact = dataAwb.shipper_contact;
-        response.destination_district_code = dataAwb.destination_district_code;
-        response.destination_district_id = parseInt(dataAwb.destination_district_id);
-        response.receiver_name = dataAwb.receiver_name;
-        response.receiver_address = dataAwb.receiver_address;
-        response.receiver_phone = dataAwb.receiver_phone;
-        response.receiver_postal_code = parseInt(dataAwb.receiver_postal_code);
-        response.receiver_contact = dataAwb.receiver_contact;
-        response.special_instruction = dataAwb.special_instruction;
-        response.return_district_code = dataAwb.return_district_code;
-        response.return_phone = dataAwb.return_phone;
-        response.return_contact = dataAwb.return_contact;
-        response.return_address = dataAwb.return_address;
+        response.service_type_code = dataAwbx.service_type_code;
+        response.quantity = parseInt(dataAwbx.quantity);
+        response.total_item = parseInt(dataAwbx.total_item);
+        response.weight = parseInt(dataAwbx.weight);
+        response.volumetric = dataAwbx.volumetric;
+        response.description_item = dataAwbx.description_item;
+        response.item_value = parseInt(dataAwbx.item_value);
+        response.insurance_flag = parseInt(dataAwbx.insurance_flag);
+        response.insurance_type_code = dataAwbx.insurance_type_code;
+        response.insurance_value = parseInt(dataAwbx.insurance_value);
+        response.cod_flag = parseInt(dataAwbx.cod_flag);
+        response.cod_value = parseInt(dataAwbx.cod_value);
+        response.shipper_name = dataAwbx.shipper_name;
+        response.shipper_phone = dataAwbx.shipper_phone;
+        response.shipper_email = dataAwbx.shipper_email;
+        response.shipper_contact = dataAwbx.shipper_contact;
+        response.destination_district_code = dataAwbx.destination_district_code;
+        response.destination_district_id = parseInt(dataAwbx.destination_district_id);
+        response.receiver_name = dataAwbx.receiver_name;
+        response.receiver_address = dataAwbx.receiver_address;
+        response.receiver_phone = dataAwbx.receiver_phone;
+        response.receiver_postal_code = parseInt(dataAwbx.receiver_postal_code);
+        response.receiver_contact = dataAwbx.receiver_contact;
+        response.special_instruction = dataAwbx.special_instruction;
+        response.return_district_code = dataAwbx.return_district_code;
+        response.return_phone = dataAwbx.return_phone;
+        response.return_contact = dataAwbx.return_contact;
+        response.return_address = dataAwbx.return_address;
       }
       dataItem.push(response);
     }
@@ -310,7 +313,7 @@ export class WebDeliveryVendorOutService {
   }
 
   // private method
-  private static async getRawAwb(awbNumber: string): Promise<any> {
+  private static async getRawAwb(awbNumber: string[]): Promise<any> {
     const query = `
     select
         a.awb_number as awbNumber,
@@ -358,15 +361,12 @@ export class WebDeliveryVendorOutService {
           AND dprd.awb_status_id_last in (25650, 25000) AND dprd.is_deleted = false
         LEFT JOIN awb_return ar ON ar.origin_awb_id = ai.awb_id AND ar.is_deleted = false
         LEFT JOIN awb_substitute asub ON asub.awb_number = a.awb_number
-      WHERE a.awb_number = :awbNumber
-      AND a.is_deleted = false
-      LIMIT 1;
+      WHERE a.awb_number in ('${awbNumber.join('\',\'')}')
+      AND a.is_deleted = false;
     `;
 
-    const rawData = await RawQueryService.queryWithParams(query, {
-      awbNumber,
-    });
-    return rawData ? rawData[0] : null;
+    const rawData = await RawQueryService.query(query);
+    return rawData;
   }
 
   private static async getPickupData(userID: number): Promise<any> {
@@ -386,10 +386,10 @@ export class WebDeliveryVendorOutService {
       e.fullname as return_contact,
       c.address as return_address
     FROM users a
-      JOIN user_role b on a.user_id = b.user_id
-      JOIN branch c on b.branch_id = c.branch_id
-      JOIN district d on c.district_id = d.district_id
-      JOIN employee e on a.employee_id = e.employee_id
+      INNER JOIN user_role b on a.user_id = b.user_id
+      INNER JOIN branch c on b.branch_id = c.branch_id
+      INNER JOIN district d on c.district_id = d.district_id
+      INNER JOIN employee e on a.employee_id = e.employee_id
     WHERE a.user_id = :userID
     ;`;
 
