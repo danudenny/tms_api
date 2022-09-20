@@ -167,7 +167,7 @@ export class DoPodDetailPostMetaQueueService {
     awbSubstitute: string,
   ) {
     const noteInternal = `Pengiriman dilanjutkan oleh ${partnerLogisticName} dengan no resi ${awbSubstitute}`;
-    const notePublic   = noteInternal;
+    const notePublic   = `Paket di teruskan ke Partner`;
     // provide data
     const obj = {
       awbItemId,
