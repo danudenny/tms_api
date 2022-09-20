@@ -1,6 +1,6 @@
 import { AwbService } from '../v1/awb.service';
-import { WebDeliveryVendorOutPayload, WebDeliveryVendorOutSendPayload, ScanOutPropertyAwbPayloadVm } from '../../models/web-delivery-vendor-out-payload.vm';
-import { WebDeliveryVendorOutResponseVm, WebDeliveryVendorOutResponse, ScanOutPropertyAwbResponseVm, ScanOutPropertyAwbResponse} from '../../models/web-delivery-vendor-out-response.vm';
+import { WebDeliveryVendorOutPayload, WebDeliveryVendorOutSendPayload, ScanOutPropertyAwbPayloadVm, WebDeliveryTrackingVendorPayload, WebDeliveryTrackingVendor } from '../../models/web-delivery-vendor-out-payload.vm';
+import { WebDeliveryVendorOutResponseVm, WebDeliveryVendorOutResponse, ScanOutPropertyAwbResponseVm, ScanOutPropertyAwbResponse, WebDeliveryTrackingVendorResponse, WebDeliveryTrackingVendorResponseVm} from '../../models/web-delivery-vendor-out-response.vm';
 import { PrintVendorOutPayloadQueryVm} from '../../models/print-vendor-out-payload.vm';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -13,8 +13,9 @@ import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import e = require('express');
 import { PrinterService } from '../../../../shared/services/printer.service';
 import { VendorLogisticService } from '../../../../shared/services/vendor.logistic.service';
-import { RepositoryService } from '../../../../shared/services/repository.service';
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
+import { Branch } from '../../../../shared/orm-entity/branch';
+import { User } from '../../../../shared/orm-entity/user';
 
 export class WebDeliveryVendorOutService {
   static async validateAWB(payload: WebDeliveryVendorOutPayload): Promise<WebDeliveryVendorOutResponseVm> {
@@ -127,10 +128,12 @@ export class WebDeliveryVendorOutService {
   }
 
   static async printVendor(res: e.Response, queryParams: PrintVendorOutPayloadQueryVm) {
-    const currentBranch = await RepositoryService.branch
-      .loadById(queryParams.branchId)
-      .select({
-        branchName: true,
+    const currentBranch = await Branch.findOne({
+      select: ['branchName'],
+      where: {
+        branchId: queryParams.branchId,
+        isDeleted : false
+      },
     });
 
     if (!currentBranch) {
@@ -139,14 +142,12 @@ export class WebDeliveryVendorOutService {
       });
     }
 
-    const currentUser = await RepositoryService.user
-      .loadById(queryParams.userId)
-      .select({
-        userId: true, 
-        employee: {
-          nickname: true,
-        },
-    });
+    const currentUser = await User.findOne({
+      select: ['userId', 'firstName', 'username', 'lastName'],
+      where :{
+        userId : queryParams.userId,
+      }
+    })
 
     if (!currentUser) {
       RequestErrorService.throwObj({
@@ -155,48 +156,48 @@ export class WebDeliveryVendorOutService {
     }
 
     let data = await VendorLogisticService.getDataSuratJalan(queryParams.orderVendorCode, queryParams.userId);
-    console.log(data.data)
-  //   let data = {
-  //     "data": {
-  //         "order_vendor_code": "SAP12345",
-  //         "delivery_date": "2022-08-21T11:22:08Z",
-  //         "vendor_id": "443614be-241d-11ed-9891-a15adc6ec386",
-  //         "vendor_name": "SAP",
-  //         "details": [
-  //             {
-  //                 "awb_no": "100018551113",
-  //                 "order_status": "done",
-  //                 "message": "",
-  //                 "cod_value": 0,
-  //                 "pickup_name": "Head Office Juanda",
-  //                 "receiver_name": "Bambang",
-  //                 "receiver_address": "Sulses",
-  //                 "receiver_phone": "085214235212"
-  //             },
-  //             {
-  //                 "awb_no": "100018551114",
-  //                 "order_status": "failed",
-  //                 "message": "Ada kesalahan data",
-  //                 "cod_value": 150000,
-  //                 "pickup_name": "Head Office Juanda",
-  //                 "receiver_name": "Bambang",
-  //                 "receiver_address": "Sulses",
-  //                 "receiver_phone": "085214235212"
-  //             }
-  //         ],
-  //         "paging": {
-  //             "currentPage": 1,
-  //             "nextPage": 0,
-  //             "prevPage": 0,
-  //             "totalPage": 1,
-  //             "totalData": 2,
-  //             "limit": 2
-  //         }
-  //     },
-  //     "code": "200000",
-  //     "statusCode": 200,
-  //     "latency": "6.64 ms"
-  // }
+    // console.log(data.data)
+    // let data = {
+    //   "data": {
+    //       "order_vendor_code": "SAP12345",
+    //       "delivery_date": "2022-08-21T11:22:08Z",
+    //       "vendor_id": "443614be-241d-11ed-9891-a15adc6ec386",
+    //       "vendor_name": "SAP",
+    //       "details": [
+    //           {
+    //               "awb_no": "100018551113",
+    //               "order_status": "done",
+    //               "message": "",
+    //               "cod_value": 0,
+    //               "pickup_name": "Head Office Juanda",
+    //               "receiver_name": "Bambang",
+    //               "receiver_address": "Sulses",
+    //               "receiver_phone": "085214235212"
+    //           },
+    //           {
+    //               "awb_no": "100018551114",
+    //               "order_status": "failed",
+    //               "message": "Ada kesalahan data",
+    //               "cod_value": 150000,
+    //               "pickup_name": "Head Office Juanda",
+    //               "receiver_name": "Bambang",
+    //               "receiver_address": "Sulses",
+    //               "receiver_phone": "085214235212"
+    //           }
+    //       ],
+    //       "paging": {
+    //           "currentPage": 1,
+    //           "nextPage": 0,
+    //           "prevPage": 0,
+    //           "totalPage": 1,
+    //           "totalData": 2,
+    //           "limit": 2
+    //       }
+    //   },
+    //   "code": "200000",
+    //   "statusCode": 200,
+    //   "latency": "6.64 ms"
+    // }
 
     let awb = [];
     let totalItem = 0;
@@ -227,7 +228,7 @@ export class WebDeliveryVendorOutService {
         currentBranchName : currentBranch.branchName,
         date: currentDate.format('DD/MM/YY'),
         time: currentDate.format('HH:mm'),
-        currentUserName : currentUser.employee.nickname,
+        currentUserName : currentUser.firstName,
         totalItems : totalItem,
         totalCod : totalCod
       }
@@ -398,4 +399,61 @@ export class WebDeliveryVendorOutService {
     return rawData ? rawData[0] : null;
   }
 
+  //webhook tracking
+  static async insertTracking(payload: WebDeliveryTrackingVendorPayload): Promise<WebDeliveryTrackingVendorResponseVm>{
+    const result = new WebDeliveryTrackingVendorResponseVm();
+    const dataItem = [];
+    for (const dataAWB of payload.scanValue) {
+      const response = new WebDeliveryTrackingVendorResponse();
+      const awb = await AwbItemAttr.findOne({
+        select: ['awbNumber', 'awbItemId'],
+        where: {
+          awbNumber: dataAWB.awbNumber,
+          isDeleted: false,
+        }
+      });
+
+      if (awb) {
+        const holdRedis = await RedisService.lockingWithExpire(
+          `hold:scanoutvendor:${awb.awbItemId}`,
+          'locking',
+          60,
+        );
+
+        if (holdRedis) {
+          try {
+            AwbDeliveryVendorQueueService.createJobInserTracking(
+              awb.awbItemId,
+              dataAWB.awbStatusId,
+              dataAWB.noteInternal,
+              dataAWB.notePublic,
+              dataAWB.latitude,
+              dataAWB.longitude,
+              dataAWB.branchId,
+              dataAWB.userId
+            )
+
+            response.status = 'ok';
+            response.message = `Resi ${dataAWB.awbNumber} berhasil di proses.`;
+            RedisService.del(`hold:scanoutvendor:${awb.awbItemId}`);
+          } catch (err) {
+            response.status = 'error';
+            response.message = `Gangguan Server: ${err.message}`;
+          }
+        } else {
+          response.status = 'error';
+          response.message = `Server Busy: Resi ${dataAWB.awbNumber} sedang di proses.`;
+        }
+      } else {
+        response.status = 'error';
+        response.message = `Vendor tidak ditemukan.`;
+      }
+      
+      response.awbNumber = dataAWB.awbNumber;
+      dataItem.push(response);
+    }
+
+    result.data = dataItem;
+    return result;
+  }
 }

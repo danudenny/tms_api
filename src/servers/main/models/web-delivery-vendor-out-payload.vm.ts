@@ -18,3 +18,51 @@ export class WebDeliveryVendorOutSendPayload {
   @Type(() => String)
   scanValue: string[];
 }
+
+export class ScanOutPropertyAwbPayloadVm {
+  @ApiModelProperty()
+  user_id: number;
+  
+  @ApiModelProperty()
+  awbNumber: string[];
+}
+
+export class WebDeliveryTrackingVendorPayload {
+  @ApiModelProperty({ type: () => [WebDeliveryTrackingVendor] })
+  scanValue: WebDeliveryTrackingVendor[];
+}
+
+export class WebDeliveryTrackingVendor{
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  awbStatusId: number;
+
+  @ApiModelProperty()
+  noteInternal : string;
+
+  @ApiModelProperty()
+  notePublic : string;
+
+  @ApiModelProperty()
+  latitude : string;
+
+  @ApiModelProperty()
+  longitude : string;
+
+  @ApiModelProperty()
+  branchId : number;
+
+  @ApiModelProperty()
+  userId : number;
+
+  @ApiModelProperty()
+  urlPhoto : string;
+
+  @ApiModelProperty()
+  urlPhotoSignature : string;
+
+  @ApiModelProperty()
+  urlPhotoRetur : string;
+}

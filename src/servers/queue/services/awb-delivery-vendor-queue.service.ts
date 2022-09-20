@@ -126,4 +126,31 @@ export class AwbDeliveryVendorQueueService {
     };
     return AwbDeliveryVendorQueueService.queue.add(obj);
   }
+
+  public static async createJobInserTracking(
+    awbItemId: number,
+    awbStatusId: number,
+    noteInternal: string,
+    notePublic :string,
+    latitude: string,
+    longitude: string,
+    branchId : number,
+    userId : number
+  ){
+    const obj = {
+      awbItemId,
+      userId,
+      branchId,
+      awbStatusId,
+      awbStatusIdLastPublic: AWB_STATUS.ON_PROGRESS,
+      userIdCreated: userId,
+      userIdUpdated: userId,
+      timestamp: moment().toDate(),
+      noteInternal,
+      notePublic,
+      longitude,
+      latitude
+    };
+    return AwbDeliveryVendorQueueService.queue.add(obj);
+  }
 }

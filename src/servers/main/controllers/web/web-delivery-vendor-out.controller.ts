@@ -7,8 +7,8 @@ import { PermissionTokenGuard } from '../../../../shared/guards/permission-token
 import { WebDeliveryVendorOutService } from '../../services/web/web-delivery-vendor-out.service';
 import { ResponseSerializerOptions } from '../../../../shared/decorators/response-serializer-options.decorator';
 import express = require('express');
-import { WebDeliveryVendorOutPayload, WebDeliveryVendorOutSendPayload, ScanOutPropertyAwbPayloadVm } from '../../models/web-delivery-vendor-out-payload.vm';
-import { WebDeliveryVendorOutResponseVm, ScanOutPropertyAwbResponseVm } from '../../models/web-delivery-vendor-out-response.vm';
+import { WebDeliveryVendorOutPayload, WebDeliveryVendorOutSendPayload, ScanOutPropertyAwbPayloadVm, WebDeliveryTrackingVendorPayload } from '../../models/web-delivery-vendor-out-payload.vm';
+import { WebDeliveryVendorOutResponseVm, ScanOutPropertyAwbResponseVm, WebDeliveryTrackingVendorResponseVm } from '../../models/web-delivery-vendor-out-response.vm';
 import { AuthBackdoorApiKeyGuard } from '../../../../shared/guards/auth-backdoor-api-key.guard';
 import { PrintVendorOutPayloadQueryVm} from '../../models/print-vendor-out-payload.vm';
 
@@ -48,4 +48,13 @@ export class WebAwbDeliveryVendorController {
   public async awbNumber(@Body() payload: ScanOutPropertyAwbPayloadVm) {
     return WebDeliveryVendorOutService.awb(payload);
   }
+
+  @Post('scanOut/insertTracking')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthBackdoorApiKeyGuard)
+  @ApiOkResponse({ type: WebDeliveryTrackingVendorResponseVm })
+  public async insertTracking(@Body() payload: WebDeliveryTrackingVendorPayload) {
+    return WebDeliveryVendorOutService.insertTracking(payload);
+  }
+
 }
