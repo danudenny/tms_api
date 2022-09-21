@@ -1,6 +1,23 @@
 import { AwbService } from '../v1/awb.service';
-import { WebDeliveryVendorOutPayload, WebDeliveryVendorOutSendPayload, ScanOutPropertyAwbPayloadVm, WebDeliveryTrackingVendorPayload, WebDeliveryTrackingVendor } from '../../models/web-delivery-vendor-out-payload.vm';
-import { WebDeliveryVendorOutResponseVm, WebDeliveryVendorOutResponse, ScanOutPropertyAwbResponseVm, ScanOutPropertyAwbResponse, WebDeliveryTrackingVendorResponse, WebDeliveryTrackingVendorResponseVm} from '../../models/web-delivery-vendor-out-response.vm';
+import { 
+  WebDeliveryVendorOutPayload, 
+  WebDeliveryVendorOutSendPayload, 
+  ScanOutPropertyAwbPayloadVm, 
+  WebDeliveryTrackingVendorPayload, 
+  WebDeliveryTrackingVendor, 
+  WebDeliveryVendorUploadPhotoPayload, 
+  WebDeliveryVendorUploadPhoto
+} from '../../models/web-delivery-vendor-out-payload.vm';
+import { 
+  WebDeliveryVendorOutResponseVm, 
+  WebDeliveryVendorOutResponse, 
+  ScanOutPropertyAwbResponseVm, 
+  ScanOutPropertyAwbResponse, 
+  WebDeliveryTrackingVendorResponse, 
+  WebDeliveryTrackingVendorResponseVm,
+  WebDeliveryVendorUploadPhotoResponse,
+  WebDeliveryVendorUploadPhotoResponseVm
+} from '../../models/web-delivery-vendor-out-response.vm';
 import { PrintVendorOutPayloadQueryVm} from '../../models/print-vendor-out-payload.vm';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
@@ -455,5 +472,10 @@ export class WebDeliveryVendorOutService {
 
     result.data = dataItem;
     return result;
+  }
+
+  static async uploadPhotoVendor(payload : WebDeliveryVendorUploadPhotoPayload): Promise <WebDeliveryVendorUploadPhotoResponse>{
+    
+    return null;
   }
 }

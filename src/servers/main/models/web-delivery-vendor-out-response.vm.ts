@@ -236,3 +236,22 @@ export class WebDeliveryTrackingVendorResponseVm {
   @ApiModelProperty({ type: () => [WebDeliveryTrackingVendorResponse] })
   data: WebDeliveryTrackingVendorResponse[];
 }
+
+export class WebDeliveryVendorUploadPhotoResponse{
+  @ApiModelProperty({ type: () => [WebDeliveryVendorUploadPhotoResponseVm] })
+  data: WebDeliveryVendorUploadPhotoResponseVm[];
+}
+
+export class WebDeliveryVendorUploadPhotoResponseVm{
+  @ApiModelProperty()
+  attachmentTmsId: number;
+
+  @ApiModelProperty()
+  awbNumber: string;
+
+  @ApiModelProperty()
+  status: string;
+
+  @ApiModelProperty()
+  message: string;
+}
