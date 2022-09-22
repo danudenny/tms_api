@@ -36,24 +36,31 @@ export class PrintBagItemPaperService {
               awbNumber: true,
               consigneeName: true,
               consigneeNumber: true,
-              totalWeightFinalRounded: true,
+              totalWeightReal: true,
             },
           },
         },
       })
       .where(e => e.bagItemId, w => w.equals(queryParams.id))
       .andWhere(e => e.bagItemAwbs.isDeleted, w => w.isFalse());
-
     if (!bagItem) {
       RequestErrorService.throwObj({
         message: 'Gabung paket tidak ditemukan',
+      });
+    }
+    // handle legacy query
+    if (bagItem.bagItemAwbs) {
+      bagItem.bagItemAwbs.forEach(bia => {
+        if (bia.awbItem && bia.awbItem.awb) {
+          bia.awbItem.awb.totalWeightFinalRounded = bia.awbItem.awb.totalWeightReal;
+        }
       });
     }
     let newBagSeq = bagItem.bagSeq.toString();
     if (bagItem.bagSeq.toString().length < 3) {
       newBagSeq = '0'.repeat(3 - bagItem.bagSeq.toString().length) + newBagSeq;
     }
-    const bagNumSeq = bagItem.bag.bagNumber + newBagSeq
+    const bagNumSeq = bagItem.bag.bagNumber + newBagSeq;
     bagItem.bag.bagNumber = bagNumSeq.substring(0, 10);
     this.printBagItemPaperAndQueryMeta(res, bagItem as any, {
       userId: queryParams.userId,
@@ -113,7 +120,7 @@ export class PrintBagItemPaperService {
     //       }
     //   });
     // }
-    totalWeight = Math.round(data.weight * 100)/100;
+    totalWeight = Math.round(data.weight * 100) / 100;
 
     return this.printBagItemPaper(
       res,
