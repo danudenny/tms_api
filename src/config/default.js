@@ -201,6 +201,7 @@ module.exports = {
   },
   codTransferBranch: {
     version : 2,
+    transferBranchLockTtl : 30
   },
   korwil: {
     korwilRoleId: [38, 155],

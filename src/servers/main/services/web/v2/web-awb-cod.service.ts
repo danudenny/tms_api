@@ -54,6 +54,7 @@ import { MetaService } from '../../../../../shared/services/meta.service';
 import { CodPaymentRevision } from '../../../../../shared/orm-entity/cod-payment-revision';
 import { ConfigService } from '../../../../../shared/services/config.service';
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
+import * as hash from 'object-hash';
 
 export class V2WebAwbCodService {
   static async transferBranch(
@@ -65,6 +66,14 @@ export class V2WebAwbCodService {
     const uuidString = uuidv1();
     const transferBranchConfig = ConfigService.get('codTransferBranch');
     const version = transferBranchConfig.version;
+
+
+    const lockTtl = transferBranchConfig.transferBranchLockTtl;
+    const redlock = await this.lockRequest(payload, lockTtl)
+
+    if (!redlock) {
+      throw new BadRequestException('Duplicate Request!');
+    }
 
     let codTransactionCash: WebCodTransferBranchCashResponseVm;
     if (payload.dataCash.length > 0) {
@@ -166,6 +175,28 @@ export class V2WebAwbCodService {
       throw new BadRequestException('Nominal COD tidak boleh sama!');
     }
     return result;
+  }
+
+  static async lockRequest(payload: WebCodTransferPayloadVm, lockTTL: number): Promise<boolean>{
+    let dataAwb : WebCodAwbPayloadVm[]
+
+    if (payload.dataCash.length > 0) {
+     dataAwb = payload.dataCash
+    }else {
+      dataAwb = payload.dataCashless
+    }
+
+    let awbItems =  dataAwb.map(awb => awb.awbItemId)
+    awbItems.sort((one, two) => (one < two ? -1 : 1));
+    const key = awbItems.join("_")
+    const hashKey = hash(key);
+    const lockkey = `redlock:transfer-branch:${payload.userIdDriver}-${hashKey}`
+    const redlock = await RedisService.redlock(
+      lockkey,
+      lockTTL,
+    );
+
+    return redlock
   }
 
   static async nominalUpdate(
