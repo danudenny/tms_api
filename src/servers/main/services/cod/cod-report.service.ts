@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { RedshiftReportingService } from '../report/redshift-reporting.service';
-import { ConfigService } from '../../../../shared/services/config.service';
-import { BaseMetaPayloadVm, ReportBaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
-import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
-import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
-import { RoleGroupService } from '../../../../shared/services/role-group.service';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { TRANSACTION_STATUS } from '../../../../shared/constants/transaction-status.constant';
+import {Injectable} from '@nestjs/common';
+import {RedshiftReportingService} from '../report/redshift-reporting.service';
+import {ConfigService} from '../../../../shared/services/config.service';
+import {BaseMetaPayloadVm, ReportBaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
+import {OrionRepositoryService} from '../../../../shared/services/orion-repository.service';
+import {AwbItemAttr} from '../../../../shared/orm-entity/awb-item-attr';
+import {AWB_STATUS} from '../../../../shared/constants/awb-status.constant';
+import {RoleGroupService} from '../../../../shared/services/role-group.service';
+import {AuthService} from '../../../../shared/services/auth.service';
+import {TRANSACTION_STATUS} from '../../../../shared/constants/transaction-status.constant';
 import * as moment from 'moment';
 
 @Injectable()
@@ -255,9 +255,9 @@ export class CodReportService {
 
   async generateAwbCodTransactionDetailReport(payload: ReportBaseMetaPayloadVm) {
     const reportType = this.configReportType.codNonFee;
-    const rawQuery = this.generateQueryAwbCodTransaction(payload)
+    const rawQuery = this.generateQueryAwbCodTransaction(payload);
 
-    return this.reportingService.generateReport(reportType, rawQuery)
+    return this.reportingService.generateReport(reportType, rawQuery);
   }
 
   async fetchReportAwbTransactionDetail(page: number, limit: number) {
@@ -266,122 +266,114 @@ export class CodReportService {
   }
 
   private generateQueryAwbCodTransaction(payload: ReportBaseMetaPayloadVm) {
-
-    let queryParam = "";
+    let queryParam = '';
     for (const filter of payload.filters) {
       if (filter.field == 'periodStart' && filter.value) {
-        const d = moment
-          .utc(filter.value)
-          .format('YYYY-MM-DD 00:00:00')
-        queryParam += `AND ctd.pod_date >= '${d}' `;
+        queryParam += `AND aia.awb_history_date_last >= '${filter.value}' `;
       }
       if (filter.field == 'periodEnd' && filter.value) {
-        const d = moment
-          .utc(filter.value)
-          .format('YYYY-MM-DD 00:00:00')
-        queryParam += `AND ctd.pod_date < '${d}' `;
+        queryParam += `AND aia.awb_history_date_last < '${filter.value}' `;
       }
 
       if (filter.field == 'transactionStart' && filter.value) {
-        const d = moment
-          .utc(filter.value)
-          .format('YYYY-MM-DD 00:00:00')
-        queryParam += `AND ctd.updated_time >= '${d}' `;
+        queryParam += `AND ctd.updated_time >= '${filter.value}' `;
       }
 
       if (filter.field == 'transactionEnd' && filter.value) {
-        const d = moment
-          .utc(filter.value)
-          .format('YYYY-MM-DD 00:00:00')
-        queryParam += `AND ctd.updated_time < '${d}' `;
+        queryParam += `AND ctd.updated_time < '${filter.value}' `;
       }
 
       if (filter.field == 'manifestedStart' && filter.value) {
-        const d = moment
-          .utc(filter.value)
-          .format('YYYY-MM-DD 00:00:00')
-        queryParam += `AND ctd.awb_date >= '${d}' `;
+        queryParam += `AND a.awb_date >= '${filter.value}' `;
       }
 
       if (filter.field == 'manifestedEnd' && filter.value) {
-        const d = moment
-          .utc(filter.value)
-          .format('YYYY-MM-DD 00:00:00')
-        queryParam += `AND ctd.awb_date < '${d}' `;
+        queryParam += `AND a.awb_date < '${filter.value}' `;
       }
 
       if (filter.field == 'partnerId' && filter.value && this.isNumber(filter.value)) {
-        queryParam += `AND ctd.partner_id = ${filter.value} `;
+        queryParam += `AND pr.partner_id = ${filter.value} `;
       }
+
       if (filter.field == 'representativeId' && filter.value && this.isNumber(filter.value)) {
-        queryParam += `AND ctd_branch.representative_id = ${filter.value} `;
+        queryParam += `AND rs.representative_id = ${filter.value} `;
       }
+
       if (filter.field == 'branchIdFinal' && filter.value && this.isNumber(filter.value)) {
-        queryParam += `AND ctd.current_position_id = ${filter.value} `;
+        queryParam += `AND aia.branch_id_last = ${filter.value} `;
       }
+
       if (filter.field == 'awbStatusIdFinal' && filter.value && this.isNumber(filter.value)) {
-        queryParam += `AND aia.awb_status_id_final = ${filter.value} `;
+        queryParam += `AND aia.awb_status_id_last = ${filter.value} `;
       }
+
       if (filter.field == 'transactionStatusId' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.transaction_status_id = ${filter.value} `;
       }
+
       if (filter.field == 'sigesit' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.user_id_driver = ${filter.value} `;
       }
+
       if (filter.field == 'supplierInvoiceStatusId' && filter.value && this.isNumber(filter.value)) {
         queryParam += `AND ctd.supplier_invoice_status_id = ${filter.value} `;
       }
     }
-    queryParam += 'AND ctd.is_deleted = false';
 
-    const query = `SELECT 
-    ctd.partner_name AS "Partner",
-    ctd.awb_date AS "Awb Date",
-    ctd.awb_number AS "Awb",
-    round(ctd.parcel_value, `+ this.configCodReport.roundedDecimal + `) AS "Package Amount", 
-    round(ctd.cod_value, `+ this.configCodReport.roundedDecimal + `) AS "COD Amount", 
-    round(ctd.cod_fee, `+ this.configCodReport.roundedDecimal + `) AS "COD Fee", 
-    round(ctd.cod_value, `+ this.configCodReport.roundedDecimal + `) AS "Amount Transfer", 
-    ctd.pod_date AS "POD Datetime",
-    ctd.consignee_name AS "Recipient",
-    ctd.payment_method AS "Tipe Pembayaran",
-    sis.status_title AS "Status Internal",
-    aws.awb_status_name AS "Tracking Status",
-    sisinv.status_title AS "Status Invoice",
-    ctd.cust_package AS "Cust Package",
-    ctd.pickup_source AS "Pickup Source",
-    ctd.current_position AS "Current Position",
-    ctd.destination_code AS "Destination Code",
-    ctd.destination AS "Destination",
-    rep.representative_code AS "Perwakilan",
-    CONCAT(ude.nik+' ', ude.fullname) AS "Sigesit",
-    regexp_replace(ctd.parcel_content, '`+ this.configCodReport.regexExpToReplace + `', ' ') AS "Package Detail",
-    ctd.package_type AS "Services",
-    regexp_replace(ctd.parcel_note, '`+ this.configCodReport.regexExpToReplace + `', ' ') AS "Notes", 
-    ctd.updated_time AS "Date Updated",
-    CONCAT(uae.nik+' ', uae.fullname) AS "User Updated"
-  FROM
-    "public"."cod_transaction_detail" "ctd"
-    INNER JOIN "public"."awb_item_attr" "aia" ON "aia"."awb_item_id" = "ctd"."awb_item_id"
-      AND ("aia"."is_deleted" = 'false')
-    LEFT JOIN "public"."transaction_status" "sisinv" ON "sisinv"."transaction_status_id" = "ctd"."supplier_invoice_status_id"
-    LEFT JOIN "public"."transaction_status" "sis" ON "sis"."transaction_status_id" = "ctd"."transaction_status_id"
-    LEFT JOIN "public"."awb_status" "aws" ON "aws"."awb_status_id" = "aia"."awb_status_id_last"
-    LEFT JOIN "public"."users" "ctd_userDriver" ON "ctd_userDriver"."user_id" = "ctd"."user_id_driver"
-    LEFT JOIN "public"."employee" "ude" ON "ude"."employee_id" = "ctd_userDriver"."employee_id"
-    LEFT JOIN "public"."users" "ctd_userAdmin" ON "ctd_userAdmin"."user_id" = "ctd"."user_id_updated"
-    LEFT JOIN "public"."employee" "uae" ON "uae"."employee_id" = "ctd_userAdmin"."employee_id"
-    LEFT JOIN "public"."branch" "ctd_branch" ON "ctd_branch"."branch_id" = "aia"."branch_id_last"
-    LEFT JOIN "public"."representative" "rep" ON "rep"."representative_id" = "ctd_branch"."representative_id"
-      AND ("rep"."is_deleted" = 'false')
-  WHERE 
-    TRUE 
-    ${queryParam}
+    return `
+    SELECT DISTINCT
+      p.partner_name AS "Partner",
+      date(a.awb_date) AS "Awb Date",
+      aia.awb_number AS "Awb",
+      round(prd.parcel_value, ` + this.configCodReport.roundedDecimal + `) AS "Package Amount",
+      round(prd.cod_value, ` + this.configCodReport.roundedDecimal + `) AS "COD Amount",
+      round(ctd.cod_fee, ` + this.configCodReport.roundedDecimal + `) AS "COD Fee",
+      round(prd.cod_value, ` + this.configCodReport.roundedDecimal + `) AS "Amount Transfer",
+      aia.awb_history_date_last AS "POD Datetime",
+      a.consignee_name AS "Recipient",
+      ctd.payment_method AS "Tipe Pembayaran",
+      ts.status_title AS "Status Internal",
+      aws.awb_status_name AS "Tracking Status",
+      tsinv.status_title AS "Status Invoice",
+      pr.reference_no AS "Cust Package",
+      bm.branch_name AS "Pickup Source",
+      blh.branch_name AS "Current Position",
+      a.ref_destination_code AS "Destination Code",
+      ds.subdistrict AS "Destination",
+      rs.representative_code AS "Perwakilan",
+      CONCAT(es.nik+' - ', es.fullname) AS "Sigesit",
+      regexp_replace(prd.parcel_content, '` + this.configCodReport.regexExpToReplace + `', ' ') AS "Package Detail",
+      pt.package_type_name AS "Services",
+      regexp_replace(prd.notes, '` + this.configCodReport.regexExpToReplace + `', ' ') AS "Notes",
+      COALESCE(ctd.updated_time, alh.history_date) AS "Date Updated",
+      COALESCE(CONCAT(ea.nik+' - ', ea.fullname), CONCAT(ealh.nik+' - ', ealh.fullname)) AS "User Updated"
+    FROM public.awb_item_attr aia
+      INNER JOIN public.awb a ON (a.awb_id = aia.awb_id and a.is_deleted = false and aia.is_deleted = false)
+      LEFT JOIN public.cod_transaction_detail ctd ON (aia.awb_number = ctd.awb_number and ctd.is_deleted = false)
+      LEFT JOIN public.transaction_status ts ON ts.transaction_status_id = ctd.transaction_status_id
+      LEFT JOIN public.transaction_status tsinv ON tsinv.transaction_status_id = ctd.supplier_invoice_status_id
+      LEFT JOIN public.pickup_request_detail prd ON (prd.awb_item_id = aia.awb_item_id and prd.is_deleted = false)
+      LEFT JOIN public.pickup_request pr ON (pr.pickup_request_id = prd.pickup_request_id and pr.is_deleted = false)
+      LEFT JOIN public.partner p ON (p.partner_id = pr.partner_id and p.is_deleted = false)
+      LEFT JOIN public.package_type pt ON (pt.package_type_id = a.package_type_id)
+      LEFT JOIN public.awb_history am ON am.awb_history_id = aia.awb_history_id_pickdrop
+      LEFT JOIN public.awb_history alh ON alh.awb_history_id = aia.awb_history_id_last
+      LEFT JOIN public.users adm ON adm.user_id = alh.user_id_updated
+      LEFT JOIN public.employee ealh ON  ealh.employee_id = adm.employee_id
+      LEFT JOIN public.awb_status aws ON aws.awb_status_id = aia.awb_status_id_last
+      LEFT JOIN public.branch bm ON bm.branch_id = am.branch_id
+      LEFT JOIN public.branch blh ON blh.branch_id = aia.branch_id_last
+      LEFT JOIN public.destination ds ON a.ref_destination_code = ds.code
+      LEFT JOIN public.users sigesit ON ctd.user_id_driver = sigesit.user_id
+      LEFT JOIN public.employee es ON es.employee_id = sigesit.employee_id
+      LEFT JOIN public.users admin ON ctd.user_id_updated = admin.user_id
+      LEFT JOIN public.employee ea ON ea.employee_id = admin.employee_id
+      LEFT JOIN public.representative rs ON rs.representative_code = a.ref_representative_code
+    WHERE
+      a.is_cod = true
+      ${queryParam}
   `;
-
-    return query;
   }
-
 
   isNumber(value: string | number): boolean {
     return ((value != null) &&
