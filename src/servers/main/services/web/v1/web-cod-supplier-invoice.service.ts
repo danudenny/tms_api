@@ -163,14 +163,16 @@ export class V1WebCodSupplierInvoiceService {
           {
             partnerId: payload.partnerId,
             transactionStatusId: TRANSACTION_STATUS.TRMHO,
-            codSupplierInvoiceId: IsNull(),
+            isInvoiceCreated: false,
             isVoid: false,
+            isDeleted: false,
           },
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
             supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
+            isInvoiceCreated: true,
           },
         );
       });
@@ -307,6 +309,7 @@ export class V1WebCodSupplierInvoiceService {
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
             supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
+            isDeleted: false,
           },
           {
             supplierInvoiceStatusId: TRANSACTION_STATUS.PAIDHO,
