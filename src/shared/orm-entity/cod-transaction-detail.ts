@@ -270,6 +270,13 @@ export class CodTransactionDetail extends TmsBaseEntity {
   })
   voidNote: string | null;
 
+  @Column('boolean', {
+    nullable: false,
+    default: () => 'false',
+    name: 'is_invoice_created',
+  })
+  isInvoiceCreated: boolean;
+
   //  relation
   @ManyToOne(() => TransactionStatus)
   @JoinColumn({ name: 'supplier_invoice_status_id' })

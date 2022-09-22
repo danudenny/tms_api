@@ -163,7 +163,7 @@ export class V1WebCodSupplierInvoiceService {
           {
             partnerId: payload.partnerId,
             transactionStatusId: TRANSACTION_STATUS.TRMHO,
-            codSupplierInvoiceId: IsNull(),
+            isInvoiceCreated: false,
             isVoid: false,
           },
           {
@@ -171,6 +171,7 @@ export class V1WebCodSupplierInvoiceService {
             supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
+            isInvoiceCreated: true,
           },
         );
       });
