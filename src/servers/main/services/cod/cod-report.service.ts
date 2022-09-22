@@ -116,17 +116,17 @@ export class CodReportService {
         coalesce(admin.nik, '') || ' - ' || coalesce(admin.fullname, '')  AS "user updated" 
       FROM 
         cod_transaction_detail AS ctd 
-      INNER JOIN users AS du 
+      LEFT JOIN users AS du 
         ON ctd.user_id_driver = du.user_id 
-      INNER JOIN employee AS driver 
+      LEFT JOIN employee AS driver 
         ON du.employee_id = driver.employee_id
-      INNER JOIN users AS au 
+      LEFT JOIN users AS au 
         ON ctd.user_id_updated = au.user_id 
-      INNER JOIN employee AS admin 
+      LEFT JOIN employee AS admin 
         ON au.employee_id = admin.employee_id 
-      INNER JOIN branch AS br 
+      LEFT JOIN branch AS br 
         ON ctd.branch_id = br.branch_id 
-      INNER JOIN representative AS rep 
+      LEFT JOIN representative AS rep 
         ON br.representative_id = rep.representative_id 
       WHERE 
         TRUE 

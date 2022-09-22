@@ -191,7 +191,7 @@ module.exports = {
     supplierInvoiceFee: 'cod-supplier-invoice-fee',
   },
   codReportConfig: {
-    regexExpToReplace : '[\\n\\r\\;\\t\\|\\"\\\']+',
+    regexExpToReplace : '[\\n\\r\\;\\t\\|\\"\'\']+',
     roundedDecimal : 0,
   },
   codRoleId:{
