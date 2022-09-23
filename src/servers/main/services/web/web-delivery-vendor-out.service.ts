@@ -307,6 +307,7 @@ export class WebDeliveryVendorOutService {
         response.cod_flag = parseInt(dataAwbx.cod_flag);
         response.cod_value = parseInt(dataAwbx.cod_value);
         response.shipper_name = dataAwbx.shipper_name;
+        response.shipper_address = dataAwbx.shipper_address;
         response.shipper_phone = dataAwbx.shipper_phone;
         response.shipper_email = dataAwbx.shipper_email;
         response.shipper_contact = dataAwbx.shipper_contact;
