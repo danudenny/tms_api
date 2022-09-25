@@ -30,6 +30,7 @@ export class PodAttachment {
             attachmentTmsId: data.attachmentTmsId,
             awbStatusId: data.awbStatusId,
             photoType: data.photoType,
+            userIdUpdated : data.userIdUpdated
           }
         );
       });
@@ -42,6 +43,8 @@ export class PodAttachment {
         dataInsert.awbStatusId = data.awbStatusId;
         dataInsert.photoType = data.photoType;
         dataInsert.isDeleted = false;
+        dataInsert.userIdCreated = data.userIdCreated;
+        dataInsert.userIdUpdated = data.userIdUpdated;
         await transactional.insert(PodAwbAttachment, dataInsert);
       });
     }

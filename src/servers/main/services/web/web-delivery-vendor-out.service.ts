@@ -1,24 +1,24 @@
 import { AwbService } from '../v1/awb.service';
-import { 
-  WebDeliveryVendorOutPayload, 
-  WebDeliveryVendorOutSendPayload, 
-  ScanOutPropertyAwbPayloadVm, 
-  WebDeliveryTrackingVendorPayload, 
-  WebDeliveryTrackingVendor, 
-  WebDeliveryVendorUploadPhotoPayload, 
+import {
+  WebDeliveryVendorOutPayload,
+  WebDeliveryVendorOutSendPayload,
+  ScanOutPropertyAwbPayloadVm,
+  WebDeliveryTrackingVendorPayload,
+  WebDeliveryTrackingVendor,
+  WebDeliveryVendorUploadPhotoPayload,
   WebDeliveryVendorUploadPhoto
 } from '../../models/web-delivery-vendor-out-payload.vm';
-import { 
-  WebDeliveryVendorOutResponseVm, 
-  WebDeliveryVendorOutResponse, 
-  ScanOutPropertyAwbResponseVm, 
-  ScanOutPropertyAwbResponse, 
-  WebDeliveryTrackingVendorResponse, 
+import {
+  WebDeliveryVendorOutResponseVm,
+  WebDeliveryVendorOutResponse,
+  ScanOutPropertyAwbResponseVm,
+  ScanOutPropertyAwbResponse,
+  WebDeliveryTrackingVendorResponse,
   WebDeliveryTrackingVendorResponseVm,
   WebDeliveryVendorUploadPhotoResponse,
   WebDeliveryVendorUploadPhotoResponseVm
 } from '../../models/web-delivery-vendor-out-response.vm';
-import { PrintVendorOutPayloadQueryVm} from '../../models/print-vendor-out-payload.vm';
+import { PrintVendorOutPayloadQueryVm } from '../../models/print-vendor-out-payload.vm';
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { AwbStatusService } from '../master/awb-status.service';
@@ -33,6 +33,10 @@ import { VendorLogisticService } from '../../../../shared/services/vendor.logist
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { User } from '../../../../shared/orm-entity/user';
+import { AttachmentService } from '../../../../shared/services/attachment.service';
+import axios from 'axios';
+import { PodAttachment } from '../../../../shared/services/pod-attachment';
+import { PodWebAttachmentModel } from '../../../../shared/models/pod-web-attachment.model';
 
 export class WebDeliveryVendorOutService {
   static async validateAWB(payload: WebDeliveryVendorOutPayload): Promise<WebDeliveryVendorOutResponseVm> {
@@ -132,9 +136,9 @@ export class WebDeliveryVendorOutService {
       dataItem.push(response);
     }
 
-    try{
+    try {
       await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken);
-    }catch(err){
+    } catch (err) {
       RequestErrorService.throwObj({
         message: 'Gagal mengirimkan data ke vendor',
       });
@@ -149,7 +153,7 @@ export class WebDeliveryVendorOutService {
       select: ['branchName'],
       where: {
         branchId: queryParams.branchId,
-        isDeleted : false
+        isDeleted: false
       },
     });
 
@@ -161,8 +165,8 @@ export class WebDeliveryVendorOutService {
 
     const currentUser = await User.findOne({
       select: ['userId', 'firstName', 'username', 'lastName'],
-      where :{
-        userId : queryParams.userId,
+      where: {
+        userId: queryParams.userId,
       }
     })
 
@@ -219,35 +223,35 @@ export class WebDeliveryVendorOutService {
     let awb = [];
     let totalItem = 0;
     let totalCod = 0;
-    for(let datax of data.data.details){
+    for (let datax of data.data.details) {
       totalItem++;
       totalCod = totalCod + datax.cod_value;
       awb.push({
-        awbNumber : datax.awb_no,
-        consigneeName : datax.receiver_name,
-        isCod : datax.cod_value > 0 ? true : false,
-        totalCodValue : datax.cod_value,
-        alamat : datax.receiver_address
+        awbNumber: datax.awb_no,
+        consigneeName: datax.receiver_name,
+        isCod: datax.cod_value > 0 ? true : false,
+        totalCodValue: datax.cod_value,
+        alamat: datax.receiver_address
       })
     }
     //remapping
     const currentDate = moment();
     const jsreportParams = {
-      data : {
-        vendorCode : queryParams.orderVendorCode,
-        userDriver : {
-          nameDriver : data.data.vendor_name,
+      data: {
+        vendorCode: queryParams.orderVendorCode,
+        userDriver: {
+          nameDriver: data.data.vendor_name,
           vehicleNumber: '-'
         },
-        dataAWB : awb
+        dataAWB: awb
       },
-      meta :{
-        currentBranchName : currentBranch.branchName,
+      meta: {
+        currentBranchName: currentBranch.branchName,
         date: currentDate.format('DD/MM/YY'),
         time: currentDate.format('HH:mm'),
-        currentUserName : currentUser.firstName,
-        totalItems : totalItem,
-        totalCod : totalCod
+        currentUserName: currentUser.firstName,
+        totalItems: totalItem,
+        totalCod: totalCod
       }
     };
 
@@ -324,7 +328,9 @@ export class WebDeliveryVendorOutService {
         response.return_contact = dataAwbx.return_contact;
         response.return_address = dataAwbx.return_address;
       }
-      dataItem.push(response);
+      if (response.awbNumber != undefined) {
+        dataItem.push(response);
+      }
     }
     result.data = dataItem
     return result;
@@ -418,7 +424,7 @@ export class WebDeliveryVendorOutService {
   }
 
   //webhook tracking
-  static async insertTracking(payload: WebDeliveryTrackingVendorPayload): Promise<WebDeliveryTrackingVendorResponseVm>{
+  static async insertTracking(payload: WebDeliveryTrackingVendorPayload): Promise<WebDeliveryTrackingVendorResponseVm> {
     const result = new WebDeliveryTrackingVendorResponseVm();
     const dataItem = [];
     for (const dataAWB of payload.scanValue) {
@@ -466,7 +472,7 @@ export class WebDeliveryVendorOutService {
         response.status = 'error';
         response.message = `Vendor tidak ditemukan.`;
       }
-      
+
       response.awbNumber = dataAWB.awbNumber;
       dataItem.push(response);
     }
@@ -475,8 +481,63 @@ export class WebDeliveryVendorOutService {
     return result;
   }
 
-  static async uploadPhotoVendor(payload : WebDeliveryVendorUploadPhotoPayload): Promise <WebDeliveryVendorUploadPhotoResponse>{
+  static async uploadPhotoVendor(payload: WebDeliveryVendorUploadPhotoPayload): Promise<WebDeliveryVendorUploadPhotoResponse> {
+    var request = require('request').defaults({ encoding: null });
+    const result = new WebDeliveryVendorUploadPhotoResponse();
+    let dataValue = [];
+    try {
+      for (let data of payload.scanValue) {
+        const awb = await AwbItemAttr.findOne({
+          select: ['awbNumber', 'awbItemId'],
+          where: {
+            awbNumber: data.awbNumber,
+            isDeleted: false,
+          }
+        });
+        const retVal = new WebDeliveryVendorUploadPhotoResponseVm();
+        const response = await axios.get(data.urlPhoto,  { responseType: 'arraybuffer' })
+        const buffer = Buffer.from(response.data, "utf-8")
+        let pathId = `photoPOD`;
+        let photoType = `photoPOD`;
+
+        if(data.photoType == 'signature'){
+          pathId = 'signaturePOD';
+          photoType = 'signaturePOD'
+        }
+
+        let attachment = await AttachmentService.uploadFileBufferToS3(
+          buffer,
+          data.awbNumber,
+          response.headers['content-type'],
+          pathId
+         );
+
+        if (attachment) {
+          let propUpload = new PodWebAttachmentModel();
+          propUpload.awbNumber = awb.awbNumber;
+          propUpload.awbItemId = awb.awbItemId;
+          propUpload.attachmentTmsId =  attachment.attachmentTmsId;
+          propUpload.awbStatusId = data.awbStatusId;
+          propUpload.photoType = photoType;
+          propUpload.userIdCreated = 1;
+          propUpload.userIdUpdated = 1;
+          await PodAttachment.upsertPodAttachment(propUpload);
+          retVal.attachmentTmsId = attachment.attachmentTmsId;
+          retVal.message = 'ok'
+          retVal.status = 'success';
+        }else{
+          retVal.attachmentTmsId = 0;
+          retVal.message = 'Gambar gagal upload'
+          retVal.status = 'error';
+        } 
+        dataValue.push(retVal)      
+    }
     
-    return null;
+    result.data = dataValue;
+    } catch (err) {
+      console.log(err)
+    }
+
+    return result;
   }
 }
