@@ -482,7 +482,6 @@ export class WebDeliveryVendorOutService {
   }
 
   static async uploadPhotoVendor(payload: WebDeliveryVendorUploadPhotoPayload): Promise<WebDeliveryVendorUploadPhotoResponse> {
-    var request = require('request').defaults({ encoding: null });
     const result = new WebDeliveryVendorUploadPhotoResponse();
     let dataValue = [];
     try {
