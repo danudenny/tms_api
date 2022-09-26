@@ -714,7 +714,24 @@ export class V2WebAwbCodService {
         PinoLoggerService.error(`TransferBranch.handleAwbCodV2 - error transaction insert CodTransactionDetail transactionId : ${transactiontId} , awbNumber : ${item.awbNumber}`, err.message);
         return false;
       }
-      
+    } else {
+      await queryRunner.manager.update(
+        CodTransactionDetail,
+        {
+          codTransactionDetailId:
+          dataTransactionDetail.codTransactionDetailId,
+        },
+        {
+          codTransactionId: transactiontId,
+          transactionStatusId: TRANSACTION_STATUS.TRM,
+          podDate: moment().toDate(),
+          branchId: Number(branchId),
+          currentPositionId: Number(branchId),
+          userIdUpdated: Number(userId),
+          updatedTime: moment().toDate(),
+          isInvoiceCreated: false,
+        },
+      );
     }
 
     // #region create transaction history
@@ -792,8 +809,8 @@ export class V2WebAwbCodService {
             'ctd.codTransactionDetailId',
           ])
           .where(
-            'ctd.awbItemId = :awbItemId AND ctd.isDeleted = false',
-            { awbItemId: awbValid.awbItemId },
+            'ctd.awbItemId = :awbItemId AND ctd.transactionStatusId != :transactionStatusId AND ctd.isDeleted = false',
+            { awbItemId: awbValid.awbItemId, transactionStatusId: TRANSACTION_STATUS.SIGESIT },
           )
           .getOne();
 
