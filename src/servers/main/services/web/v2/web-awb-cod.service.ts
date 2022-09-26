@@ -708,6 +708,7 @@ export class V2WebAwbCodService {
           paymentService: item.paymentService,
           noReference: item.noReference,
           codValue: item.codValue,
+          isInvoiceCreated: false,
         });
       }catch(err){
         PinoLoggerService.error(`TransferBranch.handleAwbCodV2 - error transaction insert CodTransactionDetail transactionId : ${transactiontId} , awbNumber : ${item.awbNumber}`, err.message);
