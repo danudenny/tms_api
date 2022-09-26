@@ -7,15 +7,28 @@ import moment = require('moment');
 import { OrderManualHelper } from '../helpers/order-manual-helpers';
 
 export class PodAttachment {
-  public static async upsertPodAttachment(data: PodWebAttachmentModel) {
+  public static async upsertPodAttachment(data: PodWebAttachmentModel, isCheckType = false) {
     const timeNow = moment().toDate();
-    let dataAttachment = await PodAwbAttachment.findOne({
-      select: ['id'],
-      where: {
+    let where = {}
+
+    if(isCheckType == true){
+      where = {
+        awbItemId: data.awbItemId,
+        awbStatusId: data.awbStatusId,
+        photoType : data.photoType,
+        isDeleted: false,
+      }
+    }else{
+      where = {
         awbItemId: data.awbItemId,
         awbStatusId: data.awbStatusId,
         isDeleted: false
       }
+    }
+
+    let dataAttachment = await PodAwbAttachment.findOne({
+      select: ['id'],
+      where
     });
 
     if (dataAttachment) {

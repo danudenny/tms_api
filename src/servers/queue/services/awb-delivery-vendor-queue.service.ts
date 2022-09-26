@@ -13,6 +13,11 @@ import { Reason } from '../../../shared/orm-entity/reason';
 import { SharedService } from '../../../shared/services/shared.service';
 import { PinoLoggerService } from '../../../shared/services/pino-logger.service';
 import { VendorLogisticService } from '../../../shared/services/vendor.logistic.service';
+import { AwsS3Service } from '../../../shared/services/aws-s3.service';
+import { AttachmentTms } from '../../../shared/orm-entity/attachment-tms';
+import { FILE_PROVIDER } from '../../../shared/constants/file-provider.constant';
+import { PodWebAttachmentModel } from '../../../shared/models/pod-web-attachment.model';
+import { PodAttachment } from '../../../shared/services/pod-attachment';
 
 export class AwbDeliveryVendorQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-vendor', {
@@ -51,7 +56,6 @@ export class AwbDeliveryVendorQueueService {
             refAwbNumber: awbItemAttr.awbNumber,
             userId: data.userId,
             branchId: data.branchId,
-            // employeeIdDriver: data.employeeIdDriver,
             historyDate: data.timestamp,
             awbStatusId: data.awbStatusId,
             awbHistoryIdPrev: awbItemAttr.awbHistoryIdLast,
@@ -69,6 +73,13 @@ export class AwbDeliveryVendorQueueService {
             location: data.location,
           });
           await AwbHistory.insert(awbHistory);
+
+          if(data.awbStatusId == AWB_STATUS.DLV){
+            //handle upload photo
+            this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'photo')
+            this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'signature')
+          }
+
           // try{
           //   VendorLogisticService.sendVendor(awbItemAttr.awbNumber, data.vendorId, data.orderVendorCode, data.userId, data.tokenPayload);
           // }catch(err){
@@ -76,7 +87,6 @@ export class AwbDeliveryVendorQueueService {
           //   throw err;
           // }
         }
-      // }); // end transaction
       } catch (error) {
         console.error(`[awb-history-vendor-queue] `, error);
         throw error;
@@ -135,7 +145,10 @@ export class AwbDeliveryVendorQueueService {
     latitude: string,
     longitude: string,
     branchId : number,
-    userId : number
+    userId : number,
+    urlPhoto : string,
+    urlPhotoSignature : string,
+    urlPhotoRetur : string
   ){
     const obj = {
       awbItemId,
@@ -149,8 +162,58 @@ export class AwbDeliveryVendorQueueService {
       noteInternal,
       notePublic,
       longitude,
-      latitude
+      latitude,
+      urlPhoto,
+      urlPhotoSignature,
+      urlPhotoRetur
     };
     return AwbDeliveryVendorQueueService.queue.add(obj);
   }
+
+  static async uploadPhotoVendor(
+    url : string, 
+    awbNumber : string, 
+    awbItemId : number, 
+    awbStatusId : number,
+    photoType: string, 
+    )
+    {
+      const awsKey = `attachments/${photoType}POD/${awbNumber}`;
+      const response = await AwsS3Service.uploadFromUrlV2(
+        url,
+        awsKey,
+      );
+      const fileMime = response.res.headers['content-type'];
+
+      let bucketName = null;
+      if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
+        bucketName = ConfigService.get('cloudStorage.cloudBucket');
+      }
+
+      const attachment = AttachmentTms.create({
+        s3BucketName: bucketName,
+        fileMime,
+        fileProvider: FILE_PROVIDER.AWS_S3,
+        attachmentPath: response.awsKey,
+        attachmentName: awbNumber,
+        fileName: awbNumber,
+        url : `https://${bucketName}.s3.amazonaws.com/${awsKey}`,
+        userIdCreated: 1,
+        userIdUpdated: 1,
+      });
+
+      let saveAttachment = await AttachmentTms.save(attachment);
+
+      if (saveAttachment) {
+        let propUpload = new PodWebAttachmentModel();
+        propUpload.awbNumber = awbNumber;
+        propUpload.awbItemId = awbItemId;
+        propUpload.attachmentTmsId =  saveAttachment.attachmentTmsId;
+        propUpload.awbStatusId = awbStatusId;
+        propUpload.photoType = photoType;
+        propUpload.userIdCreated = 1;
+        propUpload.userIdUpdated = 1;
+        await PodAttachment.upsertPodAttachment(propUpload, true);
+      }
+    }
 }

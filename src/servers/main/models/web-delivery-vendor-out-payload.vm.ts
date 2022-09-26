@@ -56,23 +56,13 @@ export class WebDeliveryTrackingVendor{
 
   @ApiModelProperty()
   userId : number;
-}
-
-export class WebDeliveryVendorUploadPhotoPayload{
-  @ApiModelProperty({ type: () => [WebDeliveryVendorUploadPhoto] })
-  scanValue: WebDeliveryVendorUploadPhoto[];
-}
-
-export class WebDeliveryVendorUploadPhoto{
-  @ApiModelProperty()
-  awbNumber: string;
 
   @ApiModelProperty()
-  awbStatusId: number;
+  urlPhoto : string;
 
   @ApiModelProperty()
-  urlPhoto: string;
+  urlPhotoSignature : string;
 
   @ApiModelProperty()
-  photoType: string;
+  urlPhotoRetur : string;
 }

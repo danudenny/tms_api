@@ -3,10 +3,7 @@ import {
   WebDeliveryVendorOutPayload,
   WebDeliveryVendorOutSendPayload,
   ScanOutPropertyAwbPayloadVm,
-  WebDeliveryTrackingVendorPayload,
-  WebDeliveryTrackingVendor,
-  WebDeliveryVendorUploadPhotoPayload,
-  WebDeliveryVendorUploadPhoto
+  WebDeliveryTrackingVendorPayload
 } from '../../models/web-delivery-vendor-out-payload.vm';
 import {
   WebDeliveryVendorOutResponseVm,
@@ -14,9 +11,7 @@ import {
   ScanOutPropertyAwbResponseVm,
   ScanOutPropertyAwbResponse,
   WebDeliveryTrackingVendorResponse,
-  WebDeliveryTrackingVendorResponseVm,
-  WebDeliveryVendorUploadPhotoResponse,
-  WebDeliveryVendorUploadPhotoResponseVm
+  WebDeliveryTrackingVendorResponseVm
 } from '../../models/web-delivery-vendor-out-response.vm';
 import { PrintVendorOutPayloadQueryVm } from '../../models/print-vendor-out-payload.vm';
 import moment = require('moment');
@@ -33,10 +28,6 @@ import { VendorLogisticService } from '../../../../shared/services/vendor.logist
 import { RequestErrorService } from '../../../../shared/services/request-error.service';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { User } from '../../../../shared/orm-entity/user';
-import { AttachmentService } from '../../../../shared/services/attachment.service';
-import axios from 'axios';
-import { PodAttachment } from '../../../../shared/services/pod-attachment';
-import { PodWebAttachmentModel } from '../../../../shared/models/pod-web-attachment.model';
 
 export class WebDeliveryVendorOutService {
   static async validateAWB(payload: WebDeliveryVendorOutPayload): Promise<WebDeliveryVendorOutResponseVm> {
@@ -254,8 +245,7 @@ export class WebDeliveryVendorOutService {
         totalCod: totalCod
       }
     };
-
-    console.log(jsreportParams)
+    
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
@@ -454,7 +444,10 @@ export class WebDeliveryVendorOutService {
               dataAWB.latitude,
               dataAWB.longitude,
               dataAWB.branchId,
-              dataAWB.userId
+              dataAWB.userId,
+              dataAWB.urlPhoto,
+              dataAWB.urlPhotoSignature,
+              dataAWB.urlPhotoRetur
             )
 
             response.status = 'ok';
@@ -478,65 +471,6 @@ export class WebDeliveryVendorOutService {
     }
 
     result.data = dataItem;
-    return result;
-  }
-
-  static async uploadPhotoVendor(payload: WebDeliveryVendorUploadPhotoPayload): Promise<WebDeliveryVendorUploadPhotoResponse> {
-    const result = new WebDeliveryVendorUploadPhotoResponse();
-    let dataValue = [];
-    try {
-      for (let data of payload.scanValue) {
-        const awb = await AwbItemAttr.findOne({
-          select: ['awbNumber', 'awbItemId'],
-          where: {
-            awbNumber: data.awbNumber,
-            isDeleted: false,
-          }
-        });
-        const retVal = new WebDeliveryVendorUploadPhotoResponseVm();
-        const response = await axios.get(data.urlPhoto,  { responseType: 'arraybuffer' })
-        const buffer = Buffer.from(response.data, "utf-8")
-        let pathId = `photoPOD`;
-        let photoType = `photoPOD`;
-
-        if(data.photoType == 'signature'){
-          pathId = 'signaturePOD';
-          photoType = 'signaturePOD'
-        }
-
-        let attachment = await AttachmentService.uploadFileBufferToS3(
-          buffer,
-          data.awbNumber,
-          response.headers['content-type'],
-          pathId
-         );
-
-        if (attachment) {
-          let propUpload = new PodWebAttachmentModel();
-          propUpload.awbNumber = awb.awbNumber;
-          propUpload.awbItemId = awb.awbItemId;
-          propUpload.attachmentTmsId =  attachment.attachmentTmsId;
-          propUpload.awbStatusId = data.awbStatusId;
-          propUpload.photoType = photoType;
-          propUpload.userIdCreated = 1;
-          propUpload.userIdUpdated = 1;
-          await PodAttachment.upsertPodAttachment(propUpload);
-          retVal.attachmentTmsId = attachment.attachmentTmsId;
-          retVal.message = 'ok'
-          retVal.status = 'success';
-        }else{
-          retVal.attachmentTmsId = 0;
-          retVal.message = 'Gambar gagal upload'
-          retVal.status = 'error';
-        } 
-        dataValue.push(retVal)      
-    }
-    
-    result.data = dataValue;
-    } catch (err) {
-      console.log(err)
-    }
-
     return result;
   }
 }

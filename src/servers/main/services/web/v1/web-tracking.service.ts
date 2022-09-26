@@ -108,6 +108,10 @@ export class V1WebTrackingService {
           result.transactionHistory = transactionHistory;
         }
       }
+
+      if(data.awbStatusLast == 'DLV' && result.isHasPhotoReceiver == false){
+        result.isHasPhotoReceiver = true;
+      }
     }
     return result;
   }
@@ -364,10 +368,15 @@ export class V1WebTrackingService {
     }
 
     if(PHOTO_TYPE.DELIVER == payload.photoType){
-      result.data = await this.photoDetails(payload.doPodId, payload.attachmentType);
-      for(let i = 0; i < result.data.length; i++){
-        result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+      if(payload.doPodId !== undefined){
+        result.data = await this.photoDetails(payload.doPodId, payload.attachmentType);
+        for(let i = 0; i < result.data.length; i++){
+          result.data[i].url = ImgProxyHelper.sicepatProxyUrl(result.data[i].url);
+        }
+      }else{
+        result.data = await PodAttachment.findAttachment(payload.awbNumber);
       }
+
       return result;
     }
     return result;
