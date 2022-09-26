@@ -724,7 +724,6 @@ export class V2WebAwbCodService {
         {
           codTransactionId: transactiontId,
           transactionStatusId: TRANSACTION_STATUS.TRM,
-          podDate: moment().toDate(),
           branchId: Number(branchId),
           currentPositionId: Number(branchId),
           userIdUpdated: Number(userId),
