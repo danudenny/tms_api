@@ -375,7 +375,7 @@ export class WebDeliveryVendorOutService {
           AND dprd.awb_status_id_last in (25650, 25000) AND dprd.is_deleted = false
         LEFT JOIN awb_return ar ON ar.origin_awb_id = ai.awb_id AND ar.is_deleted = false
         LEFT JOIN awb_substitute asub ON asub.awb_number = a.awb_number
-      WHERE a.awb_number in ('${awbNumber.join('\',\'')}')
+      WHERE a.awb_number = '${awbNumber[0]}'
       AND a.is_deleted = false;
     `;
 
