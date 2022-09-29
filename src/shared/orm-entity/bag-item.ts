@@ -69,7 +69,7 @@ export class BagItem extends TmsBaseEntity {
     nullable: true,
     name: 'bagging_id_last',
   })
-  baggingIdLast: number | null;
+  baggingIdLast: number | string | null;
 
   @Column('boolean', {
     nullable: true,
