@@ -301,14 +301,14 @@ export class WebDeliveryVendorOutService {
         response.cod_flag = parseInt(dataAwbx.cod_flag);
         response.cod_value = parseInt(dataAwbx.cod_value);
         response.shipper_name = dataAwbx.shipper_name;
-        response.shipper_address = dataAwbx.shipper_address;
+        response.shipper_address = dataAwbx.shipper_address == null || dataAwbx.shipper_address === undefined || dataAwbx.shipper_address == "" ? '-' : dataAwbx.shipper_address;
         response.shipper_phone = dataAwbx.shipper_phone;
         response.shipper_email = dataAwbx.shipper_email;
         response.shipper_contact = dataAwbx.shipper_contact;
         response.destination_district_code = dataAwbx.destination_district_code;
         response.destination_district_id = parseInt(dataAwbx.destination_district_id);
         response.receiver_name = dataAwbx.receiver_name;
-        response.receiver_address = dataAwbx.receiver_address;
+        response.receiver_address = dataAwbx.receiver_address == null || dataAwbx.receiver_address == undefined || dataAwbx.receiver_address == "" ? '-' : dataAwbx.receiver_address;
         response.receiver_phone = dataAwbx.receiver_phone;
         response.receiver_postal_code = parseInt(dataAwbx.receiver_postal_code);
         response.receiver_contact = dataAwbx.receiver_contact;
