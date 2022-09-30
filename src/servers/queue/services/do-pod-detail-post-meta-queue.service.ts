@@ -686,7 +686,7 @@ export class DoPodDetailPostMetaQueueService {
     const awbStatus = await SharedService.getDataAwbStatus(awbStatusId);
     if (awbStatus) {
       // Success DLV
-      if (awbStatusId == AWB_STATUS.DLV) {
+      if (awbStatusId == AWB_STATUS.DLV && reasonId !== undefined) {
         const reason = await Reason.findOne({
           where: { reasonId },
           cache: true,
