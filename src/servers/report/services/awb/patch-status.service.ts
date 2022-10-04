@@ -118,7 +118,7 @@ export class AwbPatchStatusService {
       let resiPengganti = payload.resiPengganti[i];
 
       if (resi.length == 12) {
-        const doPodDetail = await DoPodDetail.findOne({ awbNumber: resi, isDeleted: false});
+        const doPodDetail = await DoPodDetail.findOne({ awbNumber: resi, isDeleted: false}, {order: {createdTime:"DESC"}});
         if (doPodDetail) {
           doPodDetail.awbSubstitute = resiPengganti;
           doPodDetail.updatedTime = moment().toDate();

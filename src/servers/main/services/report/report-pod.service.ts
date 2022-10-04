@@ -6,6 +6,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { AwbHighValueUpload } from '../../../../shared/orm-entity/awb-high-value-upload';
 import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
+import { PodScanInBranch } from '../../../../shared/orm-entity/pod-scan-in-branch';
 import { ConfigService } from '../../../../shared/services/config.service';
 import axios from 'axios';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -74,6 +75,9 @@ export class ReportPodService {
         break;
       case REPORT_TYPE.CANCELRETURN:
         queryParam = await WebAwbReturnCancelService.exportReturnCancelList(payload);
+        break;
+      case REPORT_TYPE.PODSCANINBRANCH:
+        queryParam = await this.generatePodScanInBranchQuery(payload);
         break;
       default:
         RequestErrorService.throwObj(
@@ -338,6 +342,67 @@ export class ReportPodService {
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    return q.getQuery();
+  }
+  
+  static async generatePodScanInBranchQuery(payload: BaseMetaPayloadVm) {
+    payload.fieldResolverMap['awbNumber'] = 'psbd.awb_number';
+    payload.fieldResolverMap['routePriority'] = 'psbd.route_priority';
+    payload.fieldResolverMap['createdTime'] = 'psb.created_time';
+    payload.fieldResolverMap['partnerID'] = 'p.partner_id';
+    payload.fieldResolverMap['partnerName'] = 'p.partner_name';
+    payload.fieldResolverMap['branchName'] = 'b.branch_name';
+    payload.fieldResolverMap['branchCode'] = 'b.branch_code';
+    
+    payload.globalSearchFields = [
+      {
+        field: 'branch_code',
+      },
+    ];
+
+    const repo = new OrionRepositoryService(PodScanInBranch, 'psb');
+    const q = repo.findAllRaw();
+
+    payload.applyToOrionRepositoryQuery(q);
+
+    q.selectRaw(
+      [`''''||psbd.awb_number`, 'awb_number'],
+      ['psbd.route_priority', 'route_priority'],
+      ["TO_CHAR(psb.created_time, 'YYYY-MM-DD')", 'created_time'],
+      ['p.partner_id', 'partner_id'],
+      ['p.partner_name', 'partner_name'],
+      ['b.branch_name', 'branch_name'],
+      ['b.branch_code', 'branch_code'],
+    );
+
+    q.innerJoin(e => e.PodScanInBranchDetail, 'psbd', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+    );
+    q.innerJoinRaw(
+      'pickup_request_detail',
+      'prd',
+      'psbd.awb_number = prd.ref_awb_number',
+    );
+    q.innerJoinRaw(
+      'pickup_request',
+      'pr',
+      'prd.pickup_request_id = pr.pickup_request_id',
+    );
+    q.innerJoinRaw(
+      'partner',
+      'p',
+      'p.partner_id = pr.partner_id',
+    );
+    q.innerJoinRaw(
+      'branch',
+      'b',
+      'psb.branch_id = b.branch_id',
+    );
+
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    console.log(q.getQuery());
 
     return q.getQuery();
   }

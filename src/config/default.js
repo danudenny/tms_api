@@ -191,7 +191,7 @@ module.exports = {
     supplierInvoiceFee: 'cod-supplier-invoice-fee',
   },
   codReportConfig: {
-    regexExpToReplace : '[\\n\\r\\;\\t\\|\\"\\\']+',
+    regexExpToReplace : '[\\n\\r\\;\\t\\|\\"\'\']+',
     roundedDecimal : 0,
   },
   codRoleId:{
@@ -201,6 +201,7 @@ module.exports = {
   },
   codTransferBranch: {
     version : 2,
+    transferBranchLockTtl : 30
   },
   korwil: {
     korwilRoleId: [38, 155],

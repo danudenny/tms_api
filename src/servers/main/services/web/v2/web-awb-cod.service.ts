@@ -54,6 +54,7 @@ import { MetaService } from '../../../../../shared/services/meta.service';
 import { CodPaymentRevision } from '../../../../../shared/orm-entity/cod-payment-revision';
 import { ConfigService } from '../../../../../shared/services/config.service';
 import { PinoLoggerService } from '../../../../../shared/services/pino-logger.service';
+import * as hash from 'object-hash';
 
 export class V2WebAwbCodService {
   static async transferBranch(
@@ -65,6 +66,14 @@ export class V2WebAwbCodService {
     const uuidString = uuidv1();
     const transferBranchConfig = ConfigService.get('codTransferBranch');
     const version = transferBranchConfig.version;
+
+
+    const lockTtl = transferBranchConfig.transferBranchLockTtl;
+    const redlock = await this.lockRequest(payload, lockTtl)
+
+    if (!redlock) {
+      throw new BadRequestException('Duplicate Request!');
+    }
 
     let codTransactionCash: WebCodTransferBranchCashResponseVm;
     if (payload.dataCash.length > 0) {
@@ -166,6 +175,28 @@ export class V2WebAwbCodService {
       throw new BadRequestException('Nominal COD tidak boleh sama!');
     }
     return result;
+  }
+
+  static async lockRequest(payload: WebCodTransferPayloadVm, lockTTL: number): Promise<boolean>{
+    let dataAwb : WebCodAwbPayloadVm[]
+
+    if (payload.dataCash.length > 0) {
+     dataAwb = payload.dataCash
+    }else {
+      dataAwb = payload.dataCashless
+    }
+
+    let awbItems =  dataAwb.map(awb => awb.awbItemId)
+    awbItems.sort((one, two) => (one < two ? -1 : 1));
+    const key = awbItems.join("_")
+    const hashKey = hash(key);
+    const lockkey = `redlock:transfer-branch:${payload.userIdDriver}-${hashKey}`
+    const redlock = await RedisService.redlock(
+      lockkey,
+      lockTTL,
+    );
+
+    return redlock
   }
 
   static async nominalUpdate(
@@ -677,12 +708,29 @@ export class V2WebAwbCodService {
           paymentService: item.paymentService,
           noReference: item.noReference,
           codValue: item.codValue,
+          isInvoiceCreated: false,
         });
       }catch(err){
         PinoLoggerService.error(`TransferBranch.handleAwbCodV2 - error transaction insert CodTransactionDetail transactionId : ${transactiontId} , awbNumber : ${item.awbNumber}`, err.message);
         return false;
       }
-      
+    } else {
+      await queryRunner.manager.update(
+        CodTransactionDetail,
+        {
+          codTransactionDetailId:
+          dataTransactionDetail.codTransactionDetailId,
+        },
+        {
+          codTransactionId: transactiontId,
+          transactionStatusId: TRANSACTION_STATUS.TRM,
+          branchId: Number(branchId),
+          currentPositionId: Number(branchId),
+          userIdUpdated: Number(userId),
+          updatedTime: moment().toDate(),
+          isInvoiceCreated: false,
+        },
+      );
     }
 
     // #region create transaction history
@@ -753,6 +801,23 @@ export class V2WebAwbCodService {
         (type === 'cash' && awbValid) ||
         (type === 'cashless' && awbValid)
       ) {
+        const ctd = await getConnection()
+          .createQueryBuilder(CodTransactionDetail, 'ctd')
+          .setQueryRunner(masterQueryRunner)
+          .select([
+            'ctd.codTransactionDetailId',
+          ])
+          .where(
+            'ctd.awbItemId = :awbItemId AND ctd.transactionStatusId != :transactionStatusId AND ctd.isDeleted = false',
+            { awbItemId: awbValid.awbItemId, transactionStatusId: TRANSACTION_STATUS.SIGESIT },
+          )
+          .getOne();
+
+        if (ctd) {
+          // cod_transaction_detail already exist
+          return false;
+        }
+
         return true;
       } else {
         return false;

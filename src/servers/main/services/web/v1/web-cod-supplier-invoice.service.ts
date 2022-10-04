@@ -165,12 +165,14 @@ export class V1WebCodSupplierInvoiceService {
             transactionStatusId: TRANSACTION_STATUS.TRMHO,
             codSupplierInvoiceId: IsNull(),
             isVoid: false,
+            isDeleted: false,
           },
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
             supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
+            isInvoiceCreated: true,
           },
         );
       });
@@ -307,6 +309,7 @@ export class V1WebCodSupplierInvoiceService {
           {
             codSupplierInvoiceId: supplierInvoice.codSupplierInvoiceId,
             supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
+            isDeleted: false,
           },
           {
             supplierInvoiceStatusId: TRANSACTION_STATUS.PAIDHO,
