@@ -22,6 +22,7 @@ import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic'
 import { RedisService } from '../../../../shared/services/redis.service';
 import { AwbDeliveryVendorQueueService } from '../../../queue/services/awb-delivery-vendor-queue.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import e = require('express');
 import { PrinterService } from '../../../../shared/services/printer.service';
 import { VendorLogisticService } from '../../../../shared/services/vendor.logistic.service';
