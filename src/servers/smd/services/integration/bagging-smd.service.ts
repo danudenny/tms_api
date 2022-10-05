@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, InternalServerErrorException } from '@
 import moment = require('moment');
 import { AuthService } from '../../../../shared/services/auth.service';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
-import { createQueryBuilder } from 'typeorm';
+import { createQueryBuilder, getManager } from 'typeorm';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
@@ -172,6 +172,8 @@ export class BaggingSmdService {
     let baggingCode = '';
     let baggingData = new InputManualDataPayloadVm();
     let rawQuery = '';
+    let toUpdate;
+    let newBagging;
 
     const bagDetail = await BagService.validBagNumber(bagNumberWithSeq);
 
@@ -326,16 +328,16 @@ export class BaggingSmdService {
       // handle jika representative id bagging berbeda dengan representative di bag
       // update representative id bagging jika berbeda
       if (dataPackage.representative_id_to == representative_id_to || !dataPackage.representative_id_to) {
-        await Bagging.update(baggingId, {
+        toUpdate = {
           totalWeight: baggingData.total_weight.toString(),
           totalItem: baggingData.total_item,
-        }, {transaction: false});
+        };
       } else {
-        await Bagging.update(baggingId, {
+        toUpdate = {
           totalWeight: baggingData.total_weight.toString(),
           totalItem: baggingData.total_item,
           representativeIdTo: dataPackage.representative_id_to,
-        }, {transaction: false});
+        };
       }
     }
 
@@ -359,29 +361,25 @@ export class BaggingSmdService {
       // Redlock for race condition
       const redlock = await RedisService.redlock(`redlock:bagging:${paramBaggingCode}`, 300);
       if (redlock) {
-        const createBagging = Bagging.create();
-        createBagging.userId = authMeta.userId.toString();
-        createBagging.representativeIdTo = representative[0].representative_id;
-        createBagging.branchId = permissionPayload.branchId.toString();
-        createBagging.totalItem = 1;
-        createBagging.totalWeight = dataPackage.weight.toString();
-        createBagging.baggingCode = paramBaggingCode;
-        createBagging.baggingDate = baggingDate;
-        createBagging.userIdCreated = authMeta.userId.toString();
-        createBagging.userIdUpdated = authMeta.userId.toString();
-        createBagging.baggingDateReal = moment().toDate();
-        createBagging.baggingSeq = maxBagSeq;
-        createBagging.createdTime = moment().toDate();
-        createBagging.updatedTime = moment().toDate();
-        await Bagging.save(createBagging, {transaction: false});
+        newBagging = Bagging.create();
+        newBagging.userId = authMeta.userId.toString();
+        newBagging.representativeIdTo = representative[0].representative_id;
+        newBagging.branchId = permissionPayload.branchId.toString();
+        newBagging.totalItem = 1;
+        newBagging.totalWeight = dataPackage.weight.toString();
+        newBagging.baggingCode = paramBaggingCode;
+        newBagging.baggingDate = baggingDate;
+        newBagging.userIdCreated = authMeta.userId.toString();
+        newBagging.userIdUpdated = authMeta.userId.toString();
+        newBagging.baggingDateReal = moment().toDate();
+        newBagging.baggingSeq = maxBagSeq;
+        newBagging.createdTime = moment().toDate();
+        newBagging.updatedTime = moment().toDate();
 
-        baggingId = createBagging.baggingId;
-        baggingCode = createBagging.baggingCode;
-
-        baggingData.bagging_id = createBagging.baggingId;
-        baggingData.bagging_code = createBagging.baggingCode;
-        baggingData.total_weight = Number(createBagging.totalWeight);
-        baggingData.total_item = Number(createBagging.totalItem);
+        baggingCode = newBagging.baggingCode;
+        baggingData.bagging_code = newBagging.baggingCode;
+        baggingData.total_weight = Number(newBagging.totalWeight);
+        baggingData.total_item = Number(newBagging.totalItem);
 
       } else {
         result.message = 'Data Bagging Sedang di proses, Silahkan Coba Beberapa Saat';
@@ -389,17 +387,29 @@ export class BaggingSmdService {
       }
     }
     const baggingItem = BaggingItem.create();
-    baggingItem.baggingId = baggingId;
     baggingItem.bagItemId = bagDetail.bagItemId.toString();
     baggingItem.userIdCreated = authMeta.userId.toString();
     baggingItem.userIdUpdated = authMeta.userId.toString();
     baggingItem.createdTime = moment().toDate();
     baggingItem.updatedTime = moment().toDate();
-    BaggingItem.save(baggingItem, {transaction: false});
 
-    await BagItem.update(dataPackage.bag_item_id, {
-      baggingIdLast: Number(baggingId),
-    }, {transaction: false});
+    await getManager().transaction(async txEntityManager => {
+      if (newBagging) {
+        newBagging = await txEntityManager.save(Bagging, newBagging);
+      }
+      baggingId = payload.baggingId || newBagging.baggingId;
+      const promises = [];
+      baggingItem.baggingId = baggingId;
+      baggingData.bagging_id = baggingId;
+      promises.push(txEntityManager.save(BaggingItem, baggingItem));
+      if (toUpdate) {
+        promises.push(txEntityManager.update(Bagging, baggingId, toUpdate));
+      }
+      promises.push(txEntityManager.update(BagItem, dataPackage.bag_item_id, {
+        baggingIdLast: baggingId,
+      }));
+      await Promise.all(promises);
+    });
 
     result.status = 'success';
     result.baggingId = baggingId;
