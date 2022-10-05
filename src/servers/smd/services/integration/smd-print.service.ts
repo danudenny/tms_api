@@ -89,7 +89,7 @@ export class SmdPrintService {
       `TEXT 10,120,"5",0,1,1,0,"BAGGING DARAT"\n` +
       `BARCODE 10,200,"128",100,1,0,3,10,"${data.baggingCode}"\n` +
       `TEXT 10,380,"3",0,1,1,"Jumlah koli : ${data.totalColi}"\n` +
-      `TEXT 10,420,"3",0,1,1,"Berat : ${data.totalWeight}"\n` +
+      `TEXT 10,420,"3",0,1,1,"Berat : ${this.formatWeight(data.totalWeight)}"\n` +
       `TEXT 10,460,"5",0,1,1,0,"${data.representativeCode}"\n` +
       `TEXT 10,540,"3",0,1,1,"${data.representativeName}"\n` +
       `PRINT 1\n` +
@@ -1258,4 +1258,7 @@ export class SmdPrintService {
     });
   }
 
+  private static formatWeight(weight) {
+    return `${parseFloat(weight).toFixed(2)} Kg`;
+  }
 }
