@@ -22,6 +22,7 @@ import { PartnerLogistic } from '../../../../shared/orm-entity/partner-logistic'
 import { RedisService } from '../../../../shared/services/redis.service';
 import { AwbDeliveryVendorQueueService } from '../../../queue/services/awb-delivery-vendor-queue.service';
 import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 import e = require('express');
 import { PrinterService } from '../../../../shared/services/printer.service';
 import { VendorLogisticService } from '../../../../shared/services/vendor.logistic.service';
@@ -266,7 +267,7 @@ export class WebDeliveryVendorOutService {
     const result = new ScanOutPropertyAwbResponseVm();
     const dataItem = [];
     const [pickupData, dataAwb] = await Promise.all([
-      this.getPickupData(payload.user_id),
+      this.getPickupData(payload.user_id, payload.branch_id),
       this.getRawAwb(payload.awbNumber)
     ]);
 
@@ -382,13 +383,12 @@ export class WebDeliveryVendorOutService {
     return rawData;
   }
 
-  private static async getPickupData(userID: number): Promise<any> {
+  private static async getPickupData(userID: number, branchID: number): Promise<any> {
     const query = `
     SELECT e.fullname as pickup_name,
-      c.address as pickup_adress,
+      c.address as pickup_address,
       e.phone1 as pickup_phone,
       a.email as pickup_email,
-      e.zip_code_id_card as pickup_postal_code,
       e.fullname as pickup_contact,
       c.latitude as pickup_latitude,
       c.longitude as pickup_longitude,
@@ -404,10 +404,12 @@ export class WebDeliveryVendorOutService {
       INNER JOIN district d on c.district_id = d.district_id
       INNER JOIN employee e on a.employee_id = e.employee_id
     WHERE a.user_id = :userID
+    AND b.branch_id = :branchID
+    LIMIT 1
     ;`;
 
     const rawData = await RawQueryService.queryWithParams(query, {
-      userID,
+      userID, branchID
     });
     return rawData ? rawData[0] : null;
   }
