@@ -712,14 +712,27 @@ export class DoPodDetailPostMetaQueueService {
         const cityName = branch && branch.district
           ? branch.district.city.cityName
           : 'Jakarta';
-
-        noteBody = SharedService.stringInject(stringNote, [
-          cityName,
-          branchName,
-          awbStatus.awbStatusName,
-          awbStatus.awbStatusTitle,
-        ]);
         
+        if (awbStatusId == AWB_STATUS.CODB && reasonId !== undefined) {
+          const reason = await Reason.findOne(reasonId);
+          reasonName = reason ? reason.reasonName : '';
+          // CODB add reason_name
+          stringNote = 'Paket di kembalikan di {0} [{1}] - ({2}) {3} - {4}';
+          noteBody = SharedService.stringInject(stringNote, [
+            cityName,
+            branchName,
+            awbStatus.awbStatusName,
+            awbStatus.awbStatusTitle,
+            reasonName,
+          ]);
+        }else{
+          noteBody = SharedService.stringInject(stringNote, [
+            cityName,
+            branchName,
+            awbStatus.awbStatusName,
+            awbStatus.awbStatusTitle,
+          ]);
+        }        
       }
 
       // provide data
