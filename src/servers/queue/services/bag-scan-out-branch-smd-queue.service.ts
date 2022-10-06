@@ -165,10 +165,10 @@ export class BagScanOutBranchSmdQueueService {
     const tempBag = [];
     for (const item of resultQuery) {
       // handle duplikat bag_item_id
-      if (tempBag.includes(Number(item.bag_item_id))) {
+      if (tempBag.includes((item.bag_item_id))) {
         continue;
       }
-      tempBag.push(Number(item.bag_item_id));
+      tempBag.push((item.bag_item_id));
 
       if (item.branch_id_to) {
         const branchNext = await SharedService.getDataBranchCity(
@@ -179,26 +179,26 @@ export class BagScanOutBranchSmdQueueService {
         }
       }
 
-        const bagItemsAwb = await BagItemAwb.find({
+      const bagItemsAwb = await BagItemAwb.find({
           where: {
-            bagItemId: Number(item.bag_item_id),
+            bagItemId: (item.bag_item_id),
             isDeleted: false,
           },
         });
         // console.log(bagItemsAwb);
-        const resultbagItemHistory = BagItemHistory.create();
-        resultbagItemHistory.bagItemId = item.bag_item_id.toString();
-        resultbagItemHistory.userId = data.userId.toString();
-        resultbagItemHistory.branchId = data.branchId.toString();
-        resultbagItemHistory.historyDate = moment().toDate();
-        resultbagItemHistory.bagItemStatusId = BAG_STATUS.OUT_LINE_HAUL.toString();
-        resultbagItemHistory.userIdCreated = Number(data.userId);
-        resultbagItemHistory.createdTime = moment().toDate();
-        resultbagItemHistory.userIdUpdated = Number(data.userId);
-        resultbagItemHistory.updatedTime = moment().toDate();
-        const bagItemHistory = await BagItemHistory.insert(resultbagItemHistory);
+      const resultbagItemHistory = BagItemHistory.create();
+      resultbagItemHistory.bagItemId = item.bag_item_id.toString();
+      resultbagItemHistory.userId = data.userId.toString();
+      resultbagItemHistory.branchId = data.branchId.toString();
+      resultbagItemHistory.historyDate = moment().toDate();
+      resultbagItemHistory.bagItemStatusId = BAG_STATUS.OUT_LINE_HAUL.toString();
+      resultbagItemHistory.userIdCreated = Number(data.userId);
+      resultbagItemHistory.createdTime = moment().toDate();
+      resultbagItemHistory.userIdUpdated = Number(data.userId);
+      resultbagItemHistory.updatedTime = moment().toDate();
+      const bagItemHistory = await BagItemHistory.insert(resultbagItemHistory);
 
-        await BagItem.update(
+      await BagItem.update(
           { bagItemId : item.bag_item_id },
           {
             bagItemStatusIdLast: BAG_STATUS.OUT_LINE_HAUL,
@@ -217,7 +217,7 @@ export class BagScanOutBranchSmdQueueService {
             tempAwb.push(itemAwb.awbItemId);
 
             DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
-              Number(itemAwb.awbItemId),
+              (itemAwb.awbItemId),
               Number(data.branchId),
               Number(data.userId),
               Number(employeeIdDriver),
@@ -347,7 +347,7 @@ export class BagScanOutBranchSmdQueueService {
         tempAwb.push(item.awb_item_id);
 
         DoSmdPostAwbHistoryMetaQueueService.createJobByScanOutBag(
-          Number(item.awb_item_id),
+          (item.awb_item_id),
           Number(data.branchId),
           Number(data.userId),
           Number(employeeIdDriver),

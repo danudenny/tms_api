@@ -51,7 +51,7 @@ export class BagScanDoSmdQueueService {
 
         const bagItemsAwb = await BagItemAwb.find({
           where: {
-            bagItemId: data.bagItemId ? Number(data.bagItemId) : In(data.arrBagItemId),
+            bagItemId: data.bagItemId ? data.bagItemId : In(data.arrBagItemId),
             isDeleted: false,
           },
         });
@@ -87,7 +87,7 @@ export class BagScanDoSmdQueueService {
               tempAwb.push(itemAwb.awbItemId);
 
               DoSmdPostAwbHistoryMetaQueueService.createJobByScanDoSmd(
-                Number(itemAwb.awbItemId),
+                (itemAwb.awbItemId),
                 Number(data.branchId),
                 Number(data.userId),
                 AWB_STATUS.IN_LINE_HAUL,

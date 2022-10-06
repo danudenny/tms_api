@@ -3,6 +3,7 @@ import { AxiosRequestConfig } from 'axios';
 
 import { ConfigService } from '../../../../shared/services/config.service';
 import { HttpRequestAxiosService } from '../../../../shared/services/http-request-axios.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import {
   BaseMonitoringHubPackage,
   PayloadMonitoringHubPackageList,
@@ -59,8 +60,18 @@ export class ExternalHubMonitoringService {
             (err.response.data.message || err.response.data.error),
           statusCode: status,
         };
+        if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+          PinoLoggerService.error(
+            `[ExternalMonitoringService] Response Error: ${
+              errResponse.message
+            }`,
+          );
+        }
         throw new HttpException(errResponse, status);
       }
+      PinoLoggerService.error(
+        `[ExternalMonitoringService] Request Error: ${err.message}`,
+      );
       throw err;
     }
   }
