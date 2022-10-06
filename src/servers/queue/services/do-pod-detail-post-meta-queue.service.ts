@@ -686,7 +686,7 @@ export class DoPodDetailPostMetaQueueService {
     const awbStatus = await SharedService.getDataAwbStatus(awbStatusId);
     if (awbStatus) {
       // Success DLV
-      if (awbStatusId == AWB_STATUS.DLV && reasonId !== undefined) {
+      if (awbStatusId == AWB_STATUS.DLV) {
         const reason = await Reason.findOne({
           where: { reasonId },
           cache: true,
@@ -713,7 +713,7 @@ export class DoPodDetailPostMetaQueueService {
           ? branch.district.city.cityName
           : 'Jakarta';
         
-        if (awbStatusId == AWB_STATUS.CODB) {
+        if (awbStatusId == AWB_STATUS.CODB && reasonId !== undefined) {
           const reason = await Reason.findOne(reasonId);
           reasonName = reason ? reason.reasonName : '';
           // CODB add reason_name
