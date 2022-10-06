@@ -7,15 +7,28 @@ import moment = require('moment');
 import { OrderManualHelper } from '../helpers/order-manual-helpers';
 
 export class PodAttachment {
-  public static async upsertPodAttachment(data: PodWebAttachmentModel) {
+  public static async upsertPodAttachment(data: PodWebAttachmentModel, isCheckType = false) {
     const timeNow = moment().toDate();
-    let dataAttachment = await PodAwbAttachment.findOne({
-      select: ['id'],
-      where: {
+    let where = {}
+
+    if(isCheckType == true){
+      where = {
+        awbItemId: data.awbItemId,
+        awbStatusId: data.awbStatusId,
+        photoType : data.photoType,
+        isDeleted: false,
+      }
+    }else{
+      where = {
         awbItemId: data.awbItemId,
         awbStatusId: data.awbStatusId,
         isDeleted: false
       }
+    }
+
+    let dataAttachment = await PodAwbAttachment.findOne({
+      select: ['id'],
+      where
     });
 
     if (dataAttachment) {
@@ -30,6 +43,7 @@ export class PodAttachment {
             attachmentTmsId: data.attachmentTmsId,
             awbStatusId: data.awbStatusId,
             photoType: data.photoType,
+            userIdUpdated : data.userIdUpdated
           }
         );
       });
@@ -42,6 +56,8 @@ export class PodAttachment {
         dataInsert.awbStatusId = data.awbStatusId;
         dataInsert.photoType = data.photoType;
         dataInsert.isDeleted = false;
+        dataInsert.userIdCreated = data.userIdCreated;
+        dataInsert.userIdUpdated = data.userIdUpdated;
         await transactional.insert(PodAwbAttachment, dataInsert);
       });
     }

@@ -350,7 +350,7 @@ export class WebAwbDeliverService {
         userId,
         branchId,
         delivery.reasonNotes,
-        null,
+        delivery.awbStatusId == AWB_STATUS.CODB ? delivery.reasonId : null,
         null,
       );
       // NOTE: mail notification

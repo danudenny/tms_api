@@ -83,6 +83,11 @@ module.exports = {
   exportService: {
     baseUrl : 'http://api-internal.sicepat.io/operation/reporting-service/v1',
   },
+  vendorLogisticService: {
+    baseUrl : 'http://api-internal.s.sicepat.io/operation/mercury/mercury/api/v1/',
+    backdoorApiKey: '3210634d6da8ea5c3f072bb94049250e-c535141c6320a3a8f22774604a6334c860a70dcd6801c356eeac91df65660669',
+    slackChannel : '#pod-awb-history',
+  },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
     subdomain: 'sicepat',
