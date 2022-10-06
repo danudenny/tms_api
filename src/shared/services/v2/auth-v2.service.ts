@@ -342,6 +342,11 @@ export class AuthV2Service {
 
     const sortChannel = String(ConfigService.get('svcOtp.sortChannel')).split(',');
 
+    let whiteListUserData  = await RedisService.get(
+      `pod:required:otp`,
+      true,
+    );
+
     const addresses = [];
     for (const address of response.data.result.addresses) {
       const loginChannelOtpAddresses = new LoginChannelOtpAddresses();
@@ -350,6 +355,12 @@ export class AuthV2Service {
         SharedService.maskEmail(address.address) : 
         SharedService.maskString(address.address, '+', '4', '4');
       loginChannelOtpAddresses.enable = ConfigService.get('svcOtp.disableChannel').includes(address.channel) ? false : true;
+      
+      if(whiteListUserData && whiteListUserData.configChannel) {
+        const configChannel = whiteListUserData.configChannel;
+        loginChannelOtpAddresses.enable = configChannel[address.channel];
+      }
+      
 
       //Add sort mechanism
       if (sortChannel.includes(address.channel)) {
