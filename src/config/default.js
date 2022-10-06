@@ -69,7 +69,7 @@ module.exports = {
     schema: 'pod',
   },
   priorityService :{
-    baseUrl : 'http://api-internal.sicepat.io/operation/tms-awb/api/lastmile/',
+    baseUrl : 'http://api-internal.sicepat.io/operation/tms-awb-api/api/lastmile/',
     retryCount : 2,
     delayTime : 2000,
     slackChannel : '#last-mile-alert',
@@ -84,9 +84,9 @@ module.exports = {
     baseUrl : 'http://api-internal.sicepat.io/operation/reporting-service/v1',
   },
   vendorLogisticService: {
-    baseUrl : 'http://api-internal.s.sicepat.io/operation/mercury/mercury/api/v1/',
-    backdoorApiKey: '3210634d6da8ea5c3f072bb94049250e-c535141c6320a3a8f22774604a6334c860a70dcd6801c356eeac91df65660669',
-    slackChannel : '#pod-awb-history',
+    baseUrl : 'http://api-internal.sicepat.io/operation/mercury/mercury/api/v1/',
+    backdoorApiKey: '09d65e75-ae70-4e09-8230-44eaca844051',
+    slackChannel : '#last-mile-alert',
   },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
