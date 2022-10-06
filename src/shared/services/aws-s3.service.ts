@@ -118,6 +118,41 @@ export class AwsS3Service {
     }
   }
 
+  public static async uploadFromUrlV2(
+    url: string,
+    awsKey: string,
+    bucketName?: string,
+  ) {
+    // init bucketName
+    if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
+      bucketName = ConfigService.get('cloudStorage.cloudBucket');
+    }
+
+    try {
+      const res = await axios.get(url, {responseType: 'arraybuffer'});
+      if (res) {
+        // NOTE: The optional contentType option can be used to set Content/mime type of the file.
+        // By default the content type is set to application/octet-stream.
+        return AWS_S3.putObject({
+          ACL: 'public-read',
+          ContentType: res.headers['content-type'],
+          Body: res.data, // buffer
+          Bucket: bucketName,
+          Key: awsKey,
+        })
+        .promise()
+        .then(() => {
+          return {
+            awsKey,
+            res,
+          };
+        });
+      }
+    } catch (error) {
+      console.log(`[AwsS3ServiceV2][uploadFromUrl] get error: ${error.message}`);
+    }
+  }
+
   public static async uploadFromFilePath(
     filePath: string,
     fileName: string,
