@@ -267,7 +267,7 @@ export class WebDeliveryVendorOutService {
     const result = new ScanOutPropertyAwbResponseVm();
     const dataItem = [];
     const [pickupData, dataAwb] = await Promise.all([
-      this.getPickupData(payload.user_id),
+      this.getPickupData(payload.user_id, payload.branch_id),
       this.getRawAwb(payload.awbNumber)
     ]);
 
@@ -334,7 +334,7 @@ export class WebDeliveryVendorOutService {
         a.awb_number as reference_no,
         ai.item_qty as quantity,
         a.total_item as total_item,
-        a.total_weight_real_rounded as weight,
+        a.total_weight_real_rounded::numeric(10, 2) as weight,
         concat(ai.length,'x',ai.width,'x', ai.height) as volumetric,
         ai.item_description as description_item,
         prd.parcel_value as item_value,
@@ -349,6 +349,7 @@ export class WebDeliveryVendorOutService {
         a.consignee_name as receiver_contact,
         a.claim_special_case as special_instruction,
         ca.customer_account_name as shipper_name,
+	      prd.shipper_address as shipper_address,
         ca.phone1 as shipper_phone,
         ca.email1 as shipper_email,
         ca.mobile1 as shipper_contact,
@@ -383,13 +384,12 @@ export class WebDeliveryVendorOutService {
     return rawData;
   }
 
-  private static async getPickupData(userID: number): Promise<any> {
+  private static async getPickupData(userID: number, branchID: number): Promise<any> {
     const query = `
     SELECT e.fullname as pickup_name,
-      c.address as pickup_adress,
+      c.address as pickup_address,
       e.phone1 as pickup_phone,
       a.email as pickup_email,
-      e.zip_code_id_card as pickup_postal_code,
       e.fullname as pickup_contact,
       c.latitude as pickup_latitude,
       c.longitude as pickup_longitude,
@@ -405,10 +405,12 @@ export class WebDeliveryVendorOutService {
       INNER JOIN district d on c.district_id = d.district_id
       INNER JOIN employee e on a.employee_id = e.employee_id
     WHERE a.user_id = :userID
+    AND b.branch_id = :branchID
+    LIMIT 1
     ;`;
 
     const rawData = await RawQueryService.queryWithParams(query, {
-      userID,
+      userID, branchID
     });
     return rawData ? rawData[0] : null;
   }

@@ -21,6 +21,9 @@ export class WebDeliveryVendorOutSendPayload {
 
 export class ScanOutPropertyAwbPayloadVm {
   @ApiModelProperty()
+  branch_id: number;
+
+  @ApiModelProperty()
   user_id: number;
   
   @ApiModelProperty()

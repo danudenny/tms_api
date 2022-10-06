@@ -169,6 +169,9 @@ module.exports = {
       "cod-payment": {
         destination: "/finance/cod-payment" 
       },
+      "mercury": {
+        destination: "/operation/mercury/mercury" 
+      },
     }
   },
   codProxy: {
