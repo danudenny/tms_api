@@ -163,7 +163,7 @@ export class V1WebCodSupplierInvoiceService {
           {
             partnerId: payload.partnerId,
             transactionStatusId: TRANSACTION_STATUS.TRMHO,
-            codSupplierInvoiceId: IsNull(),
+            isInvoiceCreated: false,
             isVoid: false,
             isDeleted: false,
           },
@@ -396,6 +396,7 @@ export class V1WebCodSupplierInvoiceService {
                   supplierInvoiceStatusId: TRANSACTION_STATUS.DRAFT_INV,
                   userIdUpdated: authMeta.userId,
                   updatedTime: timestamp,
+                  isInvoiceCreated: true,
                 },
               );
               // NOTE: update data and sync data to mongo
@@ -503,6 +504,7 @@ export class V1WebCodSupplierInvoiceService {
             codSupplierInvoiceId: null,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
+            isInvoiceCreated: false,
           },
         );
         // NOTE: update transaction history for supplier invoice??
@@ -575,6 +577,7 @@ export class V1WebCodSupplierInvoiceService {
             isVoid: true,
             userIdUpdated: authMeta.userId,
             updatedTime: timestamp,
+            isInvoiceCreated:false
           },
         );
         // NOTE: update transaction history for supplier invoice??
