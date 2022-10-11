@@ -7,3 +7,14 @@ export class CheckAwbPayload {
   @ApiModelProperty()
   awbNumber: string;
 }
+
+export interface GetAwbPayload {
+  awbNumber: string;
+}
+
+export interface CheckAwbQueuePayload {
+  awbCheckId: string;
+  awbNumber: string;
+  time: Date;
+  userId: number;
+}
