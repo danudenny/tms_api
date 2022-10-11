@@ -3,8 +3,10 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Awb } from './awb';
 
 import { AwbCheckSummary } from './awb-check-summary';
 import { TmsBaseEntity } from './tms-base';
@@ -32,4 +34,8 @@ export class AwbCheckLog extends TmsBaseEntity {
   @ManyToOne(() => AwbCheckSummary, summary => summary.checkLogs)
   @JoinColumn({ name: 'awb_check_summary_id' })
   summary: AwbCheckSummary;
+
+  @OneToOne(() => Awb)
+  @JoinColumn({name : 'awb_number'})
+  awb: Awb;
 }
