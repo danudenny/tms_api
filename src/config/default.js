@@ -257,7 +257,7 @@ module.exports = {
       sortation: 1
     }
   },
-  checkAwb: {
+  hubCheckAwb: {
     maxIdleTimeInMinutes: 30,
   }
 };

@@ -75,17 +75,15 @@ export class DefaultCheckAwbService implements CheckAwbService {
       { id: payload.awbCheckId, isDeleted: false },
       { select: ['endTime'] },
     );
-    if (!session) {
-      return response;
-    }
-
+    let timeDifference = 0;
     const now = moment();
-    const timeDifference = moment
-      .duration(now.diff(moment(session.endTime)))
-      .asMilliseconds();
+    if (session) {
+      timeDifference = moment
+        .duration(now.diff(moment(session.endTime)))
+        .asMilliseconds();
+    }
     const maxIdleTime = ConfigService.get('hubCheckAwb.maxIdleTimeInMinutes');
-
-    if (timeDifference > maxIdleTime * 60000) {
+    if (!session || timeDifference > maxIdleTime * 60000) {
       const summary = await this.createSummary();
       response.data.awbCheckId = summary.id;
     }
