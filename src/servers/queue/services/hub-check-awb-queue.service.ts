@@ -48,6 +48,7 @@ export class HubCheckAwbQueueService {
             updatedTime: time,
             userIdCreated: userId,
             userIdUpdated: userId,
+            isDeleted: false,
           });
           await manager.increment(
             AwbCheckSummary,

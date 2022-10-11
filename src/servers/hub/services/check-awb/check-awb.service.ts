@@ -110,6 +110,7 @@ export class DefaultCheckAwbService implements CheckAwbService {
       userIdUpdated: authMeta.userId,
       createdTime: now,
       updatedTime: now,
+      isDeleted: false,
     });
     return AwbCheckSummary.save(awbCheck);
   }
