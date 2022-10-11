@@ -35,7 +35,7 @@ export class AwbCheckLog extends TmsBaseEntity {
   @JoinColumn({ name: 'awb_check_summary_id' })
   summary: AwbCheckSummary;
 
-  @OneToOne(() => Awb)
-  @JoinColumn({name : 'awb_number'})
+  @OneToOne(() => Awb, e => e.awbNumber)
+  @JoinColumn({ name: 'awb_number', referencedColumnName: 'awbNumber' })
   awb: Awb;
 }
