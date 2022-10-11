@@ -11,7 +11,17 @@ import { CheckAwbResponseVM } from '../../models/hub-machine-sortir.vm';
 export class CheckAwbListService {
 
   async checkAwbList(payload: BaseMetaPayloadVm): Promise<CheckAwbListResponVm> {
-    payload.sortBy = payload.sortBy || 'createdTime';
+
+    payload.fieldResolverMap['awbCheckId'] = 'acs.awbCheckId';
+    payload.fieldResolverMap['startTime'] = 'acs.startTime';
+    payload.fieldResolverMap['endTime'] = 'acs.endTime';
+    payload.fieldResolverMap['branchId'] = 'acs.branchId';
+    payload.fieldResolverMap['totalAwb'] = 'acs.totalAwb';
+
+    if (payload.sortBy === '') {
+      payload.sortBy = 'start_time';
+
+    }
 
     const repo = new OrionRepositoryService(AwbCheckSummary, 'acs');
     const q = repo.findAllRaw();
@@ -38,7 +48,7 @@ export class CheckAwbListService {
 
     const result = new CheckAwbListResponVm();
     result.statusCode = HttpStatus.OK;
-    result.message = 'Sukses ambil data check AWV';
+    result.message = 'Sukses ambil data check AWB';
     result.data =  objCheckAwb;
     result.buildPagingWithPayload(payload, count);
 
@@ -74,7 +84,7 @@ export class CheckAwbListService {
 
     const result = new CheckAwbDetailResponVm();
     result.statusCode = HttpStatus.OK;
-    result.message = 'Sukses ambil data check AWB';
+    result.message = 'Sukses ambil data detail check AWB';
     result.data =  objDetailCheckAwb;
     result.buildPagingWithPayload(payload, count);
 
