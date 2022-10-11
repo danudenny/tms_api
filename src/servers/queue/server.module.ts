@@ -67,8 +67,9 @@ import { UpdateBranchSortirLogSummaryQueueService } from './services/update-bran
 import { UpdatePackageCombineHubQueueService } from './services/update-package-combine-hub-queue.service';
 import { DoMutationQueueService } from './services/do-mutation-queue.service';
 import { BagScanDoSortationQueueService } from './services/bag-scan-do-sortation-queue.service';
-import {AwbDeliveryVendorQueueService} from './services/awb-delivery-vendor-queue.service';
+import { AwbDeliveryVendorQueueService } from './services/awb-delivery-vendor-queue.service';
 import { BagScanOutBranchSortirQueueService } from './services/bag-scan-out-branch-sortir-queue.service';
+import { HubCheckAwbQueueService } from './services/hub-check-awb-queue.service';
 
 // #endregion import
 @Module({
@@ -177,6 +178,7 @@ export class QueueServerModule extends MultiServerAppModule
       if (serverConfig.bullHub) {
         UpsertHubSummaryBagSortirQueueService.boot();
         UpdateBranchSortirLogSummaryQueueService.boot();
+        HubCheckAwbQueueService.boot();
       }
     }
 
