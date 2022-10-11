@@ -1,7 +1,8 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { AwbCheckLog } from './awb-check-log';
 
 import { TmsBaseEntity } from './tms-base';
+import { User } from './user';
 
 @Entity('awb_check_summary', { schema: 'public' })
 export class AwbCheckSummary extends TmsBaseEntity {
@@ -37,4 +38,8 @@ export class AwbCheckSummary extends TmsBaseEntity {
 
   @OneToMany(() => AwbCheckLog, log => log.summary)
   checkLogs: AwbCheckLog;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id_created' })
+  user: User;
 }
