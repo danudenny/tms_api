@@ -44,3 +44,11 @@ export class BaseMetaResponseVm {
     this.buildPaging(payload.page, payload.limit, totalData);
   }
 }
+
+export class BaseMetaResponse extends BaseMetaResponseVm {
+  @ApiModelProperty()
+  status: Number;
+
+  @ApiModelProperty()
+  message: string;
+}
