@@ -2,7 +2,7 @@ import { ApiModelProperty } from '../external/nestjs-swagger';
 
 export class BaseResponse {
   @ApiModelProperty()
-  status: number;
+  statusCode: number;
 
   @ApiModelProperty()
   message: string;

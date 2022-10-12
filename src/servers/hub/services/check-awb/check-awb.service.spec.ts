@@ -54,7 +54,7 @@ describe('DefaultCheckAwbService', () => {
           Promise.resolve(({ id: uuid } as unknown) as BaseEntity),
         );
       const result = await service.startSession();
-      expect(result.status).toBe(HttpStatus.CREATED);
+      expect(result.statusCode).toBe(HttpStatus.CREATED);
       expect(result.data.awbCheckId).toBe(uuid);
     });
 
@@ -111,7 +111,7 @@ describe('DefaultCheckAwbService', () => {
         .spyOn(OrionRepositoryService.prototype, 'findOne')
         .mockReturnValue(getMockQueryBuilder({}));
       const response = await service.getAwb(payload);
-      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.statusCode).toBe(HttpStatus.OK);
       expect(response.data).toEqual(expected);
     });
 
@@ -157,7 +157,7 @@ describe('DefaultCheckAwbService', () => {
         .mockReturnValue(Promise.resolve(null));
 
       const response = await service.getAwb(payload);
-      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.statusCode).toBe(HttpStatus.OK);
       expect(response.data.awbCheckId).not.toEqual(expected.awbCheckId);
     });
 
@@ -172,7 +172,7 @@ describe('DefaultCheckAwbService', () => {
       );
 
       const response = await service.getAwb(payload);
-      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.statusCode).toBe(HttpStatus.OK);
       expect(response.data.awbCheckId).not.toEqual(expected.awbCheckId);
     });
 
@@ -187,7 +187,7 @@ describe('DefaultCheckAwbService', () => {
       );
 
       const response = await service.getAwb(payload);
-      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.statusCode).toBe(HttpStatus.OK);
       expect(response.data).toEqual(expected);
     });
   });

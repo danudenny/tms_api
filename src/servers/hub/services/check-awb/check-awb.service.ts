@@ -28,7 +28,7 @@ export class DefaultCheckAwbService implements CheckAwbService {
   async startSession(): Promise<StartCheckAwbResponse> {
     const session = await this.createSummary();
     return {
-      status: HttpStatus.CREATED,
+      statusCode: HttpStatus.CREATED,
       message: 'Success',
       data: {
         awbCheckId: session.id,
@@ -41,7 +41,7 @@ export class DefaultCheckAwbService implements CheckAwbService {
     const perm = AuthService.getPermissionTokenPayload();
     const awb = await this.sortationService.getAwb(payload.awbNumber);
     const response: CheckAwbResponse = {
-      status: HttpStatus.OK,
+      statusCode: HttpStatus.OK,
       message: 'Success get AWB',
       data: {
         awbCheckId: payload.awbCheckId,
