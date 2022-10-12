@@ -19,8 +19,8 @@ export class CheckAwbDetailResponVm extends BaseMetaResponseVm {
   @ApiModelProperty()
   message: string;
 
-  @ApiModelProperty({type: () => [ListDataCheckAwbRespon]})
-  data: ListDataCheckAwbRespon[];
+  @ApiModelProperty({type: () => [DetailCheckAwbRespon]})
+  data: DetailCheckAwbRespon[];
 }
 
 export class ListDataCheckAwbRespon {
@@ -47,7 +47,7 @@ export class ListDataCheckAwbRespon {
   name: string;
 
   @ApiModelProperty()
-  count: string;
+  totalAwb: string;
 
 }
 
@@ -63,6 +63,6 @@ export class DetailCheckAwbRespon {
   consigneeAddress: string;
 
   @ApiModelProperty()
-  consigneeDistrict: string;
+  districtName: string;
 
 }

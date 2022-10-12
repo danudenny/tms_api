@@ -3,7 +3,7 @@ import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
-import { CheckAwbListResponVm } from '../../models/check-awb/check-awb-list.response';
+import { CheckAwbDetailResponVm, CheckAwbListResponVm } from '../../models/check-awb/check-awb-list.response';
 import { CheckAwbListService } from '../../services/check-awb/check-awb-list.service';
 
 @ApiUseTags('Check AWB Destination')
@@ -21,7 +21,7 @@ export class CheckAwbListController {
 
   @Post('detail')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
-  public getDetailCheck(@Body() payload: BaseMetaPayloadVm): Promise<CheckAwbListResponVm> {
+  public getDetailCheck(@Body() payload: BaseMetaPayloadVm): Promise<CheckAwbDetailResponVm> {
     return this.checkAwbService.checkAwbDetail(payload);
   }
 
