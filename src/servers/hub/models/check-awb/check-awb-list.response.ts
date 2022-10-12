@@ -1,23 +1,13 @@
 import { ApiModelProperty } from '../../../../shared/external/nestjs-swagger';
-import { BaseMetaResponseVm } from '../../../../shared/models/base-meta-response.vm';
+import { BaseMetaResponse } from '../../../../shared/models/base-meta-response.vm';
 
-export class CheckAwbListResponVm extends BaseMetaResponseVm {
-  @ApiModelProperty()
-  statusCode: number;
-
-  @ApiModelProperty()
-  message: string;
+export class CheckAwbListResponVm extends BaseMetaResponse {
 
   @ApiModelProperty({type: () => [ListDataCheckAwbRespon]})
   data: ListDataCheckAwbRespon[];
 }
 
-export class CheckAwbDetailResponVm extends BaseMetaResponseVm {
-  @ApiModelProperty()
-  statusCode: number;
-
-  @ApiModelProperty()
-  message: string;
+export class CheckAwbDetailResponVm extends BaseMetaResponse {
 
   @ApiModelProperty({type: () => [DetailCheckAwbRespon]})
   data: DetailCheckAwbRespon[];
