@@ -7,7 +7,7 @@ import { CheckAwbListResponVm } from '../../models/check-awb/check-awb-list.resp
 import { CheckAwbListService } from '../../services/check-awb/check-awb-list.service';
 
 @ApiUseTags('Check AWB Destination')
-@Controller('check-awb')
+@Controller('hub/check-awb')
 export class CheckAwbListController {
   constructor(
     private readonly checkAwbService: CheckAwbListService,

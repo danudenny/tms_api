@@ -14,7 +14,7 @@ import {
 } from '../../models/check-awb/check-awb.response';
 
 @ApiUseTags('Check AWB Destination')
-@Controller('check-awb')
+@Controller('hub/check-awb')
 export class CheckAwbController {
   constructor(
     @Inject(CHECK_AWB_SERVICE) private readonly service: CheckAwbService,
