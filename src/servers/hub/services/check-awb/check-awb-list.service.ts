@@ -50,7 +50,7 @@ export class CheckAwbListService {
     ]);
 
     const result = new CheckAwbListResponVm();
-    result.status = HttpStatus.OK;
+    result.statusCode = HttpStatus.OK;
     result.message = 'Sukses ambil data check AWB';
     result.data =  objCheckAwb;
     result.buildPagingWithPayload(payload, count);
@@ -88,7 +88,7 @@ export class CheckAwbListService {
       ]);
 
     const result = new CheckAwbDetailResponVm();
-    result.status = HttpStatus.OK;
+    result.statusCode = HttpStatus.OK;
     result.message = 'Sukses ambil data detail check AWB';
     result.data =  objDetailCheckAwb;
     result.buildPagingWithPayload(payload, count);

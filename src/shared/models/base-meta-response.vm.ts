@@ -47,7 +47,7 @@ export class BaseMetaResponseVm {
 
 export class BaseMetaResponse extends BaseMetaResponseVm {
   @ApiModelProperty()
-  status: Number;
+  statusCode: Number;
 
   @ApiModelProperty()
   message: string;
