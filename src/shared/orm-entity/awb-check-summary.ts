@@ -1,5 +1,6 @@
 import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { AwbCheckLog } from './awb-check-log';
+import { Branch } from './branch';
 
 import { TmsBaseEntity } from './tms-base';
 import { User } from './user';
@@ -35,6 +36,10 @@ export class AwbCheckSummary extends TmsBaseEntity {
     default: 0,
   })
   logs: number;
+
+  @OneToOne(() => Branch)
+  @JoinColumn({ name: 'branch_id' })
+  branch: Branch;
 
   @OneToMany(() => AwbCheckLog, log => log.summary)
   checkLogs: AwbCheckLog;

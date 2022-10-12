@@ -32,6 +32,7 @@ export class CheckAwbListService {
       ['acs.start_time', 'startTime'],
       ['acs.end_time', 'endTime'],
       ['acs.branch_id', 'branchId'],
+      ['b.branch_name', 'branchName'],
       ['acs.logs', 'totalAwb'],
       ['ue.employee_id', 'nik'],
       ['ue.fullname', 'name'],
@@ -39,6 +40,8 @@ export class CheckAwbListService {
     ];
     q.selectRaw(...selectColumn)
       .innerJoin(e => e.user.employee, 'ue',  j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()))
+      .innerJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()));
 
     const [objCheckAwb, count] = await Promise.all([
@@ -58,12 +61,14 @@ export class CheckAwbListService {
 
   async checkAwbDetail(payload: BaseMetaPayloadVm): Promise<CheckAwbDetailResponVm> {
 
+    payload.fieldResolverMap['awbCheckId'] = 'acl.awb_check_summary_id';
+
     const repo = new OrionRepositoryService(AwbCheckLog, 'acl');
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
     const selectColumn = [
-      ['acl.awb_check_summary_id', 'awbCheckSummaryId'],
+      ['acl.awb_check_summary_id', 'awbCheckId'],
       ['acl.awb_number', 'awbNumber'],
       ['a.consignee_name', 'consigneeName'],
       ['a.consignee_name', 'consigneeName'],
