@@ -13,10 +13,11 @@ export class CheckAwbListService {
   async checkAwbList(payload: BaseMetaPayloadVm): Promise<CheckAwbListResponVm> {
 
     payload.fieldResolverMap['awbCheckId'] = 'acs.awbCheckId';
-    payload.fieldResolverMap['startTime'] = 'acs.startTime';
-    payload.fieldResolverMap['endTime'] = 'acs.endTime';
-    payload.fieldResolverMap['branchId'] = 'acs.branchId';
-    payload.fieldResolverMap['totalAwb'] = 'acs.totalAwb';
+    payload.fieldResolverMap['startTime'] = 'acs.start_time';
+    payload.fieldResolverMap['endTime'] = 'acs.end_time';
+    payload.fieldResolverMap['branchId'] = 'acs.branch_id';
+    payload.fieldResolverMap['nik'] = 'ue.employee_id';
+    payload.fieldResolverMap['totalAwb'] = 'acs.logs';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'start_time';
@@ -62,6 +63,12 @@ export class CheckAwbListService {
   async checkAwbDetail(payload: BaseMetaPayloadVm): Promise<CheckAwbDetailResponVm> {
 
     payload.fieldResolverMap['awbCheckId'] = 'acl.awb_check_summary_id';
+    payload.fieldResolverMap['createdTime'] = 'acl.created_time';
+    
+    if (payload.sortBy === '') {
+      payload.sortBy = 'acl.created_time';
+
+    }
 
     const repo = new OrionRepositoryService(AwbCheckLog, 'acl');
     const q = repo.findAllRaw();
