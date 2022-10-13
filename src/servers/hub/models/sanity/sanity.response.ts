@@ -23,12 +23,12 @@ class DeleteDoSMdData {
 
 class DeleteBaggingData {
   @ApiModelProperty()
-  baggingId: [string];
+  baggingCode: [string];
 }
 
 class DeleteBagRepresentativeData {
   @ApiModelProperty()
-  bagRepresentativeId: [string];
+  bagRepresentativeCode: [string];
 }
 
 export class DeleteBagsResponse extends BaseResponse {

@@ -22,10 +22,10 @@ export class DeleteDoSmdRequest {
 
 export class DeleteBaggingRequest {
   @ApiModelProperty()
-  baggingId: [string];
+  baggingCode: [string];
 }
 
 export class DeleteBagRepresentativeRequest {
   @ApiModelProperty()
-  bagRepresentativeId: [string];
+  bagRepresentativeCode: [string];
 }

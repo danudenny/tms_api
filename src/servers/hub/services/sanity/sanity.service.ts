@@ -311,38 +311,50 @@ export default class DefaultSanityService implements SanityService {
     const q = new OrionRepositoryService(Bagging, 'b').createQueryBuilder();
     const objBagging = await q
       .select('b.bagging_id', 'baggingId')
-      .andWhere('bagging_id IN (:...baggingId)', {
-        baggingId: payload.baggingId,
+      .andWhere('bagging_code IN (:...baggingCode)', {
+        baggingCode: payload.baggingCode,
       })
       .andWhere('is_deleted = FALSE')
       .execute();
+
+    if (objBagging.length == 0) {
+      throw new BadRequestException('Bagging tidak ditemukan atau sudah di delete.');
+    }
 
     const baggingIds = objBagging.map(bagging => bagging.baggingId);
     const now = moment().toDate();
 
     await getManager().transaction(async manager => {
-      await manager.update(Bagging, `bagging_id IN (${baggingIds.join(',')})`, {
-        isDeleted: true,
-        updatedTime: now,
-        userIdUpdated: String(authMeta.userId),
-      });
 
-      await manager.update(
-        BaggingItem,
-        `bagging_id IN (${baggingIds.join(',')})`,
-        {
+      await manager
+        .createQueryBuilder()
+        .update(Bagging)
+        .set({
           isDeleted: true,
           updatedTime: now,
           userIdUpdated: String(authMeta.userId),
-        },
-      );
+        })
+        .where('bagging_id IN (:...ids)', { ids: baggingIds })
+        .execute();
+
+      await manager
+        .createQueryBuilder()
+        .update(BaggingItem)
+        .set({
+          isDeleted: true,
+          updatedTime: now,
+          userIdUpdated: String(authMeta.userId),
+        })
+        .where('bagging_id IN (:...ids)', { ids: baggingIds })
+        .execute();
+
     });
 
     return {
       statusCode: HttpStatus.OK,
       message: 'Successfully deleted Bagging',
       data: {
-        baggingId: payload.baggingId,
+        baggingCode: payload.baggingCode,
       },
     };
   }
@@ -357,11 +369,15 @@ export default class DefaultSanityService implements SanityService {
     ).createQueryBuilder();
     const objBagRepresentative = await q
       .select('br.bag_representative_id', 'bagRepresentativeId')
-      .andWhere('bag_representative_id IN (:...bagRepresentativeId)', {
-        baggingId: payload.bagRepresentativeId,
+      .andWhere('bag_representative_code IN (:...bagRepresentativeCode)', {
+        bagRepresentativeCode: payload.bagRepresentativeCode,
       })
       .andWhere('is_deleted = FALSE')
       .execute();
+
+    if (objBagRepresentative.length == 0) {
+      throw new BadRequestException('Bag Representative tidak ditemukan atau sudah di delete.');
+    }
 
     const baggingIds = objBagRepresentative.map(
       bagRep => bagRep.bagRepresentativeId,
@@ -369,32 +385,36 @@ export default class DefaultSanityService implements SanityService {
     const now = moment().toDate();
 
     await getManager().transaction(async manager => {
-      await manager.update(
-        BagRepresentative,
-        `bag_representative_id IN (${baggingIds.join(',')})`,
-        {
-          isDeleted: true,
-          updatedTime: now,
-          userIdUpdated: authMeta.userId,
-        },
-      );
 
-      await manager.update(
-        BagRepresentativeItem,
-        `bag_representative_id IN (${baggingIds.join(',')})`,
-        {
+      await manager
+        .createQueryBuilder()
+        .update(BagRepresentative)
+        .set({
           isDeleted: true,
           updatedTime: now,
           userIdUpdated: authMeta.userId,
-        },
-      );
+        })
+        .where('bag_representative_id IN (:...ids)', { ids: baggingIds })
+        .execute();
+
+      await manager
+        .createQueryBuilder()
+        .update(BagRepresentativeItem)
+        .set({
+          isDeleted: true,
+          updatedTime: now,
+          userIdUpdated: authMeta.userId,
+        })
+        .where('bag_representative_id IN (:...ids)', { ids: baggingIds })
+        .execute();
+
     });
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'Successfully deleted Bagging',
+      message: 'Successfully deleted Bag Representative',
       data: {
-        bagRepresentativeId: payload.bagRepresentativeId,
+        bagRepresentativeCode: payload.bagRepresentativeCode,
       },
     };
   }

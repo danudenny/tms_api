@@ -67,7 +67,7 @@ export class SanityController {
     return this.service.deleteBagging(payload);
   }
 
-  @Delete('bagRepresentative')
+  @Delete('bagrepresentative')
   public deleteBagRepresentative(
     @Body() payload: DeleteBagRepresentativeRequest,
   ): Promise<DeleteBagRepresentativeResponse> {
