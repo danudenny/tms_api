@@ -5,6 +5,11 @@ export class DeleteBagsRequest {
   bag_numbers: [string];
 }
 
+export class DeleteAwbsRequest {
+  @ApiModelProperty()
+  awb_numbers: [string];
+}
+
 export class DeleteDoSmdRequest {
   @ApiModelProperty()
   doSmdId: string;

@@ -4,6 +4,9 @@ import moment = require('moment');
 import { getManager } from 'typeorm';
 
 import { BagService } from '../../../../servers/main/services/v1/bag.service';
+import { Awb } from '../../../../shared/orm-entity/awb';
+import { AwbItem } from '../../../../shared/orm-entity/awb-item';
+import { AwbItemAttr } from '../../../../shared/orm-entity/awb-item-attr';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
@@ -17,12 +20,14 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { SanityService } from '../../interfaces/sanity.service';
 import {
+  DeleteAwbsRequest,
   DeleteBaggingRequest,
   DeleteBagRepresentativeRequest,
   DeleteBagsRequest,
   DeleteDoSmdRequest,
 } from '../../models/sanity/sanity.request';
 import {
+  DeleteAwbsResponse,
   DeleteBaggingResponse,
   DeleteBagRepresentativeResponse,
   DeleteBagsResponse,
@@ -36,7 +41,9 @@ export default class DefaultSanityService implements SanityService {
   ): Promise<DeleteBagsResponse> {
     const auth = AuthService.getAuthMetadata();
     let bags = await Promise.all(
-      payload.bag_numbers.map(bagNumber => BagService.validBagNumber(bagNumber)),
+      payload.bag_numbers.map(bagNumber =>
+        BagService.validBagNumber(bagNumber),
+      ),
     );
     bags = _.uniq(_.compact(bags));
     if (!bags.length) {
@@ -51,27 +58,79 @@ export default class DefaultSanityService implements SanityService {
     const bagIds = bags.map(bag => bag.bagId);
     const now = moment().toDate();
     await getManager().transaction(async manager => {
-      await manager.update(Bag, bagIds, {
-        isDeleted: true,
-        updatedTime: now,
-        userIdUpdated: auth.userId,
-      });
-      await manager
-        .createQueryBuilder()
-        .update(BagItem)
-        .set({
+      await Promise.all([
+        manager.update(Bag, bagIds, {
           isDeleted: true,
           updatedTime: now,
           userIdUpdated: auth.userId,
-        })
-        .where('bag_id IN (:...ids)', { ids: bagIds })
-        .execute();
+        }),
+        manager
+          .createQueryBuilder()
+          .update(BagItem)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
+          })
+          .where('bag_id IN (:...ids)', { ids: bagIds })
+          .execute(),
+      ]);
     });
     return {
       statusCode: HttpStatus.OK,
       message: 'Successfully deleted bag',
       data: {
         bagNumbers: payload.bag_numbers,
+      },
+    };
+  }
+
+  // Delete awbs, and all corresponding awb_items and awb_item_attrs
+  public async deleteAwbs(
+    payload: DeleteAwbsRequest,
+  ): Promise<DeleteAwbsResponse> {
+    const auth = AuthService.getAuthData();
+    const now = moment().toDate();
+    await getManager().transaction(async manager => {
+      await Promise.all([
+        manager
+          .createQueryBuilder()
+          .update(Awb)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
+          })
+          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .execute(),
+        manager
+          .createQueryBuilder()
+          .update(AwbItem)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
+          })
+          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .execute(),
+        manager
+          .createQueryBuilder()
+          .update(AwbItemAttr)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdLast: auth.userId,
+          })
+          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .execute(),
+      ]);
+    });
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Successfully deleted AWBs',
+      data: {
+        awbNumbers: payload.awb_numbers,
       },
     };
   }

@@ -6,6 +6,11 @@ class DeleteBagsData {
   bagNumbers: [string];
 }
 
+class DeleteAwbsData {
+  @ApiModelProperty()
+  awbNumbers: [string];
+}
+
 class DeleteDoSMdData {
   @ApiModelProperty()
   doSmdId: string;
@@ -24,6 +29,11 @@ class DeleteBagRepresentativeData {
 export class DeleteBagsResponse extends BaseResponse {
   @ApiModelProperty()
   data: DeleteBagsData;
+}
+
+export class DeleteAwbsResponse extends BaseResponse {
+  @ApiModelProperty()
+  data: DeleteAwbsData;
 }
 
 export class DeleteDoSmdResponse extends BaseResponse {

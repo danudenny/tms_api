@@ -7,12 +7,14 @@ import { PermissionTokenGuard } from '../../../../shared/guards/permission-token
 import { PermissionRoleGuard } from '../../../../shared/guards/permission.role.guard';
 import { SANITY_SERVICE, SanityService } from '../../interfaces/sanity.service';
 import {
+  DeleteAwbsRequest,
   DeleteBaggingRequest,
   DeleteBagRepresentativeRequest,
   DeleteBagsRequest,
   DeleteDoSmdRequest,
 } from '../../models/sanity/sanity.request';
 import {
+  DeleteAwbsResponse,
   DeleteBaggingResponse,
   DeleteBagRepresentativeResponse,
   DeleteBagsResponse,
@@ -29,10 +31,17 @@ export class SanityController {
   ) {}
 
   @Delete('bag')
-  public deleteBag(
+  public deleteBags(
     @Body() payload: DeleteBagsRequest,
   ): Promise<DeleteBagsResponse> {
     return this.service.deleteBags(payload);
+  }
+
+  @Delete('awb')
+  public deleteAwbs(
+    @Body() payload: DeleteAwbsRequest,
+  ): Promise<DeleteAwbsResponse> {
+    return this.service.deleteAwbs(payload);
   }
 
   @Delete('dosmd')
