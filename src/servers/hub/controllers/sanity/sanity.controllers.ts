@@ -14,8 +14,8 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { PermissionRoleGuard } from '../../../../shared/guards/permission.role.guard';
 import { SANITY_SERVICE, SanityService } from '../../interfaces/sanity.service';
-import { DeleteBagRequest } from '../../models/sanity/sanity.request';
-import { DeleteBagResponse } from '../../models/sanity/sanity.response';
+import { DeleteBagsRequest } from '../../models/sanity/sanity.request';
+import { DeleteBagsResponse } from '../../models/sanity/sanity.response';
 
 @ApiUseTags('Backdoor APIs for Sanity Testing')
 @RoleAuthGuardOptions('1', '11')
@@ -28,8 +28,8 @@ export class SanityController {
 
   @Delete('bag')
   public deleteBag(
-    @Body() payload: DeleteBagRequest,
-  ): Promise<DeleteBagResponse> {
-    return this.service.deleteBag(payload);
+    @Body() payload: DeleteBagsRequest,
+  ): Promise<DeleteBagsResponse> {
+    return this.service.deleteBags(payload);
   }
 }

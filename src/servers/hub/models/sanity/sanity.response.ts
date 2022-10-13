@@ -1,12 +1,12 @@
 import { ApiModelProperty } from '../../../../shared/external/nestjs-swagger';
 import { BaseResponse } from '../../../../shared/models/base-response';
 
-class DeleteBagData {
+class DeleteBagsData {
   @ApiModelProperty()
   bagNumbers: [string];
 }
 
-export class DeleteBagResponse extends BaseResponse {
+export class DeleteBagsResponse extends BaseResponse {
   @ApiModelProperty()
-  data: DeleteBagData;
+  data: DeleteBagsData;
 }

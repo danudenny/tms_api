@@ -8,14 +8,14 @@ import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { SanityService } from '../../interfaces/sanity.service';
-import { DeleteBagRequest } from '../../models/sanity/sanity.request';
-import { DeleteBagResponse } from '../../models/sanity/sanity.response';
+import { DeleteBagsRequest } from '../../models/sanity/sanity.request';
+import { DeleteBagsResponse } from '../../models/sanity/sanity.response';
 
 export default class DefaultSanityService implements SanityService {
   // Delete bag(s) by bag_number(s) and all bag_items in the corresponding bags
-  public async deleteBag(
-    payload: DeleteBagRequest,
-  ): Promise<DeleteBagResponse> {
+  public async deleteBags(
+    payload: DeleteBagsRequest,
+  ): Promise<DeleteBagsResponse> {
     const auth = AuthService.getAuthMetadata();
     let bags = await Promise.all(
       payload.bagNumbers.map(bagNumber => BagService.validBagNumber(bagNumber)),
