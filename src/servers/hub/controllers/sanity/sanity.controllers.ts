@@ -14,8 +14,8 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { PermissionRoleGuard } from '../../../../shared/guards/permission.role.guard';
 import { SANITY_SERVICE, SanityService } from '../../interfaces/sanity.service';
-import { DeleteBagRequest } from '../../models/sanity/sanity.request';
-import { DeleteBagResponse } from '../../models/sanity/sanity.response';
+import { DeleteBaggingRequest, DeleteBagRepresentativeRequest, DeleteBagRequest, DeleteDoSmdRequest } from '../../models/sanity/sanity.request';
+import { DeleteBaggingResponse, DeleteBagRepresentativeResponse, DeleteBagResponse, DeleteDoSmdResponse } from '../../models/sanity/sanity.response';
 
 @ApiUseTags('Backdoor APIs for Sanity Testing')
 @RoleAuthGuardOptions('1', '11')
@@ -32,4 +32,20 @@ export class SanityController {
   ): Promise<DeleteBagResponse> {
     return this.service.deleteBag(payload);
   }
+
+  @Delete('dosmd')
+  public deleteDoSmd(@Body() payload: DeleteDoSmdRequest): Promise<DeleteDoSmdResponse> {
+    return this.service.deleteDoSmd(payload);
+  }
+
+  @Delete('bagging')
+  public deleteBagging(@Body() payload: DeleteBaggingRequest): Promise<DeleteBaggingResponse> {
+    return this.service.deleteBagging(payload);
+  }
+
+  @Delete('bagRepresentative')
+  public deleteBagRepresentative(@Body() payload: DeleteBagRepresentativeRequest): Promise<DeleteBagRepresentativeResponse> {
+    return this.service.deleteBagRepresentative(payload);
+  }
+
 }
