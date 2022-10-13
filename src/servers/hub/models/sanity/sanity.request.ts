@@ -10,6 +10,11 @@ export class DeleteAwbsRequest {
   awb_numbers: [string];
 }
 
+export class DeleteDoSortationsRequest {
+  @ApiModelProperty()
+  do_sortation_codes: [string];
+}
+
 export class DeleteDoSmdRequest {
   @ApiModelProperty()
   doSmdCode: [string];

@@ -1,5 +1,5 @@
 import { BadRequestException, HttpStatus } from '@nestjs/common';
-import _ from 'lodash';
+import _ = require('lodash');
 import moment = require('moment');
 import { getManager } from 'typeorm';
 
@@ -13,6 +13,10 @@ import { BagRepresentative } from '../../../../shared/orm-entity/bag-representat
 import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
+import { DoSortation } from '../../../../shared/orm-entity/do-sortation';
+import { DoSortationDetail } from '../../../../shared/orm-entity/do-sortation-detail';
+import { DoSortationDetailItem } from '../../../../shared/orm-entity/do-sortation-detail-item';
+import { DoSortationVehicle } from '../../../../shared/orm-entity/do-sortation-vehicle';
 import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
@@ -25,6 +29,7 @@ import {
   DeleteBagRepresentativeRequest,
   DeleteBagsRequest,
   DeleteDoSmdRequest,
+  DeleteDoSortationsRequest,
 } from '../../models/sanity/sanity.request';
 import {
   DeleteAwbsResponse,
@@ -32,6 +37,7 @@ import {
   DeleteBagRepresentativeResponse,
   DeleteBagsResponse,
   DeleteDoSmdResponse,
+  DeleteDoSortationsResponse,
 } from '../../models/sanity/sanity.response';
 
 export default class DefaultSanityService implements SanityService {
@@ -91,6 +97,9 @@ export default class DefaultSanityService implements SanityService {
   ): Promise<DeleteAwbsResponse> {
     const auth = AuthService.getAuthData();
     const now = moment().toDate();
+    if (!payload.awb_numbers.length) {
+      throw new BadRequestException('awb_numbers is empty!');
+    }
     await getManager().transaction(async manager => {
       await Promise.all([
         manager
@@ -135,6 +144,98 @@ export default class DefaultSanityService implements SanityService {
     };
   }
 
+  // Delete do_sortations and their corresponding do_sortation_vehicles,
+  // do_sortation_details do_sortation_detail_items
+  public async deleteDoSortations(
+    payload: DeleteDoSortationsRequest,
+  ): Promise<DeleteDoSortationsResponse> {
+    const auth = AuthService.getAuthData();
+    const now = moment().toDate();
+    const q = new OrionRepositoryService(DoSortation, 'ds').findAllRaw();
+    const selectColumns = [
+      ['ds.do_sortation_id', 'dsId'],
+      ['dsv.do_sortation_vehicle_id', 'dsvId'],
+      ['dsd.do_sortation_detail_id', 'dsdId'],
+      ['dsdi.do_sortation_detail_item_id', 'dsdiId'],
+    ];
+
+    const bags = await q
+      .selectRaw(...selectColumns)
+      .leftJoinRaw('ds.doSortationVehicle', 'dsv', 'dsv.is_deleted = FALSE')
+      .leftJoinRaw('ds.doSortationDetails', 'dsd', 'dsd.is_deleted = FALSE')
+      .leftJoinRaw(
+        'dsd.doSortationDetailItems',
+        'dsdi',
+        'dsdi.is_deleted = FALSE',
+      )
+      .andWhereRaw('ds.do_sortation_code IN (:...codes)', {
+        codes: payload.do_sortation_codes,
+      })
+      .andWhereRaw('ds.is_deleted = FALSE');
+    const dsIds = _.uniq(_.compact(bags.map(bag => bag.dsId)));
+    const dsvIds = _.uniq(_.compact(bags.map(bag => bag.dsvId)));
+    const dsdIds = _.uniq(_.compact(bags.map(bag => bag.dsdId)));
+    const dsdiIds = _.uniq(_.compact(bags.map(bag => bag.dsdiId)));
+    await getManager().transaction(async manager => {
+      if (dsIds.length) {
+        await manager
+          .createQueryBuilder()
+          .update(DoSortation)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
+          })
+          .where('do_sortation_id IN (:...dsIds)', { dsIds })
+          .execute();
+      }
+      if (dsvIds.length) {
+        await manager
+          .createQueryBuilder()
+          .update(DoSortationVehicle)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
+          })
+          .where('do_sortation_vehicle_id IN (:...dsvIds)', { dsvIds })
+          .execute();
+      }
+      if (dsdIds.length) {
+        await manager
+          .createQueryBuilder()
+          .update(DoSortationDetail)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
+          })
+          .where('do_sortation_detail_id IN (:...dsdIds)', { dsdIds })
+          .execute();
+      }
+      if (dsdiIds.length) {
+        await manager
+          .createQueryBuilder()
+          .update(DoSortationDetailItem)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
+          })
+          .where('do_sortation_detail_item_id IN (:...dsdiIds)', { dsdiIds })
+          .execute();
+      }
+    });
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Successfully deleted sortation scanouts',
+      data: {
+        doSortationCodes: payload.do_sortation_codes,
+      },
+    };
+  }
+
   public async deleteDoSmd(
     payload: DeleteDoSmdRequest,
   ): Promise<DeleteDoSmdResponse> {
@@ -156,22 +257,20 @@ export default class DefaultSanityService implements SanityService {
     ]);
 
     if (count == 0) {
-      throw new BadRequestException('DoSmdCode tidak ditemukan atau sudah didelete.');
+      throw new BadRequestException(
+        'DoSmdCode tidak ditemukan atau sudah didelete.',
+      );
     }
 
     const doSmdIds = objSmd.map(objSmds => objSmds.doSmdId);
     const doSmdDetailIdLastS = objSmd.map(objSmds => objSmds.doSmdDetailIdLast);
     const now = moment().toDate();
     await getManager().transaction(async manager => {
-      await manager.update(
-        DoSmd,
-        doSmdIds,
-        {
-          isDeleted: true,
-          updatedTime: now,
-          userIdUpdated: authMeta.userId,
-        },
-      );
+      await manager.update(DoSmd, doSmdIds, {
+        isDeleted: true,
+        updatedTime: now,
+        userIdUpdated: authMeta.userId,
+      });
 
       await manager
         .createQueryBuilder()
@@ -194,7 +293,6 @@ export default class DefaultSanityService implements SanityService {
         })
         .where('do_smd_detail_id IN (:...ids)', { ids: doSmdDetailIdLastS })
         .execute();
-
     });
 
     return {

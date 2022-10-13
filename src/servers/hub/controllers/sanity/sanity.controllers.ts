@@ -12,6 +12,7 @@ import {
   DeleteBagRepresentativeRequest,
   DeleteBagsRequest,
   DeleteDoSmdRequest,
+  DeleteDoSortationsRequest,
 } from '../../models/sanity/sanity.request';
 import {
   DeleteAwbsResponse,
@@ -19,6 +20,7 @@ import {
   DeleteBagRepresentativeResponse,
   DeleteBagsResponse,
   DeleteDoSmdResponse,
+  DeleteDoSortationsResponse,
 } from '../../models/sanity/sanity.response';
 
 @ApiUseTags('Backdoor APIs for Sanity Testing')
@@ -42,6 +44,13 @@ export class SanityController {
     @Body() payload: DeleteAwbsRequest,
   ): Promise<DeleteAwbsResponse> {
     return this.service.deleteAwbs(payload);
+  }
+
+  @Delete('sortation/scanout')
+  public deleteDoSortations(
+    @Body() payload: DeleteDoSortationsRequest,
+  ): Promise<DeleteDoSortationsResponse> {
+    return this.service.deleteDoSortations(payload);
   }
 
   @Delete('dosmd')

@@ -11,6 +11,11 @@ class DeleteAwbsData {
   awbNumbers: [string];
 }
 
+class DeleteDoSortationsData {
+  @ApiModelProperty()
+  doSortationCodes: [string];
+}
+
 class DeleteDoSMdData {
   @ApiModelProperty()
   doSmdCode: [string];
@@ -34,6 +39,11 @@ export class DeleteBagsResponse extends BaseResponse {
 export class DeleteAwbsResponse extends BaseResponse {
   @ApiModelProperty()
   data: DeleteAwbsData;
+}
+
+export class DeleteDoSortationsResponse extends BaseResponse {
+  @ApiModelProperty()
+  data: DeleteDoSortationsData;
 }
 
 export class DeleteDoSmdResponse extends BaseResponse {

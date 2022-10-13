@@ -4,6 +4,7 @@ import {
   DeleteBagRepresentativeRequest,
   DeleteBagsRequest,
   DeleteDoSmdRequest,
+  DeleteDoSortationsRequest,
 } from '../models/sanity/sanity.request';
 import {
   DeleteAwbsResponse,
@@ -11,6 +12,7 @@ import {
   DeleteBagRepresentativeResponse,
   DeleteBagsResponse,
   DeleteDoSmdResponse,
+  DeleteDoSortationsResponse,
 } from '../models/sanity/sanity.response';
 
 export const SANITY_SERVICE = 'SANITY_SERVICE';
@@ -18,6 +20,9 @@ export const SANITY_SERVICE = 'SANITY_SERVICE';
 export interface SanityService {
   deleteBags: (payload: DeleteBagsRequest) => Promise<DeleteBagsResponse>;
   deleteAwbs: (payload: DeleteAwbsRequest) => Promise<DeleteAwbsResponse>;
+  deleteDoSortations: (
+    payload: DeleteDoSortationsRequest,
+  ) => Promise<DeleteDoSortationsResponse>;
   deleteDoSmd: (payload: DeleteDoSmdRequest) => Promise<DeleteDoSmdResponse>;
   deleteBagging: (
     payload: DeleteBaggingRequest,
