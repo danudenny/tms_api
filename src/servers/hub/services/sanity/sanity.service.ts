@@ -1,9 +1,11 @@
-import { BadRequestException, HttpStatus } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import moment = require('moment');
 import { getManager } from 'typeorm';
 
+import { BagService } from '../../../../servers/main/services/v1/bag.service';
 import { Bag } from '../../../../shared/orm-entity/bag';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { AuthService } from '../../../../shared/services/auth.service';
 import { BagRepresentative } from '../../../../shared/orm-entity/bag-representative';
 import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
@@ -11,35 +13,48 @@ import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
 import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
-import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { SanityService } from '../../interfaces/sanity.service';
 import { DeleteBaggingRequest, DeleteBagRepresentativeRequest, DeleteBagRequest, DeleteDoSmdRequest } from '../../models/sanity/sanity.request';
 import { DeleteBaggingResponse, DeleteBagRepresentativeResponse, DeleteBagResponse, DeleteDoSmdResponse } from '../../models/sanity/sanity.response';
 
 export default class DefaultSanityService implements SanityService {
+  // Delete bag(s) by bag_number(s) and all bag_items in the corresponding bags
   public async deleteBag(
     payload: DeleteBagRequest,
   ): Promise<DeleteBagResponse> {
-    const q = new OrionRepositoryService(Bag, 'b').createQueryBuilder();
-    const bags = await q
-      .select('b.bag_id', 'id')
-      .andWhere('bag_number IN (:...bagNumbers)', {
-        bagNumbers: payload.bagNumbers,
-      })
-      .andWhere('is_deleted = FALSE')
-      .execute();
-    const bagIds = bags.map(bag => bag.id);
+    const auth = AuthService.getAuthMetadata();
+    let bags = await Promise.all(
+      payload.bagNumbers.map(bagNumber => BagService.validBagNumber(bagNumber)),
+    );
+    bags = _.uniq(_.compact(bags));
+    if (!bags.length) {
+      return {
+        statusCode: HttpStatus.NO_CONTENT,
+        message: 'Bag number(s) not found or have been deleted',
+        data: {
+          bagNumbers: payload.bagNumbers,
+        },
+      };
+    }
+    const bagIds = bags.map(bag => bag.bagId);
     const now = moment().toDate();
     await getManager().transaction(async manager => {
-      await manager.update(Bag, `bag_id IN (${bagIds.join(',')})`, {
+      await manager.update(Bag, bagIds, {
         isDeleted: true,
         updatedTime: now,
+        userIdUpdated: auth.userId,
       });
-      await manager.update(BagItem, `bag_id IN (${bagIds.join(',')})`, {
-        isDeleted: true,
-        updatedTime: now,
-      });
+      await manager
+        .createQueryBuilder()
+        .update(BagItem)
+        .set({
+          isDeleted: true,
+          updatedTime: now,
+          userIdUpdated: auth.userId,
+        })
+        .where('bag_id IN (:...ids)', { ids: bagIds })
+        .execute();
     });
     return {
       statusCode: HttpStatus.OK,
