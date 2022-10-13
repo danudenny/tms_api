@@ -8,7 +8,7 @@ class DeleteBagsData {
 
 class DeleteDoSMdData {
   @ApiModelProperty()
-  doSmdId: string;
+  doSmdCode: [string];
 }
 
 class DeleteBaggingData {
