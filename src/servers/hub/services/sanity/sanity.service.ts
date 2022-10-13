@@ -114,25 +114,28 @@ export default class DefaultSanityService implements SanityService {
         },
       );
 
-      await manager.update(
-        DoSmdDetail,
-        doSmdIds,
-        {
+      await manager
+        .createQueryBuilder()
+        .update(DoSmdDetail)
+        .set({
           isDeleted: true,
           updatedTime: now,
           userIdUpdated: authMeta.userId,
-        },
-      );
+        })
+        .where('do_smd_id IN (:...ids)', { ids: doSmdIds })
+        .execute();
 
-      await manager.update(
-        DoSmdDetailItem,
-        doSmdDetailIdLastS,
-        {
+      await manager
+        .createQueryBuilder()
+        .update(DoSmdDetailItem)
+        .set({
           isDeleted: true,
           updatedTime: now,
           userIdUpdated: authMeta.userId,
-        },
-      );
+        })
+        .where('do_smd_detail_id IN (:...ids)', { ids: doSmdDetailIdLastS })
+        .execute();
+
     });
 
     return {
