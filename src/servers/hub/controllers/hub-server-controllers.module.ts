@@ -27,6 +27,7 @@ import { SortationL2ListModuleController } from './sortation/web/sortation-l2-li
 import { SortationMasterdataController } from './masterdata-controller';
 import { SortationMasterdataService } from '../services/masterdata-service';
 import { SortationReportController } from './sortation/web/sortation-report-controller';
+import { SanityController } from './sanity/sanity.controllers';
 
 const providers = [
   {
@@ -62,6 +63,7 @@ const providers = [
     ReportingHubPackageController,
     HubPackagesMonitoringController,
     SortationReportController,
+    SanityController,
   ],
 })
 export class HubServerControllersModule {}
