@@ -36,7 +36,7 @@ export default class DefaultSanityService implements SanityService {
   ): Promise<DeleteBagsResponse> {
     const auth = AuthService.getAuthMetadata();
     let bags = await Promise.all(
-      payload.bagNumbers.map(bagNumber => BagService.validBagNumber(bagNumber)),
+      payload.bag_numbers.map(bagNumber => BagService.validBagNumber(bagNumber)),
     );
     bags = _.uniq(_.compact(bags));
     if (!bags.length) {
@@ -44,7 +44,7 @@ export default class DefaultSanityService implements SanityService {
         statusCode: HttpStatus.NO_CONTENT,
         message: 'Bag number(s) not found or have been deleted',
         data: {
-          bagNumbers: payload.bagNumbers,
+          bagNumbers: payload.bag_numbers,
         },
       };
     }
@@ -71,7 +71,7 @@ export default class DefaultSanityService implements SanityService {
       statusCode: HttpStatus.OK,
       message: 'Successfully deleted bag',
       data: {
-        bagNumbers: payload.bagNumbers,
+        bagNumbers: payload.bag_numbers,
       },
     };
   }
