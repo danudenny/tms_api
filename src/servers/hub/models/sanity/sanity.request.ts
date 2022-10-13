@@ -12,7 +12,7 @@ export class DeleteAwbsRequest {
 
 export class DeleteDoSmdRequest {
   @ApiModelProperty()
-  doSmdId: string;
+  doSmdCode: [string];
 }
 
 export class DeleteBaggingRequest {

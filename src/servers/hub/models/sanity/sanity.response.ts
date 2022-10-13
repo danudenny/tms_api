@@ -13,7 +13,7 @@ class DeleteAwbsData {
 
 class DeleteDoSMdData {
   @ApiModelProperty()
-  doSmdId: string;
+  doSmdCode: [string];
 }
 
 class DeleteBaggingData {

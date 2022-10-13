@@ -139,26 +139,33 @@ export default class DefaultSanityService implements SanityService {
     payload: DeleteDoSmdRequest,
   ): Promise<DeleteDoSmdResponse> {
     const authMeta = AuthService.getAuthData();
-    const q = new OrionRepositoryService(DoSmd, 'ds').createQueryBuilder();
-    const objDoSmd = await q
-      .select(
-        'ds.do_smd_id as doSmdId, ds.do_smd_detail_id_last as doSmdDetailIdLast',
-      )
-      .andWhere(`ds.do_smd_id = ${payload.doSmdId}`)
-      .andWhere('is_deleted = FALSE')
-      .execute();
 
-    if (!objDoSmd) {
-      throw new BadRequestException('DoSmdId tidak ditemukan.');
+    const repo = new OrionRepositoryService(DoSmd, 'ds');
+    const q = repo.findAllRaw();
+    const selectColumn = [
+      ['ds.do_smd_id', 'doSmdId'],
+      ['ds.do_smd_detail_id_last', 'doSmdDetailIdLast'],
+    ];
+    q.selectRaw(...selectColumn);
+    q.andWhere(e => e.doSmdCode, w => w.in(payload.doSmdCode));
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+
+    const [objSmd, count] = await Promise.all([
+      q.exec(),
+      q.countWithoutTakeAndSkip(),
+    ]);
+
+    if (count == 0) {
+      throw new BadRequestException('DoSmdCode tidak ditemukan atau sudah didelete.');
     }
 
+    const doSmdIds = objSmd.map(objSmds => objSmds.doSmdId);
+    const doSmdDetailIdLastS = objSmd.map(objSmds => objSmds.doSmdDetailIdLast);
     const now = moment().toDate();
     await getManager().transaction(async manager => {
       await manager.update(
         DoSmd,
-        {
-          doSmdId: objDoSmd.doSmdId,
-        },
+        doSmdIds,
         {
           isDeleted: true,
           updatedTime: now,
@@ -166,36 +173,35 @@ export default class DefaultSanityService implements SanityService {
         },
       );
 
-      await manager.update(
-        DoSmdDetail,
-        {
-          doSmdId: objDoSmd.doSmdId,
-        },
-        {
+      await manager
+        .createQueryBuilder()
+        .update(DoSmdDetail)
+        .set({
           isDeleted: true,
           updatedTime: now,
           userIdUpdated: authMeta.userId,
-        },
-      );
+        })
+        .where('do_smd_id IN (:...ids)', { ids: doSmdIds })
+        .execute();
 
-      await manager.update(
-        DoSmdDetailItem,
-        {
-          doSmdDetailId: objDoSmd.doSmdDetailIdLast,
-        },
-        {
+      await manager
+        .createQueryBuilder()
+        .update(DoSmdDetailItem)
+        .set({
           isDeleted: true,
           updatedTime: now,
           userIdUpdated: authMeta.userId,
-        },
-      );
+        })
+        .where('do_smd_detail_id IN (:...ids)', { ids: doSmdDetailIdLastS })
+        .execute();
+
     });
 
     return {
       statusCode: HttpStatus.OK,
       message: 'Successfully deleted DoSmd',
       data: {
-        doSmdId: payload.doSmdId,
+        doSmdCode: payload.doSmdCode,
       },
     };
   }
