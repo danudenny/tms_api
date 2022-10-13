@@ -1,4 +1,5 @@
-import { HttpStatus } from '@nestjs/common';
+import { BadRequestException, HttpStatus } from '@nestjs/common';
+import _ from 'lodash';
 import moment = require('moment');
 import { getManager } from 'typeorm';
 
@@ -17,6 +18,7 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { SanityService } from '../../interfaces/sanity.service';
 import { DeleteBaggingRequest, DeleteBagRepresentativeRequest, DeleteBagRequest, DeleteDoSmdRequest } from '../../models/sanity/sanity.request';
 import { DeleteBaggingResponse, DeleteBagRepresentativeResponse, DeleteBagResponse, DeleteDoSmdResponse } from '../../models/sanity/sanity.response';
+
 
 export default class DefaultSanityService implements SanityService {
   // Delete bag(s) by bag_number(s) and all bag_items in the corresponding bags
