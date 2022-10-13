@@ -1,14 +1,6 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Inject,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
-import { RoleAuthGuardOptions } from '../../../../shared/decorators/role-auth-guard-options.decorator';
+import { Body, Controller, Delete, Inject, UseGuards } from '@nestjs/common';
 
+import { RoleAuthGuardOptions } from '../../../../shared/decorators/role-auth-guard-options.decorator';
 import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
