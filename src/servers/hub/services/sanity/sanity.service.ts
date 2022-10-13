@@ -84,7 +84,7 @@ export default class DefaultSanityService implements SanityService {
     });
     return {
       statusCode: HttpStatus.OK,
-      message: 'Successfully deleted bag',
+      message: 'Successfully deleted bag(s)',
       data: {
         bagNumbers: payload.bag_numbers,
       },
@@ -137,7 +137,7 @@ export default class DefaultSanityService implements SanityService {
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'Successfully deleted AWBs',
+      message: 'Successfully deleted AWB(s)',
       data: {
         awbNumbers: payload.awb_numbers,
       },
@@ -229,7 +229,7 @@ export default class DefaultSanityService implements SanityService {
 
     return {
       statusCode: HttpStatus.OK,
-      message: 'Successfully deleted sortation scanouts',
+      message: 'Successfully deleted sortation scanout(s)',
       data: {
         doSortationCodes: payload.do_sortation_codes,
       },
