@@ -53,7 +53,7 @@ export class SanityController {
     return this.service.deleteDoSortations(payload);
   }
 
-  @Delete('dosmd/scanout')
+  @Delete('smd/scanout')
   public deleteDoSmd(
     @Body() payload: DeleteDoSmdRequest,
   ): Promise<DeleteDoSmdResponse> {
