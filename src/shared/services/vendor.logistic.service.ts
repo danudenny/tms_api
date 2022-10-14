@@ -49,6 +49,7 @@ export class VendorLogisticService {
   public static async getDataSuratJalan(orderVendorCode, userId) {
     let url = `${this.queryServiceUrl}vendor/order/detail`;
     let channelSlack = await ConfigService.get('vendorLogisticService.slackChannel');
+    console.log('ODER VENDOR CODE PARAMSS >>>>>', orderVendorCode);
     const options = {
       headers: {
         'accept': 'application/json',
