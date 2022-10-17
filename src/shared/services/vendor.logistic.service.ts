@@ -34,7 +34,6 @@ export class VendorLogisticService {
       const request = await axios.post(url, body, options);
       return request;
     } catch (err) {
-      console.log(err)
       await SlackUtil.sendMessage(channelSlack, "Error from hit service for send vendor - awb : "+awbNumber, err.stack, body, null, null, url);
       RequestErrorService.throwObj(
         {
@@ -49,7 +48,6 @@ export class VendorLogisticService {
   public static async getDataSuratJalan(orderVendorCode, userId) {
     let url = `${this.queryServiceUrl}vendor/order/detail`;
     let channelSlack = await ConfigService.get('vendorLogisticService.slackChannel');
-    console.log('ODER VENDOR CODE PARAMSS >>>>>', orderVendorCode);
     const options = {
       headers: {
         'accept': 'application/json',
