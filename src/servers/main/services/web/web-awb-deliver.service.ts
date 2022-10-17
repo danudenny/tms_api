@@ -83,7 +83,7 @@ export class WebAwbDeliverService {
                   response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
                 } else if(delivery.awbStatusId == AWB_STATUS.DLV && awb.awbStatusIdLast == AWB_STATUS.LOST){
                   response.status = 'error';
-                  response.message = `Resi ${delivery.awbNumber} broke`;
+                  response.message = `Resi ${delivery.awbNumber} lost`;
                 } else {
                   // set data deliver for sync data
                   delivery.doPodDeliverId = awbDeliver.doPodDeliverId;
