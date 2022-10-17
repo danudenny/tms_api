@@ -141,6 +141,10 @@ export class WebDeliveryVendorOutService {
   }
 
   static async printVendor(res: e.Response, queryParams: PrintVendorOutPayloadQueryVm) {
+    if(queryParams.orderVendorCode.includes("%20")){
+      queryParams.orderVendorCode = queryParams.orderVendorCode.replace("%20"," ");
+    }
+
     const currentBranch = await Branch.findOne({
       select: ['branchName'],
       where: {
