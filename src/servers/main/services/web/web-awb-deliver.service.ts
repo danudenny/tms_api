@@ -81,7 +81,7 @@ export class WebAwbDeliverService {
                 if (statusFinal.includes(awb.awbStatusIdLast)) {
                   response.status = 'error';
                   response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
-                } else if(delivery.awbStatusId == AWB_STATUS.DLV && awb.awbStatusIdLast == AWB_STATUS.BROKE){
+                } else if(delivery.awbStatusId == AWB_STATUS.DLV && awb.awbStatusIdLast == AWB_STATUS.LOST){
                   response.status = 'error';
                   response.message = `Resi ${delivery.awbNumber} broke`;
                 } else {

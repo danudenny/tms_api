@@ -93,7 +93,7 @@ export class AwbStatusService {
     optionalInBranch?: Boolean,
     optionalManifested?: Boolean,
     isReturCheck = true,
-    isBrokeCheck = false
+    isLostCheck = false
   ) {
     let message = `Resi ${awbItemAttr.awbNumber} tidak dapat di proses.`;
     let isValid = false;
@@ -114,8 +114,8 @@ export class AwbStatusService {
         return { isValid, message };
       }
 
-      if (AWB_STATUS.BROKE == awbItemAttr.awbStatusIdLast && isBrokeCheck) {
-        message = `Resi ${awbItemAttr.awbNumber} broke`;
+      if (AWB_STATUS.BROKE == awbItemAttr.awbStatusIdLast && isLostCheck) {
+        message = `Resi ${awbItemAttr.awbNumber} lost`;
         return { isValid, message };
       }
 
