@@ -92,7 +92,8 @@ export class AwbStatusService {
     awbItemAttr: AwbItemAttr,
     optionalInBranch?: Boolean,
     optionalManifested?: Boolean,
-    isReturCheck = true
+    isReturCheck = true,
+    isBrokeCheck = false
   ) {
     let message = `Resi ${awbItemAttr.awbNumber} tidak dapat di proses.`;
     let isValid = false;
@@ -110,6 +111,11 @@ export class AwbStatusService {
         AWB_STATUS.IN_BRANCH != awbItemAttr.awbStatusIdLast
       ) {
         message = `Resi ${awbItemAttr.awbNumber} belum di Scan In`;
+        return { isValid, message };
+      }
+
+      if (AWB_STATUS.BROKE == awbItemAttr.awbStatusIdLast && isBrokeCheck) {
+        message = `Resi ${awbItemAttr.awbNumber} broke`;
         return { isValid, message };
       }
 
