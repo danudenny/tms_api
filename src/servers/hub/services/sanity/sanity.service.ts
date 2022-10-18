@@ -1,8 +1,6 @@
 import { BadRequestException, HttpStatus } from '@nestjs/common';
 import _ = require('lodash');
 import moment = require('moment');
-import { BranchSortirLogSummary } from 'src/shared/orm-entity/branch-sortir-log-summary';
-import { HubSummaryAwb } from 'src/shared/orm-entity/hub-summary-awb';
 import { getManager } from 'typeorm';
 
 import { BagService } from '../../../../servers/main/services/v1/bag.service';
@@ -15,6 +13,7 @@ import { BagRepresentative } from '../../../../shared/orm-entity/bag-representat
 import { BagRepresentativeItem } from '../../../../shared/orm-entity/bag-representative-item';
 import { Bagging } from '../../../../shared/orm-entity/bagging';
 import { BaggingItem } from '../../../../shared/orm-entity/bagging-item';
+import { BranchSortirLogSummary } from '../../../../shared/orm-entity/branch-sortir-log-summary';
 import { DoSortation } from '../../../../shared/orm-entity/do-sortation';
 import { DoSortationDetail } from '../../../../shared/orm-entity/do-sortation-detail';
 import { DoSortationDetailItem } from '../../../../shared/orm-entity/do-sortation-detail-item';
@@ -22,6 +21,7 @@ import { DoSortationVehicle } from '../../../../shared/orm-entity/do-sortation-v
 import { DoSmd } from '../../../../shared/orm-entity/do_smd';
 import { DoSmdDetail } from '../../../../shared/orm-entity/do_smd_detail';
 import { DoSmdDetailItem } from '../../../../shared/orm-entity/do_smd_detail_item';
+import { HubSummaryAwb } from '../../../../shared/orm-entity/hub-summary-awb';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { SanityService } from '../../interfaces/sanity.service';
