@@ -64,10 +64,9 @@ export class CheckAwbListService {
 
     payload.fieldResolverMap['awbCheckId'] = 'acl.awb_check_summary_id';
     payload.fieldResolverMap['createdTime'] = 'acl.created_time';
-    
-    if (payload.sortBy === '') {
-      payload.sortBy = 'acl.created_time';
 
+    if (payload.sortBy === '') {
+      payload.sortBy = 'createdTime';
     }
 
     const repo = new OrionRepositoryService(AwbCheckLog, 'acl');
@@ -77,6 +76,7 @@ export class CheckAwbListService {
     const selectColumn = [
       ['acl.awb_check_summary_id', 'awbCheckId'],
       ['acl.awb_number', 'awbNumber'],
+      ['acl.created_time', 'createdTime'],
       ['a.consignee_name', 'consigneeName'],
       ['a.consignee_name', 'consigneeName'],
       ['a.consignee_address', 'consigneeAddress'],
