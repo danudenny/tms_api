@@ -1,6 +1,8 @@
 import { BadRequestException, HttpStatus } from '@nestjs/common';
 import _ = require('lodash');
 import moment = require('moment');
+import { BranchSortirLogSummary } from 'src/shared/orm-entity/branch-sortir-log-summary';
+import { HubSummaryAwb } from 'src/shared/orm-entity/hub-summary-awb';
 import { getManager } from 'typeorm';
 
 import { BagService } from '../../../../servers/main/services/v1/bag.service';
@@ -129,6 +131,26 @@ export default class DefaultSanityService implements SanityService {
             isDeleted: true,
             updatedTime: now,
             userIdLast: auth.userId,
+          })
+          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .execute(),
+        manager
+          .createQueryBuilder()
+          .update(BranchSortirLogSummary)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
+          })
+          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .execute(),
+        manager
+          .createQueryBuilder()
+          .update(HubSummaryAwb)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
           })
           .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
           .execute(),
