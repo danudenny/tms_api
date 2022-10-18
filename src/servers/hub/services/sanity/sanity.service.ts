@@ -123,7 +123,8 @@ export default class DefaultSanityService implements SanityService {
             updatedTime: now,
             userIdUpdated: auth.userId,
           })
-          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('is_deleted = FALSE')
           .execute(),
         manager
           .createQueryBuilder()
@@ -133,7 +134,8 @@ export default class DefaultSanityService implements SanityService {
             updatedTime: now,
             userIdUpdated: auth.userId,
           })
-          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('is_deleted = FALSE')
           .execute(),
         manager
           .createQueryBuilder()
@@ -143,7 +145,8 @@ export default class DefaultSanityService implements SanityService {
             updatedTime: now,
             userIdLast: auth.userId,
           })
-          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('is_deleted = FALSE')
           .execute(),
         manager
           .createQueryBuilder()
@@ -153,7 +156,8 @@ export default class DefaultSanityService implements SanityService {
             updatedTime: now,
             userIdUpdated: auth.userId,
           })
-          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('is_deleted = FALSE')
           .execute(),
         manager
           .createQueryBuilder()
@@ -163,7 +167,8 @@ export default class DefaultSanityService implements SanityService {
             updatedTime: now,
             userIdUpdated: auth.userId,
           })
-          .where('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('awb_number IN (:...awbs)', { awbs: payload.awb_numbers })
+          .andWhere('is_deleted = FALSE')
           .execute(),
       ]);
     });
