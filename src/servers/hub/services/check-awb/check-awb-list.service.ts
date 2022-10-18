@@ -16,7 +16,7 @@ export class CheckAwbListService {
     payload.fieldResolverMap['startTime'] = 'acs.start_time';
     payload.fieldResolverMap['endTime'] = 'acs.end_time';
     payload.fieldResolverMap['branchId'] = 'acs.branch_id';
-    payload.fieldResolverMap['nik'] = 'ue.employee_id';
+    payload.fieldResolverMap['nik'] = 'ue.nik';
     payload.fieldResolverMap['totalAwb'] = 'acs.logs';
 
     if (payload.sortBy === '') {
@@ -35,7 +35,7 @@ export class CheckAwbListService {
       ['acs.branch_id', 'branchId'],
       ['b.branch_name', 'branchName'],
       ['acs.logs', 'totalAwb'],
-      ['ue.employee_id', 'nik'],
+      ['ue.nik', 'nik'],
       ['ue.fullname', 'name'],
 
     ];
