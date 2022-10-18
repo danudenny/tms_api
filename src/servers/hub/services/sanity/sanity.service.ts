@@ -82,6 +82,17 @@ export default class DefaultSanityService implements SanityService {
           })
           .where('bag_id IN (:...ids)', { ids: bagIds })
           .execute(),
+        manager
+          .createQueryBuilder()
+          .update(HubSummaryAwb)
+          .set({
+            isDeleted: true,
+            updatedTime: now,
+            userIdUpdated: auth.userId,
+          })
+          .orWhere('bag_id_do IN (:...ids)', { ids: bagIds })
+          .orWhere('bag_id_in IN (:...ids)', { ids: bagIds })
+          .execute(),
       ]);
     });
     return {
