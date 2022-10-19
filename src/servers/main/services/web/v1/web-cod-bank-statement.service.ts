@@ -348,6 +348,7 @@ export class V1WebCodBankStatementService {
       ['t2.status_title', 'transactionStatus'],
       ['t1.bank_no_reference', 'bankNoReference'],
       ['t1.total_transaction', 'totalTransaction'],
+      ['ct.transaction_type', 'transactionType'],
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],
       ['t1.validate_datetime', 'validateDatetime'],
@@ -359,6 +360,10 @@ export class V1WebCodBankStatementService {
       ['t4.first_name', 'adminName'],
       ['t5.url', 'attachmentUrl'],
     );
+
+    q.innerJoin(e => e.transactions, 'ct', j =>
+      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+  );
 
     q.innerJoin(e => e.transactionStatus, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
@@ -379,6 +384,10 @@ export class V1WebCodBankStatementService {
       e => e.transactionStatusId,
       w => w.notEquals(TRANSACTION_STATUS.CANHO),
     );
+
+    q.groupByRaw(`
+      t1.cod_bank_statement_id, t2.status_title, ct.transaction_type, t6.first_name, t3.branch_name, t4.first_name, t5.url
+  `);
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
