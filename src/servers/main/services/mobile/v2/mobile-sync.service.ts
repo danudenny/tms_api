@@ -78,15 +78,6 @@ export class V2MobileSyncService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     let process = false;
-
-    //validation check lost
-    if(delivery.awbStatusId == AWB_STATUS.DLV){
-      let arrRetval = await AwbService.validationContainAwBStatus(true, delivery.awbNumber, delivery.awbItemId, false, true);
-      if(arrRetval[0] == true){
-        return process;
-      } 
-    }
-
     for (const deliveryHistory of delivery.deliveryHistory) {
       if (!deliveryHistory.doPodDeliverHistoryId) {
         const doPodDeliverHistory = DoPodDeliverHistory.create({
