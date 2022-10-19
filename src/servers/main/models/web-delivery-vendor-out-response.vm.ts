@@ -216,7 +216,7 @@ export class ScanOutPropertyAwbResponse {
   return_address : string;
 
   @ApiModelProperty()
-  origin_id : string;
+  origin_id : number;
 
   @ApiModelProperty()
   pickup_city : string;

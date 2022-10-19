@@ -292,7 +292,7 @@ export class WebDeliveryVendorOutService {
         response.pickup_longitude = pickupData.pickup_longitude;
         response.pickup_district_id = parseInt(pickupData.pickup_district_id);
         response.pickup_district_code = pickupData.pickup_district_code == null || pickupData.pickup_district_code == "" || pickupData.pickup_district_code === undefined ? '-' : pickupData.pickup_district_code;
-        response.origin_id = pickupData.origin_id == null || pickupData.origin_id == "" || pickupData.origin_id == undefined ? 0 : pickupData.origin_id;
+        response.origin_id = pickupData.origin_id == null || pickupData.origin_id == "" || pickupData.origin_id == undefined ? 0 : parseInt(pickupData.origin_id);
         response.pickup_city = pickupData.pickup_city == null || pickupData.pickup_city == "" || pickupData.pickup_city == undefined ? '-' : pickupData.pickup_city;
         response.service_type_code = dataAwbx.service_type_code;
         response.quantity = parseInt(dataAwbx.quantity);
