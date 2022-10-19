@@ -78,6 +78,15 @@ export class V2MobileSyncService {
     const permissonPayload = AuthService.getPermissionTokenPayload();
 
     let process = false;
+
+    //validation check lost
+    if(delivery.awbStatusId == AWB_STATUS.DLV){
+      let arrRetval = await AwbService.validationContainAwBStatus(true, delivery.awbNumber, delivery.awbItemId, false, true);
+      if(arrRetval[0] == true){
+        return process;
+      } 
+    }
+
     for (const deliveryHistory of delivery.deliveryHistory) {
       if (!deliveryHistory.doPodDeliverHistoryId) {
         const doPodDeliverHistory = DoPodDeliverHistory.create({
@@ -112,7 +121,7 @@ export class V2MobileSyncService {
 
       try {
         const awbDelivery = await this.getDoPodDeliverDetail(delivery.doPodDeliverDetailId);
-        const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS, AWB_STATUS.LOST];
+        const finalStatus = [AWB_STATUS.DLV, AWB_STATUS.BROKE, AWB_STATUS.RTS];
         if (awbDelivery && !finalStatus.includes(Number(awbDelivery.awbStatusIdLast))) {
           const awbStatus = await AwbStatus.findOne(
             { awbStatusId: lastDoPodDeliverHistory.awbStatusId },

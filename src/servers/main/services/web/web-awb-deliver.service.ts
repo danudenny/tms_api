@@ -75,13 +75,22 @@ export class WebAwbDeliverService {
                 syncManualDelivery = true;
               }
 
+              let isNotLost = true;
+              if(delivery.awbStatusId == AWB_STATUS.DLV){
+                //ketika mau scan deliver
+                let checkLost = await AwbService.validationContainAwBStatus(true, awb.awbNumber, awb.awbItemId, false, true);
+                if(checkLost[0] == true){
+                  isNotLost = false
+                }
+              }
+
               if (syncManualDelivery) {
                 // add handel final status
                 const statusFinal = [AWB_STATUS.DLV];
                 if (statusFinal.includes(awb.awbStatusIdLast)) {
                   response.status = 'error';
                   response.message = `Resi ${delivery.awbNumber} sudah Final Status !`;
-                } else if(delivery.awbStatusId == AWB_STATUS.DLV && awb.awbStatusIdLast == AWB_STATUS.LOST){
+                } else if(delivery.awbStatusId == AWB_STATUS.DLV && !isNotLost){
                   response.status = 'error';
                   response.message = `Resi ${delivery.awbNumber} lost`;
                 } else {
