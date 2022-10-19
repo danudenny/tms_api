@@ -307,7 +307,7 @@ export class AwbService {
     return rawData ? true : false;
   }
   
-  public static async validationContainAwBStatus(optionalManifested, awbNumber, awbItemId, isReturCheck): Promise<[boolean, string]> {
+  public static async validationContainAwBStatus(optionalManifested, awbNumber, awbItemId, isReturCheck, isLost = false): Promise<[boolean, string]> {
     let retVal = false;
     let retNote = null;
     let collectArrStatus = []
@@ -370,6 +370,12 @@ export class AwbService {
           return [retVal, retNote]
         }
       }
+    }
+
+    if (isLost && collectArrStatus.includes(AWB_STATUS.LOST)){
+      retVal = true;
+      retNote = `Resi ${awbNumber} barang lost`;
+      return [retVal, retNote]
     }
     
     return [retVal, retNote];
