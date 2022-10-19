@@ -240,7 +240,7 @@ export class LastMileDeliveryOutService {
     response.trouble = true;
 
     if (awb) {
-      const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false);
+      const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false, false, true);
       // NOTE: first must scan in branch
       if (checkValidAwbStatusIdLast.isValid) {
         // Add Locking setnx redis
