@@ -1586,6 +1586,19 @@ export class WebDeliveryOutService {
       },
     ];
 
+    let isAvailDoPodDeliverId = false;
+    if(payload.filters){
+      for(let data of payload.filters){
+        if(data.field == "doPodDeliverId"){
+          isAvailDoPodDeliverId = true;
+        }
+      }
+    }
+    
+    if(isAvailDoPodDeliverId == false){
+      throw new BadRequestException('payload invalid');
+    }
+
     const repo = new OrionRepositoryService(DoPodDeliverDetail, 't1');
     const q = repo.findAllRaw();
 
