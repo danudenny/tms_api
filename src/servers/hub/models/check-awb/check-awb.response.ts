@@ -29,8 +29,3 @@ export class CheckAwbResponse extends BaseResponse {
   @ApiModelProperty()
   data: CheckAwbData;
 }
-
-export interface GetAwbResponse {
-  destination: string;
-  transport_type: string;
-}

@@ -11,15 +11,15 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { HubCheckAwbQueueService } from '../../../queue/services/hub-check-awb-queue.service';
 import { CHECK_AWB_SERVICE } from '../../interfaces/check-awb.interface';
 import {
-  SortationService,
+  SortationMachineService,
   SORTATION_SERVICE,
-} from '../../interfaces/sortation-service.interface';
-import { MockSortationService } from '../mocks/sortation-service';
+} from '../../interfaces/sortation-machine-service.interface';
+import { MockSortationService } from '../mocks/sortation-machine.service';
 import { DefaultCheckAwbService } from './check-awb.service';
 
 describe('DefaultCheckAwbService', () => {
   let service: DefaultCheckAwbService;
-  let sortationService: SortationService;
+  let sortationService: SortationMachineService;
   const mockPermission = { branchId: 1 };
   const mockAuthData = { userId: 1 };
 
@@ -31,7 +31,7 @@ describe('DefaultCheckAwbService', () => {
       ],
     }).compile();
     service = module.get<DefaultCheckAwbService>(CHECK_AWB_SERVICE);
-    sortationService = module.get<SortationService>(SORTATION_SERVICE);
+    sortationService = module.get<SortationMachineService>(SORTATION_SERVICE);
   });
 
   beforeEach(() => {
@@ -78,11 +78,11 @@ describe('DefaultCheckAwbService', () => {
       andWhereRaw: () => val,
     });
     const getMockQueryBuilder = val =>
-      ({
-        select: () => getMockQueryBuilder(val),
-        innerJoinRaw: () => getMockQueryBuilder(val),
-        andWhereRaw: () => getMockDuplicateQuery(val),
-      } as any);
+    ({
+      select: () => getMockQueryBuilder(val),
+      innerJoinRaw: () => getMockQueryBuilder(val),
+      andWhereRaw: () => getMockDuplicateQuery(val),
+    } as any);
     const payload = {
       awbCheckId: uuidv1(),
       awbNumber: '0000000000',

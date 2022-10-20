@@ -9,9 +9,9 @@ import { OrionRepositoryService } from '../../../../shared/services/orion-reposi
 import { HubCheckAwbQueueService } from '../../../queue/services/hub-check-awb-queue.service';
 import { CheckAwbService } from '../../interfaces/check-awb.interface';
 import {
-  SORTATION_SERVICE,
-  SortationService,
-} from '../../interfaces/sortation-service.interface';
+  SORTATION_MACHINE_SERVICE,
+  SortationMachineService,
+} from '../../interfaces/sortation-machine-service.interface';
 import { CheckAwbPayload } from '../../models/check-awb/check-awb.payload';
 import {
   CheckAwbResponse,
@@ -21,9 +21,9 @@ import {
 @Injectable()
 export class DefaultCheckAwbService implements CheckAwbService {
   constructor(
-    @Inject(SORTATION_SERVICE)
-    private readonly sortationService: SortationService,
-  ) {}
+    @Inject(SORTATION_MACHINE_SERVICE)
+    private readonly sortationService: SortationMachineService,
+  ) { }
 
   async startSession(): Promise<StartCheckAwbResponse> {
     const session = await this.createSummary();
@@ -39,7 +39,10 @@ export class DefaultCheckAwbService implements CheckAwbService {
   async getAwb(payload: CheckAwbPayload): Promise<CheckAwbResponse> {
     const authMeta = AuthService.getAuthMetadata();
     const perm = AuthService.getPermissionTokenPayload();
-    const awb = await this.sortationService.getAwb(payload.awbNumber);
+    const awb = await this.sortationService.checkAwb({
+      tracking_number: payload.awbNumber,
+      sorting_branch_id: perm.branchId,
+    });
     const response: CheckAwbResponse = {
       statusCode: HttpStatus.OK,
       message: 'Success get AWB',
