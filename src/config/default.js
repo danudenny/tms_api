@@ -259,5 +259,8 @@ module.exports = {
   },
   hubCheckAwb: {
     maxIdleTimeInMinutes: 30,
+  },
+  sortationMachine: {
+    v2: "http://api-internal.sicepat.io/mesin-sortir/api/v2"
   }
 };

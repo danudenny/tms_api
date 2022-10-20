@@ -12,7 +12,7 @@ import { CheckAwbRequest, CheckAwbResponse } from '../../models/sortation-machin
 export class ExternalSortationMachineService implements SortationMachineService {
   constructor(private readonly httpRequestService: HttpRequestAxiosService) { }
 
-  private readonly BASE_URL = ConfigService.get('hubMonitoring.baseUrl');
+  private readonly BASE_URL = ConfigService.get('sortationMachine.v2');
 
   public async checkAwb(payload: CheckAwbRequest): Promise<CheckAwbResponse> {
     const result = await this.post('/check-awb', payload);
