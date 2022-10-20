@@ -97,13 +97,13 @@ export class AuthService {
 
   async addBlockCounter(username: string) {
     await RedisService.incr(
-      await this.fetchLoginCounterKey(username)
+      await this.fetchLoginCounterKey(username),
     );
   }
 
   async removeBlockCounter(username: string) {
     await RedisService.del(
-      await this.fetchLoginCounterKey(username)
+      await this.fetchLoginCounterKey(username),
     );
   }
 
@@ -112,10 +112,10 @@ export class AuthService {
     Number of block retry {failedPasswordRetry} times
   */
   async blockProcess(username: string) {
-    const ttlBlock = 1800; //in second
+    const ttlBlock = 1800; // in second
     const failedPasswordRetry = 3;
 
-    let checkBlock : any = await RedisService.ttl(await this.fetchLoginBlockKey(username));
+    let checkBlock: any = await RedisService.ttl(await this.fetchLoginBlockKey(username));
 
     const failedCounter = await RedisService.get(await this.fetchLoginCounterKey(username));
     if (failedCounter >= failedPasswordRetry) {
@@ -129,7 +129,7 @@ export class AuthService {
     }
 
     if (checkBlock > 0) {
-      checkBlock = Math.round(checkBlock/60);
+      checkBlock = Math.round(checkBlock / 60);
       RequestErrorService.throwObj({
         message: `Anda sudah gagal memasukan password ${failedPasswordRetry} kali, silahkan coba kembali dalam ${checkBlock} menit`,
       });
@@ -472,6 +472,10 @@ export class AuthService {
   // return boolean (true | false)
   public static get isLoggedIn() {
     return !!this.getAuthMetadata();
+  }
+
+  public static get hasPermission() {
+    return !!this.getPermissionToken();
   }
 
   // #region REQUEST_CONTEXT
