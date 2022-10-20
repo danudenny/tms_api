@@ -18,7 +18,7 @@ export class ExternalSortationMachineService implements SortationMachineService 
     const result = await this.post('/check-awb', payload);
 
     return {
-      destination: _.get(result, 'data.0.branch_id_lastmile'),
+      destination: _.get(result, 'data.0.branch_name'),
       transport_type: _.get(result, 'data.0.route_transport_map'),
     };
   }
