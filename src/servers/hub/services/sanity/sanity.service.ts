@@ -67,13 +67,14 @@ export default class DefaultSanityService implements SanityService {
     }
     const bagIds = bags.map(bag => bag.bagId);
 
-    const q = new OrionRepositoryService(HubSummaryAwb, 'hsa').findAllRaw();
+    let q = new OrionRepositoryService(HubSummaryAwb, 'hsa').findAllRaw();
     let summaries = await q
       .selectRaw(['hub_summary_awb_id', 'hsaId'])
       .andWhereRaw('bag_id_do IN (:...bagIds)', { bagIds })
       .andWhereRaw('is_deleted = FALSE');
 
     if (!summaries.length) {
+      q = new OrionRepositoryService(HubSummaryAwb, 'hsa').findAllRaw();
       summaries = await q
         .selectRaw(['hub_summary_awb_id', 'hsaId'])
         .andWhereRaw('bag_id_in IN (:...bagIds)', { bagIds })
