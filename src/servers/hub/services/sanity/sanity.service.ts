@@ -76,7 +76,7 @@ export default class DefaultSanityService implements SanityService {
     if (!summaries.length) {
       summaries = await q
         .selectRaw(['hub_summary_awb_id', 'hsaId'])
-        .andWhereRaw('bag_id_do IN (:...bagIds)', { bagIds })
+        .andWhereRaw('bag_id_in IN (:...bagIds)', { bagIds })
         .andWhereRaw('is_deleted = FALSE');
     }
 
