@@ -62,11 +62,27 @@ export default class DefaultSanityService implements SanityService {
           bagNumbers: payload.bag_numbers,
         },
       };
+    } else if (bags.length > 10) {
+      throw new BadRequestException('Max number of bags to delete is 10');
     }
     const bagIds = bags.map(bag => bag.bagId);
+
+    const q = new OrionRepositoryService(HubSummaryAwb, 'hsa').findAllRaw();
+    let summaries = await q
+      .selectRaw(['hub_summary_awb_id', 'hsaId'])
+      .andWhereRaw('bag_id_do IN (:...bagIds)', { bagIds })
+      .andWhereRaw('is_deleted = FALSE');
+
+    if (!summaries.length) {
+      summaries = await q
+        .selectRaw(['hub_summary_awb_id', 'hsaId'])
+        .andWhereRaw('bag_id_do IN (:...bagIds)', { bagIds })
+        .andWhereRaw('is_deleted = FALSE');
+    }
+
     const now = moment().toDate();
     await getManager().transaction(async manager => {
-      await Promise.all([
+      const promises = [
         manager.update(Bag, bagIds, {
           isDeleted: true,
           updatedTime: now,
@@ -82,18 +98,24 @@ export default class DefaultSanityService implements SanityService {
           })
           .where('bag_id IN (:...ids)', { ids: bagIds })
           .execute(),
-        manager
-          .createQueryBuilder()
-          .update(HubSummaryAwb)
-          .set({
-            isDeleted: true,
-            updatedTime: now,
-            userIdUpdated: auth.userId,
-          })
-          .orWhere('bag_id_do IN (:...ids)', { ids: bagIds })
-          .orWhere('bag_id_in IN (:...ids)', { ids: bagIds })
-          .execute(),
-      ]);
+      ];
+      if (summaries.length) {
+        promises.push(
+          manager
+            .createQueryBuilder()
+            .update(HubSummaryAwb)
+            .set({
+              isDeleted: true,
+              updatedTime: now,
+              userIdUpdated: auth.userId,
+            })
+            .where('hub_summary_awb_id IN (:...ids)', {
+              ids: summaries.map(s => s.hsaId),
+            })
+            .execute(),
+        );
+      }
+      await Promise.all(promises);
     });
     return {
       statusCode: HttpStatus.OK,
