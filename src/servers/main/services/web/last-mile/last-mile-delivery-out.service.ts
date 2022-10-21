@@ -471,6 +471,7 @@ export class LastMileDeliveryOutService {
                     },
                     {
                       isDeleted: true,
+                      updatedTime: moment().toDate(),
                       userIdUpdated: authMeta.userId,
                     },
                   );
