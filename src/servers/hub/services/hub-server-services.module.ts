@@ -9,7 +9,7 @@ import { MockSortationMachineService } from './mocks/sortation-machine.service';
 
 const providers = [
   { provide: SORTATION_MACHINE_SERVICE, useClass: MockSortationMachineService },
-  // { provide: SORTATION_MAHCINE_SERVICE, useClass: ExternalSortationMachineService },
+  // { provide: SORTATION_MACHINE_SERVICE, useClass: ExternalSortationMachineService },
   { provide: CHECK_AWB_SERVICE, useClass: DefaultCheckAwbService },
 ];
 
