@@ -125,7 +125,7 @@ export class CodBankStatement extends TmsBaseEntity {
   userIdTransfer: number;
 
   @Column('character varying', {
-    nullable: false,
+    nullable: true,
     length: 20,
     name: 'transaction_type',
   })
