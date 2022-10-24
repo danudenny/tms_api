@@ -124,6 +124,13 @@ export class CodBankStatement extends TmsBaseEntity {
   })
   userIdTransfer: number;
 
+  @Column('character varying', {
+    nullable: false,
+    length: 20,
+    name: 'transaction_type',
+  })
+  transactionType: string;
+
   // relation
   @ManyToOne(() => TransactionStatus)
   @JoinColumn({ name: 'transaction_status_id' })
