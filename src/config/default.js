@@ -261,6 +261,6 @@ module.exports = {
     maxIdleTimeInMinutes: 30,
   },
   sortationMachine: {
-    url: "http://api-internal.sicepat.io/mesin-sortir/api/v2"
+    url: "http://api-internal.sicepat.io/operation/mesin-sortir/mesin-sortir/api/v2"
   }
 };

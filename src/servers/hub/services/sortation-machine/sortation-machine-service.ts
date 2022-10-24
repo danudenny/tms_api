@@ -6,11 +6,15 @@ import { ConfigService } from '../../../../shared/services/config.service';
 import { HttpRequestAxiosService } from '../../../../shared/services/http-request-axios.service';
 import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import { SortationMachineService } from '../../interfaces/sortation-machine-service.interface';
-import { CheckAwbRequest, CheckAwbResponse } from '../../models/sortation-machine/sortation-machine.payload';
+import {
+  CheckAwbRequest,
+  CheckAwbResponse,
+} from '../../models/sortation-machine/sortation-machine.payload';
 
 @Injectable()
-export class ExternalSortationMachineService implements SortationMachineService {
-  constructor(private readonly httpRequestService: HttpRequestAxiosService) { }
+export class ExternalSortationMachineService
+  implements SortationMachineService {
+  constructor(private readonly httpRequestService: HttpRequestAxiosService) {}
 
   private readonly BASE_URL = ConfigService.get('sortationMachine.url');
 
@@ -46,7 +50,9 @@ export class ExternalSortationMachineService implements SortationMachineService 
         };
         if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
           PinoLoggerService.error(
-            `[ExternalSortationMachineService] Response Error: ${errResponse.message}`,
+            `[ExternalSortationMachineService] Response Error: ${
+              errResponse.message
+            }`,
           );
         }
         throw new HttpException(errResponse, status);
