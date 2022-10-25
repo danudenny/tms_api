@@ -30,6 +30,8 @@ import { SortationReportController } from './sortation/web/sortation-report-cont
 import { CheckAwbController } from './awb/check-awb.controller';
 import { CheckAwbListService } from '../services/check-awb/check-awb-list.service';
 import { CheckAwbListController } from './awb/check-awb-list.controller';
+import { CheckAwbReportController } from './awb/check-awb-report.controller';
+import { CheckAwbReportService } from '../services/check-awb/check-awb-report.service';
 
 const providers = [
   {
@@ -41,6 +43,7 @@ const providers = [
   ReportingHubPackageService,
   SortationMasterdataService,
   CheckAwbListService,
+  CheckAwbReportService,
 ];
 
 @Module({
@@ -67,7 +70,8 @@ const providers = [
     HubPackagesMonitoringController,
     SortationReportController,
     CheckAwbController,
-    CheckAwbListController
+    CheckAwbListController,
+    CheckAwbReportController,
   ],
 })
 export class HubServerControllersModule {}
