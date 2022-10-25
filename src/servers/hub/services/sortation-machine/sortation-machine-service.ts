@@ -21,6 +21,15 @@ export class ExternalSortationMachineService
   public async checkAwb(payload: CheckAwbRequest): Promise<CheckAwbResponse> {
     const result = await this.post('/check-awb', payload);
 
+    if (result.statusCode >= HttpStatus.BAD_REQUEST) {
+      const errResponse = {
+        error: result.error,
+        message: result.message || 'Terjadi kesalahan. AWB tidak ditemukan',
+        statusCode: result.statusCode,
+      };
+      throw new HttpException(errResponse, result.statusCode);
+    }
+
     return {
       destination: _.get(result, 'data.0.branch_name'),
       transport_type: _.get(result, 'data.0.route_transport_map'),
