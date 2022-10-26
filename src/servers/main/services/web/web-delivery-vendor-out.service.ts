@@ -189,7 +189,8 @@ export class WebDeliveryVendorOutService {
     //               "pickup_name": "Head Office Juanda",
     //               "receiver_name": "Bambang",
     //               "receiver_address": "Sulses",
-    //               "receiver_phone": "085214235212"
+    //               "receiver_phone": "085214235212",
+    //               "total_weight" : 10.5,
     //           },
     //           {
     //               "awb_no": "100018551114",
@@ -199,7 +200,8 @@ export class WebDeliveryVendorOutService {
     //               "pickup_name": "Head Office Juanda",
     //               "receiver_name": "Bambang",
     //               "receiver_address": "Sulses",
-    //               "receiver_phone": "085214235212"
+    //               "receiver_phone": "085214235212",
+    //               "total_weight" : 10.6,
     //           }
     //       ],
     //       "paging": {
@@ -219,9 +221,11 @@ export class WebDeliveryVendorOutService {
     let awb = [];
     let totalItem = 0;
     let totalCod = 0;
+    let totalFinalWeight = 0;
     for (let datax of data.data.details) {
       totalItem++;
       totalCod = totalCod + datax.cod_value;
+      totalFinalWeight = Number(totalFinalWeight) + Number(datax.total_weight);
       awb.push({
         awbNumber: datax.awb_no,
         consigneeName: datax.receiver_name,
@@ -239,7 +243,8 @@ export class WebDeliveryVendorOutService {
           nameDriver: data.data.vendor_name,
           vehicleNumber: '-'
         },
-        dataAWB: awb
+        dataAWB: awb,
+        totalFinalWeight : Math.round(totalFinalWeight * 100)/100
       },
       meta: {
         currentBranchName: currentBranch.branchName,
@@ -250,7 +255,7 @@ export class WebDeliveryVendorOutService {
         totalCod: totalCod
       }
     };
-    
+    console.log(jsreportParams)
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
