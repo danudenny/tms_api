@@ -65,7 +65,7 @@ module.exports = {
     level: 'error', // trace / debug / info / warn / error / silent
   },
   rebuildPickupService: {
-    baseUrl : 'http://api-internal.s.sicepat.io/operation/pickup-coresvc/'
+    baseUrl : 'http://api-internal.sicepat.io/operation/pickup-coresvc/'
   },
   queryService :{
     baseUrl : 'http://api-internal.sicepat.io/core/query-service/api/v1/',
