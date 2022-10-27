@@ -225,7 +225,7 @@ export class WebDeliveryVendorOutService {
     for (let datax of data.data.details) {
       totalItem++;
       totalCod = totalCod + datax.cod_value;
-      totalFinalWeight = Number(totalFinalWeight) + Number(datax.total_weight);
+      totalFinalWeight = Number(totalFinalWeight) + Number(datax.weight);
       awb.push({
         awbNumber: datax.awb_no,
         consigneeName: datax.receiver_name,
