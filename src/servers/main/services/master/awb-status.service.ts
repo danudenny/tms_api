@@ -92,7 +92,8 @@ export class AwbStatusService {
     awbItemAttr: AwbItemAttr,
     optionalInBranch?: Boolean,
     optionalManifested?: Boolean,
-    isReturCheck = true
+    isReturCheck = true,
+    isCheckLost = false,
   ) {
     let message = `Resi ${awbItemAttr.awbNumber} tidak dapat di proses.`;
     let isValid = false;
@@ -113,7 +114,7 @@ export class AwbStatusService {
         return { isValid, message };
       }
 
-      let arrRetval = await AwbService.validationContainAwBStatus(optionalManifested, awbItemAttr.awbNumber, awbItemAttr.awbItemId, isReturCheck);
+      let arrRetval = await AwbService.validationContainAwBStatus(optionalManifested, awbItemAttr.awbNumber, awbItemAttr.awbItemId, isReturCheck, isCheckLost);
       if(arrRetval[0] == true){
         let message = arrRetval[1]
         return {isValid, message};
