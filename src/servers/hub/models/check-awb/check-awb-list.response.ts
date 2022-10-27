@@ -55,4 +55,7 @@ export class DetailCheckAwbRespon {
   @ApiModelProperty()
   districtName: string;
 
+  @ApiModelProperty()
+  branchToName: string;
+
 }
