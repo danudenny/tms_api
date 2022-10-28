@@ -12,9 +12,9 @@ import { HubCheckAwbQueueService } from '../../../queue/services/hub-check-awb-q
 import { CHECK_AWB_SERVICE } from '../../interfaces/check-awb.interface';
 import {
   SortationMachineService,
-  SORTATION_SERVICE,
+  SORTATION_MACHINE_SERVICE,
 } from '../../interfaces/sortation-machine-service.interface';
-import { MockSortationService } from '../mocks/sortation-machine.service';
+import { MockSortationMachineService } from '../mocks/sortation-machine.service';
 import { DefaultCheckAwbService } from './check-awb.service';
 
 describe('DefaultCheckAwbService', () => {
@@ -26,12 +26,17 @@ describe('DefaultCheckAwbService', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       providers: [
-        { provide: SORTATION_SERVICE, useClass: MockSortationService },
+        {
+          provide: SORTATION_MACHINE_SERVICE,
+          useClass: MockSortationMachineService,
+        },
         { provide: CHECK_AWB_SERVICE, useClass: DefaultCheckAwbService },
       ],
     }).compile();
     service = module.get<DefaultCheckAwbService>(CHECK_AWB_SERVICE);
-    sortationService = module.get<SortationMachineService>(SORTATION_SERVICE);
+    sortationService = module.get<SortationMachineService>(
+      SORTATION_MACHINE_SERVICE,
+    );
   });
 
   beforeEach(() => {
@@ -78,11 +83,11 @@ describe('DefaultCheckAwbService', () => {
       andWhereRaw: () => val,
     });
     const getMockQueryBuilder = val =>
-    ({
-      select: () => getMockQueryBuilder(val),
-      innerJoinRaw: () => getMockQueryBuilder(val),
-      andWhereRaw: () => getMockDuplicateQuery(val),
-    } as any);
+      ({
+        select: () => getMockQueryBuilder(val),
+        innerJoinRaw: () => getMockQueryBuilder(val),
+        andWhereRaw: () => getMockDuplicateQuery(val),
+      } as any);
     const payload = {
       awbCheckId: uuidv1(),
       awbNumber: '0000000000',
@@ -90,7 +95,7 @@ describe('DefaultCheckAwbService', () => {
     const expected = {
       awbCheckId: payload.awbCheckId,
       awbNumber: payload.awbNumber,
-      destination: 'Tangerang Kudu Agung',
+      destination: 'Tangerang Kadu Agung',
       transportType: 'SMU',
     };
 
@@ -118,7 +123,7 @@ describe('DefaultCheckAwbService', () => {
     it('should throw internal server exception - sortation service throws error', async () => {
       const errMsg = 'Unexpected service error';
       jest
-        .spyOn(sortationService, 'getAwb')
+        .spyOn(sortationService, 'checkAwb')
         .mockImplementationOnce(async () => {
           throw new InternalServerErrorException(errMsg);
         });
