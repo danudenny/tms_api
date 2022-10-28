@@ -33,6 +33,7 @@ export class CheckAwbListService {
       ['acs.start_time', 'startTime'],
       ['acs.end_time', 'endTime'],
       ['acs.branch_id', 'branchId'],
+      ['b.branch_code', 'branchCode'],
       ['b.branch_name', 'branchName'],
       ['acs.logs', 'totalAwb'],
       ['ue.nik', 'nik'],
@@ -78,12 +79,8 @@ export class CheckAwbListService {
       ['acl.awb_number', 'awbNumber'],
       ['acl.created_time', 'createdTime'],
       ['a.consignee_name', 'consigneeName'],
-      ['a.consignee_name', 'consigneeName'],
       ['a.consignee_address', 'consigneeAddress'],
-      ['dt.district_name', 'districtName'],
-      [`CONCAT(
-        r.representative_code, ' - ', dt.district_name
-      )`, "branchToName"]
+      [`dt.district_name`, "branchToName"]
 
     ];
     q.selectRaw(...selectColumn)

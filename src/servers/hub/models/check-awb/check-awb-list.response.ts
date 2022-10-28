@@ -28,6 +28,9 @@ export class ListDataCheckAwbRespon {
   branchId: number;
 
   @ApiModelProperty()
+  branchCode: number;
+
+  @ApiModelProperty()
   branchName: string;
 
   @ApiModelProperty()
@@ -51,9 +54,6 @@ export class DetailCheckAwbRespon {
 
   @ApiModelProperty()
   consigneeAddress: string;
-
-  @ApiModelProperty()
-  districtName: string;
 
   @ApiModelProperty()
   branchToName: string;
