@@ -52,6 +52,7 @@ export class DefaultCheckAwbService implements CheckAwbService {
         destination: awb.destination,
         transportType: awb.transport_type,
       },
+      code: '20000',
     };
 
     // check duplicate awb scan in current branch
@@ -70,6 +71,7 @@ export class DefaultCheckAwbService implements CheckAwbService {
       .andWhereRaw('acl.is_deleted = FALSE');
 
     if (duplicate) {
+      response.code = '20001';
       return response;
     }
 
@@ -88,6 +90,7 @@ export class DefaultCheckAwbService implements CheckAwbService {
     const maxIdleTime = ConfigService.get('hubCheckAwb.maxIdleTimeInMinutes');
     if (!session || timeDifference > maxIdleTime * 60000) {
       const summary = await this.createSummary();
+      response.code = '20002';
       response.data.awbCheckId = summary.id;
     }
 
