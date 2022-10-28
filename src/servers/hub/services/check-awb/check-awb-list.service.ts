@@ -44,7 +44,7 @@ export class CheckAwbListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()))
       .innerJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()));
-
+    q.andWhere(e => e.logs, w => w.notEquals(0))
     const [objCheckAwb, count] = await Promise.all([
       q.exec(),
       q.countWithoutTakeAndSkip(),
