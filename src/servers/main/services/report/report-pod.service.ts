@@ -12,6 +12,7 @@ import axios from 'axios';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { WebAwbReturnCancelService } from '../../services/web/web-awb-return-cancel.service';
 import moment = require('moment');
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
 
 export class ReportPodService {
   static async fetchReportResult(
@@ -80,7 +81,7 @@ export class ReportPodService {
         queryParam = await this.generatePodScanInBranchQuery(payload);
         break;
       case REPORT_TYPE.PODVENDOR:
-          queryParam = await this.generatePodScanInBranchQuery(payload);
+          queryParam = await this.generatePodVendorQuery(payload);
           break;
       default:
         RequestErrorService.throwObj(
@@ -425,49 +426,27 @@ export class ReportPodService {
       },
     ];
 
-    const repo = new OrionRepositoryService(PodScanInBranch, 'psb');
-    const q = repo.findAllRaw();
-
-    payload.applyToOrionRepositoryQuery(q);
-
-    q.selectRaw(
-      [`''''||psbd.awb_number`, 'awb_number'],
-      ['psbd.route_priority', 'route_priority'],
-      ["TO_CHAR(psb.created_time, 'YYYY-MM-DD')", 'created_time'],
-      ['p.partner_id', 'partner_id'],
-      ['p.partner_name', 'partner_name'],
-      ['b.branch_name', 'branch_name'],
-      ['b.branch_code', 'branch_code'],
-    );
-
-    q.innerJoin(e => e.PodScanInBranchDetail, 'psbd', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
-    );
-    q.innerJoinRaw(
-      'pickup_request_detail',
-      'prd',
-      'psbd.awb_number = prd.ref_awb_number',
-    );
-    q.innerJoinRaw(
-      'pickup_request',
-      'pr',
-      'prd.pickup_request_id = pr.pickup_request_id',
-    );
-    q.innerJoinRaw(
-      'partner',
-      'p',
-      'p.partner_id = pr.partner_id',
-    );
-    q.innerJoinRaw(
-      'branch',
-      'b',
-      'psb.branch_id = b.branch_id',
-    );
-
-    q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    console.log(q.getQuery());
-
-    return q.getQuery();
+    let query = `
+    SELECT 
+      ov.order_vendor_code as "Nomor Surat Jalan",
+      ov.delivery_date as "Tanggal Pengiriman",
+      v.vendor_name as "Nama Vendor",
+      b.branch_name as "Gerai Asal",
+      count(ovd.awb_no) as "Total Resi",
+      ov.status as "Status"
+    FROM order_vendor ov 
+      INNER JOIN order_vendor_detail ovd 
+        ON ov.order_vendor_id = ovd.order_vendor_id and ovd.is_deleted = false
+      INNER JOIN vendor v 
+        ON ov.vendor_id = v.vendor_id
+      INNER JOIN branch b 
+      ON ov.branch_id = b.branch_id
+    WHERE 
+      ov.is_deleted = false 
+      AND ov.status != "new"
+      AND ov.delivery_date between "2022-10-25 00:00:00" and "2022-10-25 23:59:59"
+      AND ov.branch_id = 0
+    GROUP BY ov.order_vendor_id`
+    return query;
   }
 }
