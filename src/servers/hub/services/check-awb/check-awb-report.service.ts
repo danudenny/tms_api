@@ -86,14 +86,14 @@ export class CheckAwbReportService {
   private  async generateCheckAwb(payload: CheckAwbReportGeneratePayloadVm): Promise<any> {
 
     let query = `SELECT \n
-          "acs"."logs" AS "totalAwb", \n
-          "ue"."nik" AS "nik", \n
           acs.awb_check_summary_id AS "awbCheckId", \n
           acs.start_time AS "startTime", \n
           acs.end_time AS "endTime", \n
-          acs.branch_id AS "branchId", \n
+          b.branch_code AS "branchCode", \n
           b.branch_name AS "branchName", \n
-          ue.fullname AS "name" \n
+          "ue"."nik" AS "nik", \n
+          ue.fullname AS "name", \n
+          "acs"."logs" AS "totalAwb" \n
         FROM \n
           "public"."awb_check_summary" "acs" \n
           INNER JOIN "public"."users" "acs_user" ON "acs_user"."user_id" = "acs"."user_id_created" \n
@@ -105,6 +105,7 @@ export class CheckAwbReportService {
           (
             "acs"."start_time" >= '${moment(payload.startDate).format('YYYY-MM-DD')}'
             AND "acs"."start_time" < '${moment(payload.endDate).format('YYYY-MM-DD')}'
+            AND "acs"."logs" != 0
           )`;
     if (payload.branchId && payload.branchId !== 0) {
             query = query + ` AND acs.branch_id = '${payload.branchId}' \n`;
