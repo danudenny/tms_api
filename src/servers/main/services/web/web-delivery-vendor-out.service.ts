@@ -302,7 +302,7 @@ export class WebDeliveryVendorOutService {
         response.service_type_code = dataAwbx.service_type_code;
         response.quantity = parseInt(dataAwbx.quantity);
         response.total_item = parseInt(dataAwbx.total_item);
-        response.weight = parseInt(dataAwbx.weight);
+        response.weight = parseFloat(dataAwbx.weight);
         response.volumetric = "4x4x4";
         response.description_item = dataAwbx.description_item;
         response.item_value = parseInt(dataAwbx.item_value);
