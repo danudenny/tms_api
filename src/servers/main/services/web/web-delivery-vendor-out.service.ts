@@ -255,7 +255,7 @@ export class WebDeliveryVendorOutService {
         totalCod: totalCod
       }
     };
-    console.log(jsreportParams)
+    
     const listPrinterName = ['BarcodePrinter', 'StrukPrinter'];
     PrinterService.responseForJsReport({
       res,
