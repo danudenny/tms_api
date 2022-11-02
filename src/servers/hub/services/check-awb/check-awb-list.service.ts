@@ -45,7 +45,7 @@ export class CheckAwbListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()))
       .innerJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()));
-    q.andWhere(e => e.logs, w => w.notEquals(0))
+    q.andWhere(e => e.logs, w => w.notEquals(0));
     const [objCheckAwb, count] = await Promise.all([
       q.exec(),
       q.countWithoutTakeAndSkip(),
@@ -65,6 +65,8 @@ export class CheckAwbListService {
 
     payload.fieldResolverMap['awbCheckId'] = 'acl.awb_check_summary_id';
     payload.fieldResolverMap['createdTime'] = 'acl.created_time';
+    payload.fieldResolverMap['awbNumber'] = 'acl.awb_number';
+    payload.fieldResolverMap['branchToName'] = 'dt.district_name';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -80,15 +82,15 @@ export class CheckAwbListService {
       ['acl.created_time', 'createdTime'],
       ['a.consignee_name', 'consigneeName'],
       ['a.consignee_address', 'consigneeAddress'],
-      [`dt.district_name`, "branchToName"]
+      [`dt.district_name`, 'branchToName'],
 
     ];
     q.selectRaw(...selectColumn)
       .leftJoin(e => e.awb, 'a',  j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()))
-      .leftJoinRaw("district", "dt", "dt.district_id = a.to_id and a.from_type = 40 ")
-      .leftJoinRaw("branch", "bt", "bt.branch_id = dt.branch_id_delivery")
-      .leftJoinRaw("representative", "r", "r.representative_id = bt.representative_id")
+      .leftJoinRaw('district', 'dt', 'dt.district_id = a.to_id and a.from_type = 40 ')
+      // .leftJoinRaw('branch', 'bt', 'bt.branch_id = dt.branch_id_delivery');
+      // .leftJoinRaw('representative', 'r', 'r.representative_id = bt.representative_id');
 
     const [objDetailCheckAwb, count] = await Promise.all([
         q.exec(),
