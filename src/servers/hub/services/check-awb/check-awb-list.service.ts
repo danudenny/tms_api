@@ -45,7 +45,7 @@ export class CheckAwbListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()))
       .innerJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()));
-    q.andWhere(e => e.logs, w => w.notEquals(0))
+    q.andWhere(e => e.logs, w => w.notEquals(0));
     const [objCheckAwb, count] = await Promise.all([
       q.exec(),
       q.countWithoutTakeAndSkip(),
@@ -89,8 +89,8 @@ export class CheckAwbListService {
       .leftJoin(e => e.awb, 'a',  j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()))
       .leftJoinRaw('district', 'dt', 'dt.district_id = a.to_id and a.from_type = 40 ')
-      .leftJoinRaw('branch', 'bt', 'bt.branch_id = dt.branch_id_delivery')
-      .leftJoinRaw('representative', 'r', 'r.representative_id = bt.representative_id');
+      // .leftJoinRaw('branch', 'bt', 'bt.branch_id = dt.branch_id_delivery');
+      // .leftJoinRaw('representative', 'r', 'r.representative_id = bt.representative_id');
 
     const [objDetailCheckAwb, count] = await Promise.all([
         q.exec(),
