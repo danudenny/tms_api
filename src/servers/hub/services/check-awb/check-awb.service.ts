@@ -23,7 +23,7 @@ export class DefaultCheckAwbService implements CheckAwbService {
   constructor(
     @Inject(SORTATION_MACHINE_SERVICE)
     private readonly sortationService: SortationMachineService,
-  ) { }
+  ) {}
 
   async startSession(): Promise<StartCheckAwbResponse> {
     const session = await this.createSummary();
@@ -88,15 +88,17 @@ export class DefaultCheckAwbService implements CheckAwbService {
         .asMilliseconds();
     }
     const maxIdleTime = ConfigService.get('hubCheckAwb.maxIdleTimeInMinutes');
+    let awbCheckId = payload.awbCheckId;
     if (!session || timeDifference > maxIdleTime * 60000) {
       const summary = await this.createSummary();
       response.code = '20002';
+      awbCheckId = summary.id;
       response.data.awbCheckId = summary.id;
     }
 
     await HubCheckAwbQueueService.addJob({
       userId: authMeta.userId,
-      awbCheckId: payload.awbCheckId,
+      awbCheckId,
       awbNumber: payload.awbNumber,
       time: now.toDate(),
     });
