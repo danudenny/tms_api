@@ -357,7 +357,7 @@ export class WebDeliveryVendorOutService {
         prd.insurance_value as insurance_flag,
         prd.insurance_value as insurance_value,
         a.is_cod as cod_flag,
-        ai.cod_value as cod_value,
+        a.cod_value as cod_value,
         a.consignee_name as receiver_name,
         a.consignee_address as receiver_address,
         a.consignee_phone as receiver_phone,
