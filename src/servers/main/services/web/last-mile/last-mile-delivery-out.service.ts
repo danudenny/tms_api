@@ -438,7 +438,7 @@ export class LastMileDeliveryOutService {
         // }
         // #endregion validation
 
-        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false);
+        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false, true, true);
         if (checkValidAwbStatusIdLast.isValid) {
           // Add Locking setnx redis
           const holdRedis = await RedisService.lockingWithExpire(
@@ -471,6 +471,7 @@ export class LastMileDeliveryOutService {
                     },
                     {
                       isDeleted: true,
+                      updatedTime: moment().toDate(),
                       userIdUpdated: authMeta.userId,
                     },
                   );

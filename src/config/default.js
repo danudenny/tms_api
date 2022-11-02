@@ -64,6 +64,9 @@ module.exports = {
   logger: {
     level: 'debug', // trace / debug / info / warn / error / silent
   },
+  rebuildPickupService: {
+    baseUrl : 'http://api-internal.s.sicepat.io/operation/pickup-coresvc/'
+  },
   queryService :{
     baseUrl : 'http://api-internal.s.sicepat.io/core/query-service/api/v1/',
     schema: 'pod',
@@ -82,6 +85,11 @@ module.exports = {
   },
   exportService: {
     baseUrl : 'http://api-internal.s.sicepat.io/operation/reporting-service/v1' //https://swagger.s.sicepat.tech/operation/reporting-service/v1 | http://api-internal.s.sicepat.io/operation/reporting-service/v1
+  },
+  vendorLogisticService: {
+    baseUrl : 'http://api-internal.s.sicepat.io/operation/mercury/mercury/api/v1/',
+    backdoorApiKey: '3210634d6da8ea5c3f072bb94049250e-c535141c6320a3a8f22774604a6334c860a70dcd6801c356eeac91df65660669',
+    slackChannel : '#pod-awb-history',
   },
   loggly: {
     token: '7688b46a-9f23-45d4-851a-cce4d07a0596',
@@ -163,6 +171,9 @@ module.exports = {
       },
       "cod-payment": {
         destination: "/finance/cod-payment" 
+      },
+      "mercury": {
+        destination: "/operation/mercury/mercury" 
       },
     }
   },
