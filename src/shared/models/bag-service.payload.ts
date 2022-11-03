@@ -35,3 +35,17 @@ export interface InsertAWBResponse {
   total_awb_weight: number;
   total_awb: number;
 }
+
+export interface GetBagPayload {
+  bag_item_id: string;
+}
+
+export interface GetBagResponse {
+  bag_item_id: string;
+  bag_item_id_old: string;
+  weight: number;
+  bag_number: string;
+  representative_id: number;
+  representative_code: string;
+  transportation_mode: string;
+}

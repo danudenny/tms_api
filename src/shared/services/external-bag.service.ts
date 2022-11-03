@@ -5,6 +5,8 @@ import { BagService } from '../interfaces/bag.service.interface';
 import {
   CreateBagPayload,
   CreateBagResponse,
+  GetBagPayload,
+  GetBagResponse,
   InsertAWBPayload,
   InsertAWBResponse,
 } from '../models/bag-service.payload';
@@ -31,6 +33,13 @@ export class ExternalBagService extends ExternalService implements BagService {
     payload: InsertAWBPayload,
   ): Promise<InsertAWBResponse> {
     const response = await this.post('/v1/bag/awb', payload);
+    return _.get(response, 'data');
+  }
+
+  public async getBag(payload: GetBagPayload): Promise<GetBagResponse> {
+    const response = await this.get(
+      `/v1/bag-item?bag_item_id=${payload.bag_item_id}`,
+    );
     return _.get(response, 'data');
   }
 }
