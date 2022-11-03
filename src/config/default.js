@@ -262,5 +262,8 @@ module.exports = {
   },
   sortationMachine: {
     url: "http://api-internal.sicepat.io/operation/mesin-sortir/mesin-sortir/api/v2"
+  },
+  bagService: {
+    url: "http://api-internal.sicepat.io/operation/bag/bag/api",
   }
 };

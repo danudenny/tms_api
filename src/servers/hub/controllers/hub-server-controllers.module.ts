@@ -32,6 +32,7 @@ import { CheckAwbListService } from '../services/check-awb/check-awb-list.servic
 import { CheckAwbListController } from './awb/check-awb-list.controller';
 import { CheckAwbReportController } from './awb/check-awb-report.controller';
 import { CheckAwbReportService } from '../services/check-awb/check-awb-report.service';
+import { HubBagController } from './bag/bag.controller';
 
 const providers = [
   {
@@ -72,6 +73,7 @@ const providers = [
     CheckAwbController,
     CheckAwbListController,
     CheckAwbReportController,
+    HubBagController,
   ],
 })
 export class HubServerControllersModule {}
