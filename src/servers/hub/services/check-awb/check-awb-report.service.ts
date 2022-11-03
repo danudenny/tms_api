@@ -86,8 +86,8 @@ export class CheckAwbReportService {
   private  async generateCheckAwb(payload: CheckAwbReportGeneratePayloadVm): Promise<any> {
 
     let query = `SELECT \n
-        acs.start_time AS "tgl_mulai_scan_resi", \n
-        acs.end_time AS "tgl_selesai_scan_resi", \n
+        TO_CHAR(acs.start_time, 'DD Mon YYYY HH24:MI') AS "tgl_mulai_scan_resi", \n
+	      TO_CHAR(acs.end_time, 'DD Mon YYYY HH24:MI') AS "tgl_selesai_scan_resi", \n
         b.branch_code AS "analitic", \n
         b.branch_name AS "hub_scan_resi", \n
         concat(ue.nik+' - ', ue.fullname) as sorter,  \n
