@@ -86,14 +86,12 @@ export class CheckAwbReportService {
   private  async generateCheckAwb(payload: CheckAwbReportGeneratePayloadVm): Promise<any> {
 
     let query = `SELECT \n
-          acs.awb_check_summary_id AS "awbCheckId", \n
-          acs.start_time AS "startTime", \n
-          acs.end_time AS "endTime", \n
-          b.branch_code AS "branchCode", \n
-          b.branch_name AS "branchName", \n
-          "ue"."nik" AS "nik", \n
-          ue.fullname AS "name", \n
-          "acs"."logs" AS "totalAwb" \n
+        acs.start_time AS "tgl_mulai_scan_resi", \n
+        acs.end_time AS "tgl_selesai_scan_resi", \n
+        acs.branch_id AS "analitic", \n
+        b.branch_name AS "hub_scan_resi", \n
+        concat(ue.nik+' - ', ue.fullname) as sorter,  \n
+        "acs"."logs" AS "total_resi"
         FROM \n
           "public"."awb_check_summary" "acs" \n
           INNER JOIN "public"."users" "acs_user" ON "acs_user"."user_id" = "acs"."user_id_created" \n
