@@ -189,7 +189,8 @@ export class WebDeliveryVendorOutService {
     //               "pickup_name": "Head Office Juanda",
     //               "receiver_name": "Bambang",
     //               "receiver_address": "Sulses",
-    //               "receiver_phone": "085214235212"
+    //               "receiver_phone": "085214235212",
+    //               "total_weight" : 10.5,
     //           },
     //           {
     //               "awb_no": "100018551114",
@@ -199,7 +200,8 @@ export class WebDeliveryVendorOutService {
     //               "pickup_name": "Head Office Juanda",
     //               "receiver_name": "Bambang",
     //               "receiver_address": "Sulses",
-    //               "receiver_phone": "085214235212"
+    //               "receiver_phone": "085214235212",
+    //               "total_weight" : 10.6,
     //           }
     //       ],
     //       "paging": {
@@ -219,9 +221,11 @@ export class WebDeliveryVendorOutService {
     let awb = [];
     let totalItem = 0;
     let totalCod = 0;
+    let totalFinalWeight = 0;
     for (let datax of data.data.details) {
       totalItem++;
       totalCod = totalCod + datax.cod_value;
+      totalFinalWeight = Number(totalFinalWeight) + Number(datax.weight);
       awb.push({
         awbNumber: datax.awb_no,
         consigneeName: datax.receiver_name,
@@ -239,7 +243,8 @@ export class WebDeliveryVendorOutService {
           nameDriver: data.data.vendor_name,
           vehicleNumber: '-'
         },
-        dataAWB: awb
+        dataAWB: awb,
+        totalFinalWeight : Math.round(totalFinalWeight * 100)/100
       },
       meta: {
         currentBranchName: currentBranch.branchName,
@@ -292,12 +297,12 @@ export class WebDeliveryVendorOutService {
         response.pickup_longitude = pickupData.pickup_longitude;
         response.pickup_district_id = parseInt(pickupData.pickup_district_id);
         response.pickup_district_code = pickupData.pickup_district_code == null || pickupData.pickup_district_code == "" || pickupData.pickup_district_code === undefined ? '-' : pickupData.pickup_district_code;
-        response.origin_id = pickupData.origin_id == null || pickupData.origin_id == "" || pickupData.origin_id == undefined ? 0 : parseInt(pickupData.origin_id);
+        response.origin_id = pickupData.origin_id == null || pickupData.origin_id == "" || pickupData.origin_id == undefined || pickupData.origin_id <= 0 ? 0 : parseInt(pickupData.origin_id);
         response.pickup_city = pickupData.pickup_city == null || pickupData.pickup_city == "" || pickupData.pickup_city == undefined ? '-' : pickupData.pickup_city;
         response.service_type_code = dataAwbx.service_type_code;
         response.quantity = parseInt(dataAwbx.quantity);
         response.total_item = parseInt(dataAwbx.total_item);
-        response.weight = parseInt(dataAwbx.weight);
+        response.weight = parseFloat(dataAwbx.weight);
         response.volumetric = "4x4x4";
         response.description_item = dataAwbx.description_item;
         response.item_value = parseInt(dataAwbx.item_value);
@@ -352,7 +357,7 @@ export class WebDeliveryVendorOutService {
         prd.insurance_value as insurance_flag,
         prd.insurance_value as insurance_value,
         a.is_cod as cod_flag,
-        ai.cod_value as cod_value,
+        a.total_cod_value as cod_value,
         a.consignee_name as receiver_name,
         a.consignee_address as receiver_address,
         a.consignee_phone as receiver_phone,
@@ -417,11 +422,11 @@ export class WebDeliveryVendorOutService {
       c.origin_id as origin_id,
       f.city_name as pickup_city
     FROM users a
-      INNER JOIN user_role b on a.user_id = b.user_id
-      INNER JOIN branch c on b.branch_id = c.branch_id
-      INNER JOIN district d on c.district_id = d.district_id
+      LEFT JOIN user_role b on a.user_id = b.user_id
+      LEFT JOIN branch c on b.branch_id = c.branch_id
+      LEFT JOIN district d on c.district_id = d.district_id
       INNER JOIN employee e on a.employee_id = e.employee_id
-      INNER JOIN city f on d.city_id = f.city_id
+      LEFT JOIN city f on d.city_id = f.city_id
     WHERE a.user_id = :userID
     AND b.branch_id = :branchID
     LIMIT 1
