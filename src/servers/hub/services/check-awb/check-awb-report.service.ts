@@ -88,7 +88,7 @@ export class CheckAwbReportService {
     let query = `SELECT \n
         acs.start_time AS "tgl_mulai_scan_resi", \n
         acs.end_time AS "tgl_selesai_scan_resi", \n
-        acs.branch_id AS "analitic", \n
+        b.branch_code AS "analitic", \n
         b.branch_name AS "hub_scan_resi", \n
         concat(ue.nik+' - ', ue.fullname) as sorter,  \n
         "acs"."logs" AS "total_resi"
