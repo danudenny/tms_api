@@ -4,7 +4,7 @@ export interface CreateBagPayload {
   branch_last_mile_id: number;
   representative_id_to: number;
   representative_code: string;
-  tag_seal_number: string;
+  tag_seal_number?: string;
   chute_number: number;
   bag_type: string;
   transportation_mode: string;
