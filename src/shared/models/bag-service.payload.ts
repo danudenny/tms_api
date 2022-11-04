@@ -48,4 +48,5 @@ export interface GetBagResponse {
   representative_id: number;
   representative_code: string;
   transportation_mode: string;
+  awbs: string[];
 }

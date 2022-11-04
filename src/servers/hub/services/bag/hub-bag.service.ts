@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpStatus,
   Inject,
   Injectable,
@@ -52,6 +53,11 @@ export class DefaultHubBagService implements HubBagService {
 
     if (payload.bagId && payload.bagItemId) {
       const bag: GetBagResponse = response[1];
+      // check if awb is scanned previously
+      if (bag.awbs.includes(payload.awbNumber)) {
+        throw new BadRequestException('Resi sudah pernah di-scan');
+      }
+
       // check if awb has same destination & transportation_mode
       if (awb.transport_type != bag.transportation_mode) {
         throw new UnprocessableEntityException('Mode transportasi berbeda');

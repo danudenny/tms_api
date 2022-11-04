@@ -37,6 +37,7 @@ export class MockBagService implements BagService {
       representative_id: 87,
       representative_code: 'TES',
       transportation_mode: 'SMD',
+      awbs: ['601000000101'],
     };
   }
 }
