@@ -13,6 +13,7 @@ import { MetaService } from '../../../../shared/services/meta.service';
 import { WebAwbReturnCancelService } from '../../services/web/web-awb-return-cancel.service';
 import moment = require('moment');
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { Payload } from 'aws-sdk/clients/iotdata';
 
 export class ReportPodService {
   static async fetchReportResult(
@@ -412,19 +413,29 @@ export class ReportPodService {
   }
 
   static async generatePodVendorQuery(payload: BaseMetaPayloadVm) {
-    payload.fieldResolverMap['awbNumber'] = 'psbd.awb_number';
-    payload.fieldResolverMap['routePriority'] = 'psbd.route_priority';
-    payload.fieldResolverMap['createdTime'] = 'psb.created_time';
-    payload.fieldResolverMap['partnerID'] = 'p.partner_id';
-    payload.fieldResolverMap['partnerName'] = 'p.partner_name';
-    payload.fieldResolverMap['branchName'] = 'b.branch_name';
-    payload.fieldResolverMap['branchCode'] = 'b.branch_code';
-    
-    payload.globalSearchFields = [
-      {
-        field: 'branch_code',
-      },
-    ];
+
+    let startDate = moment().add(-30, 'days').format('YYYY-MM-DD 00:00:00');
+    let endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+    let branchId = 0;
+    let vendorId = 0;
+
+    for(let data of payload.filters){
+      if (data.field == 'startDate') {
+        startDate = data.value;
+      }
+
+      if (data.field == 'endDate') {
+        endDate = data.value;
+      }
+
+      if (data.field == 'branchId') {
+        branchId = data.value;
+      }
+
+      if (data.field == 'vendorId') {
+        vendorId = data.value;
+      }
+    }
 
     let query = `
     SELECT 
@@ -444,8 +455,9 @@ export class ReportPodService {
     WHERE 
       ov.is_deleted = false 
       AND ov.status != "new"
-      AND ov.delivery_date between "2022-10-25 00:00:00" and "2022-10-25 23:59:59"
-      AND ov.branch_id = 0
+      AND ov.delivery_date between "${startDate}" and "${endDate}"
+      AND ov.origin_branch_id = ${branchId}
+      AND ov.vendor_id = ${vendorId}
     GROUP BY ov.order_vendor_id`
     return query;
   }
