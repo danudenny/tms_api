@@ -12,6 +12,7 @@ import {
 } from '../models/bag-service.payload';
 import { ExternalService } from './base-external.service';
 import { HttpRequestAxiosService } from './http-request-axios.service';
+import { SharedService } from './shared.service';
 
 export const EXT_BAG_SVC_URL = 'EXT_BAG_SVC_URL';
 
@@ -37,9 +38,8 @@ export class ExternalBagService extends ExternalService implements BagService {
   }
 
   public async getBag(payload: GetBagPayload): Promise<GetBagResponse> {
-    const response = await this.get(
-      `/v1/bag-item?bag_item_id=${payload.bag_item_id}`,
-    );
+    const query = SharedService.getHttpQuery(payload);
+    const response = await this.get(`/v1/bag-item?${query}`);
     const bag = _.get(response, 'data');
     bag.awbs = bag.awbs ? bag.awbs.map(awb => awb.reference) : [];
     return bag;
