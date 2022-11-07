@@ -418,6 +418,7 @@ export class ReportPodService {
     let endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
     let branchId = 0;
     let vendorId = 0;
+    let queryBranch = `AND ov.origin_branch_id = ${branchId}`
 
     for(let data of payload.filters){
       if (data.field == 'startDate') {
@@ -437,8 +438,8 @@ export class ReportPodService {
       }
     }
 
-    if(branchId == 0){
-      throw new BadRequestException(`Branch tidak ditemukan`);
+    if(branchId != 0){
+      queryBranch = ``
     }
 
     if(vendorId == 0){
@@ -464,7 +465,7 @@ export class ReportPodService {
       ov.is_deleted = false 
       AND ov.status != "new"
       AND ov.delivery_date between "${startDate}" and "${endDate}"
-      AND ov.origin_branch_id = ${branchId}
+      ${queryBranch}
       AND ov.vendor_id = ${vendorId}
     GROUP BY ov.order_vendor_id`
     return query;
