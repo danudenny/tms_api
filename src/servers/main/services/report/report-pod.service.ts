@@ -437,6 +437,14 @@ export class ReportPodService {
       }
     }
 
+    if(branchId == 0){
+      throw new BadRequestException(`Branch tidak ditemukan`);
+    }
+
+    if(vendorId == 0){
+      throw new BadRequestException(`Vendor tidak ditemukan`);
+    }
+
     let query = `
     SELECT 
       ov.order_vendor_code as "Nomor Surat Jalan",
