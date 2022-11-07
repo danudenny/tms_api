@@ -22,7 +22,7 @@ export class MockBagService implements BagService {
     payload: InsertAWBPayload,
   ): Promise<InsertAWBResponse> {
     return {
-      bag_id: '123234324',
+      bag_id: '61c1494786158d5dabdef1df',
       total_awb_weight: 20,
       total_awb: 5,
     };
