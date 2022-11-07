@@ -418,7 +418,6 @@ export class ReportPodService {
     let endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
     let branchId = 0;
     let vendorId = 0;
-    let queryBranch = `AND ov.origin_branch_id = ${branchId}`
 
     for(let data of payload.filters){
       if (data.field == 'startDate') {
@@ -438,6 +437,7 @@ export class ReportPodService {
       }
     }
 
+    let queryBranch = `AND ov.origin_branch_id = ${branchId}`
     if(branchId != 0){
       queryBranch = ``
     }
