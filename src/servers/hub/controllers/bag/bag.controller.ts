@@ -7,8 +7,10 @@ import {
   HUB_BAG_SERVICE,
   HubBagService,
 } from '../../interfaces/hub-bag.interface';
-import { HubBagInsertAwbPayload } from '../../models/bag/hub-bag.payload';
-import { StartCheckAwbResponse } from '../../models/check-awb/check-awb.response';
+import {
+  HubBagInsertAwbPayload,
+  HubBagInsertAwbResponse,
+} from '../../models/bag/hub-bag.payload';
 
 @ApiUseTags('Hub Bags Controller')
 @Controller('hub/bag')
@@ -21,7 +23,7 @@ export class HubBagController {
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public insertAWB(
     @Body() payload: HubBagInsertAwbPayload,
-  ): Promise<StartCheckAwbResponse> {
+  ): Promise<HubBagInsertAwbResponse> {
     return this.service.insertAWB(payload);
   }
 }
