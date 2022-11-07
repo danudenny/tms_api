@@ -448,26 +448,31 @@ export class ReportPodService {
 
     let query = `
     SELECT 
-      ov.order_vendor_code as "Nomor Surat Jalan",
-      ov.delivery_date as "Tanggal Pengiriman",
-      v.vendor_name as "Nama Vendor",
-      b.branch_name as "Gerai Asal",
-      count(ovd.awb_no) as "Total Resi",
-      ov.status as "Status"
-    FROM order_vendor ov 
-      INNER JOIN order_vendor_detail ovd 
-        ON ov.order_vendor_id = ovd.order_vendor_id and ovd.is_deleted = false
-      INNER JOIN vendor v 
-        ON ov.vendor_id = v.vendor_id
-      INNER JOIN branch b 
-      ON ov.branch_id = b.branch_id
+      ov.order_vendor_code as "Nomor Surat Jalan", 
+      ov.delivery_date as "Tanggal Pengiriman", 
+      v.vendor_name as "Nama Vendor", 
+      b.branch_name as "Gerai Asal", 
+      count(ovd.awb_no) as "Total Resi", 
+      ov.status as "Status" 
+    FROM 
+      mercury.order_vendor ov 
+      inner JOIN mercury.order_vendor_detail ovd ON ov.order_vendor_id = ovd.order_vendor_id 
+      and ovd.is_deleted = false 
+      inner JOIN mercury.vendor v ON ov.vendor_id = v.vendor_id 
+      inner JOIN branch b ON ov.branch_id = b.branch_id 
     WHERE 
       ov.is_deleted = false 
-      AND ov.status != "new"
-      AND ov.delivery_date between "${startDate}" and "${endDate}"
+      AND ov.status != 'new'
+      AND ov.delivery_date between '${startDate}'
+      and '${endDate}'
       ${queryBranch}
-      AND ov.vendor_id = ${vendorId}
-    GROUP BY ov.order_vendor_id`
+      AND ov.vendor_id = '${vendorId}'
+    GROUP BY 
+      ov.order_vendor_code,
+      ov.delivery_date,
+      v.vendor_name,
+      b.branch_name,
+      ov.status`
     return query;
   }
 }
