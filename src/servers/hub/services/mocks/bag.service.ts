@@ -6,6 +6,7 @@ import {
   InsertAWBResponse,
   GetBagPayload,
   GetBagResponse,
+  GetBagSummaryResponse,
 } from '../../../../shared/models/bag-service.payload';
 
 export class MockBagService implements BagService {
@@ -38,6 +39,19 @@ export class MockBagService implements BagService {
       representative_code: 'TES',
       transportation_mode: 'SMD',
       awbs: ['601000000101'],
+    };
+  }
+
+  public async getBagSummary(
+    payload: GetBagPayload,
+  ): Promise<GetBagSummaryResponse> {
+    return {
+      weight: 44.8,
+      bag_number: 'ZBPJ0YU03Z',
+      representative_id: 87,
+      representative_code: 'TES',
+      transportation_mode: 'SMD',
+      awbs: 1,
     };
   }
 }

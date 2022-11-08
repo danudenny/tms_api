@@ -6,15 +6,31 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import express = require('express');
+import moment = require('moment');
 
-import { BAG_SERVICE, BagService } from '../../../../shared/interfaces/bag.service.interface';
+import {
+  BAG_SERVICE,
+  BagService,
+} from '../../../../shared/interfaces/bag.service.interface';
 import { GetBagResponse } from '../../../../shared/models/bag-service.payload';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { Branch } from '../../../../shared/orm-entity/branch';
+import { Representative } from '../../../../shared/orm-entity/representative';
+import { User } from '../../../../shared/orm-entity/user';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { PrinterService } from '../../../../shared/services/printer.service';
 import { HubBagService } from '../../interfaces/hub-bag.interface';
-import { SORTATION_MACHINE_SERVICE, SortationMachineService } from '../../interfaces/sortation-machine-service.interface';
-import { HubBagInsertAwbPayload, HubBagInsertAwbResponse } from '../../models/bag/hub-bag.payload';
+import {
+  SORTATION_MACHINE_SERVICE,
+  SortationMachineService,
+} from '../../interfaces/sortation-machine-service.interface';
+import {
+  HubBagInsertAwbPayload,
+  HubBagInsertAwbResponse,
+  HubBagSummary,
+} from '../../models/bag/hub-bag.payload';
 import { GetAwbResponse } from '../../models/sortation-machine/sortation-machine.payload';
 
 @Injectable()
@@ -44,6 +60,8 @@ export class DefaultHubBagService implements HubBagService {
 
     const response = await Promise.all(promises);
     const awb: GetAwbResponse = response[0];
+    console.log('awb', awb);
+    let bagNumber: string;
 
     if (payload.bagId && payload.bagItemId) {
       const bag: GetBagResponse = response[1];
@@ -59,10 +77,11 @@ export class DefaultHubBagService implements HubBagService {
       if (awb.representative != bag.representative_code) {
         throw new UnprocessableEntityException('Representatif tujuan berbeda');
       }
+      bagNumber = bag.bag_number;
     } else {
       // Create a new bag
       const bag = await this.bagService.create({
-        branch_id: perm.branchId,
+        branch_id: Number(perm.branchId.toString()),
         district_code: awb.district_code,
         branch_last_mile_id: awb.branch_id_lastmile,
         representative_id_to: awb.representative_id,
@@ -70,10 +89,11 @@ export class DefaultHubBagService implements HubBagService {
         chute_number: 0,
         bag_type: 'MAN',
         transportation_mode: awb.transport_type,
-        user_id: auth.userId,
+        user_id: Number(auth.userId.toString()),
       });
       payload.bagId = bag.bag_id;
       payload.bagItemId = bag.bag_item_id;
+      bagNumber = bag.bag_number;
     }
 
     await this.bagService.insertAWB({
@@ -95,6 +115,9 @@ export class DefaultHubBagService implements HubBagService {
         awbNumber: payload.awbNumber,
         bagId: payload.bagId,
         bagItemId: payload.bagItemId,
+        representativeCode: awb.representative,
+        transportationMode: awb.transport_type,
+        bagNumber,
       },
     };
   }
@@ -147,5 +170,63 @@ export class DefaultHubBagService implements HubBagService {
     bagItem.bag.bagNumber = bagNumber.substring(0, 10);
 
     return bagItem;
+  }
+
+  public async getSummary(bagItemId: string): Promise<HubBagSummary> {
+    const bag = await this.bagService.getBagSummary({ bag_item_id: bagItemId });
+    const representative = await Representative.findOne(bag.representative_id, {
+      select: ['representativeName'],
+    });
+    return {
+      bagNumber: bag.bag_number,
+      weight: bag.weight,
+      awbs: bag.awbs,
+      transportationMode: bag.transportation_mode,
+      representativeCode: bag.representative_code,
+      representativeName: representative.representativeName,
+    };
+  }
+
+  public async printSticker(
+    bagSummary: HubBagSummary,
+    userId: number,
+    branchId: number,
+    res: express.Response,
+  ): Promise<any> {
+    const branch = await Branch.findOne(
+      { branchId, isDeleted: false },
+      { select: ['branchName'] },
+    );
+    const user = await User.findOne(
+      { userId, isDeleted: false },
+      {
+        select: ['firstName', 'lastName'],
+      },
+    );
+    const now = moment().format('YYYY-MM-DD HH:mm');
+    const command = `
+    SIZE 80 mm, 100 mm
+    SPEED 3
+    DENSITY 8
+    DIRECTION 0
+    OFFSET 0
+    CLS
+    TEXT 30,120,"5",0,1,1,0,"GABUNGAN PAKET"
+    BARCODE 30,200,"128",100,1,0,3,10, ${bagSummary.bagNumber}
+    TEXT 30,380,"3",0,1,1,Berat       : ${bagSummary.weight}
+    TEXT 30,420,"3",0,1,1,Total Paket : ${bagSummary.awbs}
+    TEXT 30,460,"3",0,1,1,0,[${bagSummary.transportationMode}]
+    TEXT 30,500,"6",0,1,1,0,${bagSummary.representativeCode}
+    TEXT 30,550,"4",0,1,1,0,${bagSummary.representativeName}
+    TEXT 30,600,"2",0,1,1,0,${branch.branchName}
+    TEXT 30,630,"2",0,1,1,0,${user.firstName} ${user.lastName}
+    TEXT 30,660,"2",0,1,1,0,${now}
+    PRINT 1
+    EOP`;
+    PrinterService.responseForRawCommands({
+      res,
+      rawCommands: command,
+      printerName: 'BarcodePrinter',
+    });
   }
 }

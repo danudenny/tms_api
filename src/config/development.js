@@ -61,5 +61,8 @@ module.exports = {
   },
   sortationMachine: {
     url: "https://swagger.s.sicepat.tech/operation/mesin-sortir/mesin-sortir/api/v2"
+  },
+  bagService: {
+    url: "https://swagger.s.sicepat.tech/operation/bag/bag/api",
   }
 };

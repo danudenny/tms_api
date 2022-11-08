@@ -7,6 +7,7 @@ import {
   CreateBagResponse,
   GetBagPayload,
   GetBagResponse,
+  GetBagSummaryResponse,
   InsertAWBPayload,
   InsertAWBResponse,
 } from '../models/bag-service.payload';
@@ -38,10 +39,22 @@ export class ExternalBagService extends ExternalService implements BagService {
   }
 
   public async getBag(payload: GetBagPayload): Promise<GetBagResponse> {
-    const query = SharedService.getHttpQuery(payload);
-    const response = await this.get(`/v1/bag-item?${query}`);
+    const response = await this.get(
+      `/v1/bag-item?bag-item-id=${payload.bag_item_id}`,
+    );
     const bag = _.get(response, 'data');
     bag.awbs = bag.awbs ? bag.awbs.map(awb => awb.reference) : [];
+    return bag;
+  }
+
+  public async getBagSummary(
+    payload: GetBagPayload,
+  ): Promise<GetBagSummaryResponse> {
+    const response = await this.get(
+      `/v1/bag-item?bag-item-id=${payload.bag_item_id}`,
+    );
+    const bag = _.get(response, 'data');
+    bag.awbs = bag.awbs ? bag.awbs.length : 0;
     return bag;
   }
 }
