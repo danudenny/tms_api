@@ -50,3 +50,12 @@ export interface GetBagResponse {
   transportation_mode: string;
   awbs: string[];
 }
+
+export interface GetBagSummaryResponse {
+  weight: number;
+  bag_number: string;
+  representative_id: number;
+  representative_code: string;
+  transportation_mode: string;
+  awbs: number;
+}

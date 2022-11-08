@@ -30,7 +30,6 @@ export class HubBagInsertAwbResponse extends BaseResponse {
   data: HubBagInsertAwbResponseData;
 }
 
-
 export class PrintHubBagQuery {
   @ApiModelProperty()
   bagItemId: string;
@@ -40,4 +39,13 @@ export class PrintHubBagQuery {
 
   @ApiModelProperty()
   branchId: number;
+}
+
+export interface HubBagSummary {
+  bagNumber: string;
+  weight: number;
+  awbs: number;
+  representativeCode: string;
+  representativeName: string;
+  transportationMode: string;
 }
