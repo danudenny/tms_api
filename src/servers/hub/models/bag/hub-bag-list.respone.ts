@@ -9,7 +9,7 @@ export class CheckBagGpListResponVm extends BaseMetaResponse {
 
 export class ListDataBagRespon {
   @ApiModelProperty()
-  bagId: string;
+  bagIdNew: string;
 
   @ApiModelProperty()
   bagNumber: string;

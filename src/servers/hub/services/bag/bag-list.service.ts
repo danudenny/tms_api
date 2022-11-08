@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { Bag } from '../../../../shared/orm-entity/bag';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { BagItemAwb } from '../../../../shared/orm-entity/bag-item-awb';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { MetaService } from '../../../../shared/services/meta.service';
@@ -33,7 +34,7 @@ export class DefaultBagListService implements HubBagListService {
     payload.applyToOrionRepositoryQuery(q, true);
 
     const selectColumn = [
-      ['t1.bag_id_new', 'bagId'],
+      ['t1.bag_id_new', 'bagIdNew'],
       ['t1.bag_number', 'bagNumber'],
       ['SUBSTRING( CONCAT( t1.bag_number, LPAD(t2.bag_seq :: text, 3, \'0\') ), 1, 10 )', 'bagNumberCode'],
       ['t1.ref_representative_code', 'representativeCode'],
@@ -45,9 +46,10 @@ export class DefaultBagListService implements HubBagListService {
       ['t5.branch_name', 'branchScanName'],
       ['t5.branch_id', 'branchScanId'],
       ['bagItem.awbCount', 'totalAwb'],
-      ['CONCAT( CAST(\'t2\'.\'weight\' AS NUMERIC(20, 2)), \' Kg\' )', 'weight'],
+      ['CONCAT( CAST(\'t2.weight\' AS NUMERIC(20, 2)), \' Kg\' )', 'weight'],
 
     ];
+    q.selectRaw(...selectColumn);
     q.innerJoin(e => e.bagItems, 't2', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse())),
     q.innerJoinRaw(
@@ -82,19 +84,18 @@ export class DefaultBagListService implements HubBagListService {
   }
 
   public async detailBag(payload: BaseMetaPayloadVm): Promise<CheckBagDetailResponVm> {
-    payload.fieldResolverMap['bagItemIdNew'] = 'bia.bag_item_id_new';
+    payload.fieldResolverMap['bagIdNew'] = 'bi.bag_id_new';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
     }
 
-    const repo = new OrionRepositoryService(BagItemAwb, 'bia');
+    const repo = new OrionRepositoryService(BagItem, 'bi');
     const q = repo.findAllRaw();
     payload.applyToOrionRepositoryQuery(q, true);
 
     const selectColumn = [
       ['bia.awb_number', 'awbNumber'],
-      ['bia.bag_item_id_new', 'bagItemIdNew'],
       ['bia.created_time', 'createdTime'],
       ['a.consignee_name', 'consigneeName'],
       ['a.consignee_address', 'consigneeAddress'],
@@ -102,7 +103,9 @@ export class DefaultBagListService implements HubBagListService {
     ];
 
     q.selectRaw(...selectColumn)
-    .innerJoin(e => e.awbItem.awb, 'a',  j =>
+    .innerJoin(e => e.bagItemAwbs, 'bia',  j =>
+    j.andWhere(e => e.isDeleted, w => w.isFalse()))
+    .innerJoin(e => e.bagItemAwbs.awbItem.awb, 'a', j =>
     j.andWhere(e => e.isDeleted, w => w.isFalse()))
     .leftJoinRaw('district', 'd', 'd.district_id = a.to_id and a.from_type = 40 ');
 
