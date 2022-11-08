@@ -36,26 +36,19 @@ export class DefaultBagListService implements HubBagListService {
     const selectColumn = [
       ['t1.bag_id_new', 'bagIdNew'],
       ['t1.bag_number', 'bagNumber'],
-      ['SUBSTRING( CONCAT( t1.bag_number, LPAD(t2.bag_seq :: text, 3, \'0\') ), 1, 10 )', 'bagNumberCode'],
       ['t1.ref_representative_code', 'representativeCode'],
       ['t1.transportation_mode', 'transportMode'],
-      ['t2.bag_seq', 'bagSeq'],
       ['t1.created_time', 'createdTime'],
-      ['t3.branch_name', 'branchName'],
-      ['t3.branch_id', 'branchId'],
-      ['t5.branch_name', 'branchScanName'],
+      ['t5.branch_name', 'branchFromName'],
       ['t5.branch_id', 'branchScanId'],
       ['bagItem.awbCount', 'totalAwb'],
-      ['CONCAT( CAST(\'t2.weight\' AS NUMERIC(20, 2)), \' Kg\' )', 'weight'],
-
+      ['CONCAT( CAST(t2.weight AS NUMERIC(20, 2)), \' Kg\' )', 'weight'],
     ];
     q.selectRaw(...selectColumn);
-    q.innerJoin(e => e.bagItems, 't2', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse())),
     q.innerJoinRaw(
-        'branch',
-        't3',
-        `t3.branch_id = t1.branch_id_to AND t3.is_deleted = false
+        'bag_item',
+        't2',
+        `t2.bag_id = t1.bag_id AND t2.is_deleted = false
         INNER JOIN LATERAL(
           select
               count(bia.bag_item_awb_id) as awbCount
@@ -85,6 +78,9 @@ export class DefaultBagListService implements HubBagListService {
 
   public async detailBag(payload: BaseMetaPayloadVm): Promise<CheckBagDetailResponVm> {
     payload.fieldResolverMap['bagIdNew'] = 'bi.bag_id_new';
+    payload.fieldResolverMap['awbNumber'] = 'bia.awb_number';
+    payload.fieldResolverMap['createdTime'] = 'bia.created_time';
+    payload.fieldResolverMap['branchToName'] = 'd.district_name';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
