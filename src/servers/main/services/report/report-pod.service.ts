@@ -120,6 +120,7 @@ export class ReportPodService {
       return response.data;
     } catch (error) {
       if (error.response) {
+        console.log(error.response.data)
         throw new BadRequestException(error.response.data);
       }
       throw error;
@@ -473,6 +474,7 @@ export class ReportPodService {
       v.vendor_name,
       b.branch_name,
       ov.status`
+      console.log(query);
     return query;
   }
 }
