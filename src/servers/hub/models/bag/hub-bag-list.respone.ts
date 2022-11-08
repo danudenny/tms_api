@@ -21,13 +21,16 @@ export class ListDataBagRespon {
   branchFromName: string;
 
   @ApiModelProperty()
+  branchScanId: string;
+
+  @ApiModelProperty()
   representativeCode: string;
 
   @ApiModelProperty()
   transportMode: string;
 
   @ApiModelProperty()
-  totalResi: number;
+  totalAwb: number;
 
   @ApiModelProperty()
   weight: string;
