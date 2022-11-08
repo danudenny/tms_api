@@ -438,8 +438,8 @@ export class ReportPodService {
       }
     }
 
-    let queryBranch = `AND ov.origin_branch_id = ${branchId}`
-    if(branchId != 0){
+    let queryBranch = `AND ov.branch_id = ${branchId}`
+    if(branchId == 0){
       queryBranch = ``
     }
 
