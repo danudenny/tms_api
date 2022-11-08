@@ -172,7 +172,7 @@ export class DefaultHubBagService implements HubBagService {
       awbs: bagItem.bagItemAwbs ? bagItem.bagItemAwbs.length : 0,
     };
 
-    PrinterService.responseForJsReport({
+    await PrinterService.responseForJsReport({
       res,
       templates: [
         {
@@ -226,7 +226,7 @@ export class DefaultHubBagService implements HubBagService {
     TEXT 30,660,"2",0,1,1,0,${now}
     PRINT 1
     EOP`;
-    PrinterService.responseForRawCommands({
+    await PrinterService.responseForRawCommands({
       res,
       rawCommands: command,
       printerName: 'BarcodePrinter',

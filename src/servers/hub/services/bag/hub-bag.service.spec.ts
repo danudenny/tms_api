@@ -1,5 +1,6 @@
 import { HttpStatus, InternalServerErrorException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { BaseEntity } from 'typeorm';
 
 import {
   BAG_SERVICE,
@@ -7,8 +8,12 @@ import {
 } from '../../../../shared/interfaces/bag.service.interface';
 import { JwtPermissionTokenPayload } from '../../../../shared/interfaces/jwt-payload.interface';
 import { AuthLoginMetadata } from '../../../../shared/models/auth-login-metadata.model';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
+import { Branch } from '../../../../shared/orm-entity/branch';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
+import { PrinterService } from '../../../../shared/services/printer.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
 import {
   HUB_BAG_SERVICE,
   HubBagService,
@@ -349,6 +354,84 @@ describe('DefaultHubBagService', () => {
       } catch (err) {
         err = err.response;
         expect(err.statusCode).toEqual(HttpStatus.NOT_FOUND);
+      }
+    });
+  });
+
+  describe('print', () => {
+    const mockBagItem = { bagItemId: '63588cd81e421c6da5ccc5d4' };
+    const mockUser = { employee: { nickname: 'A' } };
+    const mockBranch = { branchName: 'B' };
+    const getMockQueryBuilder = val => {
+      return { select: () => val } as any;
+    };
+    const getMockRepo = val =>
+      ({
+        loadById: () => getMockQueryBuilder(val),
+      } as any);
+    it('should call PrinterService', async () => {
+      jest
+        .spyOn(RepositoryService, 'user', 'get')
+        .mockReturnValue(getMockRepo(mockUser));
+      jest
+        .spyOn(Branch, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockBranch as unknown) as BaseEntity),
+        );
+      jest
+        .spyOn(PrinterService, 'responseForJsReport')
+        .mockImplementation(async () => {});
+      await service.print(
+        (mockBagItem as unknown) as Partial<BagItem>,
+        mockAuthData.userId,
+        mockPermission.branchId,
+        null,
+      );
+      expect(PrinterService.responseForJsReport).toBeCalled();
+    });
+
+    it('should throw an internal server error', async () => {
+      jest.spyOn(RepositoryService, 'user', 'get').mockImplementation(() => {
+        throw new InternalServerErrorException('Unexpected Service Error');
+      });
+      try {
+        await service.print(
+          (mockBagItem as unknown) as Partial<BagItem>,
+          mockAuthData.userId,
+          mockPermission.branchId,
+          null,
+        );
+      } catch (err) {
+        err = err.response;
+        expect(err.statusCode).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    });
+
+    it('should throw an internal server error from PrinterService', async () => {
+      jest
+        .spyOn(RepositoryService, 'user', 'get')
+        .mockReturnValue(getMockRepo(mockUser));
+      jest
+        .spyOn(Branch, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockBranch as unknown) as BaseEntity),
+        );
+      jest
+        .spyOn(PrinterService, 'responseForJsReport')
+        .mockImplementation(async () => {
+          throw new InternalServerErrorException('Unexpected service error');
+        });
+
+      try {
+        await service.print(
+          (mockBagItem as unknown) as Partial<BagItem>,
+          mockAuthData.userId,
+          mockPermission.branchId,
+          null,
+        );
+      } catch (err) {
+        err = err.response;
+        expect(err.statusCode).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
       }
     });
   });
