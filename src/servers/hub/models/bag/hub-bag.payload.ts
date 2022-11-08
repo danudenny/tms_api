@@ -29,3 +29,15 @@ class HubBagInsertAwbResponseData {
 export class HubBagInsertAwbResponse extends BaseResponse {
   data: HubBagInsertAwbResponseData;
 }
+
+
+export class PrintHubBagQuery {
+  @ApiModelProperty()
+  bagItemId: string;
+
+  @ApiModelProperty()
+  userId: number;
+
+  @ApiModelProperty()
+  branchId: number;
+}

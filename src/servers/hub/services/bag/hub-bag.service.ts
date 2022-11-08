@@ -3,24 +3,18 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 
-import {
-  BAG_SERVICE,
-  BagService,
-} from '../../../../shared/interfaces/bag.service.interface';
+import { BAG_SERVICE, BagService } from '../../../../shared/interfaces/bag.service.interface';
 import { GetBagResponse } from '../../../../shared/models/bag-service.payload';
+import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { HubBagService } from '../../interfaces/hub-bag.interface';
-import {
-  SORTATION_MACHINE_SERVICE,
-  SortationMachineService,
-} from '../../interfaces/sortation-machine-service.interface';
-import {
-  HubBagInsertAwbPayload,
-  HubBagInsertAwbResponse,
-} from '../../models/bag/hub-bag.payload';
+import { SORTATION_MACHINE_SERVICE, SortationMachineService } from '../../interfaces/sortation-machine-service.interface';
+import { HubBagInsertAwbPayload, HubBagInsertAwbResponse } from '../../models/bag/hub-bag.payload';
 import { GetAwbResponse } from '../../models/sortation-machine/sortation-machine.payload';
 
 @Injectable()
@@ -103,5 +97,55 @@ export class DefaultHubBagService implements HubBagService {
         bagItemId: payload.bagItemId,
       },
     };
+  }
+
+  public async get(bagItemId: string): Promise<Partial<BagItem>> {
+    const q = new OrionRepositoryService(BagItem, 'bi').findOne();
+    const selection = {
+      bagItemId: true,
+      bagSeq: true,
+      weight: true,
+      bag: {
+        bagId: true,
+        bagNumber: true,
+        branch: {
+          branchName: true,
+          branchCode: true,
+        },
+      },
+      bagItemAwbs: {
+        bagItemAwbId: true,
+        awbItem: {
+          awbItemId: true,
+          awb: {
+            awbNumber: true,
+            consigneeName: true,
+            consigneeNumber: true,
+            totalWeightReal: true,
+          },
+        },
+      },
+    };
+    const bagItem = await q
+      .select(selection)
+      .whereRaw('bi.bag_item_id_new = :id', { id: bagItemId })
+      .andWhereRaw('bi.is_deleted = FALSE')
+      .take(1);
+    if (!bagItem) {
+      throw new NotFoundException('Gabung Paket tidak ditemukan!');
+    }
+    if (bagItem.bagItemAwbs) {
+      bagItem.bagItemAwbs.forEach(bia => {
+        if (bia.awbItem && bia.awbItem.awb) {
+          bia.awbItem.awb.totalWeightFinalRounded =
+            bia.awbItem.awb.totalWeightReal;
+        }
+      });
+    }
+    const bagSeq = bagItem.bagSeq.toString().padStart(3, '0');
+    const bagNumber = `${bagItem.bag.bagNumber}${bagSeq}`;
+    bagItem.bag.bagNumber = bagNumber.substring(0, 10);
+
+    return bagItem;
   }
 }

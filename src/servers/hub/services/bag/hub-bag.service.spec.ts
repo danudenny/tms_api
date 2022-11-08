@@ -8,6 +8,7 @@ import {
 import { JwtPermissionTokenPayload } from '../../../../shared/interfaces/jwt-payload.interface';
 import { AuthLoginMetadata } from '../../../../shared/models/auth-login-metadata.model';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import {
   HUB_BAG_SERVICE,
   HubBagService,
@@ -288,5 +289,68 @@ describe('DefaultHubBagService', () => {
         expect(err.statusCode).toEqual(HttpStatus.UNPROCESSABLE_ENTITY);
       }
     });
+  });
+
+  describe('get', () => {
+    const bagItemId = '63588cd81e421c6da5ccc5d4';
+    const mockBagItem = {
+      changedValues: {},
+      bagItemId: '1585080473506295808',
+      weight: '2.10000',
+      bagSeq: 1,
+      bag: {
+        changedValues: {},
+        bagId: '1585080473489518592',
+        bagNumber: '438MO4RL99',
+        branch: {
+          changedValues: {},
+          branchCode: '3601001',
+          branchName: 'Kantor Pusat 1',
+        },
+      },
+      bagItemAwbs: [
+        {
+          bagItemAwbId: '1585081839066812416',
+          awbItem: {
+            awbItemId: '46958266',
+            awb: {
+              awbNumber: '210011003304',
+              consigneeName: 'A`',
+              consigneeNumber: '0123456789',
+              totalWeightReal: '2.10000',
+              totalWeightFinalRounded: '2.10000',
+            },
+          },
+        },
+      ],
+    };
+
+    const getMockQueryBuilder = val =>
+      ({
+        select: () => getMockQueryBuilder(val),
+        whereRaw: () => getMockQueryBuilder(val),
+        andWhereRaw: () => getMockQueryBuilder(val),
+        take: () => val,
+      } as any);
+
+      it('should return a bagItem', async () => {
+        jest
+          .spyOn(OrionRepositoryService.prototype, 'findOne')
+          .mockReturnValue(getMockQueryBuilder(mockBagItem));
+        const result = await service.get(bagItemId);
+        expect(result).toEqual(mockBagItem);
+      });
+
+      it('should throw a not found error', async () => {
+        jest
+          .spyOn(OrionRepositoryService.prototype, 'findOne')
+          .mockReturnValue(getMockQueryBuilder(null));
+        try {
+          await service.get(bagItemId);
+        } catch (err) {
+          err = err.response;
+          expect(err.statusCode).toEqual(HttpStatus.NOT_FOUND);
+        }
+      });
   });
 });
