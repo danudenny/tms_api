@@ -25,7 +25,7 @@ module.exports = {
     cloudSecretAccessKey: 'a+R/bJ/Nl7Wt1EW6RuBNeOxS6SQxpe3xkCAC/KHt',
   },
   printerHelper: {
-    url: 'http://jsreport.sicepat.com/wcpp',
+    url: 'http://jsreportstaging.sicepat.com/wcpp',
   },
   queue: {
     doPodDetailPostMeta: {

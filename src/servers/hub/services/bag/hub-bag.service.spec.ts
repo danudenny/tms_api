@@ -302,30 +302,23 @@ describe('DefaultHubBagService', () => {
     const bagItemId = '63588cd81e421c6da5ccc5d4';
     const mockBagItem = {
       changedValues: {},
-      bagItemId: '1585080473506295808',
-      weight: '2.10000',
+      weight: '6.00000',
       bagSeq: 1,
       bag: {
         changedValues: {},
-        bagId: '1585080473489518592',
-        bagNumber: '438MO4RL99',
-        branch: {
-          changedValues: {},
-          branchCode: '3601001',
-          branchName: 'Kantor Pusat 1',
-        },
+        bagNumber: 'SPE7W7Q819',
+        transportationMode: 'SMD',
       },
       bagItemAwbs: [
         {
-          bagItemAwbId: '1585081839066812416',
+          bagItemAwbId: '1589839066352844800',
           awbItem: {
-            awbItemId: '46958266',
+            awbItemId: '46971288',
             awb: {
-              awbNumber: '210011003304',
-              consigneeName: 'A`',
-              consigneeNumber: '0123456789',
+              awbNumber: '014991020870',
+              consigneeName: 'A',
+              consigneeNumber: '6280123456789',
               totalWeightReal: '2.10000',
-              totalWeightFinalRounded: '2.10000',
             },
           },
         },
@@ -336,8 +329,7 @@ describe('DefaultHubBagService', () => {
       ({
         select: () => getMockQueryBuilder(val),
         whereRaw: () => getMockQueryBuilder(val),
-        andWhereRaw: () => getMockQueryBuilder(val),
-        take: () => val,
+        andWhereRaw: () => val,
       } as any);
 
     it('should return a bagItem', async () => {

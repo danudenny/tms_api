@@ -21,6 +21,7 @@ import { User } from '../../../../shared/orm-entity/user';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
+import { RepositoryService } from '../../../../shared/services/repository.service';
 import { HubBagService } from '../../interfaces/hub-bag.interface';
 import {
   SORTATION_MACHINE_SERVICE,
@@ -60,7 +61,7 @@ export class DefaultHubBagService implements HubBagService {
 
     const response = await Promise.all(promises);
     const awb: GetAwbResponse = response[0];
-    console.log('awb', awb);
+
     let bagNumber: string;
 
     if (payload.bagId && payload.bagItemId) {
@@ -125,17 +126,9 @@ export class DefaultHubBagService implements HubBagService {
   public async get(bagItemId: string): Promise<Partial<BagItem>> {
     const q = new OrionRepositoryService(BagItem, 'bi').findOne();
     const selection = {
-      bagItemId: true,
-      bagSeq: true,
       weight: true,
-      bag: {
-        bagId: true,
-        bagNumber: true,
-        branch: {
-          branchName: true,
-          branchCode: true,
-        },
-      },
+      bagSeq: true,
+      bag: { bagNumber: true, transportationMode: true },
       bagItemAwbs: {
         bagItemAwbId: true,
         awbItem: {
@@ -152,24 +145,43 @@ export class DefaultHubBagService implements HubBagService {
     const bagItem = await q
       .select(selection)
       .whereRaw('bi.bag_item_id_new = :id', { id: bagItemId })
-      .andWhereRaw('bi.is_deleted = FALSE')
-      .take(1);
+      .andWhereRaw('bi.is_deleted = FALSE');
     if (!bagItem) {
       throw new NotFoundException('Gabung Paket tidak ditemukan!');
-    }
-    if (bagItem.bagItemAwbs) {
-      bagItem.bagItemAwbs.forEach(bia => {
-        if (bia.awbItem && bia.awbItem.awb) {
-          bia.awbItem.awb.totalWeightFinalRounded =
-            bia.awbItem.awb.totalWeightReal;
-        }
-      });
     }
     const bagSeq = bagItem.bagSeq.toString().padStart(3, '0');
     const bagNumber = `${bagItem.bag.bagNumber}${bagSeq}`;
     bagItem.bag.bagNumber = bagNumber.substring(0, 10);
 
     return bagItem;
+  }
+
+  public async print(
+    bagItem: Partial<BagItem>,
+    userId: number,
+    branchId: number,
+    res: express.Response,
+  ): Promise<any> {
+    const [user, branch] = await this.getUserAndBranch(userId, branchId);
+    const now = moment();
+    const meta = {
+      user,
+      branch,
+      date: now.format('DD/MM/YY'),
+      time: now.format('HH:mm'),
+      awbs: bagItem.bagItemAwbs ? bagItem.bagItemAwbs.length : 0,
+    };
+
+    PrinterService.responseForJsReport({
+      res,
+      templates: [
+        {
+          templateName: 'hub-gabungan-paket',
+          templateData: { data: bagItem, meta },
+        },
+      ],
+      listPrinterName: ['StrukPrinter'],
+    });
   }
 
   public async getSummary(bagItemId: string): Promise<HubBagSummary> {
@@ -193,18 +205,9 @@ export class DefaultHubBagService implements HubBagService {
     branchId: number,
     res: express.Response,
   ): Promise<any> {
-    const branch = await Branch.findOne(
-      { branchId, isDeleted: false },
-      { select: ['branchName'] },
-    );
-    const user = await User.findOne(
-      { userId, isDeleted: false },
-      {
-        select: ['firstName', 'lastName'],
-      },
-    );
+    const [user, branch] = await this.getUserAndBranch(userId, branchId);
     const now = moment().format('YYYY-MM-DD HH:mm');
-    const command = `
+    const command = `\
     SIZE 80 mm, 100 mm
     SPEED 3
     DENSITY 8
@@ -218,8 +221,8 @@ export class DefaultHubBagService implements HubBagService {
     TEXT 30,460,"3",0,1,1,0,[${bagSummary.transportationMode}]
     TEXT 30,500,"6",0,1,1,0,${bagSummary.representativeCode}
     TEXT 30,550,"4",0,1,1,0,${bagSummary.representativeName}
-    TEXT 30,600,"2",0,1,1,0,${branch.branchName}
-    TEXT 30,630,"2",0,1,1,0,${user.firstName} ${user.lastName}
+    TEXT 30,600,"2",0,1,1,0,${branch}
+    TEXT 30,630,"2",0,1,1,0,${user}
     TEXT 30,660,"2",0,1,1,0,${now}
     PRINT 1
     EOP`;
@@ -228,5 +231,30 @@ export class DefaultHubBagService implements HubBagService {
       rawCommands: command,
       printerName: 'BarcodePrinter',
     });
+  }
+
+  private async getUserAndBranch(
+    userId: number,
+    branchId: number,
+  ): Promise<[string, string]> {
+    const [user, branch] = await Promise.all([
+      await RepositoryService.user.loadById(userId).select({
+        userId: true,
+        employee: {
+          nickname: true,
+        },
+      }),
+      Branch.findOne(
+        { branchId, isDeleted: false },
+        { select: ['branchName'] },
+      ),
+    ]);
+    if (!branch) {
+      throw new BadRequestException('Cabang tidak ditemukan!');
+    }
+    if (!user) {
+      throw new BadRequestException('User tidak ditemukan!');
+    }
+    return [user.employee.nickname, branch.branchName];
   }
 }

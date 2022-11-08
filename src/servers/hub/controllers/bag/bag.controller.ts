@@ -13,7 +13,6 @@ import express = require('express');
 import { ApiUseTags } from '../../../../shared/external/nestjs-swagger';
 import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
-import { PrintBagItemPaperService } from '../../../main/services/print-bag-item-paper.service';
 import {
   HUB_BAG_SERVICE,
   HubBagService,
@@ -45,9 +44,6 @@ export class HubBagController {
     @Response() rw: express.Response,
   ): Promise<any> {
     const bagItem = await this.hubBagService.get(query.bagItemId);
-    PrintBagItemPaperService.printBagItemPaperAndQueryMeta(rw, bagItem, {
-      userId: query.userId,
-      branchId: query.branchId,
-    });
+    await this.hubBagService.print(bagItem, query.userId, query.branchId, rw);
   }
 }

@@ -14,6 +14,12 @@ export interface HubBagService {
     payload: HubBagInsertAwbPayload,
   ) => Promise<HubBagInsertAwbResponse>;
   get: (bagItemId: string) => Promise<Partial<BagItem>>;
+  print: (
+    bagItem: Partial<BagItem>,
+    userId: number,
+    branchId: number,
+    res: express.Response,
+  ) => Promise<any>;
   getSummary: (bagItemId: string) => Promise<HubBagSummary>;
   printSticker: (
     bagSummary: HubBagSummary,
