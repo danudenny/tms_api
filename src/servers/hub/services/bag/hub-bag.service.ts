@@ -60,6 +60,8 @@ export class DefaultHubBagService implements HubBagService {
 
     const response = await Promise.all(promises);
     const awb: GetAwbResponse = response[0];
+    console.log('awb', awb);
+    let bagNumber: string;
 
     if (payload.bagId && payload.bagItemId) {
       const bag: GetBagResponse = response[1];
@@ -75,10 +77,11 @@ export class DefaultHubBagService implements HubBagService {
       if (awb.representative != bag.representative_code) {
         throw new UnprocessableEntityException('Representatif tujuan berbeda');
       }
+      bagNumber = bag.bag_number;
     } else {
       // Create a new bag
       const bag = await this.bagService.create({
-        branch_id: perm.branchId,
+        branch_id: Number(perm.branchId.toString()),
         district_code: awb.district_code,
         branch_last_mile_id: awb.branch_id_lastmile,
         representative_id_to: awb.representative_id,
@@ -86,10 +89,11 @@ export class DefaultHubBagService implements HubBagService {
         chute_number: 0,
         bag_type: 'MAN',
         transportation_mode: awb.transport_type,
-        user_id: auth.userId,
+        user_id: Number(auth.userId.toString()),
       });
       payload.bagId = bag.bag_id;
       payload.bagItemId = bag.bag_item_id;
+      bagNumber = bag.bag_number;
     }
 
     await this.bagService.insertAWB({
@@ -111,6 +115,9 @@ export class DefaultHubBagService implements HubBagService {
         awbNumber: payload.awbNumber,
         bagId: payload.bagId,
         bagItemId: payload.bagItemId,
+        representativeCode: awb.representative,
+        transportationMode: awb.transport_type,
+        bagNumber,
       },
     };
   }

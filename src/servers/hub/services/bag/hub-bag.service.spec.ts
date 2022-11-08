@@ -75,17 +75,18 @@ describe('DefaultHubBagService', () => {
         bag_item_id: '61c1494786158d5dabdef1e0',
         bag_status_id: 3000,
       };
-      jest.spyOn(sortationService, 'getAwb').mockReturnValue(
-        Promise.resolve({
-          awb_item_id: 46958266,
-          weight: 2.1,
-          transport_type: 'SMU',
-          district_code: 'DCODE',
-          branch_id_lastmile: 1,
-          representative_id: 1,
-          representative: 'SUB',
-        }),
-      );
+      const mockAwb = {
+        awb_item_id: 46958266,
+        weight: 2.1,
+        transport_type: 'SMU',
+        district_code: 'DCODE',
+        branch_id_lastmile: 1,
+        representative_id: 1,
+        representative: 'SUB',
+      };
+      jest
+        .spyOn(sortationService, 'getAwb')
+        .mockReturnValue(Promise.resolve(mockAwb));
       jest
         .spyOn(bagService, 'create')
         .mockReturnValue(Promise.resolve(mockBag));
@@ -108,6 +109,9 @@ describe('DefaultHubBagService', () => {
         awbNumber: createBagPayload.awbNumber,
         bagId: mockBag.bag_id,
         bagItemId: mockBag.bag_item_id,
+        bagNumber: mockBag.bag_number,
+        transportationMode: mockAwb.transport_type,
+        representativeCode: mockAwb.representative,
       });
     });
 
@@ -150,18 +154,18 @@ describe('DefaultHubBagService', () => {
         transportation_mode: 'SMD',
         awbs: ['601000000101'],
       };
-
-      jest.spyOn(sortationService, 'getAwb').mockReturnValue(
-        Promise.resolve({
-          awb_item_id: 46958266,
-          weight: 2.1,
-          transport_type: 'SMD',
-          district_code: 'DCODE',
-          branch_id_lastmile: 1,
-          representative_id: 87,
-          representative: 'SUB',
-        }),
-      );
+      const mockAwb = {
+        awb_item_id: 46958266,
+        weight: 2.1,
+        transport_type: 'SMD',
+        district_code: 'DCODE',
+        branch_id_lastmile: 1,
+        representative_id: 87,
+        representative: 'SUB',
+      };
+      jest
+        .spyOn(sortationService, 'getAwb')
+        .mockReturnValue(Promise.resolve(mockAwb));
       jest
         .spyOn(bagService, 'getBag')
         .mockReturnValue(Promise.resolve(mockBag));
@@ -182,6 +186,9 @@ describe('DefaultHubBagService', () => {
         awbNumber: payload.awbNumber,
         bagId: payload.bagId,
         bagItemId: payload.bagItemId,
+        bagNumber: mockBag.bag_number,
+        transportationMode: mockAwb.transport_type,
+        representativeCode: mockAwb.representative,
       });
     });
 
@@ -333,24 +340,24 @@ describe('DefaultHubBagService', () => {
         take: () => val,
       } as any);
 
-      it('should return a bagItem', async () => {
-        jest
-          .spyOn(OrionRepositoryService.prototype, 'findOne')
-          .mockReturnValue(getMockQueryBuilder(mockBagItem));
-        const result = await service.get(bagItemId);
-        expect(result).toEqual(mockBagItem);
-      });
+    it('should return a bagItem', async () => {
+      jest
+        .spyOn(OrionRepositoryService.prototype, 'findOne')
+        .mockReturnValue(getMockQueryBuilder(mockBagItem));
+      const result = await service.get(bagItemId);
+      expect(result).toEqual(mockBagItem);
+    });
 
-      it('should throw a not found error', async () => {
-        jest
-          .spyOn(OrionRepositoryService.prototype, 'findOne')
-          .mockReturnValue(getMockQueryBuilder(null));
-        try {
-          await service.get(bagItemId);
-        } catch (err) {
-          err = err.response;
-          expect(err.statusCode).toEqual(HttpStatus.NOT_FOUND);
-        }
-      });
+    it('should throw a not found error', async () => {
+      jest
+        .spyOn(OrionRepositoryService.prototype, 'findOne')
+        .mockReturnValue(getMockQueryBuilder(null));
+      try {
+        await service.get(bagItemId);
+      } catch (err) {
+        err = err.response;
+        expect(err.statusCode).toEqual(HttpStatus.NOT_FOUND);
+      }
+    });
   });
 });

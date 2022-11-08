@@ -24,6 +24,15 @@ class HubBagInsertAwbResponseData {
 
   @ApiModelProperty()
   bagItemId: string;
+
+  @ApiModelProperty()
+  bagNumber: string;
+
+  @ApiModelProperty()
+  representativeCode: string;
+
+  @ApiModelProperty()
+  transportationMode: string;
 }
 
 export class HubBagInsertAwbResponse extends BaseResponse {
