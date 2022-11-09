@@ -49,7 +49,7 @@ export class BagReportingService {
 
     let query = `SELECT \n
             t1.bag_number AS "gabung_paket", \n
-            t1.created_time AS "tgl_gabung_paket", \n
+            TO_CHAR(t1.created_time, 'DD Mon YYYY HH24:MI') AS "tgl_gabung_paket", \n
             t5.branch_name AS "gerai_asal", \n
             t1.ref_representative_code AS "perwakilan_tujuan", \n
             COUNT (t6.*) as "total_resi", \n
