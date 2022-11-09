@@ -450,7 +450,7 @@ export class ReportPodService {
     let query = `
     SELECT 
       ov.order_vendor_code as "Nomor Surat Jalan", 
-      ov.delivery_date as "Tanggal Pengiriman", 
+      TO_CHAR(ov.delivery_date, 'YYYY-MM-DD') as "Tanggal Pengiriman", 
       v.vendor_name as "Nama Vendor", 
       b.branch_name as "Gerai Asal", 
       count(ovd.awb_no) as "Total Resi", 
