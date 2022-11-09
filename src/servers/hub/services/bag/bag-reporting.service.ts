@@ -33,7 +33,6 @@ export class BagReportingService {
     // encode query generate sortation
     const encodeQuery = await this.generateBag(payload);
     // endpoint to redshift
-
     const params: GenerateQueueOptionPayloadVm = {
       userId: authMeta.userId};
     const formData: GenerateQueueFormDataPayloadVm = {
@@ -45,44 +44,39 @@ export class BagReportingService {
 
   }
 
-  private async generateBag(payload  ): Promise<any> {
+  private async generateBag(payload: BagReportGeneratePayloadVm ): Promise<any> {
 
-    let query = `SELECT \n
-            t1.bag_number AS "gabung_paket", \n
-            TO_CHAR(t1.created_time, 'DD Mon YYYY HH24:MI') AS "tgl_gabung_paket", \n
-            t5.branch_name AS "gerai_asal", \n
-            t1.ref_representative_code AS "perwakilan_tujuan", \n
-            COUNT (t6.*) as "total_resi", \n
-            CONCAT(
-              CAST(
-                "t2"."weight" AS NUMERIC(20, 2)
-              ),
-              ' Kg'
-            ) AS "weight" \n
-          FROM \n
-            "public"."bag" "t1" \n
-            INNER JOIN "public"."bag_item" "t2" ON "t2"."bag_id" = "t1"."bag_id" \n
-            AND ("t2"."is_deleted" = 'false') \n
-            INNER JOIN "public"."branch" "t3" ON "t3"."branch_id" = "t1"."branch_id_to" \n
-            AND ("t3"."is_deleted" = 'false') \n
-            LEFT JOIN "public"."branch" "t5" ON "t5"."branch_id" = "t1"."branch_id" \n
-            AND ("t5"."is_deleted" = 'false') \n
-            inner join "public"."bag_item_awb" "t6" on "t6"."bag_item_id" = "t2"."bag_item_id" \n
-            and ("t6"."is_deleted" = 'false') \n
-          WHERE \n
-            (
-              "t1"."created_time" >= '${moment(payload.startDate).format('YYYY-MM-DD')} \n
-              AND "t1"."created_time" < '${moment(payload.endDate).format('YYYY-MM-DD')}'  \n
-            )
-          `;
+    let query = ` SELECT
+      t1.bag_number AS "gabung_paket",
+      TO_CHAR(t1.created_time, 'DD Mon YYYY HH24:MI') AS "tgl_gabung_paket",
+      t5.branch_name AS "gerai_asal",
+      t1.ref_representative_code AS "perwakilan_tujuan",
+      COUNT (t6.*) as "total_resi",
+        CONCAT(
+            CAST("t2"."weight" AS NUMERIC(20, 2)),
+            ' Kg'
+        ) AS "weight"
+    FROM
+        "public"."bag" "t1"
+        INNER JOIN "public"."bag_item" "t2" ON "t2"."bag_id" = "t1"."bag_id"
+        AND ("t2"."is_deleted" = 'false')
+        LEFT JOIN "public"."branch" "t5" ON "t5"."branch_id" = "t1"."branch_id"
+        AND ("t5"."is_deleted" = 'false')
+        inner join "public"."bag_item_awb" "t6" on "t6"."bag_item_id" = "t2"."bag_item_id"
+        AND ("t6"."is_deleted" = 'false')
+        WHERE \n
+          (
+            "t1"."created_time" >= '${moment(payload.startDate).format('YYYY-MM-DD')}'
+            AND "t1"."created_time" < '${moment(payload.endDate).format('YYYY-MM-DD')}'
+          )\n`;
     if (payload.branchId && payload.branchId !== 0) {
-        query = query + ` AND acs.branch_id = '${payload.branchId}' \n`;
+        query = query + `AND t1.branch_id = '${payload.branchId}'`;
       }
     query = query + `
         and "t1"."is_deleted" = false
         AND "t1"."is_sortir" = false
         and "t1"."is_manual" = true
-          group by
+        GROUP by
           t1.bag_number,
           t1.created_time,
           t1.ref_representative_code,
@@ -90,7 +84,6 @@ export class BagReportingService {
           t2.weight
         ORDER BY
           "t1"."created_time" desc;`;
-
     return Buffer.from(query).toString('base64');
   }
 
