@@ -33,7 +33,6 @@ export class BagReportingService {
     // encode query generate sortation
     const encodeQuery = await this.generateBag(payload);
     // endpoint to redshift
-
     const params: GenerateQueueOptionPayloadVm = {
       userId: authMeta.userId};
     const formData: GenerateQueueFormDataPayloadVm = {
@@ -45,7 +44,7 @@ export class BagReportingService {
 
   }
 
-  private async generateBag(payload  ): Promise<any> {
+  private async generateBag(payload: BagReportGeneratePayloadVm ): Promise<any> {
 
     let query = ` SELECT
       t1.bag_number AS "gabung_paket",
@@ -79,7 +78,7 @@ export class BagReportingService {
         and "t1"."is_deleted" = false
         AND "t1"."is_sortir" = false
         and "t1"."is_manual" = true
-          group by
+        GROUP by
           t1.bag_number,
           t1.created_time,
           t1.ref_representative_code,
@@ -87,6 +86,7 @@ export class BagReportingService {
           t2.weight
         ORDER BY
           "t1"."created_time" desc;`;
+
     return Buffer.from(query).toString('base64');
   }
 
