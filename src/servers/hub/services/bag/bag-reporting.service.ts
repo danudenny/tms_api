@@ -60,8 +60,6 @@ export class BagReportingService {
         "public"."bag" "t1"
         INNER JOIN "public"."bag_item" "t2" ON "t2"."bag_id" = "t1"."bag_id"
         AND ("t2"."is_deleted" = 'false')
-        INNER JOIN "public"."branch" "t3" ON "t3"."branch_id" = "t1"."branch_id_to"
-        AND ("t3"."is_deleted" = 'false')
         LEFT JOIN "public"."branch" "t5" ON "t5"."branch_id" = "t1"."branch_id"
         AND ("t5"."is_deleted" = 'false')
         inner join "public"."bag_item_awb" "t6" on "t6"."bag_item_id" = "t2"."bag_item_id"
@@ -86,7 +84,6 @@ export class BagReportingService {
           t2.weight
         ORDER BY
           "t1"."created_time" desc;`;
-
     return Buffer.from(query).toString('base64');
   }
 
