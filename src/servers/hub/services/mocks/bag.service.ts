@@ -48,7 +48,7 @@ export class MockBagService implements BagService {
     return {
       weight: 44.8,
       bag_number: 'ZBPJ0YU03Z',
-      representative_id: 87,
+      representative_id_to: 87,
       representative_code: 'TES',
       transportation_mode: 'SMD',
       awbs: 1,

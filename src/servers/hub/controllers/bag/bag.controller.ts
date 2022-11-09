@@ -46,4 +46,18 @@ export class HubBagController {
     const bagItem = await this.hubBagService.get(query.bagItemId);
     await this.hubBagService.print(bagItem, query.userId, query.branchId, rw);
   }
+
+  @Get('print/sticker')
+  public async printSticker(
+    @Query() query: PrintHubBagQuery,
+    @Response() rw: express.Response,
+  ): Promise<any> {
+    const bagSummary = await this.hubBagService.getSummary(query.bagItemId);
+    await this.hubBagService.printSticker(
+      bagSummary,
+      query.userId,
+      query.branchId,
+      rw,
+    );
+  }
 }

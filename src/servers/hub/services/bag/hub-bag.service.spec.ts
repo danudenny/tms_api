@@ -10,6 +10,7 @@ import { JwtPermissionTokenPayload } from '../../../../shared/interfaces/jwt-pay
 import { AuthLoginMetadata } from '../../../../shared/models/auth-login-metadata.model';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { Branch } from '../../../../shared/orm-entity/branch';
+import { Representative } from '../../../../shared/orm-entity/representative';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
@@ -429,6 +430,67 @@ describe('DefaultHubBagService', () => {
           mockPermission.branchId,
           null,
         );
+      } catch (err) {
+        err = err.response;
+        expect(err.statusCode).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    });
+  });
+
+  describe('getSummary', () => {
+    const bagItemId = '63588cd81e421c6da5ccc5d4';
+    const mockBagSummary = {
+      bag_number: 'ZBPJ0YU03Z',
+      weight: 2.1,
+      awbs: 1,
+      transportation_mode: 'SMD',
+      representative_id_to: 1,
+      representative_code: 'SOC',
+    };
+    const mockRepresentative = { representativeName: 'SOLO' };
+
+    it('should return a bag summary', async () => {
+      jest
+        .spyOn(bagService, 'getBagSummary')
+        .mockReturnValue(Promise.resolve(mockBagSummary));
+      jest
+        .spyOn(Representative, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockRepresentative as unknown) as BaseEntity),
+        );
+
+      const result = await service.getSummary(bagItemId);
+      expect(result).toEqual({
+        bagNumber: mockBagSummary.bag_number,
+        weight: mockBagSummary.weight,
+        awbs: mockBagSummary.awbs,
+        transportationMode: mockBagSummary.transportation_mode,
+        representativeCode: mockBagSummary.representative_code,
+        representativeName: mockRepresentative.representativeName,
+      });
+    });
+
+    it('should throw an unexpected server error - error from bag service', async () => {
+      jest.spyOn(bagService, 'getBagSummary').mockImplementation(() => {
+        throw new InternalServerErrorException('Unexpected Service error');
+      });
+      try {
+        await service.getSummary(bagItemId);
+      } catch (err) {
+        err = err.response;
+        expect(err.statusCode).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    });
+
+    it('should throw an unexpected server error', async () => {
+      jest
+        .spyOn(bagService, 'getBagSummary')
+        .mockReturnValue(Promise.resolve(mockBagSummary));
+      jest.spyOn(Representative, 'findOne').mockImplementation(() => {
+        throw new InternalServerErrorException('Unexpected database error');
+      });
+      try {
+        await service.getSummary(bagItemId);
       } catch (err) {
         err = err.response;
         expect(err.statusCode).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);

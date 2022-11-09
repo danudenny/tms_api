@@ -186,7 +186,7 @@ export class DefaultHubBagService implements HubBagService {
 
   public async getSummary(bagItemId: string): Promise<HubBagSummary> {
     const bag = await this.bagService.getBagSummary({ bag_item_id: bagItemId });
-    const representative = await Representative.findOne(bag.representative_id, {
+    const representative = await Representative.findOne(bag.representative_id_to, {
       select: ['representativeName'],
     });
     return {
@@ -208,27 +208,28 @@ export class DefaultHubBagService implements HubBagService {
     const [user, branch] = await this.getUserAndBranch(userId, branchId);
     const now = moment().format('YYYY-MM-DD HH:mm');
     const command = `\
-    SIZE 80 mm, 100 mm
-    SPEED 3
-    DENSITY 8
-    DIRECTION 0
-    OFFSET 0
-    CLS
-    TEXT 30,120,"5",0,1,1,0,"GABUNGAN PAKET"
-    BARCODE 30,200,"128",100,1,0,3,10, ${bagSummary.bagNumber}
-    TEXT 30,380,"3",0,1,1,Berat       : ${bagSummary.weight}
-    TEXT 30,420,"3",0,1,1,Total Paket : ${bagSummary.awbs}
-    TEXT 30,460,"3",0,1,1,0,[${bagSummary.transportationMode}]
-    TEXT 30,500,"6",0,1,1,0,${bagSummary.representativeCode}
-    TEXT 30,550,"4",0,1,1,0,${bagSummary.representativeName}
-    TEXT 30,600,"2",0,1,1,0,${branch}
-    TEXT 30,630,"2",0,1,1,0,${user}
-    TEXT 30,660,"2",0,1,1,0,${now}
-    PRINT 1
-    EOP`;
+      SIZE 80 mm, 100 mm
+      SPEED 3
+      DENSITY 8
+      DIRECTION 0
+      OFFSET 0
+      CLS
+      TEXT 30,120,"5",0,1,1,0,"GABUNGAN PAKET"
+      BARCODE 30,200,"128",100,1,0,3,10, ${bagSummary.bagNumber}
+      BOX 25,350,225,400,8
+      TEXT 30,360,"5",0,1,1,0,${bagSummary.transportationMode}SMD
+      TEXT 30,420,"3",0,1,1,Berat       : ${bagSummary.weight}
+      TEXT 30,460,"3",0,1,1,Total Paket : ${bagSummary.awbs}
+      TEXT 30,500,"6",0,1,1,0,${bagSummary.representativeCode}
+      TEXT 30,550,"4",0,1,1,0,${bagSummary.representativeName}
+      TEXT 30,600,"2",0,1,1,0,${branch}
+      TEXT 30,630,"2",0,1,1,0,${user}
+      TEXT 30,660,"2",0,1,1,0,${now}
+      PRINT 1
+      EOP`;
     await PrinterService.responseForRawCommands({
       res,
-      rawCommands: command,
+      rawCommands: command.replace(/\n      +/g, '\n'), // ignore code indentation
       printerName: 'BarcodePrinter',
     });
   }
