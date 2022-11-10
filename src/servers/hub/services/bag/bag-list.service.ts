@@ -35,6 +35,7 @@ export class DefaultBagListService implements HubBagListService {
 
     const selectColumn = [
       ['t1.bag_id_new', 'bagIdNew'],
+      ['t2.bag_item_id_new', 'bagItemIdNew'],
       ['t1.bag_number', 'bagNumber'],
       ['t1.ref_representative_code', 'representativeCode'],
       ['t1.transportation_mode', 'transportMode'],

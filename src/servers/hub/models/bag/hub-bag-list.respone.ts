@@ -12,6 +12,9 @@ export class ListDataBagRespon {
   bagIdNew: string;
 
   @ApiModelProperty()
+  bagItemIdNew: string;
+
+  @ApiModelProperty()
   bagNumber: string;
 
   @ApiModelProperty()
