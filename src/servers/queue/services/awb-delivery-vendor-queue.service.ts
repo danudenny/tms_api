@@ -74,7 +74,7 @@ export class AwbDeliveryVendorQueueService {
           });
           await AwbHistory.insert(awbHistory);
 
-          if(data.awbStatusId == AWB_STATUS.DLV){
+          if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
             //handle upload photo
             this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'photo')
             this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'signature')
