@@ -170,6 +170,12 @@
 
     @ApiModelProperty()
     sealNumber: string;
+
+    @ApiModelProperty()
+    nik: string;
+
+    @ApiModelProperty()
+    fullName: string;
   }
 
   export class WebScanInBagResponseVm {
