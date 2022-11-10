@@ -211,11 +211,14 @@ export class DefaultHubBagService implements HubBagService {
     const representative = _.get(bagSummary, 'representativeName', '');
     const repTokens = representative.split(' ');
     const repChunks = _.chunk(repTokens, 2);
+    const repTextSize = 60;
+    const repTextY = 500;
     const repText = repChunks.map((chunk, i) => {
-      const position = i * 60 + 600;
+      const position = i * repTextSize + repTextY;
       const text = chunk.join(' ');
       return `TEXT 30,${position},"5",0,1,1,0,"${text}"`;
     }).join('\n');
+    const nextPosition = repTextY + repTextSize * repChunks.length;
 
     const command = `
       SIZE 80 mm, 100 mm
@@ -230,11 +233,11 @@ export class DefaultHubBagService implements HubBagService {
       TEXT 475,360,"4",0,1.2,1.2,2,"${bagSummary.transportationMode}"
       TEXT 30,360,"3",0,1,1,"Berat      : ${bagSummary.weight} Kg"
       TEXT 30,400,"3",0,1,1,"Total Paket: ${bagSummary.awbs}"
-      TEXT 30,460,"2",0,1,1,0,"${branch}"
-      TEXT 30,490,"2",0,1,1,0,"${user}"
-      TEXT 30,520,"2",0,1,1,0,"${now}"
-      TEXT 30,550,"4",0,1,1,0,"${bagSummary.representativeCode}"
+      TEXT 30,460,"4",0,1,1,0,"${bagSummary.representativeCode}"
       ${repText}
+      TEXT 30,${nextPosition},"2",0,1,1,0,"${branch}"
+      TEXT 30,${nextPosition + 30},"2",0,1,1,0,"${user}"
+      TEXT 30,${nextPosition + 60},"2",0,1,1,0,"${now}"
       PRINT 1
       EOP`;
     await PrinterService.responseForRawCommands({
