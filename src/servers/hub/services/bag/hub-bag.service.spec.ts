@@ -23,7 +23,10 @@ import {
   SORTATION_MACHINE_SERVICE,
   SortationMachineService,
 } from '../../interfaces/sortation-machine-service.interface';
-import { HubBagInsertAwbPayload } from '../../models/bag/hub-bag.payload';
+import {
+  HubBagInsertAwbPayload,
+  HubBagSummary,
+} from '../../models/bag/hub-bag.payload';
 import { MockBagService } from '../mocks/bag.service';
 import { MockSortationMachineService } from '../mocks/sortation-machine.service';
 import { DefaultHubBagService } from './hub-bag.service';
@@ -370,7 +373,7 @@ describe('DefaultHubBagService', () => {
       ({
         loadById: () => getMockQueryBuilder(val),
       } as any);
-    it('should call PrinterService', async () => {
+    it('should call PrinterService.responseForJsReport', async () => {
       jest
         .spyOn(RepositoryService, 'user', 'get')
         .mockReturnValue(getMockRepo(mockUser));
@@ -491,6 +494,91 @@ describe('DefaultHubBagService', () => {
       });
       try {
         await service.getSummary(bagItemId);
+      } catch (err) {
+        err = err.response;
+        expect(err.statusCode).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    });
+  });
+
+  describe('printSticker', () => {
+    const mockBagSummary = {
+      bagNumber: 'ZBPJ0YU03Z',
+      weight: 2.1,
+      awbs: 1,
+      transportationMode: 'SMD',
+      representativeCode: 1,
+      representativeName: 'SOC',
+    };
+    const mockUser = { employee: { nickname: 'A' } };
+    const mockBranch = { branchName: 'B' };
+    const getMockQueryBuilder = val => {
+      return { select: () => val } as any;
+    };
+    const getMockRepo = val =>
+      ({
+        loadById: () => getMockQueryBuilder(val),
+      } as any);
+    it('should call PrinterService.responseForRawCommands', async () => {
+      jest
+        .spyOn(RepositoryService, 'user', 'get')
+        .mockReturnValue(getMockRepo(mockUser));
+      jest
+        .spyOn(Branch, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockBranch as unknown) as BaseEntity),
+        );
+      jest
+        .spyOn(PrinterService, 'responseForRawCommands')
+        .mockImplementation(async () => {});
+      await service.printSticker(
+        (mockBagSummary as unknown) as HubBagSummary,
+        mockAuthData.userId,
+        mockPermission.branchId,
+        null,
+      );
+      expect(PrinterService.responseForRawCommands).toBeCalled();
+    });
+
+    it('should throw an internal server error', async () => {
+      jest.spyOn(RepositoryService, 'user', 'get').mockImplementation(() => {
+        throw new InternalServerErrorException('Unexpected Service Error');
+      });
+      try {
+        await service.printSticker(
+          (mockBagSummary as unknown) as HubBagSummary,
+          mockAuthData.userId,
+          mockPermission.branchId,
+          null,
+        );
+      } catch (err) {
+        err = err.response;
+        expect(err.statusCode).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    });
+
+    it('should throw an internal server error from PrinterService', async () => {
+      jest
+        .spyOn(RepositoryService, 'user', 'get')
+        .mockReturnValue(getMockRepo(mockUser));
+      jest
+        .spyOn(Branch, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockBranch as unknown) as BaseEntity),
+        );
+      jest
+        .spyOn(PrinterService, 'responseForJsReport')
+        .mockImplementation(async () => {
+          throw new InternalServerErrorException('Unexpected service error');
+        });
+
+      try {
+        await service.printSticker(
+          (mockBagSummary as unknown) as HubBagSummary,
+          mockAuthData.userId,
+          mockPermission.branchId,
+          null,
+        );
       } catch (err) {
         err = err.response;
         expect(err.statusCode).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
