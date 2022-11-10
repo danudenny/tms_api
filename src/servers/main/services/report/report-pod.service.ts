@@ -453,7 +453,7 @@ export class ReportPodService {
       ov.status as "Status" 
     FROM 
       mercury.order_vendor ov 
-      inner JOIN mercury.order_vendor_detail ovd ON ov.order_vendor_id = ovd.order_vendor_id 
+      left JOIN mercury.order_vendor_detail ovd ON ov.order_vendor_id = ovd.order_vendor_id 
       and ovd.is_deleted = false 
       inner JOIN mercury.vendor v ON ov.vendor_id = v.vendor_id 
       inner JOIN mercury.branch b ON ov.branch_id = b.origin_branch_id 
