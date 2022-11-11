@@ -18,7 +18,6 @@ import { GetBagResponse } from '../../../../shared/models/bag-service.payload';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
-import { User } from '../../../../shared/orm-entity/user';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
@@ -187,9 +186,12 @@ export class DefaultHubBagService implements HubBagService {
 
   public async getSummary(bagItemId: string): Promise<HubBagSummary> {
     const bag = await this.bagService.getBagSummary({ bag_item_id: bagItemId });
-    const representative = await Representative.findOne(bag.representative_id_to, {
-      select: ['representativeName'],
-    });
+    const representative = await Representative.findOne(
+      bag.representative_id_to,
+      {
+        select: ['representativeName'],
+      },
+    );
     return {
       bagNumber: bag.bag_number,
       weight: bag.weight,
@@ -213,11 +215,13 @@ export class DefaultHubBagService implements HubBagService {
     const repChunks = _.chunk(repTokens, 2);
     const repTextSize = 60;
     const repTextY = 500;
-    const repText = repChunks.map((chunk, i) => {
-      const position = i * repTextSize + repTextY;
-      const text = chunk.join(' ');
-      return `TEXT 30,${position},"5",0,1,1,0,"${text}"`;
-    }).join('\n');
+    const repText = repChunks
+      .map((chunk, i) => {
+        const position = i * repTextSize + repTextY;
+        const text = chunk.join(' ');
+        return `TEXT 30,${position},"5",0,1,1,0,"${text}"`;
+      })
+      .join('\n');
     const nextPosition = repTextY + repTextSize * repChunks.length;
 
     const command = `
