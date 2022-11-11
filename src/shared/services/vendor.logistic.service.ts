@@ -27,7 +27,7 @@ export class VendorLogisticService {
       awb_no : awbNumber,
       vendor_id: vendorId,
       order_vendor_code: orderVendorCode,
-      keterangan : keterangan
+      notes : keterangan
     };
 
     let channelSlack = await ConfigService.get('vendorLogisticService.slackChannel');

@@ -117,8 +117,8 @@ export class AwbDeliveryVendorQueueService {
     tokenPayload : string,
     keterangan : string
   ) {
-    const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName}`;
-    const notePublic = `Paket di teruskan ke Partner; catatan :${keterangan}`;
+    const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName}; catatan :${keterangan}`;
+    const notePublic = `Paket di teruskan ke Partner`;
     // provide data
     const obj = {
       awbItemId,

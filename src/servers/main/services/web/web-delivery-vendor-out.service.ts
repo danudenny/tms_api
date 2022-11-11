@@ -102,7 +102,7 @@ export class WebDeliveryVendorOutService {
               payload.vendor_id,
               payload.order_vendor_code,
               permissonPayloadToken,
-              payload.keterangan
+              payload.notes
             )
             awbSendVendor.push(awbNumber)
             response.status = 'ok';
@@ -130,7 +130,7 @@ export class WebDeliveryVendorOutService {
     }
 
     try {
-      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.keterangan);
+      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes);
     } catch (err) {
       RequestErrorService.throwObj({
         message: 'Gagal mengirimkan data ke vendor',

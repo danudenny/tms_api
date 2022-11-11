@@ -15,7 +15,7 @@ export class WebDeliveryVendorOutSendPayload {
   order_vendor_code: string;
 
   @ApiModelProperty()
-  keterangan : string;
+  notes : string;
 
   @ApiModelProperty()
   @Type(() => String)
