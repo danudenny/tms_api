@@ -560,6 +560,7 @@ export class WebDeliveryInService {
     payload.fieldResolverMap['bagSeq'] = 't2.bag_seq';
     payload.fieldResolverMap['sealNumber'] = 't1.seal_number';
     payload.fieldResolverMap['fullName'] = 't6.fullname';
+    payload.fieldResolverMap['employeeId'] = 't6.employee_id';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -622,6 +623,7 @@ export class WebDeliveryInService {
       ['bagItem.awbCount', 'totalAwb'],
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t1.seal_number', 'sealNumber'],
+      ['t6.employee_id', 'employeeId'],
       ['t6.nik', 'nik'],
       ['t6.fullname', 'fullName'],
     );
@@ -655,7 +657,6 @@ export class WebDeliveryInService {
     q.innerJoin(e => e.userCreated.employee, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
-    
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
     q.andWhere(e => e.isSortir ,  w => w.isTrue());
     if (bagNumber && bagSeq) {
