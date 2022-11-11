@@ -460,7 +460,7 @@ export class ReportPodService {
     WHERE 
       ov.is_deleted = false 
       AND ov.status != 'new'
-      AND ov.delivery_date between '${startDate}'
+      AND ov.created_time between '${startDate}'
       and '${endDate}'
       ${queryBranch}
       AND ov.vendor_id = '${vendorId}'
