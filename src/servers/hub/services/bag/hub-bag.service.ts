@@ -15,7 +15,6 @@ import {
   BagService,
 } from '../../../../shared/interfaces/bag.service.interface';
 import { GetBagResponse } from '../../../../shared/models/bag-service.payload';
-import { Awb } from '../../../../shared/orm-entity/awb';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
@@ -54,10 +53,6 @@ export class DefaultHubBagService implements HubBagService {
         tracking_number: payload.awbNumber,
         sorting_branch_id: perm.branchId,
       }),
-      Awb.findOne(
-        { awbNumber: payload.awbNumber, isDeleted: false },
-        { select: ['consigneeAddress', 'consigneeName'] },
-      ),
     );
 
     if (payload.bagId && payload.bagItemId) {
@@ -66,21 +61,15 @@ export class DefaultHubBagService implements HubBagService {
 
     const response = await Promise.all(promises);
     const awb: GetAwbResponse = response[0];
-    const awbDetail = response[1];
-
-    if (!awbDetail) {
-      throw new NotFoundException('Resi tidak ditemukan');
-    }
 
     let bagNumber: string;
 
     if (payload.bagId && payload.bagItemId) {
-      const bag: GetBagResponse = response[2];
+      const bag: GetBagResponse = response[1];
       // check if awb is scanned previously
       if (bag.awbs.includes(payload.awbNumber)) {
         throw new BadRequestException('Resi sudah pernah di-scan');
       }
-
       // check if awb has same destination & transportation_mode
       if (awb.transport_type != bag.transportation_mode) {
         throw new UnprocessableEntityException('Mode transportasi berbeda');
@@ -129,8 +118,8 @@ export class DefaultHubBagService implements HubBagService {
         representativeCode: awb.representative,
         transportationMode: awb.transport_type,
         weight: awb.weight,
-        consigneeName: awbDetail.consigneeName,
-        consigneeAddress: awbDetail.consigneeAddress,
+        consigneeName: awb.consignee_name,
+        consigneeAddress: awb.consignee_address,
         bagNumber,
       },
     };

@@ -22,6 +22,8 @@ export class MockSortationMachineService implements SortationMachineService {
       branch_id_lastmile: 1,
       representative_id: 1,
       representative: 'SUB',
+      consignee_name: 'Dory',
+      consignee_address: 'P. Sherman 42, Wallaby Way',
     });
   }
 }

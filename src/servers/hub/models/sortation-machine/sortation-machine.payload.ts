@@ -16,4 +16,6 @@ export interface GetAwbResponse {
   representative: string;
   district_code: string;
   branch_id_lastmile: number;
+  consignee_name: string;
+  consignee_address: string;
 }

@@ -62,6 +62,8 @@ export class ExternalSortationMachineService
         result,
         'data.0.representative_code_branch_lastmile',
       ),
+      consignee_name: _.get(result, 'data.0.consignee_name'),
+      consignee_address: _.get(result, 'data.0.consignee_address'),
     };
   }
 
