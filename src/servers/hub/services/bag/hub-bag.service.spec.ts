@@ -8,6 +8,7 @@ import {
 } from '../../../../shared/interfaces/bag.service.interface';
 import { JwtPermissionTokenPayload } from '../../../../shared/interfaces/jwt-payload.interface';
 import { AuthLoginMetadata } from '../../../../shared/models/auth-login-metadata.model';
+import { Awb } from '../../../../shared/orm-entity/awb';
 import { BagItem } from '../../../../shared/orm-entity/bag-item';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { Representative } from '../../../../shared/orm-entity/representative';
@@ -77,6 +78,11 @@ describe('DefaultHubBagService', () => {
   };
 
   describe('insertAWB', () => {
+    const mockAwbDetail = {
+      consigneeName: 'Dory',
+      consigneeAddress: 'P. Sherman 42, Wallaby Way',
+    };
+
     it('should create a new bag', async () => {
       const mockBag = {
         bag_number: 'SPBE09P001',
@@ -93,6 +99,7 @@ describe('DefaultHubBagService', () => {
         representative_id: 1,
         representative: 'SUB',
       };
+
       jest
         .spyOn(sortationService, 'getAwb')
         .mockReturnValue(Promise.resolve(mockAwb));
@@ -106,6 +113,11 @@ describe('DefaultHubBagService', () => {
           total_awb: 2,
         }),
       );
+      jest
+        .spyOn(Awb, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockAwbDetail as unknown) as BaseEntity),
+        );
       const result = await service.insertAWB(createBagPayload);
       expect(sortationService.getAwb).toHaveBeenCalledWith({
         tracking_number: createBagPayload.awbNumber,
@@ -121,12 +133,34 @@ describe('DefaultHubBagService', () => {
         bagNumber: mockBag.bag_number,
         transportationMode: mockAwb.transport_type,
         representativeCode: mockAwb.representative,
+        weight: mockAwb.weight,
+        consigneeName: mockAwbDetail.consigneeName,
+        consigneeAddress: mockAwbDetail.consigneeAddress,
       });
     });
 
     it('should throw an error from sortation machine service', async () => {
       const errMsg = 'Unexpected database error';
       jest.spyOn(sortationService, 'getAwb').mockImplementation(async () => {
+        throw new InternalServerErrorException(errMsg);
+      });
+      jest
+        .spyOn(Awb, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockAwbDetail as unknown) as BaseEntity),
+        );
+      try {
+        await service.insertAWB(createBagPayload);
+      } catch (err) {
+        err = err.response;
+        expect(err.statusCode).toEqual(HttpStatus.INTERNAL_SERVER_ERROR);
+        expect(err.message).toEqual(errMsg);
+      }
+    });
+
+    it('should throw an error from database', async () => {
+      const errMsg = 'Unexpected database error';
+      jest.spyOn(Awb, 'findOne').mockImplementation(() => {
         throw new InternalServerErrorException(errMsg);
       });
       try {
@@ -138,9 +172,36 @@ describe('DefaultHubBagService', () => {
       }
     });
 
+    it('should throw a not found error - awb detail not found', async () => {
+      const mockAwb = {
+        awb_item_id: 46958266,
+        weight: 2.1,
+        transport_type: 'SMU',
+        district_code: 'DCODE',
+        branch_id_lastmile: 1,
+        representative_id: 1,
+        representative: 'SUB',
+      };
+      jest
+        .spyOn(sortationService, 'getAwb')
+        .mockReturnValue(Promise.resolve(mockAwb));
+      jest.spyOn(Awb, 'findOne').mockReturnValue(null);
+      try {
+        await service.insertAWB(createBagPayload);
+      } catch (err) {
+        err = err.response;
+        expect(err.statusCode).toEqual(HttpStatus.NOT_FOUND);
+      }
+    });
+
     it('should throw an error from bag service', async () => {
       const errMsg = 'Unexpected database error';
-      jest.spyOn(bagService, 'create').mockImplementation(async () => {
+      jest
+        .spyOn(Awb, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockAwbDetail as unknown) as BaseEntity),
+        );
+      jest.spyOn(bagService, 'getBag').mockImplementation(async () => {
         throw new InternalServerErrorException(errMsg);
       });
       try {
@@ -185,6 +246,11 @@ describe('DefaultHubBagService', () => {
           total_awb: 2,
         }),
       );
+      jest
+        .spyOn(Awb, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockAwbDetail as unknown) as BaseEntity),
+        );
       const result = await service.insertAWB(payload);
       expect(bagService.getBag).toHaveBeenCalledWith({
         bag_item_id: payload.bagItemId,
@@ -198,6 +264,9 @@ describe('DefaultHubBagService', () => {
         bagNumber: mockBag.bag_number,
         transportationMode: mockAwb.transport_type,
         representativeCode: mockAwb.representative,
+        weight: mockAwb.weight,
+        consigneeName: mockAwbDetail.consigneeName,
+        consigneeAddress: mockAwbDetail.consigneeAddress,
       });
     });
 
@@ -224,6 +293,11 @@ describe('DefaultHubBagService', () => {
           representative: 'SUB',
         }),
       );
+      jest
+        .spyOn(Awb, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockAwbDetail as unknown) as BaseEntity),
+        );
       jest
         .spyOn(bagService, 'getBag')
         .mockReturnValue(Promise.resolve(mockBag));
@@ -260,6 +334,11 @@ describe('DefaultHubBagService', () => {
         }),
       );
       jest
+        .spyOn(Awb, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockAwbDetail as unknown) as BaseEntity),
+        );
+      jest
         .spyOn(bagService, 'getBag')
         .mockReturnValue(Promise.resolve(mockBag));
 
@@ -294,6 +373,11 @@ describe('DefaultHubBagService', () => {
           representative: 'SUB',
         }),
       );
+      jest
+        .spyOn(Awb, 'findOne')
+        .mockReturnValue(
+          Promise.resolve((mockAwbDetail as unknown) as BaseEntity),
+        );
       jest
         .spyOn(bagService, 'getBag')
         .mockReturnValue(Promise.resolve(mockBag));

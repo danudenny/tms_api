@@ -42,7 +42,7 @@ export class ExternalSortationMachineService
     if (result.statusCode >= HttpStatus.BAD_REQUEST) {
       const errResponse = {
         error: result.error,
-        message: result.message || 'Terjadi kesalahan. AWB tidak ditemukan',
+        message: result.message || 'Terjadi kesalahan. Resi tidak ditemukan',
         statusCode: result.statusCode,
       };
       throw new HttpException(errResponse, result.statusCode);
