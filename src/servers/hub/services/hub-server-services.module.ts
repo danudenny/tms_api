@@ -7,11 +7,16 @@ import {HttpRequestAxiosService} from '../../../shared/services/http-request-axi
 import axios from 'axios';
 import {DefaultSortationExternalModulesService} from './sortation/web/sortation-external-modules.service';
 import {SORTATION_EXTERNAL_MODULE_SERVICE} from '../interfaces/sortation-external-modules.service';
+import {MockSortationExternalModuleService} from './mock/mock-sortation-external-module.service';
 
 const providers = [
     { provide: SANITY_SERVICE, useClass: DefaultSanityService },
     { provide: HttpRequestAxiosService, useFactory: () => new HttpRequestAxiosService(axios.create())},
-    { provide: SORTATION_EXTERNAL_MODULE_SERVICE, useClass: DefaultSortationExternalModulesService,},
+    {
+        provide: SORTATION_EXTERNAL_MODULE_SERVICE,
+        useClass: MockSortationExternalModuleService,
+        // useClass: DefaultSortationExternalModulesService
+    },
 ];
 @Module({
   imports: [SharedModule],
