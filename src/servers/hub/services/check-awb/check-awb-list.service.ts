@@ -1,11 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import e from 'express';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbCheckLog } from '../../../../shared/orm-entity/awb-check-log';
 import { AwbCheckSummary } from '../../../../shared/orm-entity/awb-check-summary';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { CheckAwbDetailResponVm, CheckAwbListResponVm } from '../../models/check-awb/check-awb-list.response';
-import { CheckAwbResponseVM } from '../../models/hub-machine-sortir.vm';
+import moment= require('moment');
 
 @Injectable()
 export class CheckAwbListService {
@@ -15,6 +14,7 @@ export class CheckAwbListService {
     payload.fieldResolverMap['awbCheckId'] = 'acs.awbCheckId';
     payload.fieldResolverMap['startTime'] = 'acs.start_time';
     payload.fieldResolverMap['endTime'] = 'acs.end_time';
+    payload.fieldResolverMap['createdTime'] = 'acs.created_time';
     payload.fieldResolverMap['branchId'] = 'acs.branch_id';
     payload.fieldResolverMap['nik'] = 'ue.nik';
     payload.fieldResolverMap['totalAwb'] = 'acs.logs';
@@ -24,9 +24,9 @@ export class CheckAwbListService {
 
     }
 
+    const dateCreated = this.formatPayloadFiltersAwb(payload);
     const repo = new OrionRepositoryService(AwbCheckSummary, 'acs');
     const q = repo.findAllRaw();
-    payload.applyToOrionRepositoryQuery(q, true);
 
     const selectColumn = [
       ['acs.awb_check_summary_id', 'awbCheckId'],
@@ -45,7 +45,10 @@ export class CheckAwbListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()))
       .innerJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()));
-    q.andWhere(e => e.logs, w => w.notEquals(0));
+    q.where(e => e.createdTime, w => w.greaterThan(dateCreated.start));
+    q.andWhere(e => e.createdTime, w => w.lessThan(dateCreated.end));
+    payload.applyToOrionRepositoryQuery(q, true);
+    q.andWhere(e => e.logs, w => w.greaterThan(0));
     const [objCheckAwb, count] = await Promise.all([
       q.exec(),
       q.countWithoutTakeAndSkip(),
@@ -59,6 +62,27 @@ export class CheckAwbListService {
 
     return result;
 
+  }
+
+  private formatPayloadFiltersAwb(payload: BaseMetaPayloadVm) {
+
+    let value;
+    let start;
+    let end;
+    if (payload.filters != null) {
+      payload.filters.forEach(filter => {
+        if (filter.field == 'startTime' && filter.value != null) {
+          value = moment(filter.value).format('YYYY-MM-DD');
+          if (filter.operator == 'gte') {
+            start = value;
+          } else {
+            end = value;
+          }
+        }
+      });
+    }
+
+    return {start, end};
   }
 
   async checkAwbDetail(payload: BaseMetaPayloadVm): Promise<CheckAwbDetailResponVm> {
@@ -88,7 +112,7 @@ export class CheckAwbListService {
     q.selectRaw(...selectColumn)
       .leftJoin(e => e.awb, 'a',  j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()))
-      .leftJoinRaw('district', 'dt', 'dt.district_id = a.to_id and a.from_type = 40 ')
+      .leftJoinRaw('district', 'dt', 'dt.district_id = a.to_id and a.from_type = 40 ');
       // .leftJoinRaw('branch', 'bt', 'bt.branch_id = dt.branch_id_delivery');
       // .leftJoinRaw('representative', 'r', 'r.representative_id = bt.representative_id');
 
