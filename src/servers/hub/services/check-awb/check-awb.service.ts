@@ -64,10 +64,11 @@ export class DefaultCheckAwbService implements CheckAwbService {
       .innerJoinRaw(
         'awb_check_summary',
         'acs',
-        `acs.branch_id = :branchId AND acs.is_deleted = FALSE`,
-        { branchId: perm.branchId },
+        `acs.awb_check_summary_id = acl.awb_check_summary_id
+         AND acs.is_deleted = FALSE`,
       )
       .andWhereRaw('awb_number = :awb', { awb: payload.awbNumber })
+      .andWhereRaw('acs.branch_id = :branch', { branch: perm.branchId })
       .andWhereRaw('acl.is_deleted = FALSE');
 
     if (duplicate) {
