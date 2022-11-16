@@ -72,8 +72,8 @@ export class CheckAwbListService {
         }
 
       });
-    if (tempData[0] && tempData[1]) {
-      payload.filters.unshift(tempData[0], tempData[1]);
+    if (tempData) {
+      payload.filters.unshift(...tempData);
     }
     return payload;
   }
