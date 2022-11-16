@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
+import { BaseMetaPayloadFilterVm, BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { AwbCheckLog } from '../../../../shared/orm-entity/awb-check-log';
 import { AwbCheckSummary } from '../../../../shared/orm-entity/awb-check-summary';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
@@ -24,9 +24,10 @@ export class CheckAwbListService {
 
     }
 
-    const dateCreated = this.formatPayloadFiltersAwb(payload);
+    payload = this.formatPayloadFiltersAwb(payload);
     const repo = new OrionRepositoryService(AwbCheckSummary, 'acs');
     const q = repo.findAllRaw();
+    payload.applyToOrionRepositoryQuery(q, true);
 
     const selectColumn = [
       ['acs.awb_check_summary_id', 'awbCheckId'],
@@ -46,12 +47,6 @@ export class CheckAwbListService {
       .innerJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()));
 
-    if (dateCreated.start && dateCreated.end) {
-      q.where(e => e.createdTime, w => w.greaterThanOrEqual(dateCreated.start));
-      q.andWhere(e => e.createdTime, w => w.lessThan(dateCreated.end));
-    }
-
-    payload.applyToOrionRepositoryQuery(q, true);
     q.andWhere(e => e.logs, w => w.greaterThan(0));
     const [objCheckAwb, count] = await Promise.all([
       q.exec(),
@@ -69,24 +64,18 @@ export class CheckAwbListService {
   }
 
   private formatPayloadFiltersAwb(payload: BaseMetaPayloadVm) {
-
-    let value;
-    let start;
-    let end;
-    if (payload.filters != null) {
-      payload.filters.forEach(filter => {
-        if (filter.field == 'startTime' && filter.value != null) {
-          value = moment(filter.value).format('YYYY-MM-DD');
-          if (filter.operator == 'gte') {
-            start = value;
-          } else {
-            end = value;
-          }
+    const tempData: BaseMetaPayloadFilterVm[] = [];
+    payload.filters.forEach(filter => {
+        if ((filter.field == 'startTime') && (filter.operator == 'lt' || filter.operator == 'gte')) {
+          const value = moment(filter.value).format('YYYY-MM-DD');
+          tempData.push({field: 'createdTime', operator: filter.operator, value} as BaseMetaPayloadFilterVm);
         }
-      });
-    }
 
-    return {start, end};
+      });
+    if (tempData[0] && tempData[1]) {
+      payload.filters.unshift(tempData[0], tempData[1]);
+    }
+    return payload;
   }
 
   async checkAwbDetail(payload: BaseMetaPayloadVm): Promise<CheckAwbDetailResponVm> {
