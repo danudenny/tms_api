@@ -45,7 +45,7 @@ export class CheckAwbListService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()))
       .innerJoin(e => e.branch, 'b', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()));
-    q.where(e => e.createdTime, w => w.greaterThan(dateCreated.start));
+    q.where(e => e.createdTime, w => w.greaterThanOrEqual(dateCreated.start));
     q.andWhere(e => e.createdTime, w => w.lessThan(dateCreated.end));
     payload.applyToOrionRepositoryQuery(q, true);
     q.andWhere(e => e.logs, w => w.greaterThan(0));
