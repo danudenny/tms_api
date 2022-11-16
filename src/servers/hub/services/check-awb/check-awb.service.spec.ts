@@ -82,11 +82,15 @@ describe('DefaultCheckAwbService', () => {
     const getMockDuplicateQuery = val => ({
       andWhereRaw: () => val,
     });
+    const getTempQueryBuilder = val =>
+      ({
+        andWhereRaw: () => getMockDuplicateQuery(val),
+      } as any);
     const getMockQueryBuilder = val =>
       ({
         select: () => getMockQueryBuilder(val),
         innerJoinRaw: () => getMockQueryBuilder(val),
-        andWhereRaw: () => getMockDuplicateQuery(val),
+        andWhereRaw: () => getTempQueryBuilder(val),
       } as any);
     const payload = {
       awbCheckId: uuidv1(),
