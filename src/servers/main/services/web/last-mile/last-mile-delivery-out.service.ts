@@ -437,7 +437,7 @@ export class LastMileDeliveryOutService {
         //   response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner !`;
         // }
         // #endregion validation
-        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false, true, true);
+        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false, true, false);
         if (checkValidAwbStatusIdLast.isValid) {
           // Add Locking setnx redis
           const holdRedis = await RedisService.redlock(
