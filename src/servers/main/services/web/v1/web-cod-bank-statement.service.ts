@@ -94,6 +94,8 @@ export class V1WebCodBankStatementService {
     let totalValue = 0;
     let totalData = 0;
     let totalAwb = 0;
+    let transactionType : string;
+
     try {
       // #region transaction data
       await getManager().transaction(async transactionManager => {
@@ -138,6 +140,7 @@ export class V1WebCodBankStatementService {
             totalData += 1;
             totalValue += Number(codBranch.totalCodValue);
             totalAwb += Number(codBranch.totalAwb);
+            transactionType = codBranch.transactionType
             // update data
             await transactionManager.update(
               CodTransaction,
@@ -190,6 +193,7 @@ export class V1WebCodBankStatementService {
               totalTransaction: totalData,
               transactionStatusId: TRANSACTION_STATUS.TRF,
               totalAwb,
+              transactionType : transactionType,
               updatedTime: timestamp,
               userIdUpdated: authMeta.userId,
             },
@@ -338,6 +342,19 @@ export class V1WebCodBankStatementService {
 
     payload.applyToOrionRepositoryQuery(q, true);
 
+    let startDate : Date;
+    let endDate : Date;
+
+    for (const filter of payload.filters) {
+      if (filter.field == "bankStatementDate" && filter.operator == "gte") {
+        startDate = filter.value
+      }
+
+      if (filter.field == "bankStatementDate" && filter.operator == "lt") {
+        endDate = filter.value
+      }
+    }
+
     q.selectRaw(
       ['t1.cod_bank_statement_id', 'bankStatementId'],
       ['t1.bank_statement_code', 'bankStatementCode'],
@@ -348,6 +365,7 @@ export class V1WebCodBankStatementService {
       ['t2.status_title', 'transactionStatus'],
       ['t1.bank_no_reference', 'bankNoReference'],
       ['t1.total_transaction', 'totalTransaction'],
+      ['t1.transaction_type', 'transactionType'],
       ['t1.total_awb', 'totalAwb'],
       ['t1.total_cod_value', 'totalCodValue'],
       ['t1.validate_datetime', 'validateDatetime'],
@@ -368,8 +386,12 @@ export class V1WebCodBankStatementService {
     );
     q.innerJoin(e => e.userAdmin, 't4');
     q.leftJoin(e => e.attachment, 't5', j =>
-      j.andWhere(e => e.isDeleted, w => w.isFalse()),
+      j
+        .andWhere(e => e.isDeleted, w => w.isFalse())
+        .andWhere(e => e.createdTime, w => w.greaterThanOrEqual(startDate))
+        .andWhere(e => e.createdTime, w => w.lessThan(endDate)),
     );
+    
     q.innerJoin(e => e.userTransfer, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
@@ -379,6 +401,7 @@ export class V1WebCodBankStatementService {
       e => e.transactionStatusId,
       w => w.notEquals(TRANSACTION_STATUS.CANHO),
     );
+
 
     const data = await q.exec();
     const total = await q.countWithoutTakeAndSkip();
