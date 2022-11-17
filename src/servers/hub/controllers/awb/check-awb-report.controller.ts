@@ -4,7 +4,7 @@ import { AuthenticatedGuard } from '../../../../shared/guards/authenticated.guar
 import { PermissionTokenGuard } from '../../../../shared/guards/permission-token.guard';
 import { BaseMetaPayloadVm } from '../../../../shared/models/base-meta-payload.vm';
 import { CheckAwbDetailResponVm, CheckAwbListResponVm } from '../../models/check-awb/check-awb-list.response';
-import { CheckAwbReportGeneratePayloadVm, CheckAwbReportListPayloadVm } from '../../models/check-awb/check-awb-report-payload.bm';
+import { CheckAwbReportGeneratePayloadVm, CheckAwbReportListPayloadVm } from '../../models/check-awb/check-awb-report-payload.vm';
 import { CheckAwbListService } from '../../services/check-awb/check-awb-list.service';
 import { CheckAwbReportService } from '../../services/check-awb/check-awb-report.service';
 
