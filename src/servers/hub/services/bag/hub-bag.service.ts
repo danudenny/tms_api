@@ -22,6 +22,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
+import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { HubBagService } from '../../interfaces/hub-bag.interface';
 import {
   SORTATION_MACHINE_SERVICE,
@@ -47,6 +48,8 @@ export class DefaultHubBagService implements HubBagService {
   ): Promise<HubBagInsertAwbResponse> {
     const auth = AuthService.getAuthMetadata();
     const perm = AuthService.getPermissionTokenPayload();
+    const userId = Number(auth.userId.toString());
+    const branchId = Number(perm.branchId.toString());
     const promises = [];
     promises.push(
       this.sortationMachineService.getAwb({
@@ -81,7 +84,7 @@ export class DefaultHubBagService implements HubBagService {
     } else {
       // Create a new bag
       const bag = await this.bagService.create({
-        branch_id: Number(perm.branchId.toString()),
+        branch_id: branchId,
         district_code: awb.district_code,
         branch_last_mile_id: awb.branch_id_lastmile,
         representative_id_to: awb.representative_id,
@@ -89,7 +92,7 @@ export class DefaultHubBagService implements HubBagService {
         chute_number: 0,
         bag_type: 'MAN',
         transportation_mode: awb.transport_type,
-        user_id: Number(auth.userId.toString()),
+        user_id: userId,
       });
       payload.bagId = bag.bag_id;
       payload.bagItemId = bag.bag_item_id;
@@ -107,6 +110,13 @@ export class DefaultHubBagService implements HubBagService {
         },
       ],
     });
+
+    // insert AWB in_hub status history
+    await DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+      awb.awb_item_id,
+      branchId,
+      userId,
+    );
 
     return {
       statusCode: HttpStatus.CREATED,
