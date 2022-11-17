@@ -25,7 +25,7 @@ export class BranchSortirLogSummary extends TmsBaseEntity {
 
   @Column('character varying', {
     nullable: false,
-    length: 30,
+    length: 255,
     name: 'awb_number',
   })
   awbNumber: string;

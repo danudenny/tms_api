@@ -12,6 +12,7 @@ export class SortationMasterdataService {
   ): Promise<DoSortationStatusResponseVm> {
     const repo = new OrionRepositoryService(DoSortationStatus, 'dss');
     const q = repo.findAll();
+    payload.globalSearchFields = [{ field: 'doSortationStatusTitle' }];
     payload.applyToOrionRepositoryQuery(q, true);
     q.select({
       doSortationStatusId: true,

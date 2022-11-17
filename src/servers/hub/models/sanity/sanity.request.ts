@@ -1,0 +1,31 @@
+import { ApiModelProperty } from '../../../../shared/external/nestjs-swagger';
+
+export class DeleteBagsRequest {
+  @ApiModelProperty()
+  bag_numbers: [string];
+}
+
+export class DeleteAwbsRequest {
+  @ApiModelProperty()
+  awb_numbers: [string];
+}
+
+export class DeleteDoSortationsRequest {
+  @ApiModelProperty()
+  do_sortation_codes: [string];
+}
+
+export class DeleteDoSmdRequest {
+  @ApiModelProperty()
+  doSmdCode: [string];
+}
+
+export class DeleteBaggingRequest {
+  @ApiModelProperty()
+  baggingCode: [string];
+}
+
+export class DeleteBagRepresentativeRequest {
+  @ApiModelProperty()
+  bagRepresentativeCode: [string];
+}
