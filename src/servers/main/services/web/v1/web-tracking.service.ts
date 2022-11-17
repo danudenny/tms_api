@@ -109,7 +109,7 @@ export class V1WebTrackingService {
         }
       }
 
-      if(data.awbStatusLast == 'DLV' && result.isHasPhotoReceiver == false){
+      if((data.awbStatusLast == 'DLV' || data.awbStatusLast == 'BA') && result.isHasPhotoReceiver == false){
         result.isHasPhotoReceiver = true;
       }
     }

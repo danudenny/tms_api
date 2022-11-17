@@ -74,7 +74,7 @@ export class AwbDeliveryVendorQueueService {
           });
           await AwbHistory.insert(awbHistory);
 
-          if(data.awbStatusId == AWB_STATUS.DLV){
+          if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
             //handle upload photo
             this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'photo')
             this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'signature')
@@ -114,9 +114,10 @@ export class AwbDeliveryVendorQueueService {
     vendorName: string,
     vendorId : string,
     orderVendorCode : string,
-    tokenPayload : string
+    tokenPayload : string,
+    keterangan : string
   ) {
-    const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName}`;
+    const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName}; catatan :${keterangan}`;
     const notePublic = `Paket di teruskan ke Partner`;
     // provide data
     const obj = {
