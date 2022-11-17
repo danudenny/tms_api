@@ -260,4 +260,11 @@ module.exports = {
       sortation: 1
     }
   },
+  iframe: {
+    metabase: {
+      url: 'https://metabase.sicepat.com',
+      secret: '03d663fa9582ab37a3b9d599af8be13ec45e950af2dc41ec297ae07b2da14ddc',
+      expiry: 600, // seconds
+    }
+  }
 };

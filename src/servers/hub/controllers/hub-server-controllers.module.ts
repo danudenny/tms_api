@@ -28,6 +28,7 @@ import { SortationMasterdataController } from './masterdata-controller';
 import { SortationMasterdataService } from '../services/masterdata-service';
 import { SortationReportController } from './sortation/web/sortation-report-controller';
 import { SanityController } from './sanity/sanity.controllers';
+import { IframeController } from './iframe/iframe.controller';
 
 const providers = [
   {
@@ -64,6 +65,7 @@ const providers = [
     HubPackagesMonitoringController,
     SortationReportController,
     SanityController,
+    IframeController,
   ],
 })
 export class HubServerControllersModule {}
