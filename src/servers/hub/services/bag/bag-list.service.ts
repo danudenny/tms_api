@@ -20,10 +20,13 @@ export class DefaultBagListService implements HubBagListService {
 
     payload.fieldResolverMap['bagIdNew'] = 't1.bag_id_new';
     payload.fieldResolverMap['createdTime'] = 't1.created_time';
-    payload.fieldResolverMap['branchId'] = 't5.branch_id';
+    payload.fieldResolverMap['branchScanId'] = 't5.branch_id';
+    payload.fieldResolverMap['branchFromName'] = 't5.branch_name';
     payload.fieldResolverMap['transportMode'] = 't1.transportation_mode';
     payload.fieldResolverMap['representativeCode'] = 't1.ref_representative_code';
+    payload.fieldResolverMap['totalAwb'] = 'bagItem.awbCount';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
+    payload.fieldResolverMap['weight'] = 't2.weight';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
@@ -42,7 +45,7 @@ export class DefaultBagListService implements HubBagListService {
       ['t1.created_time', 'createdTime'],
       ['t5.branch_name', 'branchFromName'],
       ['t5.branch_id', 'branchScanId'],
-      ['bagItem.awbCount', 'totalAwb'],
+      ['"bagItem"."awbCount"', 'totalAwb'],
       ['CONCAT( CAST(t2.weight AS NUMERIC(20, 2)), \' Kg\' )', 'weight'],
     ];
     q.selectRaw(...selectColumn);
@@ -52,13 +55,13 @@ export class DefaultBagListService implements HubBagListService {
         `t2.bag_id = t1.bag_id AND t2.is_deleted = false
         INNER JOIN LATERAL(
           select
-              count(bia.bag_item_awb_id) as awbCount
+              count(bia.bag_item_awb_id) as "awbCount"
           from
               bag_item_awb bia
           where
               bia.bag_item_id = t2.bag_item_id
               AND bia.is_deleted = false
-        )  as bagItem ON true AND bagItem.awbCount > 0` ),
+        )  as "bagItem" ON true AND "bagItem"."awbCount" > 0` ),
       // branch created bag
       q.leftJoin(e => e.branch, 't5', j =>
         j.andWhere(e => e.isDeleted, w => w.isFalse()),
