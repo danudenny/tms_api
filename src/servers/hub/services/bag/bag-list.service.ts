@@ -27,6 +27,7 @@ export class DefaultBagListService implements HubBagListService {
     payload.fieldResolverMap['totalAwb'] = 'bagItem.awbCount';
     payload.fieldResolverMap['bagNumber'] = 't1.bag_number';
     payload.fieldResolverMap['weight'] = 't2.weight';
+    payload.fieldResolverMap['branchId'] = 't5.branch_id';
 
     if (payload.sortBy === '') {
       payload.sortBy = 'createdTime';
