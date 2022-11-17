@@ -181,4 +181,8 @@ export class Bag extends TmsBaseEntity {
   @OneToOne(() => User)
   @JoinColumn({ name: 'user_id_updated' })
   user: User;
+
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id_created' })
+  userCreated: User;
 }

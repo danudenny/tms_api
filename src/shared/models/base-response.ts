@@ -1,4 +1,4 @@
-import { ApiModelProperty } from '../external/nestjs-swagger';
+import { ApiModelProperty, ApiModelPropertyOptional } from '../external/nestjs-swagger';
 
 export class BaseResponse {
   @ApiModelProperty()
@@ -9,4 +9,7 @@ export class BaseResponse {
 
   @ApiModelProperty()
   data: any;
+
+  @ApiModelPropertyOptional()
+  code?: string;
 }

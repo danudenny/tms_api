@@ -57,6 +57,9 @@ module.exports = {
   },
   servers: getAllServerConfigurations('default.js'),
   hubMonitoring: {
-    baseUrl: 'http://api-internal.s.sicepat.io/operation/sortation/sortation/api/v1'
+    baseUrl: 'https://swagger.s.sicepat.tech/operation/sortation/sortation/api/v1'
   },
+  sortationMachine: {
+    url: "https://swagger.s.sicepat.tech/operation/mesin-sortir/mesin-sortir/api/v2"
+  }
 };
