@@ -3,4 +3,5 @@ export const REPORT_TYPE = {
   PODHIGHVALUE: 'pod-highvalue',
   CANCELRETURN: 'pod-cancel-retur',
   PODSCANINBRANCH: 'pod-scan-in-branch',
+  PODVENDOR: 'pod-vendor',
 };
