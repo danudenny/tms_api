@@ -624,7 +624,7 @@ export class WebDeliveryInService {
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t1.seal_number', 'sealNumber'],
       ['t6.employee_id', 'employeeId'],
-      ['t6.nik', 'nik'],
+      [`COALESCE(t6.nik, '')`, 'nik'],
       [`COALESCE(t6.fullname, 'Super Admin')`, 'fullName'],
     );
 
