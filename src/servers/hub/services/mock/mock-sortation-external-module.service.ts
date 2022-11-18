@@ -8,7 +8,7 @@ import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm'
 
 @Injectable()
 export class MockSortationExternalModuleService implements SortationExternalModulesService {
-    async finish(params: SortationL2ModuleFinishManualPayloadVm): Promise<any> {
+    async finish(params): Promise<any> {
         return {
             status_code: 200,
             code: 200000,

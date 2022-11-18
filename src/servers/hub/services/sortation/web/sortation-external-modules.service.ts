@@ -16,7 +16,7 @@ import {PinoLoggerService} from '../../../../../shared/services/pino-logger.serv
 export class DefaultSortationExternalModulesService implements SortationExternalModulesService {
     private readonly BASE_URL = ConfigService.get('sortationService.baseUrl');
     constructor(private readonly httpRequestService: HttpRequestAxiosService) {}
-    async finish(params: SortationL2ModuleFinishManualPayloadVm): Promise<any> {
+    async finish(params): Promise<any> {
         return this.post('/smu/module/finish', params);
     }
 

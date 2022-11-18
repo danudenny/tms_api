@@ -7,7 +7,7 @@ export const SORTATION_EXTERNAL_MODULE_SERVICE = 'SORTATION_EXTERNAL_MODULE_SERV
 
 export interface SortationExternalModulesService {
     search: (params: SortationL2ModuleSearchPayloadVm) => Promise<any>;
-    finish: (params: SortationL2ModuleFinishManualPayloadVm) => Promise<any>;
+    finish: (params) => Promise<any>;
     // handover: (params: SortationL2ModuleHandoverPayloadVm) => Promise<any>;
     listFinish: (params: BaseMetaPayloadVm) => Promise<any>;
 }
