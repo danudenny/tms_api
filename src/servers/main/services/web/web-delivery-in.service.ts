@@ -624,8 +624,8 @@ export class WebDeliveryInService {
       [`CONCAT(CAST(t2.weight AS NUMERIC(20,2)),' Kg')`, 'weight'],
       ['t1.seal_number', 'sealNumber'],
       ['t6.employee_id', 'employeeId'],
-      ['t6.nik', 'nik'],
-      ['t6.fullname', 'fullName'],
+      [`COALESCE(t6.nik, '')`, 'nik'],
+      [`COALESCE(t6.fullname, 'superadmin')`, 'fullName'],
     );
 
     q.innerJoin(e => e.bagItems, 't2', j =>
@@ -654,7 +654,7 @@ export class WebDeliveryInService {
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
 
-    q.innerJoin(e => e.userCreated.employee, 't6', j =>
+    q.leftJoin(e => e.userCreated.employee, 't6', j =>
       j.andWhere(e => e.isDeleted, w => w.isFalse()),
     );
     q.andWhere(e => e.branchIdTo, w => w.isNotNull);
