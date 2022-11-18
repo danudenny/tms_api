@@ -22,7 +22,8 @@ export class CentralSortirService {
   static async getListMesinSortirReporting(query: CentralSortirListPayloadVm): Promise<any> {
     try {
       const offset = Number(query.page - 1) * Number(query.limit);
-      const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      // const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      const url = `${this.baseUrlInternal}/v3/report`;
       const authMeta = AuthService.getAuthData();
       const options = {
         params: {
@@ -78,7 +79,8 @@ export class CentralSortirService {
       }
 
       const filename = `reporting_mesin_sortir_${prefixIsSuccess}_${payload.startDate}_${payload.endDate}_${moment().format('YYYYMMDDHHmmss')}|${branchName}`;
-      const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      // const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      const url = `${this.baseUrlInternal}/v3/report`;
       const options = {
         headers: {
           'accept': 'application/json',
