@@ -5,6 +5,7 @@ import moment = require('moment');
 import { EnumHubReport, HUB_REPORT } from '../../../../shared/constants/laporan-hub.constant';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { ConfigService } from '../../../../shared/services/config.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import {
   CentralHubReportPayloadVm,
@@ -16,7 +17,8 @@ import {
 export class CentralSortirService {
 
   private static get baseUrlInternal() {
-    return 'http://api-internal.sicepat.io/operation/reporting-service';
+    // return 'http://api-internal.sicepat.io/operation/reporting-service';
+    return ConfigService.get('reportingService.baseUrl');
   }
 
   static async getListMesinSortirReporting(query: CentralSortirListPayloadVm): Promise<any> {
