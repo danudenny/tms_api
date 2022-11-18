@@ -9,5 +9,5 @@ export interface SortationExternalModulesService {
     search: (params: SortationL2ModuleSearchPayloadVm) => Promise<any>;
     finish: (params) => Promise<any>;
     // handover: (params: SortationL2ModuleHandoverPayloadVm) => Promise<any>;
-    listFinish: (params: BaseMetaPayloadVm) => Promise<any>;
+    listFinish: (params) => Promise<any>;
 }

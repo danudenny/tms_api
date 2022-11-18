@@ -24,7 +24,7 @@ export class DefaultSortationExternalModulesService implements SortationExternal
     //     return Promise.resolve(undefined);
     // }
 
-    async listFinish(params: BaseMetaPayloadVm): Promise<SortationFinishHistoryResponVm> {
+    async listFinish(params): Promise<SortationFinishHistoryResponVm> {
         return this.post('/smu/list/module/finish', params);
     }
 

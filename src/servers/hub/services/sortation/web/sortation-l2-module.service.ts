@@ -19,6 +19,7 @@ import {
   SortationExternalModulesService,
 } from '../../../interfaces/sortation-external-modules.service';
 import moment = require('moment');
+import {SortationL2ModuleFinishResponseVm} from "../../../models/sortation/web/sortation-l2-module-finish.response.vm";
 
 @Injectable()
 export class SortationL2ModuleService {
@@ -41,30 +42,27 @@ export class SortationL2ModuleService {
     }
   }
 
-  public async externalFinishSortation(payload: SortationL2ModuleFinishManualPayloadVm): Promise<SortationL2ModuleSearchResponseVm> {
-    try {
-      const authMeta = AuthService.getAuthData();
-      const externalPayload = {
-        do_sortation_code: payload.doSortationCode,
-        user_id: authMeta.userId,
-      };
-      const res = await this.externalL2.finish(externalPayload);
-      const resData = res.data;
-      const resultData = [];
-      if (resData.length  > 0) {
-        resultData.push({
-          doSortationId : resData[0].do_sortation_id,
-          doSortationCode : resData[0].do_sortation_code,
-        });
-      }
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Success finish manual sortation',
-        data: resultData,
-      };
-    } catch (e) {
-      throw e.message;
+  public async externalFinishSortation(payload: SortationL2ModuleFinishManualPayloadVm): Promise<SortationL2ModuleFinishResponseVm> {
+
+    const authMeta = AuthService.getAuthData();
+    const externalPayload = {
+      do_sortation_code: payload.doSortationCode,
+      user_id: authMeta.userId,
+    };
+    const res = await this.externalL2.finish(externalPayload);
+    const resData = res.data;
+    const resultData = [];
+    if (resData.length  > 0) {
+      resultData.push({
+        doSortationId : resData[0].do_sortation_id,
+        doSortationCode : resData[0].do_sortation_code,
+      });
     }
+    const result = new SortationL2ModuleFinishResponseVm();
+    result.statusCode = HttpStatus.OK;
+    result.message = 'Success finish sortation code';
+    result.data = resultData;
+    return result;
   }
 
   // public static async finishManualSortation(payload: SortationL2ModuleFinishManualPayloadVm) {

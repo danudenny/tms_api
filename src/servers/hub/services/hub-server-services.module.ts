@@ -9,6 +9,7 @@ import axios from 'axios';
 import {SORTATION_EXTERNAL_MODULE_SERVICE} from '../interfaces/sortation-external-modules.service';
 import {MockSortationExternalModuleService} from './mock/mock-sortation-external-module.service';
 import {SortationL2ModuleService} from './sortation/web/sortation-l2-module.service';
+import {SortationL2ListModuleService} from './sortation/web/sortation-l2-list.service';
 
 const providers = [
     { provide: SANITY_SERVICE, useClass: DefaultSanityService },
@@ -19,10 +20,11 @@ const providers = [
         // useClass: DefaultSortationExternalModulesService
     },
     SortationL2ModuleService,
+    SortationL2ListModuleService,
 ];
 @Module({
   imports: [SharedModule],
   providers,
-  exports: [SANITY_SERVICE, SORTATION_EXTERNAL_MODULE_SERVICE, SortationL2ModuleService],
+  exports: [SANITY_SERVICE, SORTATION_EXTERNAL_MODULE_SERVICE, SortationL2ModuleService, SortationL2ListModuleService],
 })
 export class HubServerServicesModule {}

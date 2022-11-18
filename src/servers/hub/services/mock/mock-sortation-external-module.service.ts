@@ -1,10 +1,8 @@
 import {Injectable} from '@nestjs/common';
 import {SortationExternalModulesService} from '../../interfaces/sortation-external-modules.service';
 import {
-    SortationL2ModuleFinishManualPayloadVm,
     SortationL2ModuleSearchPayloadVm,
 } from '../../models/sortation/web/sortation-l2-module-search.payload.vm';
-import {BaseMetaPayloadVm} from '../../../../shared/models/base-meta-payload.vm';
 
 @Injectable()
 export class MockSortationExternalModuleService implements SortationExternalModulesService {
@@ -22,7 +20,7 @@ export class MockSortationExternalModuleService implements SortationExternalModu
         };
     }
 
-    async listFinish(params: BaseMetaPayloadVm): Promise<any> {
+    async listFinish(params): Promise<any> {
         return {
             status_code: 200,
             code: 200000,
