@@ -27,7 +27,7 @@ export class CentralSortirService {
       const authMeta = AuthService.getAuthData();
       const options = {
         params: {
-          employee: authMeta.userId,
+          employee_id: authMeta.userId,
           report_type: 'mesin_sortir',
           limit: query.limit,
           offset,
@@ -86,9 +86,6 @@ export class CentralSortirService {
           'accept': 'application/json',
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        params: {
-          employee: authMeta.userId,
-        },
       };
 
       const qs = require('querystring');
@@ -96,6 +93,7 @@ export class CentralSortirService {
         query_encoded: encodeQuery,
         filename,
         report_type,
+        employee_id : authMeta.userId,
       };
       const request = await axios.post(url, qs.stringify(body), options);
       return { status: request.status, ...request.data };
