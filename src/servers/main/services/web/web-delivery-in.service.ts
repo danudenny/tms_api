@@ -625,7 +625,7 @@ export class WebDeliveryInService {
       ['t1.seal_number', 'sealNumber'],
       ['t6.employee_id', 'employeeId'],
       [`COALESCE(t6.nik, '')`, 'nik'],
-      [`COALESCE(t6.fullname, 'Super Admin')`, 'fullName'],
+      [`COALESCE(t6.fullname, 'superadmin')`, 'fullName'],
     );
 
     q.innerJoin(e => e.bagItems, 't2', j =>
