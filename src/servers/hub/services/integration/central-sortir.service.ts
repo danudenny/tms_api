@@ -18,7 +18,6 @@ import {
 export class CentralSortirService {
 
   private static get baseUrlInternal() {
-    // return 'http://api-internal.sicepat.io/operation/reporting-service';
     return ConfigService.get('reportingService.baseUrl');
   }
 
@@ -91,14 +90,14 @@ export class CentralSortirService {
         },
       };
 
-      const qs = require('querystring');
+      // const qs = require('querystring');
       const body = {
         query_encoded: encodeQuery,
         filename,
         report_type,
         employee_id : authMeta.userId,
       };
-      const request = await axios.post(url, qs.stringify(body), options);
+      const request = await axios.post(url, JSON.stringify(body), options);
       return { status: request.status, ...request.data };
     } catch (e) {
       PinoLoggerService.error(e);
