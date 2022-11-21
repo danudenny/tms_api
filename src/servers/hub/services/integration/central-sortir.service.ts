@@ -7,6 +7,7 @@ import { Branch } from '../../../../shared/orm-entity/branch';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import {
   CentralHubReportPayloadVm,
   CentralSortirListPayloadVm,
@@ -17,8 +18,8 @@ import {
 export class CentralSortirService {
 
   private static get baseUrlInternal() {
-    // return 'http://api-internal.sicepat.io/operation/reporting-service';
-    return ConfigService.get('reportingService.baseUrl');
+    return 'https://swagger.s.sicepat.tech/operation/reporting-service';
+    // return ConfigService.get('reportingService.baseUrl');
   }
 
   static async getListMesinSortirReporting(query: CentralSortirListPayloadVm): Promise<any> {
@@ -86,7 +87,7 @@ export class CentralSortirService {
       const options = {
         headers: {
           'accept': 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
       };
 
@@ -100,6 +101,7 @@ export class CentralSortirService {
       const request = await axios.post(url, qs.stringify(body), options);
       return { status: request.status, ...request.data };
     } catch (e) {
+      PinoLoggerService.error(e);
       throw e.message;
     }
   }
