@@ -18,8 +18,8 @@ import {
 export class CentralSortirService {
 
   private static get baseUrlInternal() {
-    return 'https://swagger.s.sicepat.tech/operation/reporting-service';
-    // return ConfigService.get('reportingService.baseUrl');
+    // return 'http://api-internal.sicepat.io/operation/reporting-service';
+    return ConfigService.get('reportingService.baseUrl');
   }
 
   static async getListMesinSortirReporting(query: CentralSortirListPayloadVm): Promise<any> {
