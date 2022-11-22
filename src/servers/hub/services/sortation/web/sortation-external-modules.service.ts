@@ -14,7 +14,7 @@ import {PinoLoggerService} from '../../../../../shared/services/pino-logger.serv
 
 @Injectable()
 export class DefaultSortationExternalModulesService implements SortationExternalModulesService {
-    private readonly BASE_URL = ConfigService.get('sortationService.baseUrl');
+    private readonly BASE_URL = ConfigService.get('hubMonitoring.baseUrl');
     constructor(private readonly httpRequestService: HttpRequestAxiosService) {}
     async finish(params): Promise<any> {
         return this.post('/smu/module/finish', params);

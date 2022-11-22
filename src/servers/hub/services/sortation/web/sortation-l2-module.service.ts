@@ -19,7 +19,7 @@ import {
   SortationExternalModulesService,
 } from '../../../interfaces/sortation-external-modules.service';
 import moment = require('moment');
-import {SortationL2ModuleFinishResponseVm} from "../../../models/sortation/web/sortation-l2-module-finish.response.vm";
+import {SortationL2ModuleFinishResponseVm} from '../../../models/sortation/web/sortation-l2-module-finish.response.vm';
 
 @Injectable()
 export class SortationL2ModuleService {
