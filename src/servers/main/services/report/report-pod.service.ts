@@ -12,6 +12,8 @@ import axios from 'axios';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { WebAwbReturnCancelService } from '../../services/web/web-awb-return-cancel.service';
 import moment = require('moment');
+import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import { Payload } from 'aws-sdk/clients/iotdata';
 
 export class ReportPodService {
   static async fetchReportResult(
@@ -79,6 +81,9 @@ export class ReportPodService {
       case REPORT_TYPE.PODSCANINBRANCH:
         queryParam = await this.generatePodScanInBranchQuery(payload);
         break;
+      case REPORT_TYPE.PODVENDOR:
+          queryParam = await this.generatePodVendorQuery(payload);
+          break;
       default:
         RequestErrorService.throwObj(
           {
@@ -401,9 +406,70 @@ export class ReportPodService {
     );
 
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-
-    console.log(q.getQuery());
-
     return q.getQuery();
+  }
+
+  static async generatePodVendorQuery(payload: BaseMetaPayloadVm) {
+
+    let startDate = moment().add(-30, 'days').format('YYYY-MM-DD 00:00:00');
+    let endDate = moment().add(1, 'days').format('YYYY-MM-DD 00:00:00');
+    let branchId = 0;
+    let vendorId = 0;
+
+    for(let data of payload.filters){
+      if (data.field == 'startDate') {
+        startDate = data.value;
+      }
+
+      if (data.field == 'endDate') {
+        endDate = data.value;
+      }
+
+      if (data.field == 'branchId') {
+        branchId = data.value;
+      }
+
+      if (data.field == 'vendorId') {
+        vendorId = data.value;
+      }
+    }
+
+    let queryBranch = `AND ov.branch_id = ${branchId}`
+    if(branchId == 0){
+      queryBranch = ``
+    }
+
+    if(vendorId == 0){
+      throw new BadRequestException(`Vendor tidak ditemukan`);
+    }
+
+    let query = `
+    SELECT 
+      ov.order_vendor_code as "Nomor Surat Jalan", 
+      TO_CHAR(ov.delivery_date, 'YYYY-MM-DD') as "Tanggal Pengiriman", 
+      v.vendor_name as "Nama Vendor", 
+      b.branch_name as "Gerai Asal", 
+      count(ovd.awb_no) as "Total Resi", 
+      ov.status as "Status" 
+    FROM 
+      mercury.order_vendor ov 
+      left JOIN mercury.order_vendor_detail ovd ON ov.order_vendor_id = ovd.order_vendor_id 
+      and ovd.is_deleted = false 
+      inner JOIN mercury.vendor v ON ov.vendor_id = v.vendor_id 
+      inner JOIN mercury.branch b ON ov.branch_id = b.origin_branch_id 
+    WHERE 
+      ov.is_deleted = false 
+      AND ov.status != 'new'
+      AND ov.created_time between '${startDate}'
+      and '${endDate}'
+      ${queryBranch}
+      AND ov.vendor_id = '${vendorId}'
+    GROUP BY 
+      ov.order_vendor_code,
+      ov.delivery_date,
+      v.vendor_name,
+      b.branch_name,
+      ov.status`
+    return query;
   }
 }
