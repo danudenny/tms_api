@@ -5,8 +5,8 @@ import { BaseMetaPayloadVm } from '../../../../../shared/models/base-meta-payloa
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
 import {
   SORTATION_EXTERNAL_MODULE_SERVICE,
-  SortationExternalModulesService
-} from "../../../interfaces/sortation-external-modules.service";
+  SortationExternalModulesService,
+} from '../../../interfaces/sortation-external-modules.service';
 
 @Injectable()
 export class SortationL2ListModuleService {

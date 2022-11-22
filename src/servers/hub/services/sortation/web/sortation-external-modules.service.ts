@@ -25,7 +25,7 @@ export class DefaultSortationExternalModulesService implements SortationExternal
     // }
 
     async listFinish(params): Promise<SortationFinishHistoryResponVm> {
-        return this.post('/smu/list/module/finish', params);
+        return this.post('/smu/module/finish/list', params);
     }
 
     async search(params: SortationL2ModuleSearchPayloadVm): Promise<any> {
