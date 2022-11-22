@@ -822,7 +822,7 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     //   j.andWhere(e => e.isDeleted, w => w.isFalse()),
     // );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.andWhereRaw('bhin.bag_item_status_id in( 3550, 3500)');
+    q.andWhereRaw('bhin.bag_item_status_id in(3550)');
 
     const data = await q.exec();
 
@@ -836,7 +836,7 @@ where dbd.bag_item_id = '${paramBagItemId}' AND dbd.is_deleted = FALSE`;
     q2.leftJoin('users', 'u', 'u.user_id=bhin.user_id_updated and u.is_deleted = FALSE');
     payload.applyFiltersToQueryBuilder(q2);
     q2.andWhere('b.is_deleted = FALSE');
-    q2.andWhere('bhin.bag_item_status_id in( 3550, 3500)');
+    q2.andWhere('bhin.bag_item_status_id in(3550)');
 
     const total = await q2.execute();
 
