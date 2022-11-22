@@ -51,7 +51,7 @@ export class ExternalSortationMachineService
     return {
       awb_item_id: _.get(result, 'data.0.awb_item.0.awb_item_id'),
       weight: _.get(result, 'data.0.awb_item.0.total_weight'),
-      transport_type: _.get(result, 'data.0.route_transport_map'),
+      transport_type: _.get(result, 'data.0.route_transport_map', ''),
       district_code: _.get(result, 'data.0.district_code'),
       branch_id_lastmile: _.get(result, 'data.0.branch_id_lastmile'),
       representative_id: _.get(
@@ -61,6 +61,7 @@ export class ExternalSortationMachineService
       representative: _.get(
         result,
         'data.0.representative_code_branch_lastmile',
+        '',
       ),
       consignee_name: _.get(result, 'data.0.consignee_name'),
       consignee_address: _.get(result, 'data.0.consignee_address'),

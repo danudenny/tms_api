@@ -43,6 +43,8 @@ export class ExternalBagService extends ExternalService implements BagService {
       `/v1/bag-item?bag-item-id=${payload.bag_item_id}`,
     );
     const bag = _.get(response, 'data');
+    bag.transportation_mode = _.get(bag, 'transportation_mode', '');
+    bag.representative_code = _.get(bag, 'representative_code', '');
     bag.awbs = bag.awbs ? bag.awbs.map(awb => awb.reference) : [];
     return bag;
   }

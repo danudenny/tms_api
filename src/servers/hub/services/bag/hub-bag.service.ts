@@ -74,10 +74,16 @@ export class DefaultHubBagService implements HubBagService {
         throw new BadRequestException('Resi sudah pernah di-scan');
       }
       // check if awb has same destination & transportation_mode
-      if (awb.transport_type != bag.transportation_mode) {
+      if (
+        awb.transport_type.toUpperCase() !=
+        bag.transportation_mode.toUpperCase()
+      ) {
         throw new UnprocessableEntityException('Mode transportasi berbeda');
       }
-      if (awb.representative != bag.representative_code) {
+      if (
+        awb.representative.toUpperCase() !=
+        bag.representative_code.toUpperCase()
+      ) {
         throw new UnprocessableEntityException('Representatif tujuan berbeda');
       }
       bagNumber = bag.bag_number;

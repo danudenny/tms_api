@@ -169,7 +169,7 @@ describe('DefaultHubBagService', () => {
         bag_number: 'ZBPJ0YU03Z',
         representative_id: 87,
         representative_code: 'SUB',
-        transportation_mode: 'SMD',
+        transportation_mode: 'smd',
         awbs: ['601000000101'],
       };
       const mockAwb = {
@@ -179,7 +179,7 @@ describe('DefaultHubBagService', () => {
         district_code: 'DCODE',
         branch_id_lastmile: 1,
         representative_id: 87,
-        representative: 'SUB',
+        representative: 'sub',
         consignee_name: 'N',
         consignee_address: 'A',
       };
