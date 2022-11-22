@@ -21,30 +21,18 @@ const providers = [
         // useClass: MockSortationExternalModuleService,
         useClass: DefaultSortationExternalModulesService,
     },
+    {
+        provide: SORTATION_MACHINE_SERVICE,
+        useClass: ExternalSortationMachineService,
+    },
+    { provide: CHECK_AWB_SERVICE, useClass: DefaultCheckAwbService },
     SortationL2ModuleService,
     SortationL2ListModuleService,
-];
-const providers = [
-  { provide: SANITY_SERVICE, useClass: DefaultSanityService },
-  {
-    provide: HttpRequestAxiosService,
-    useFactory: () => new HttpRequestAxiosService(axios.create()),
-  },
-  // { provide: SORTATION_MACHINE_SERVICE, useClass: MockSortationMachineService },
-  {
-    provide: SORTATION_MACHINE_SERVICE,
-    useClass: ExternalSortationMachineService,
-  },
-  { provide: CHECK_AWB_SERVICE, useClass: DefaultCheckAwbService },
 ];
 
 @Module({
   imports: [SharedModule],
   providers,
-  exports: [SANITY_SERVICE, SORTATION_EXTERNAL_MODULE_SERVICE, SortationL2ModuleService, SortationL2ListModuleService],
-  exports: [
-    SANITY_SERVICE,
-    CHECK_AWB_SERVICE,
-  ],
+  exports: [SANITY_SERVICE, SORTATION_EXTERNAL_MODULE_SERVICE, SANITY_SERVICE, CHECK_AWB_SERVICE, SortationL2ModuleService, SortationL2ListModuleService],
 })
 export class HubServerServicesModule {}
