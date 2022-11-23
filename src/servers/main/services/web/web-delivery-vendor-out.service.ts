@@ -130,7 +130,7 @@ export class WebDeliveryVendorOutService {
     }
 
     try {
-      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes);
+      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes, payload.branc_id);
     } catch (err) {
       RequestErrorService.throwObj({
         message: 'Gagal mengirimkan data ke vendor',
@@ -406,37 +406,46 @@ export class WebDeliveryVendorOutService {
   }
 
   private static async getPickupData(userID: number, branchID: number): Promise<any> {
-    const query = `
-    SELECT e.fullname as pickup_name,
-      c.address as pickup_address,
-      e.phone1 as pickup_phone,
-      a.email as pickup_email,
-      e.fullname as pickup_contact,
-      c.latitude as pickup_latitude,
-      c.longitude as pickup_longitude,
-      d.district_code as pickup_district_code,
-      d.district_id as pickup_district_id,
-      d.district_code as return_district_code,
-      e.phone1 as return_phone,
-      e.fullname as return_contact,
-      c.address as return_address,
-      c.origin_id as origin_id,
-      f.city_name as pickup_city
-    FROM users a
-      LEFT JOIN user_role b on a.user_id = b.user_id
-      LEFT JOIN branch c on b.branch_id = c.branch_id
-      LEFT JOIN district d on c.district_id = d.district_id
-      INNER JOIN employee e on a.employee_id = e.employee_id
-      LEFT JOIN city f on d.city_id = f.city_id
-    WHERE a.user_id = :userID
-    AND b.branch_id = :branchID
-    LIMIT 1
-    ;`;
+    const query1 = `
+    SELECT e.fullname as pickup_name, 
+    e.phone1 as pickup_phone,
+    a.email as pickup_email,
+    e.fullname as pickup_contact,
+    e.phone1 as return_phone,
+    e.fullname as return_contact
+    FROM users a 
+    INNER JOIN employee e on a.employee_id = e.employee_id
+    WHERE a.user_id = :userID;
+    `
 
-    const rawData = await RawQueryService.queryWithParams(query, {
-      userID, branchID
-    });
-    return rawData ? rawData[0] : null;
+    const query2 = `
+    SELECT 
+    c.address as pickup_address,
+    c.latitude as pickup_latitude,
+    c.longitude as pickup_longitude,
+    d.district_code as pickup_district_code,
+    d.district_id as pickup_district_id,
+    d.district_code as return_district_code,
+    c.address as return_address,
+    c.origin_id as origin_id,
+    f.city_name as pickup_city
+    FROM branch c 
+    INNER JOIN district d on c.district_id = d.district_id
+    INNER JOIN city f on d.city_id = f.city_id
+    WHERE c.branch_id = :branchID;
+    `
+
+    const [rawDataUserPickup, rawDataBranchPickup] = await Promise.all([
+      RawQueryService.queryWithParams(query1, {
+        userID
+      }),
+      RawQueryService.queryWithParams(query2, {
+        branchID
+      })
+    ]);
+
+    const rawData = Object.assign(rawDataUserPickup.length > 0 ? rawDataUserPickup[0] : {}, rawDataBranchPickup.length > 0 ? rawDataBranchPickup[0] : {});
+    return rawData ? rawData : null;
   }
 
   //webhook tracking
