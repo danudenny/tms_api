@@ -18,7 +18,7 @@ export class WebDeliveryVendorOutSendPayload {
   notes : string;
 
   @ApiModelProperty()
-  branc_id : number;
+  branch_id : number;
 
   @ApiModelProperty()
   @Type(() => String)
