@@ -28,6 +28,7 @@ import { UpsertHubSummaryBagSortirQueueService } from '../../../queue/services/u
 import { TempStt } from '../../../../shared/orm-entity/temp-stt';
 import { UpdateBranchSortirLogSummaryQueueService } from '../../../queue/services/update-branch-sortir-log-summary-queue.service';
 import { RawQueryService } from '../../../../shared/services/raw-query.service';
+import {BagNumberService} from "../../../../shared/services/bag-number.service";
 
 export class HubMachineService {
   constructor() { }
@@ -366,7 +367,8 @@ export class HubMachineService {
 
     // generate bag number
     // Prefix ZA for tangerang, ZB for BDO
-    const randomBagNumber = 'ZA' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 8).join('');
+    // const randomBagNumber = 'ZA' + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZZYWVUTSRQPONMLKJIHGFEDCBA', 8).join('');
+    const randomBagNumber = BagNumberService.createBagNumber('ZA').toString();
     const refBranchCode = branch ? branch.branchCode : '';
 
     const bagQueryData = Bag.create({
