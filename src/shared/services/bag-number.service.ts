@@ -31,7 +31,11 @@ export class BagNumberService {
         const arrayLastTreeChar = randomBagNumber.substr(length - 3).split('');
         for (let i = 0; i <= 2; i++) {
             let char = arrayLastTreeChar[i];
-            if (/^\d+$/.test(char)) {
+            if (/^[A-Z]$/i.test(char)) {
+                // jika alphabet keluar loop
+                break;
+            } else {
+                // jika number replace dan keluar loop
                 char = sampleSize('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 1).join('');
                 arrayLastTreeChar[i] = char;
                 break;
