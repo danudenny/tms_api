@@ -5,7 +5,9 @@ import moment = require('moment');
 import { EnumHubReport, HUB_REPORT } from '../../../../shared/constants/laporan-hub.constant';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { ConfigService } from '../../../../shared/services/config.service';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import {
   CentralHubReportPayloadVm,
   CentralSortirListPayloadVm,
@@ -16,17 +18,18 @@ import {
 export class CentralSortirService {
 
   private static get baseUrlInternal() {
-    return 'http://api-internal.sicepat.io/operation/reporting-service';
+    return ConfigService.get('reportingService.baseUrl');
   }
 
   static async getListMesinSortirReporting(query: CentralSortirListPayloadVm): Promise<any> {
     try {
       const offset = Number(query.page - 1) * Number(query.limit);
-      const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      // const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      const url = `${this.baseUrlInternal}/v3/report`;
       const authMeta = AuthService.getAuthData();
       const options = {
         params: {
-          employee: authMeta.userId,
+          employee_id: authMeta.userId,
           report_type: 'mesin_sortir',
           limit: query.limit,
           offset,
@@ -78,26 +81,26 @@ export class CentralSortirService {
       }
 
       const filename = `reporting_mesin_sortir_${prefixIsSuccess}_${payload.startDate}_${payload.endDate}_${moment().format('YYYYMMDDHHmmss')}|${branchName}`;
-      const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      // const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      const url = `${this.baseUrlInternal}/v3/report`;
       const options = {
         headers: {
           'accept': 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        params: {
-          employee: authMeta.userId,
+          'Content-Type': 'application/json',
         },
       };
 
-      const qs = require('querystring');
+      // const qs = require('querystring');
       const body = {
         query_encoded: encodeQuery,
         filename,
         report_type,
+        employee_id : authMeta.userId,
       };
-      const request = await axios.post(url, qs.stringify(body), options);
+      const request = await axios.post(url, JSON.stringify(body), options);
       return { status: request.status, ...request.data };
     } catch (e) {
+      PinoLoggerService.error(e);
       throw e.message;
     }
   }
