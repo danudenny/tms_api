@@ -66,20 +66,21 @@ export class WebDeliveryVendorOutService {
     const permissonPayloadToken = AuthService.getPermissionToken();
     const dataItem = [];
     let awbSendVendor = [];
+
+    const vendor = await PartnerLogistic.findOne({
+      select: ['partnerLogisticId', 'partnerLogisticName'],
+      where: {
+        partnerLogisticId: payload.vendor_id,
+        isDeleted: false,
+      }
+    });
+
     for (const awbNumber of payload.scanValue) {
       const response = new WebDeliveryVendorOutResponse();
       const awb = await AwbItemAttr.findOne({
         select: ['awbNumber', 'awbItemId'],
         where: {
           awbNumber: awbNumber,
-          isDeleted: false,
-        }
-      });
-
-      const vendor = await PartnerLogistic.findOne({
-        select: ['partnerLogisticId', 'partnerLogisticName'],
-        where: {
-          partnerLogisticId: payload.vendor_id,
           isDeleted: false,
         }
       });
