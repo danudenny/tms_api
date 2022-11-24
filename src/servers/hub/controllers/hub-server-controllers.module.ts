@@ -33,6 +33,7 @@ import { CheckAwbListController } from './awb/check-awb-list.controller';
 import { CheckAwbReportController } from './awb/check-awb-report.controller';
 import { CheckAwbReportService } from '../services/check-awb/check-awb-report.service';
 import { SanityController } from './sanity/sanity.controllers';
+import { IframeController } from './iframe/iframe.controller';
 
 const providers = [
   {
@@ -74,6 +75,7 @@ const providers = [
     CheckAwbListController,
     CheckAwbReportController,
     SanityController,
+    IframeController,
   ],
 })
 export class HubServerControllersModule {}
