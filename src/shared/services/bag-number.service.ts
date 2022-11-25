@@ -6,23 +6,19 @@ import {RedisService} from './redis.service';
 export class BagNumberService {
 
     public static async createBagNumber(prefix) {
-        let bagNumber = await this.generateBagNumber(prefix);
-        for (let i = 0; i < 5; i++) {
-            const checkExist = await BagService.validBagNumber(bagNumber);
-            if (checkExist) {
-                bagNumber = await this.generateBagNumber(prefix);
-            } else {
-                break;
+        let retries = 5;
+        while (retries--) {
+            const bagNumber = await this.generateBagNumber(prefix);
+            const bag = await BagService.validBagNumber(bagNumber);
+            const redlock = await RedisService.redlock(`redlock:bag:${bagNumber}`, 300);
+            if (!redlock) {
+                throw new BadRequestException('Data Bag Sedang di proses, Silahkan Coba Beberapa Saat');
             }
-            if (i == 4) { throw new InternalServerErrorException('BagNumber gagal di buat, silahkan ulangi beberapa saat lagi!'); }
+            if (!bag) {
+                return bagNumber;
+            }
         }
-
-        const redlock = await RedisService.redlock(`redlock:bag:${bagNumber}`, 300);
-        if (!redlock) {
-            throw new BadRequestException('Data Bag Sedang di proses, Silahkan Coba Beberapa Saat');
-        }
-
-        return bagNumber;
+        throw new InternalServerErrorException('BagNumber gagal di buat, silahkan ulangi beberapa saat lagi!');
     }
 
     public static async generateBagNumber(prefix) {
