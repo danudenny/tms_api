@@ -111,7 +111,7 @@ export class CentralSortirService {
               bsls.updated_time AS tgl_terakhir_scan_mesin, \n
               b.branch_name AS gerai_tujuan, \n
               bsls.chute_number AS chute_number, \n
-              bsls.awb_number AS no_resi, \n
+              ''''||bsls.awb_number AS no_resi, \n
               bsls.seal_number AS tag_seal, \n
               bl.branch_name AS gerai_tujuan, \n
               case when bsls.is_cod = false then 'NON COD' else 'COD' end as jenis_pembayaran,\n
