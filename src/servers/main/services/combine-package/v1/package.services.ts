@@ -613,7 +613,7 @@ export class V1PackageService {
     let randomBagNumber;
 
     await getManager().transaction(async trans => {
-      randomBagNumber = this.getRandomBagNumber(payload);
+      randomBagNumber = await this.getRandomBagNumber(payload);
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
         branchIdTo: branchId,
