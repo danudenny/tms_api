@@ -109,7 +109,7 @@ export class CentralSortirService {
     let query = `SELECT \n
               bsls.scan_date AS tgl_scan_hub, \n
               bsls.updated_time AS tgl_terakhir_scan_mesin, \n
-              b.branch_name AS gerai_sortir, \n
+              b.branch_name AS lokasi_mesin_sortir, \n
               bsls.chute_number AS chute_number, \n
               ''''||bsls.awb_number AS no_resi, \n
               bsls.seal_number AS tag_seal, \n
