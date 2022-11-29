@@ -52,7 +52,7 @@ export class AwbDeliveryVendorQueueService {
         if (awbItemAttr) {
           // NOTE: Insert Data awb history
           const awbHistory = AwbHistory.create({
-            awbItemId: data.awbItemId,
+            awbItemId: awbItemAttr.awbItemId,
             refAwbNumber: awbItemAttr.awbNumber,
             userId: data.userId,
             branchId: data.branchId,
