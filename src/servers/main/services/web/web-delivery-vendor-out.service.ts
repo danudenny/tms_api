@@ -77,17 +77,9 @@ export class WebDeliveryVendorOutService {
 
     for (const awbNumber of payload.scanValue) {
       const response = new WebDeliveryVendorOutResponse();
-      const awb = await AwbItemAttr.findOne({
-        select: ['awbNumber', 'awbItemId'],
-        where: {
-          awbNumber: awbNumber,
-          isDeleted: false,
-        }
-      });
-
-      if (awb && vendor) {
+      if (vendor) {
         const holdRedis = await RedisService.lockingWithExpire(
-          `hold:scanoutvendor:${awb.awbItemId}`,
+          `hold:scanoutvendor:${awbNumber}`,
           'locking',
           60,
         );
@@ -95,7 +87,7 @@ export class WebDeliveryVendorOutService {
         if (holdRedis) {
           try {
             AwbDeliveryVendorQueueService.createJobSendVendor(
-              awb.awbItemId,
+              awbNumber,
               AWB_STATUS.OUT_BRANCH,
               permissonPayload.branchId,
               authMeta.userId,
@@ -108,7 +100,7 @@ export class WebDeliveryVendorOutService {
             awbSendVendor.push(awbNumber)
             response.status = 'ok';
             response.message = `Resi ${awbNumber} berhasil di proses.`;
-            RedisService.del(`hold:scanoutvendor:${awb.awbItemId}`);
+            RedisService.del(`hold:scanoutvendor:${awbNumber}`);
           } catch (err) {
             response.status = 'error';
             response.message = `Gangguan Server: ${err.message}`;
@@ -129,7 +121,7 @@ export class WebDeliveryVendorOutService {
       response.awbNumber = awbNumber;
       dataItem.push(response);
     }
-
+    
     try {
       await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes, payload.branch_id);
     } catch (err) {
@@ -473,7 +465,7 @@ export class WebDeliveryVendorOutService {
         if (holdRedis) {
           try {
             AwbDeliveryVendorQueueService.createJobInserTracking(
-              awb.awbItemId,
+              dataAWB.awbNumber,
               dataAWB.awbStatusId,
               dataAWB.noteInternal,
               dataAWB.notePublic,
