@@ -67,6 +67,12 @@ export class WebDeliveryVendorOutService {
     const dataItem = [];
     let awbSendVendor = [];
 
+    if(payload.branch_id <= 0){
+      RequestErrorService.throwObj({
+        message: 'Branch tidak ditemukan',
+      });
+    }
+
     const vendor = await PartnerLogistic.findOne({
       select: ['partnerLogisticId', 'partnerLogisticName'],
       where: {
@@ -174,6 +180,7 @@ export class WebDeliveryVendorOutService {
     //       "delivery_date": "2022-08-21T11:22:08Z",
     //       "vendor_id": "443614be-241d-11ed-9891-a15adc6ec386",
     //       "vendor_name": "SAP",
+    //       "branch_name" : "ABC",
     //       "details": [
     //           {
     //               "awb_no": "100018551113",
@@ -233,6 +240,7 @@ export class WebDeliveryVendorOutService {
     const jsreportParams = {
       data: {
         vendorCode: queryParams.orderVendorCode,
+        branchName: data.data.branch_name,
         userDriver: {
           nameDriver: data.data.vendor_name,
           vehicleNumber: '-'
