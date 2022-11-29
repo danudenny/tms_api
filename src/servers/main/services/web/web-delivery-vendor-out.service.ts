@@ -223,10 +223,12 @@ export class WebDeliveryVendorOutService {
     let totalItem = 0;
     let totalCod = 0;
     let totalFinalWeight = 0;
+    let branchName = '-';
     for (let datax of data.data.details) {
       totalItem++;
       totalCod = totalCod + datax.cod_value;
       totalFinalWeight = Number(totalFinalWeight) + Number(datax.weight);
+      branchName = datax.branch_name;
       awb.push({
         awbNumber: datax.awb_no,
         consigneeName: datax.receiver_name,
@@ -240,7 +242,7 @@ export class WebDeliveryVendorOutService {
     const jsreportParams = {
       data: {
         vendorCode: queryParams.orderVendorCode,
-        branchName: data.data.branch_name,
+        branchName: branchName,
         userDriver: {
           nameDriver: data.data.vendor_name,
           vehicleNumber: '-'
