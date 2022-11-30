@@ -34,6 +34,10 @@ import { CheckAwbReportController } from './awb/check-awb-report.controller';
 import { CheckAwbReportService } from '../services/check-awb/check-awb-report.service';
 import { SanityController } from './sanity/sanity.controllers';
 import { IframeController } from './iframe/iframe.controller';
+import { HubBagController } from './bag/bag.controller';
+import { BagListController } from './bag/bag-list.controller';
+import { BagReportingService } from '../services/bag/bag-reporting.service';
+import { BagReportingController } from './bag/bag-report.controller';
 
 const providers = [
   {
@@ -46,6 +50,7 @@ const providers = [
   SortationMasterdataService,
   CheckAwbListService,
   CheckAwbReportService,
+  BagReportingService,
 ];
 
 @Module({
@@ -76,6 +81,9 @@ const providers = [
     CheckAwbReportController,
     SanityController,
     IframeController,
+    HubBagController,
+    BagListController,
+    BagReportingController,
   ],
 })
 export class HubServerControllersModule {}
