@@ -106,5 +106,12 @@ export class SharedService {
     return str.replace(regex, function(match, p1) {
         return obj[p1] || ':' + p1;
     });
-}
+  }
+
+  // construct any object into http GET query string
+  static getHttpQuery(obj: any) {
+    return Object.entries(obj)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
+  }
 }
