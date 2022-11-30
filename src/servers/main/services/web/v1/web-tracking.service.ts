@@ -109,7 +109,7 @@ export class V1WebTrackingService {
         }
       }
 
-      if(data.awbStatusLast == 'DLV' && result.isHasPhotoReceiver == false){
+      if((data.awbStatusLast == 'DLV' || data.awbStatusLast == 'BA') && result.isHasPhotoReceiver == false){
         result.isHasPhotoReceiver = true;
       }
     }
@@ -538,6 +538,7 @@ export class V1WebTrackingService {
       LEFT JOIN representative r ON br.representative_id_to = r.representative_id AND r.is_deleted = FALSE
       WHERE
         br.bag_representative_code = :bagRepresentativeNumber
+        AND br.is_deleted = false
       LIMIT 1
     `;
     const rawData = await RawQueryService.queryWithParams(query, {

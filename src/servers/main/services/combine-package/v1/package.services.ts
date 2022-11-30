@@ -30,6 +30,7 @@ import { BagService } from '../../v1/bag.service';
 import { RedisService } from '../../../../../shared/services/redis.service';
 import moment = require('moment');
 import { OrionRepositoryService } from '../../../../../shared/services/orion-repository.service';
+import {BagNumberService} from "../../../../../shared/services/bag-number.service";
 // #endregion
 const uuidv1 = require('uuid/v1');
 
@@ -612,7 +613,7 @@ export class V1PackageService {
     let randomBagNumber;
 
     await getManager().transaction(async trans => {
-      randomBagNumber = this.getRandomBagNumber(payload);
+      randomBagNumber = await this.getRandomBagNumber(payload);
       const bagDetail = Bag.create({
         bagNumber: randomBagNumber,
         branchIdTo: branchId,
@@ -1053,7 +1054,9 @@ export class V1PackageService {
     } else if (payload.note === 'Cargo') {
       bagNumberPrefix = 'SC';
     }
-    return bagNumberPrefix + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
+
+    // return bagNumberPrefix + sampleSize('012345678900123456789001234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8).join('');
+    return BagNumberService.createBagNumber(bagNumberPrefix);
   }
 
   private static getRejectScanInType(type: string) {

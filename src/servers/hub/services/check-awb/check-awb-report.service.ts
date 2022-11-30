@@ -6,7 +6,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { ConfigService } from '../../../../shared/services/config.service';
 import { MetaService } from '../../../../shared/services/meta.service';
 import { GenerateQueueFormDataPayloadVm, GenerateQueueOptionPayloadVm } from '../../../smd/models/smd-central-reporting.payload.vm';
-import { CheckAwbReportGeneratePayloadVm, CheckAwbReportListPayloadVm } from '../../models/check-awb/check-awb-report-payload.bm';
+import { CheckAwbReportGeneratePayloadVm, CheckAwbReportListPayloadVm } from '../../models/check-awb/check-awb-report-payload.vm';
 
 const type = 'check_awb_reporting';
 export class CheckAwbReportService {

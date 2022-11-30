@@ -32,6 +32,8 @@ import { CheckAwbListService } from '../services/check-awb/check-awb-list.servic
 import { CheckAwbListController } from './awb/check-awb-list.controller';
 import { CheckAwbReportController } from './awb/check-awb-report.controller';
 import { CheckAwbReportService } from '../services/check-awb/check-awb-report.service';
+import { SanityController } from './sanity/sanity.controllers';
+import { IframeController } from './iframe/iframe.controller';
 import { HubBagController } from './bag/bag.controller';
 import { BagListController } from './bag/bag-list.controller';
 import { BagReportingService } from '../services/bag/bag-reporting.service';
@@ -77,6 +79,8 @@ const providers = [
     CheckAwbController,
     CheckAwbListController,
     CheckAwbReportController,
+    SanityController,
+    IframeController,
     HubBagController,
     BagListController,
     BagReportingController,

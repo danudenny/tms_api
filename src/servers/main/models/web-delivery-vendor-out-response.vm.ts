@@ -214,6 +214,24 @@ export class ScanOutPropertyAwbResponse {
 
   @ApiModelProperty()
   return_address : string;
+
+  @ApiModelProperty()
+  origin_id : number;
+
+  @ApiModelProperty()
+  pickup_city : string;
+
+  @ApiModelProperty()
+  shipper_city : string;
+
+  @ApiModelProperty()
+  shipper_province : string;
+
+  @ApiModelProperty()
+  receiver_city : string;
+
+  @ApiModelProperty()
+  receiver_province : string;
 }
 
 export class ScanOutPropertyAwbResponseVm {

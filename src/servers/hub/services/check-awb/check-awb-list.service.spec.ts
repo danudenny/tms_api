@@ -54,6 +54,7 @@ describe('CheckAwbListService', () => {
             startTime: '2022-10-12T01:48:59.159Z',
             endTime: '2022-10-12T01:55:22.895Z',
             branchId: 121,
+            branchCode : 1232312,
             nik: '26966',
             name: 'Dev Middle',
             totalAwb: '4',
@@ -95,7 +96,7 @@ describe('CheckAwbListService', () => {
                         awbNumber: '00001111114',
                         consigneeName: null,
                         consigneeAddress: null,
-                        districtName: null,
+                        branchToName : null,
                       }];
 
       jest

@@ -311,6 +311,9 @@ export class WebCodBankStatementVm {
   totalTransaction: number;
 
   @ApiModelProperty()
+  transactionType: string;
+
+  @ApiModelProperty()
   totalAwb: number;
 
   @ApiModelProperty()

@@ -437,14 +437,13 @@ export class LastMileDeliveryOutService {
         //   response.message = `Resi ${awbNumber} telah di CANCEL oleh Partner !`;
         // }
         // #endregion validation
-
-        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false);
+        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false, true, false);
         if (checkValidAwbStatusIdLast.isValid) {
           // Add Locking setnx redis
-          const holdRedis = await RedisService.lockingWithExpire(
+          const holdRedis = await RedisService.redlock(
             `hold:scanoutant:${awb.awbItemId}`,
-            'locking',
-            60,
+            // 'locking',
+            10000,
           );
           if (holdRedis) {
             // #region after scanout
@@ -471,6 +470,7 @@ export class LastMileDeliveryOutService {
                     },
                     {
                       isDeleted: true,
+                      updatedTime: moment().toDate(),
                       userIdUpdated: authMeta.userId,
                     },
                   );
