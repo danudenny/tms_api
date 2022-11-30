@@ -410,7 +410,7 @@ export class V1WebTrackingService {
       q.andWhere(e => e.type, w => w.equals(attachmentType));
     }
     q.orderBy({createdTime:'DESC'});
-    q.take(3); // only get 3 data file (photo, signature, photoCod)
+    // q.take(3); // only get 3 data file (photo, signature, photoCod)
 
     return await q.exec();
   }
