@@ -442,6 +442,11 @@ export class LastMileDeliveryOutService {
           totalError += 1;
           response.status = 'error';
           response.message = `Resi ${awbNumber} belum di Scan In.`;
+
+          dataItem.push({
+            awbNumber,
+            ...response,
+          });
           continue;
         }
 
