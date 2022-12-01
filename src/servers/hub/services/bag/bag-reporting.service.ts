@@ -88,25 +88,23 @@ export class BagReportingService {
   }
 
   async generateQueueRequest(params: GenerateQueueOptionPayloadVm, data: GenerateQueueFormDataPayloadVm): Promise<any> {
-    const url = `${this.baseUrlInternal}/v1/reporting/report`;
+    const url = `${this.baseUrlInternal}/v3/report`;
     const options = {
       headers: {
         'accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      params: {
-        employee: params.userId,
+        'Content-Type': 'application/json',
       },
     };
-    const qs = require('querystring');
+
     const body = {
       query_encoded: data.encodeQuery,
-      filename: data.filename,
-      report_type: data.reportType,
+      filename : data.filename,
+      report_type : data.reportType,
+      employee_id : params.userId,
     };
 
     try {
-      const request = await Axios.post(url, qs.stringify(body), options);
+      const request = await Axios.post(url, JSON.stringify(body), options);
       return { status: request.status, ...request.data };
     } catch (err) {
       throw err.message;
@@ -118,11 +116,11 @@ export class BagReportingService {
     try {
 
       const offset = Number(payload.page - 1) * Number(payload.limit);
-      const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      const url = `${this.baseUrlInternal}/v3/report`;
       const authMeta = AuthService.getAuthData();
       const options = {
         params: {
-          employee: authMeta.userId,
+          employee_id: authMeta.userId,
           report_type: type,
           limit: payload.limit,
           offset,
