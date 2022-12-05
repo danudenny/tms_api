@@ -64,6 +64,10 @@ export class WebAwbDeliverService {
               if(delivery.awbStatusId == AWB_STATUS.DLV && awbReturn){
                 response.status = 'error';
                 response.message = `Resi ${delivery.awbNumber} adalah resi retur !`;
+                await dataItem.push({
+                  awbNumber: delivery.awbNumber,
+                  ...response,
+                });
                 continue;
               }
               
