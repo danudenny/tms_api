@@ -66,27 +66,26 @@ export class WebDeliveryVendorOutService {
     const permissonPayloadToken = AuthService.getPermissionToken();
     const dataItem = [];
     let awbSendVendor = [];
+
+    if(payload.branch_id <= 0){
+      RequestErrorService.throwObj({
+        message: 'Branch tidak ditemukan',
+      });
+    }
+
+    const vendor = await PartnerLogistic.findOne({
+      select: ['partnerLogisticId', 'partnerLogisticName'],
+      where: {
+        partnerLogisticId: payload.vendor_id,
+        isDeleted: false,
+      }
+    });
+
     for (const awbNumber of payload.scanValue) {
       const response = new WebDeliveryVendorOutResponse();
-      const awb = await AwbItemAttr.findOne({
-        select: ['awbNumber', 'awbItemId'],
-        where: {
-          awbNumber: awbNumber,
-          isDeleted: false,
-        }
-      });
-
-      const vendor = await PartnerLogistic.findOne({
-        select: ['partnerLogisticId', 'partnerLogisticName'],
-        where: {
-          partnerLogisticId: payload.vendor_id,
-          isDeleted: false,
-        }
-      });
-
-      if (awb && vendor) {
+      if (vendor) {
         const holdRedis = await RedisService.lockingWithExpire(
-          `hold:scanoutvendor:${awb.awbItemId}`,
+          `hold:scanoutvendor:${awbNumber}`,
           'locking',
           60,
         );
@@ -94,7 +93,7 @@ export class WebDeliveryVendorOutService {
         if (holdRedis) {
           try {
             AwbDeliveryVendorQueueService.createJobSendVendor(
-              awb.awbItemId,
+              awbNumber,
               AWB_STATUS.OUT_BRANCH,
               permissonPayload.branchId,
               authMeta.userId,
@@ -107,7 +106,7 @@ export class WebDeliveryVendorOutService {
             awbSendVendor.push(awbNumber)
             response.status = 'ok';
             response.message = `Resi ${awbNumber} berhasil di proses.`;
-            RedisService.del(`hold:scanoutvendor:${awb.awbItemId}`);
+            RedisService.del(`hold:scanoutvendor:${awbNumber}`);
           } catch (err) {
             response.status = 'error';
             response.message = `Gangguan Server: ${err.message}`;
@@ -128,9 +127,9 @@ export class WebDeliveryVendorOutService {
       response.awbNumber = awbNumber;
       dataItem.push(response);
     }
-
+    
     try {
-      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes);
+      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes, payload.branch_id);
     } catch (err) {
       RequestErrorService.throwObj({
         message: 'Gagal mengirimkan data ke vendor',
@@ -181,6 +180,7 @@ export class WebDeliveryVendorOutService {
     //       "delivery_date": "2022-08-21T11:22:08Z",
     //       "vendor_id": "443614be-241d-11ed-9891-a15adc6ec386",
     //       "vendor_name": "SAP",
+    //       "branch_name" : "ABC",
     //       "details": [
     //           {
     //               "awb_no": "100018551113",
@@ -223,10 +223,12 @@ export class WebDeliveryVendorOutService {
     let totalItem = 0;
     let totalCod = 0;
     let totalFinalWeight = 0;
+    let branchName = '-';
     for (let datax of data.data.details) {
       totalItem++;
       totalCod = totalCod + datax.cod_value;
       totalFinalWeight = Number(totalFinalWeight) + Number(datax.weight);
+      branchName = datax.branch_name;
       awb.push({
         awbNumber: datax.awb_no,
         consigneeName: datax.receiver_name,
@@ -240,6 +242,7 @@ export class WebDeliveryVendorOutService {
     const jsreportParams = {
       data: {
         vendorCode: queryParams.orderVendorCode,
+        branchName: branchName,
         userDriver: {
           nameDriver: data.data.vendor_name,
           vehicleNumber: '-'
@@ -358,7 +361,7 @@ export class WebDeliveryVendorOutService {
         prd.insurance_value as insurance_flag,
         prd.insurance_value as insurance_value,
         a.is_cod as cod_flag,
-        a.total_cod_value as cod_value,
+        prd.cod_value as cod_value,
         a.consignee_name as receiver_name,
         a.consignee_address as receiver_address,
         a.consignee_phone as receiver_phone,
@@ -406,37 +409,46 @@ export class WebDeliveryVendorOutService {
   }
 
   private static async getPickupData(userID: number, branchID: number): Promise<any> {
-    const query = `
-    SELECT e.fullname as pickup_name,
-      c.address as pickup_address,
-      e.phone1 as pickup_phone,
-      a.email as pickup_email,
-      e.fullname as pickup_contact,
-      c.latitude as pickup_latitude,
-      c.longitude as pickup_longitude,
-      d.district_code as pickup_district_code,
-      d.district_id as pickup_district_id,
-      d.district_code as return_district_code,
-      e.phone1 as return_phone,
-      e.fullname as return_contact,
-      c.address as return_address,
-      c.origin_id as origin_id,
-      f.city_name as pickup_city
-    FROM users a
-      LEFT JOIN user_role b on a.user_id = b.user_id
-      LEFT JOIN branch c on b.branch_id = c.branch_id
-      LEFT JOIN district d on c.district_id = d.district_id
-      INNER JOIN employee e on a.employee_id = e.employee_id
-      LEFT JOIN city f on d.city_id = f.city_id
-    WHERE a.user_id = :userID
-    AND b.branch_id = :branchID
-    LIMIT 1
-    ;`;
+    const query1 = `
+    SELECT e.fullname as pickup_name, 
+    e.phone1 as pickup_phone,
+    a.email as pickup_email,
+    e.fullname as pickup_contact,
+    e.phone1 as return_phone,
+    e.fullname as return_contact
+    FROM users a 
+    INNER JOIN employee e on a.employee_id = e.employee_id
+    WHERE a.user_id = :userID;
+    `
 
-    const rawData = await RawQueryService.queryWithParams(query, {
-      userID, branchID
-    });
-    return rawData ? rawData[0] : null;
+    const query2 = `
+    SELECT 
+    c.address as pickup_address,
+    c.latitude as pickup_latitude,
+    c.longitude as pickup_longitude,
+    d.district_code as pickup_district_code,
+    d.district_id as pickup_district_id,
+    d.district_code as return_district_code,
+    c.address as return_address,
+    c.origin_id as origin_id,
+    f.city_name as pickup_city
+    FROM branch c 
+    INNER JOIN district d on c.district_id = d.district_id
+    INNER JOIN city f on d.city_id = f.city_id
+    WHERE c.branch_id = :branchID;
+    `
+
+    const [rawDataUserPickup, rawDataBranchPickup] = await Promise.all([
+      RawQueryService.queryWithParams(query1, {
+        userID
+      }),
+      RawQueryService.queryWithParams(query2, {
+        branchID
+      })
+    ]);
+
+    const rawData = Object.assign(rawDataUserPickup.length > 0 ? rawDataUserPickup[0] : {}, rawDataBranchPickup.length > 0 ? rawDataBranchPickup[0] : {});
+    return rawData ? rawData : null;
   }
 
   //webhook tracking
@@ -463,7 +475,7 @@ export class WebDeliveryVendorOutService {
         if (holdRedis) {
           try {
             AwbDeliveryVendorQueueService.createJobInserTracking(
-              awb.awbItemId,
+              dataAWB.awbNumber,
               dataAWB.awbStatusId,
               dataAWB.noteInternal,
               dataAWB.notePublic,
