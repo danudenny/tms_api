@@ -5,6 +5,7 @@ import { AwbStatus } from '../../../../shared/orm-entity/awb-status';
 import { DoPodDeliver } from '../../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../../shared/orm-entity/do-pod-deliver-detail';
 import { DoPodDeliverHistory } from '../../../../shared/orm-entity/do-pod-deliver-history';
+import { AwbReturn } from '../../../../shared/orm-entity/awb-return';
 import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import {
@@ -57,7 +58,19 @@ export class WebAwbDeliverService {
             response.message = `Resi ${delivery.awbNumber} bukan resi COD !`;
           } else {
             const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
+            const awbReturn = await this.getAwbReturn(delivery.awbNumber);
             if (awbDeliver) {
+              //check return
+              if(delivery.awbStatusId == AWB_STATUS.DLV && awbReturn){
+                response.status = 'error';
+                response.message = `Resi ${delivery.awbNumber} adalah resi retur !`;
+                await dataItem.push({
+                  awbNumber: delivery.awbNumber,
+                  ...response,
+                });
+                continue;
+              }
+              
               // hardcode check role sigesit
               const roleIdSigesit = 23;
               if (permissonPayload.roleId == roleIdSigesit) {
@@ -386,6 +399,24 @@ export class WebAwbDeliverService {
     });
     q.where(
       e => e.awbNumber,
+      w => w.equals(awbNumber),
+    );
+    q.andWhere(e => e.isDeleted, w => w.isFalse());
+    q.orderBy({ updatedTime: 'DESC' });
+    q.take(1);
+    return await q.exec();
+  }
+
+  private static async getAwbReturn(awbNumber: string): Promise<AwbReturn> {
+    const awbRepository = new OrionRepositoryService(
+      AwbReturn,
+    );
+    const q = awbRepository.findOne();
+    q.select({
+      awbReturnId : true,
+    });
+    q.where(
+      e => e.originAwbNumber,
       w => w.equals(awbNumber),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
