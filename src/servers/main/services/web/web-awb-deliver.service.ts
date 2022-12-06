@@ -58,17 +58,19 @@ export class WebAwbDeliverService {
             response.message = `Resi ${delivery.awbNumber} bukan resi COD !`;
           } else {
             const awbDeliver = await this.getDeliverDetail(delivery.awbNumber);
-            const awbReturn = await this.getAwbReturn(delivery.awbNumber);
             if (awbDeliver) {
               //check return
-              if(delivery.awbStatusId == AWB_STATUS.DLV && awbReturn){
-                response.status = 'error';
-                response.message = `Resi ${delivery.awbNumber} adalah resi retur !`;
-                await dataItem.push({
-                  awbNumber: delivery.awbNumber,
-                  ...response,
-                });
-                continue;
+              if(delivery.awbStatusId == AWB_STATUS.DLV){
+                const awbReturn = await this.getAwbReturn(delivery.awbNumber);
+                if(awbReturn){
+                  response.status = 'error';
+                  response.message = `Resi ${delivery.awbNumber} adalah resi retur !`;
+                  await dataItem.push({
+                    awbNumber: delivery.awbNumber,
+                    ...response,
+                  });
+                  continue;
+                }
               }
               
               // hardcode check role sigesit
@@ -420,7 +422,6 @@ export class WebAwbDeliverService {
       w => w.equals(awbNumber),
     );
     q.andWhere(e => e.isDeleted, w => w.isFalse());
-    q.orderBy({ updatedTime: 'DESC' });
     q.take(1);
     return await q.exec();
   }
