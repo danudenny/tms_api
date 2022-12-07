@@ -369,6 +369,7 @@ export class V2MobileSyncService {
           doPodDeliverAttachment.doPodDeliverDetailId = item;
           doPodDeliverAttachment.attachmentTmsId = attachmentId;
           doPodDeliverAttachment.type = payload.imageType;
+          doPodDeliverAttachment.awbStatusIdLast = payload.awbStatusId;
           await DoPodDeliverAttachment.save(doPodDeliverAttachment);
 
           // send to background reupload s3 with awb number
