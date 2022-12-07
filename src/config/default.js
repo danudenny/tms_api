@@ -272,6 +272,7 @@ module.exports = {
       url: 'https://metabase.sicepat.com',
       secret: '03d663fa9582ab37a3b9d599af8be13ec45e950af2dc41ec297ae07b2da14ddc',
       expiry: 600, // seconds
+    }
   },
   bagService: {
     url: "http://api-internal.sicepat.io/operation/bag/bag/api",

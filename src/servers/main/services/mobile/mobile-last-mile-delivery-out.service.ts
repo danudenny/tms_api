@@ -206,6 +206,7 @@ export class LastMileDeliveryOutService {
     qb.addSelect('aia.awb_item_id', 'awbItemId');
     qb.addSelect('aia.awb_id', 'awbId');
     qb.addSelect('aia.awb_status_id_last', 'awbStatusIdLast');
+    qb.addSelect('aia.branch_id_last', 'branchIdLast');
     qb.from('awb_item_attr', 'aia');
     qb.innerJoin(
       'awb',
@@ -240,6 +241,15 @@ export class LastMileDeliveryOutService {
     response.trouble = true;
 
     if (awb) {
+
+      if (awb.branchIdLast != doPodDeliver.branchId) {
+        response.status = 'error';
+        response.message = `Resi ${awbNumber} belum di Scan In.`;
+
+        result.data = response;
+        return result;
+      }
+
       const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false, false, false);
       // NOTE: first must scan in branch
       if (checkValidAwbStatusIdLast.isValid) {
