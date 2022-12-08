@@ -24,7 +24,7 @@ export class ListDataBagRespon {
   branchFromName: string;
 
   @ApiModelProperty()
-  branchScanId: string;
+  branchScanId: number;
 
   @ApiModelProperty()
   representativeCode: string;
