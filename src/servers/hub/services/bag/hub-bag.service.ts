@@ -10,6 +10,7 @@ import express = require('express');
 import _ = require('lodash');
 import moment = require('moment');
 
+import { AWB_STATUS } from '../../../../shared/constants/awb-status.constant';
 import {
   BAG_SERVICE,
   BagService,
@@ -22,7 +23,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
-import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { DoSmdPostAwbHistoryMetaQueueService } from '../../../queue/services/do-smd-post-awb-history-meta-queue.service';
 import { HubBagService } from '../../interfaces/hub-bag.interface';
 import {
   SORTATION_MACHINE_SERVICE,
@@ -117,11 +118,11 @@ export class DefaultHubBagService implements HubBagService {
       ],
     });
 
-    // insert AWB in_hub status history
-    await DoPodDetailPostMetaQueueService.createJobByAwbFilter(
+    await DoSmdPostAwbHistoryMetaQueueService.createJobByScanDoSmd(
       awb.awb_item_id,
       branchId,
       userId,
+      AWB_STATUS.IN_LINE_HAUL,
     );
 
     return {
