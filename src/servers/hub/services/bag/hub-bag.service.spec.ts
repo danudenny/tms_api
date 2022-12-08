@@ -15,7 +15,7 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { OrionRepositoryService } from '../../../../shared/services/orion-repository.service';
 import { PrinterService } from '../../../../shared/services/printer.service';
 import { RepositoryService } from '../../../../shared/services/repository.service';
-import { DoPodDetailPostMetaQueueService } from '../../../queue/services/do-pod-detail-post-meta-queue.service';
+import { DoSmdPostAwbHistoryMetaQueueService } from '../../../queue/services/do-smd-post-awb-history-meta-queue.service';
 import {
   HUB_BAG_SERVICE,
   HubBagService,
@@ -32,7 +32,7 @@ import { MockBagService } from '../mocks/bag.service';
 import { MockSortationMachineService } from '../mocks/sortation-machine.service';
 import { DefaultHubBagService } from './hub-bag.service';
 
-DoPodDetailPostMetaQueueService.createJobByAwbFilter = jest.fn();
+DoSmdPostAwbHistoryMetaQueueService.createJobByScanDoSmd = jest.fn();
 
 describe('DefaultHubBagService', () => {
   let service: HubBagService;
