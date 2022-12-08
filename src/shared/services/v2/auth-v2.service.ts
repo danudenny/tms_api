@@ -388,6 +388,9 @@ export class AuthV2Service {
   }
 
   private async isOtpRequired(clientId: string, userName: string): Promise<boolean> {
+    if (ConfigService.get('svcOtp.bypassOTP').includes(userName)) {
+      return false;
+    }
 
     if (!ConfigService.get('svcOtp.checkingConfig')) { //if false, open otp to all users
       return true;

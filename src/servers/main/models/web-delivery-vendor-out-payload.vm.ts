@@ -18,6 +18,9 @@ export class WebDeliveryVendorOutSendPayload {
   notes : string;
 
   @ApiModelProperty()
+  branch_id : number;
+
+  @ApiModelProperty()
   @Type(() => String)
   scanValue: string[];
 }
