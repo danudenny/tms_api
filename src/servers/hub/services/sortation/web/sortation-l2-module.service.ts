@@ -47,8 +47,10 @@ export class SortationL2ModuleService {
     const authMeta = AuthService.getAuthData();
     const externalPayload = {
       do_sortation_code: payload.doSortationCode,
-      user_id: authMeta.userId,
+      user_id: Number(authMeta.userId),
     };
+
+
     const res = await this.externalL2.finish(externalPayload);
     const resData = res.data;
     const resultData = [];

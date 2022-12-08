@@ -70,47 +70,58 @@ export class SortationL2ListModuleService {
     const newPayload = {
       page: payload.page,
       limit: payload.limit,
-      sortBy: payload.sortBy || 'created_time',
-      sortDir: payload.sortDir || 'desc',
-      filters: [],
+      sort_by: payload.sortBy || 'created_time',
+      sort_dir: payload.sortDir || 'desc',
+      filter: [],
     };
     for (const filter of payload.filters) {
       const field = filter.field.replace(/[A-Z]/g, (c) => '_' + c.toLowerCase());
+      if (field === 'driver_id' && filter.value === '') {
+         continue;
+      }
       const newObjFilter = {
         field,
-        operator: filter.operator,
+        operation: filter.operator,
         value: filter.value,
       };
-      newPayload.filters.push(newObjFilter);
+      newPayload.filter.push(newObjFilter);
     }
-
-
 
     const res = await this.externalL2.listFinish(newPayload);
     const resultData = [];
-
-    for (const resData of res.data.list) {
-      const newObjList = {
-        sortationFinishHistoryId : resData.sortation_finish_history_id,
-        doSortationCode : resData.do_sortation_code,
-        doSortationId : resData.do_sortation_id,
-        driverId : resData.driver_id,
-        createdTime : resData.created_time,
-        updatedTime : resData.updated_time,
-        userIdCreated : resData.user_id_created,
-        userIdUpdated : resData.user_id_updated,
-        adminName : resData.admin_name,
-        driverName : resData.driver_name,
-        driverNik : resData.driver_nik,
-        adminNik : resData.admin_nik,
-      };
-      resultData.push(newObjList);
+    const paging = res.data.paging;
+    if (res.data.data !== null) {
+      for (const resData of res.data.data) {
+        const newObjList = {
+          sortationFinishHistoryId : resData.sortation_finish_history_id,
+          doSortationCode : resData.do_sortation_code,
+          doSortationId : resData.do_sortation_id,
+          driverId : resData.driver_id,
+          createdTime : resData.created_time,
+          updatedTime : resData.updated_time,
+          userIdCreated : resData.user_id_created,
+          userIdUpdated : resData.user_id_updated,
+          adminName : resData.admin_name,
+          driverName : resData.driver_name,
+          driverNik : resData.driver_nik,
+          adminNik : resData.admin_nik,
+        };
+        resultData.push(newObjList);
+      }
     }
+
     const result = new SortationFinishHistoryResponVm();
     result.statusCode = HttpStatus.OK;
     result.message = 'Sukses ambil data history';
     result.data =  resultData;
-    result.buildPagingWithPayload(payload, res.data.paging.total_page);
+    result.paging = {
+      currentPage : paging.current_page || 0,
+      nextPage : paging.next_page || 0,
+      prevPage : paging.prev_page || 0,
+      totalPage : 0,
+      totalData : 0,
+      limit: payload.limit,
+    };
 
     return result;
   }
