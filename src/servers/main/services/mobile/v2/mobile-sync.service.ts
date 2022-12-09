@@ -15,7 +15,7 @@ import {
 } from '../../../../queue/services/do-pod-detail-post-meta-queue.service';
 import { MobileDeliveryVm } from '../../../models/mobile-delivery.vm';
 import {
-  MobileSyncImagePayloadVm, MobileSyncPayloadVm, MobileSyncImageDataPayloadVm,
+  MobileSyncImagePayloadVm, MobileSyncPayloadVm, V2MobileSyncImageDataPayloadVm,
 } from '../../../models/mobile-sync-payload.vm';
 import { MobileSyncImageResponseVm, MobileSyncDataResponseVm, MobileSyncAwbVm, MobileSyncImageDataResponseVm } from '../../../models/mobile-sync-response.vm';
 
@@ -325,7 +325,7 @@ export class V2MobileSyncService {
   }
 
   public static async syncImageData(
-    payload: MobileSyncImageDataPayloadVm,
+    payload: V2MobileSyncImageDataPayloadVm,
     file,
   ): Promise<MobileSyncImageDataResponseVm> {
     const result = new MobileSyncImageDataResponseVm();
