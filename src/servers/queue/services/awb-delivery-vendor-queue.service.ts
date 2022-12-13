@@ -3,6 +3,7 @@ import { getManager } from 'typeorm';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { AwbHistory } from '../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
+import { Awb } from '../../../shared/orm-entity/awb';
 import { AwbStatus } from '../../../shared/orm-entity/awb-status';
 import { DoPodDetail } from '../../../shared/orm-entity/do-pod-detail';
 import { ConfigService } from '../../../shared/services/config.service';
@@ -18,6 +19,7 @@ import { AttachmentTms } from '../../../shared/orm-entity/attachment-tms';
 import { FILE_PROVIDER } from '../../../shared/constants/file-provider.constant';
 import { PodWebAttachmentModel } from '../../../shared/models/pod-web-attachment.model';
 import { PodAttachment } from '../../../shared/services/pod-attachment';
+import { AwbCodService } from '../../main/services/cod/awb-cod.service';
 
 export class AwbDeliveryVendorQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-vendor', {
@@ -78,6 +80,35 @@ export class AwbDeliveryVendorQueueService {
             //handle upload photo
             this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'photo')
             this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'signature')
+          }
+
+          if(data.awbStatusId == AWB_STATUS.DLV){
+            const awb = await Awb.findOne({
+              where: {
+                awbNumber: awbItemAttr.awbNumber,
+                isDeleted: false,
+              },
+            });
+
+            if(awb){
+              if(awb.isCod == true){
+                await AwbCodService.transfer(
+                  {
+                    doPodDeliverDetailId: delivery.doPodDeliverDetailId,
+                    awbNumber: awbItemAttr.awbNumber,
+                    awbItemId: data.awbItemId,
+                    amount: awb.totalCodValue,
+                    method: delivery.codPaymentMethod,
+                    service: delivery.codPaymentService,
+                    noReference: delivery.noReference,
+                    note: delivery.note,
+                  },
+                  data.branchId,
+                  data.userId,
+                  null,
+                );
+              }
+            }
           }
 
           // try{
