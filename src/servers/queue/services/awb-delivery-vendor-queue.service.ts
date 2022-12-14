@@ -76,8 +76,8 @@ export class AwbDeliveryVendorQueueService {
 
           if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
             //handle upload photo
-            this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'photo')
-            this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'signature')
+            this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
+            this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
           }
 
           // try{
