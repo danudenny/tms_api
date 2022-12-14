@@ -187,6 +187,12 @@ module.exports = {
       "cod-payment": {
         destination: "/finance/cod-payment" 
       },
+      "cod-core": {
+        destination: "/finance/cod-core" 
+      },
+      "cod-sync": {
+        destination: "/finance/cod-sync" 
+      },
     }
   },
   reportingService: {
