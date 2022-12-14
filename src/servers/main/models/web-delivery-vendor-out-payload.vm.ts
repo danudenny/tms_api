@@ -15,6 +15,12 @@ export class WebDeliveryVendorOutSendPayload {
   order_vendor_code: string;
 
   @ApiModelProperty()
+  notes : string;
+
+  @ApiModelProperty()
+  branch_id : number;
+
+  @ApiModelProperty()
   @Type(() => String)
   scanValue: string[];
 }

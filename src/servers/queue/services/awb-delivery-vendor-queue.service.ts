@@ -44,7 +44,7 @@ export class AwbDeliveryVendorQueueService {
         const data = job.data;
         const awbItemAttr = await AwbItemAttr.findOne({
           where: {
-            awbItemId: data.awbItemId,
+            awbNumber: data.awbNumber,
             isDeleted: false,
           },
         });
@@ -52,7 +52,7 @@ export class AwbDeliveryVendorQueueService {
         if (awbItemAttr) {
           // NOTE: Insert Data awb history
           const awbHistory = AwbHistory.create({
-            awbItemId: data.awbItemId,
+            awbItemId: awbItemAttr.awbItemId,
             refAwbNumber: awbItemAttr.awbNumber,
             userId: data.userId,
             branchId: data.branchId,
@@ -74,7 +74,7 @@ export class AwbDeliveryVendorQueueService {
           });
           await AwbHistory.insert(awbHistory);
 
-          if(data.awbStatusId == AWB_STATUS.DLV){
+          if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
             //handle upload photo
             this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'photo')
             this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'signature')
@@ -107,20 +107,21 @@ export class AwbDeliveryVendorQueueService {
 
   // NOTE: ONLY awb status ANT but by vendor
   public static async createJobSendVendor(
-    awbItemId: number,
+    awbNumber: string,
     awbStatusId: number,
     branchId: number,
     userId: number,
     vendorName: string,
     vendorId : string,
     orderVendorCode : string,
-    tokenPayload : string
+    tokenPayload : string,
+    keterangan : string
   ) {
-    const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName}`;
+    const noteInternal = `Pengiriman dilanjutkan oleh ${vendorName}; catatan :${keterangan}`;
     const notePublic = `Paket di teruskan ke Partner`;
     // provide data
     const obj = {
-      awbItemId,
+      awbNumber,
       userId,
       branchId,
       awbStatusId,
@@ -138,7 +139,7 @@ export class AwbDeliveryVendorQueueService {
   }
 
   public static async createJobInserTracking(
-    awbItemId: number,
+    awbNumber: string,
     awbStatusId: number,
     noteInternal: string,
     notePublic :string,
@@ -151,7 +152,7 @@ export class AwbDeliveryVendorQueueService {
     urlPhotoRetur : string
   ){
     const obj = {
-      awbItemId,
+      awbNumber,
       userId,
       branchId,
       awbStatusId,
@@ -178,11 +179,23 @@ export class AwbDeliveryVendorQueueService {
     photoType: string, 
     )
     {
+      //upload for partner | data not save to DB
       const awsKey = `attachments/${photoType}POD/${awbNumber}`;
-      const response = await AwsS3Service.uploadFromUrlV2(
+      await AwsS3Service.uploadFromUrlV2( 
         url,
         awsKey,
       );
+
+      //upload for internal pod | data save to DB
+      const pathId = `tms-delivery-${photoType}`;
+      const uuidv1 = require('uuid/v1');
+      const fileName = await uuidv1();
+      const awsKeyInternal = `attachments/${pathId}/${moment().format('Y/M/D')}/${fileName}`;
+      const response = await AwsS3Service.uploadFromUrlV2( 
+        url,
+        awsKeyInternal,
+      );
+
       const fileMime = response.res.headers['content-type'];
 
       let bucketName = null;
@@ -195,9 +208,9 @@ export class AwbDeliveryVendorQueueService {
         fileMime,
         fileProvider: FILE_PROVIDER.AWS_S3,
         attachmentPath: response.awsKey,
-        attachmentName: awbNumber,
-        fileName: awbNumber,
-        url : `https://${bucketName}.s3.amazonaws.com/${awsKey}`,
+        attachmentName: fileName,
+        fileName: fileName,
+        url : `https://${bucketName}.s3.amazonaws.com/${awsKeyInternal}`,
         userIdCreated: 1,
         userIdUpdated: 1,
       });

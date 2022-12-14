@@ -109,7 +109,7 @@ export class V1WebTrackingService {
         }
       }
 
-      if(data.awbStatusLast == 'DLV' && result.isHasPhotoReceiver == false){
+      if((data.awbStatusLast == 'DLV' || data.awbStatusLast == 'BA') && result.isHasPhotoReceiver == false){
         result.isHasPhotoReceiver = true;
       }
     }
@@ -410,7 +410,7 @@ export class V1WebTrackingService {
       q.andWhere(e => e.type, w => w.equals(attachmentType));
     }
     q.orderBy({createdTime:'DESC'});
-    q.take(3); // only get 3 data file (photo, signature, photoCod)
+    // q.take(3); // only get 3 data file (photo, signature, photoCod)
 
     return await q.exec();
   }

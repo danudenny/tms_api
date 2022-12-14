@@ -5,7 +5,9 @@ import moment = require('moment');
 import { EnumHubReport, HUB_REPORT } from '../../../../shared/constants/laporan-hub.constant';
 import { Branch } from '../../../../shared/orm-entity/branch';
 import { AuthService } from '../../../../shared/services/auth.service';
+import { ConfigService } from '../../../../shared/services/config.service';
 import { MetaService } from '../../../../shared/services/meta.service';
+import { PinoLoggerService } from '../../../../shared/services/pino-logger.service';
 import {
   CentralHubReportPayloadVm,
   CentralSortirListPayloadVm,
@@ -16,17 +18,18 @@ import {
 export class CentralSortirService {
 
   private static get baseUrlInternal() {
-    return 'http://api-internal.sicepat.io/operation/reporting-service';
+    return ConfigService.get('reportingService.baseUrl');
   }
 
   static async getListMesinSortirReporting(query: CentralSortirListPayloadVm): Promise<any> {
     try {
       const offset = Number(query.page - 1) * Number(query.limit);
-      const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      // const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      const url = `${this.baseUrlInternal}/v3/report`;
       const authMeta = AuthService.getAuthData();
       const options = {
         params: {
-          employee: authMeta.userId,
+          employee_id: authMeta.userId,
           report_type: 'mesin_sortir',
           limit: query.limit,
           offset,
@@ -78,51 +81,48 @@ export class CentralSortirService {
       }
 
       const filename = `reporting_mesin_sortir_${prefixIsSuccess}_${payload.startDate}_${payload.endDate}_${moment().format('YYYYMMDDHHmmss')}|${branchName}`;
-      const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      // const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      const url = `${this.baseUrlInternal}/v3/report`;
       const options = {
         headers: {
           'accept': 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        params: {
-          employee: authMeta.userId,
+          'Content-Type': 'application/json',
         },
       };
 
-      const qs = require('querystring');
+      // const qs = require('querystring');
       const body = {
         query_encoded: encodeQuery,
         filename,
         report_type,
+        employee_id : authMeta.userId,
       };
-      const request = await axios.post(url, qs.stringify(body), options);
+      const request = await axios.post(url, JSON.stringify(body), options);
       return { status: request.status, ...request.data };
     } catch (e) {
+      PinoLoggerService.error(e);
       throw e.message;
     }
   }
 
   static async generateMesinSortirQuery(payload: CentralSortirPayloadVm) {
     let query = `SELECT \n
-    bsls.scan_date AS scan_date, \n
-    bsls.updated_time AS updated_time, \n
-    b.branch_id AS branch_id, \n
-    b.branch_name AS branch_name, \n
-    bsls.chute_number AS chute_number, \n
-    bsls.awb_number AS awb_number, \n
-    bsls.seal_number AS seal_number, \n
-    bl.branch_id AS branch_id_lastmile, \n
-    bl.branch_name AS branch_name_lastmile, \n
-    bsls.is_cod AS is_cod, \n
-    bsls.is_succeed AS is_succeed, \n
-    bsls.reason AS reason \n
-    FROM public.branch_sortir_log_summary bsls \n
-    LEFT JOIN public.branch b ON b.branch_id = bsls.branch_id AND (b.is_deleted = 'false') \n
-    LEFT JOIN public.branch bl ON bl.branch_id = bsls.branch_id_lastmile AND (bl.is_deleted = 'false') \n
-    WHERE bsls.scan_date >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
-    AND bsls.scan_date < '${moment(payload.endDate).format('YYYY-MM-DD')}' \n
-    AND bsls.is_deleted = 'false' \n
-    AND bsls.is_succeed = '${payload.isSucceed}' `;
+              bsls.scan_date AS tgl_scan_hub, \n
+              bsls.updated_time AS tgl_terakhir_scan_mesin, \n
+              b.branch_name AS lokasi_mesin_sortir, \n
+              bsls.chute_number AS chute_number, \n
+              ''''||bsls.awb_number AS no_resi, \n
+              bsls.seal_number AS tag_seal, \n
+              bl.branch_name AS gerai_tujuan, \n
+              case when bsls.is_cod = false then 'NON COD' else 'COD' end as jenis_pembayaran,\n
+              bsls.reason AS catatan \n
+            FROM public.branch_sortir_log_summary bsls \n
+              LEFT JOIN public.branch b ON b.branch_id = bsls.branch_id AND (b.is_deleted = 'false') \n
+              LEFT JOIN public.branch bl ON bl.branch_id = bsls.branch_id_lastmile AND (bl.is_deleted = 'false') \n
+            WHERE bsls.scan_date >= '${moment(payload.startDate).format('YYYY-MM-DD')}' \n
+              AND bsls.scan_date < '${moment(payload.endDate).format('YYYY-MM-DD')}' \n
+              AND bsls.is_deleted = 'false' \n
+              AND bsls.is_succeed = '${payload.isSucceed}' `;
     if (payload.branchId !== null) {
       if (payload.branchId !== 0) {
         query = query + ` AND b.branch_id = '${payload.branchId}' `;

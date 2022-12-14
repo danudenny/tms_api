@@ -66,27 +66,26 @@ export class WebDeliveryVendorOutService {
     const permissonPayloadToken = AuthService.getPermissionToken();
     const dataItem = [];
     let awbSendVendor = [];
+
+    if(payload.branch_id <= 0){
+      RequestErrorService.throwObj({
+        message: 'Branch tidak ditemukan',
+      });
+    }
+
+    const vendor = await PartnerLogistic.findOne({
+      select: ['partnerLogisticId', 'partnerLogisticName'],
+      where: {
+        partnerLogisticId: payload.vendor_id,
+        isDeleted: false,
+      }
+    });
+
     for (const awbNumber of payload.scanValue) {
       const response = new WebDeliveryVendorOutResponse();
-      const awb = await AwbItemAttr.findOne({
-        select: ['awbNumber', 'awbItemId'],
-        where: {
-          awbNumber: awbNumber,
-          isDeleted: false,
-        }
-      });
-
-      const vendor = await PartnerLogistic.findOne({
-        select: ['partnerLogisticId', 'partnerLogisticName'],
-        where: {
-          partnerLogisticId: payload.vendor_id,
-          isDeleted: false,
-        }
-      });
-
-      if (awb && vendor) {
+      if (vendor) {
         const holdRedis = await RedisService.lockingWithExpire(
-          `hold:scanoutvendor:${awb.awbItemId}`,
+          `hold:scanoutvendor:${awbNumber}`,
           'locking',
           60,
         );
@@ -94,19 +93,20 @@ export class WebDeliveryVendorOutService {
         if (holdRedis) {
           try {
             AwbDeliveryVendorQueueService.createJobSendVendor(
-              awb.awbItemId,
+              awbNumber,
               AWB_STATUS.OUT_BRANCH,
               permissonPayload.branchId,
               authMeta.userId,
               vendor.partnerLogisticName,
               payload.vendor_id,
               payload.order_vendor_code,
-              permissonPayloadToken
+              permissonPayloadToken,
+              payload.notes
             )
             awbSendVendor.push(awbNumber)
             response.status = 'ok';
             response.message = `Resi ${awbNumber} berhasil di proses.`;
-            RedisService.del(`hold:scanoutvendor:${awb.awbItemId}`);
+            RedisService.del(`hold:scanoutvendor:${awbNumber}`);
           } catch (err) {
             response.status = 'error';
             response.message = `Gangguan Server: ${err.message}`;
@@ -127,9 +127,9 @@ export class WebDeliveryVendorOutService {
       response.awbNumber = awbNumber;
       dataItem.push(response);
     }
-
+    
     try {
-      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken);
+      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes, payload.branch_id);
     } catch (err) {
       RequestErrorService.throwObj({
         message: 'Gagal mengirimkan data ke vendor',
@@ -180,6 +180,7 @@ export class WebDeliveryVendorOutService {
     //       "delivery_date": "2022-08-21T11:22:08Z",
     //       "vendor_id": "443614be-241d-11ed-9891-a15adc6ec386",
     //       "vendor_name": "SAP",
+    //       "branch_name" : "ABC",
     //       "details": [
     //           {
     //               "awb_no": "100018551113",
@@ -189,7 +190,8 @@ export class WebDeliveryVendorOutService {
     //               "pickup_name": "Head Office Juanda",
     //               "receiver_name": "Bambang",
     //               "receiver_address": "Sulses",
-    //               "receiver_phone": "085214235212"
+    //               "receiver_phone": "085214235212",
+    //               "total_weight" : 10.5,
     //           },
     //           {
     //               "awb_no": "100018551114",
@@ -199,7 +201,8 @@ export class WebDeliveryVendorOutService {
     //               "pickup_name": "Head Office Juanda",
     //               "receiver_name": "Bambang",
     //               "receiver_address": "Sulses",
-    //               "receiver_phone": "085214235212"
+    //               "receiver_phone": "085214235212",
+    //               "total_weight" : 10.6,
     //           }
     //       ],
     //       "paging": {
@@ -219,9 +222,13 @@ export class WebDeliveryVendorOutService {
     let awb = [];
     let totalItem = 0;
     let totalCod = 0;
+    let totalFinalWeight = 0;
+    let branchName = '-';
     for (let datax of data.data.details) {
       totalItem++;
       totalCod = totalCod + datax.cod_value;
+      totalFinalWeight = Number(totalFinalWeight) + Number(datax.weight);
+      branchName = datax.branch_name;
       awb.push({
         awbNumber: datax.awb_no,
         consigneeName: datax.receiver_name,
@@ -235,11 +242,13 @@ export class WebDeliveryVendorOutService {
     const jsreportParams = {
       data: {
         vendorCode: queryParams.orderVendorCode,
+        branchName: branchName,
         userDriver: {
           nameDriver: data.data.vendor_name,
           vehicleNumber: '-'
         },
-        dataAWB: awb
+        dataAWB: awb,
+        totalFinalWeight : Math.round(totalFinalWeight * 100)/100
       },
       meta: {
         currentBranchName: currentBranch.branchName,
@@ -292,12 +301,12 @@ export class WebDeliveryVendorOutService {
         response.pickup_longitude = pickupData.pickup_longitude;
         response.pickup_district_id = parseInt(pickupData.pickup_district_id);
         response.pickup_district_code = pickupData.pickup_district_code == null || pickupData.pickup_district_code == "" || pickupData.pickup_district_code === undefined ? '-' : pickupData.pickup_district_code;
-        response.origin_id = pickupData.origin_id == null || pickupData.origin_id == "" || pickupData.origin_id == undefined ? 0 : parseInt(pickupData.origin_id);
+        response.origin_id = pickupData.origin_id == null || pickupData.origin_id == "" || pickupData.origin_id == undefined || pickupData.origin_id <= 0 ? 0 : parseInt(pickupData.origin_id);
         response.pickup_city = pickupData.pickup_city == null || pickupData.pickup_city == "" || pickupData.pickup_city == undefined ? '-' : pickupData.pickup_city;
         response.service_type_code = dataAwbx.service_type_code;
         response.quantity = parseInt(dataAwbx.quantity);
         response.total_item = parseInt(dataAwbx.total_item);
-        response.weight = parseInt(dataAwbx.weight);
+        response.weight = parseFloat(dataAwbx.weight);
         response.volumetric = "4x4x4";
         response.description_item = dataAwbx.description_item;
         response.item_value = parseInt(dataAwbx.item_value);
@@ -352,7 +361,7 @@ export class WebDeliveryVendorOutService {
         prd.insurance_value as insurance_flag,
         prd.insurance_value as insurance_value,
         a.is_cod as cod_flag,
-        ai.cod_value as cod_value,
+        prd.cod_value as cod_value,
         a.consignee_name as receiver_name,
         a.consignee_address as receiver_address,
         a.consignee_phone as receiver_phone,
@@ -400,37 +409,46 @@ export class WebDeliveryVendorOutService {
   }
 
   private static async getPickupData(userID: number, branchID: number): Promise<any> {
-    const query = `
-    SELECT e.fullname as pickup_name,
-      c.address as pickup_address,
-      e.phone1 as pickup_phone,
-      a.email as pickup_email,
-      e.fullname as pickup_contact,
-      c.latitude as pickup_latitude,
-      c.longitude as pickup_longitude,
-      d.district_code as pickup_district_code,
-      d.district_id as pickup_district_id,
-      d.district_code as return_district_code,
-      e.phone1 as return_phone,
-      e.fullname as return_contact,
-      c.address as return_address,
-      c.origin_id as origin_id,
-      f.city_name as pickup_city
-    FROM users a
-      INNER JOIN user_role b on a.user_id = b.user_id
-      INNER JOIN branch c on b.branch_id = c.branch_id
-      INNER JOIN district d on c.district_id = d.district_id
-      INNER JOIN employee e on a.employee_id = e.employee_id
-      INNER JOIN city f on d.city_id = f.city_id
-    WHERE a.user_id = :userID
-    AND b.branch_id = :branchID
-    LIMIT 1
-    ;`;
+    const query1 = `
+    SELECT e.fullname as pickup_name, 
+    e.phone1 as pickup_phone,
+    a.email as pickup_email,
+    e.fullname as pickup_contact,
+    e.phone1 as return_phone,
+    e.fullname as return_contact
+    FROM users a 
+    INNER JOIN employee e on a.employee_id = e.employee_id
+    WHERE a.user_id = :userID;
+    `
 
-    const rawData = await RawQueryService.queryWithParams(query, {
-      userID, branchID
-    });
-    return rawData ? rawData[0] : null;
+    const query2 = `
+    SELECT 
+    c.address as pickup_address,
+    c.latitude as pickup_latitude,
+    c.longitude as pickup_longitude,
+    d.district_code as pickup_district_code,
+    d.district_id as pickup_district_id,
+    d.district_code as return_district_code,
+    c.address as return_address,
+    c.origin_id as origin_id,
+    f.city_name as pickup_city
+    FROM branch c 
+    INNER JOIN district d on c.district_id = d.district_id
+    INNER JOIN city f on d.city_id = f.city_id
+    WHERE c.branch_id = :branchID;
+    `
+
+    const [rawDataUserPickup, rawDataBranchPickup] = await Promise.all([
+      RawQueryService.queryWithParams(query1, {
+        userID
+      }),
+      RawQueryService.queryWithParams(query2, {
+        branchID
+      })
+    ]);
+
+    const rawData = Object.assign(rawDataUserPickup.length > 0 ? rawDataUserPickup[0] : {}, rawDataBranchPickup.length > 0 ? rawDataBranchPickup[0] : {});
+    return rawData ? rawData : null;
   }
 
   //webhook tracking
@@ -457,7 +475,7 @@ export class WebDeliveryVendorOutService {
         if (holdRedis) {
           try {
             AwbDeliveryVendorQueueService.createJobInserTracking(
-              awb.awbItemId,
+              dataAWB.awbNumber,
               dataAWB.awbStatusId,
               dataAWB.noteInternal,
               dataAWB.notePublic,

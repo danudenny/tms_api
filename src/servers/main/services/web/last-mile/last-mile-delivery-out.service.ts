@@ -438,13 +438,25 @@ export class LastMileDeliveryOutService {
         // }
         // #endregion validation
 
-        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false, true, true);
+        if (awb.branchIdLast != doPodDeliver.branchId) {
+          totalError += 1;
+          response.status = 'error';
+          response.message = `Resi ${awbNumber} belum di Scan In.`;
+
+          dataItem.push({
+            awbNumber,
+            ...response,
+          });
+          continue;
+        }
+
+        const checkValidAwbStatusIdLast = await AwbStatusService.checkValidAwbStatusIdLast(awb, false, false, true, false);
         if (checkValidAwbStatusIdLast.isValid) {
           // Add Locking setnx redis
-          const holdRedis = await RedisService.lockingWithExpire(
+          const holdRedis = await RedisService.redlock(
             `hold:scanoutant:${awb.awbItemId}`,
-            'locking',
-            60,
+            // 'locking',
+            10000,
           );
           if (holdRedis) {
             // #region after scanout

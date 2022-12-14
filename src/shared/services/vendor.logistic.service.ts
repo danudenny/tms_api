@@ -10,7 +10,7 @@ export class VendorLogisticService {
     return ConfigService.get('vendorLogisticService.baseUrl');
   }
 
-  public static async sendVendor(awbNumber, vendorId, orderVendorCode, userId, tokenPayload) {
+  public static async sendVendor(awbNumber, vendorId, orderVendorCode, userId, tokenPayload, keterangan, branchId) {
     let url = `${this.queryServiceUrl}vendor/order?is_retry=false`;
     const options = {
       headers: {
@@ -26,7 +26,9 @@ export class VendorLogisticService {
       // awb_no: [awbNumber],
       awb_no : awbNumber,
       vendor_id: vendorId,
-      order_vendor_code: orderVendorCode
+      order_vendor_code: orderVendorCode,
+      notes : keterangan,
+      branch_id : branchId,
     };
 
     let channelSlack = await ConfigService.get('vendorLogisticService.slackChannel');

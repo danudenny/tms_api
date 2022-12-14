@@ -250,6 +250,7 @@ module.exports = {
     otpRequiredUrl: 'https://sms-otp.s3.ap-southeast-1.amazonaws.com/otp_config.json',
     sortChannel: 'wa,email,sms', //no space
     isBypass: false,
+    bypassOTP: ["TESTPLAY"],
     bypassCode: "815413",
     checkingConfig: true,
     disableChannel: "sms|wa"
@@ -260,4 +261,20 @@ module.exports = {
       sortation: 1
     }
   },
+  hubCheckAwb: {
+    maxIdleTimeInMinutes: 30,
+  },
+  sortationMachine: {
+    url: "http://api-internal.sicepat.io/operation/mesin-sortir/mesin-sortir/api/v2"
+  },
+  iframe: {
+    metabase: {
+      url: 'https://metabase.sicepat.com',
+      secret: '03d663fa9582ab37a3b9d599af8be13ec45e950af2dc41ec297ae07b2da14ddc',
+      expiry: 600, // seconds
+    }
+  },
+  bagService: {
+    url: "http://api-internal.sicepat.io/operation/bag/bag/api",
+  }
 };

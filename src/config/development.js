@@ -25,7 +25,7 @@ module.exports = {
     cloudSecretAccessKey: 'a+R/bJ/Nl7Wt1EW6RuBNeOxS6SQxpe3xkCAC/KHt',
   },
   printerHelper: {
-    url: 'http://jsreport.sicepat.com/wcpp',
+    url: 'http://jsreportstaging.sicepat.com/wcpp',
   },
   queue: {
     doPodDetailPostMeta: {
@@ -57,6 +57,12 @@ module.exports = {
   },
   servers: getAllServerConfigurations('default.js'),
   hubMonitoring: {
-    baseUrl: 'http://api-internal.s.sicepat.io/operation/sortation/sortation/api/v1'
+    baseUrl: 'https://swagger.s.sicepat.tech/operation/sortation/sortation/api/v1'
   },
+  sortationMachine: {
+    url: "https://swagger.s.sicepat.tech/operation/mesin-sortir/mesin-sortir/api/v2"
+  },
+  bagService: {
+    url: "https://swagger.s.sicepat.tech/operation/bag/bag/api",
+  }
 };
