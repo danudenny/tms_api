@@ -194,7 +194,7 @@ export class V1WebCodBankStatementService {
               transactionStatusId: TRANSACTION_STATUS.TRF,
               totalAwb,
               transactionType : transactionType,
-              updatedTime: timestamp,
+              updatedTime: moment().toDate(),
               userIdUpdated: authMeta.userId,
             },
           );
