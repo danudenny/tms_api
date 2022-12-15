@@ -362,7 +362,7 @@ export class CodReportService {
       LEFT JOIN public.employee ealh ON  ealh.employee_id = adm.employee_id
       LEFT JOIN public.awb_status aws ON aws.awb_status_id = aia.awb_status_id_last
       LEFT JOIN public.branch bm ON bm.branch_id = am.branch_id
-      LEFT JOIN public.branch blh ON blh.branch_id = aia.branch_id_last
+      LEFT JOIN public.branch blh ON blh.branch_id = alh.branch_id
       LEFT JOIN public.destination ds ON a.ref_destination_code = ds.code
       LEFT JOIN public.users sigesit ON ctd.user_id_driver = sigesit.user_id
       LEFT JOIN public.employee es ON es.employee_id = sigesit.employee_id
