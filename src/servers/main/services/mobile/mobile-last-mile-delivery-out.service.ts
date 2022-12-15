@@ -254,10 +254,9 @@ export class LastMileDeliveryOutService {
       // NOTE: first must scan in branch
       if (checkValidAwbStatusIdLast.isValid) {
         // Add Locking setnx redis
-        const holdRedis = await RedisService.lockingWithExpire(
+        const holdRedis = await RedisService.redlock(
           `hold:scanoutant:${awb.awbItemId}`,
-          'locking',
-          60,
+          10000,
         );
 
         // return result;
