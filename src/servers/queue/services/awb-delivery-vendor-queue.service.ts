@@ -147,7 +147,7 @@ export class AwbDeliveryVendorQueueService {
                 {
                   doPodDeliverDetailId: doPodDeliverDetailID,
                   awbNumber: awbItemAttr.awbNumber,
-                  awbItemId: data.awbItemId,
+                  awbItemId: awbItemAttr.awbItemId,
                   amount: data.codValue,
                   method: 'cash',
                   service: null,
