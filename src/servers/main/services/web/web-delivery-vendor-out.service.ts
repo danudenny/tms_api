@@ -136,7 +136,7 @@ export class WebDeliveryVendorOutService {
       );
       
       if(holdRedis){
-        await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes);
+        await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes, payload.branch_id);
         RedisService.del(`hold:scanoutvendor:${payload.order_vendor_code}`);
       }else{
         RequestErrorService.throwObj({
