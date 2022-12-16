@@ -1,5 +1,5 @@
 import { ApiUseTags } from '../../../../../shared/external/nestjs-swagger';
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {Body, Controller, HttpCode, HttpStatus, Inject, Post, UseGuards} from '@nestjs/common';
 import { Transactional } from '../../../../../shared/external/typeorm-transactional-cls-hooked';
 import { AuthenticatedGuard } from '../../../../../shared/guards/authenticated.guard';
 import { PermissionTokenGuard } from '../../../../../shared/guards/permission-token.guard';
@@ -13,19 +13,25 @@ import { SortationL2ModuleService } from '../../../services/sortation/web/sortat
 @ApiUseTags('L2 Module')
 @Controller('sortation/module')
 export class SortationL2ModuleController {
-  constructor() {
+  constructor(
+      private readonly moduleService: SortationL2ModuleService,
+  ) {
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('search')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async searchSortation(@Body() payload: SortationL2ModuleSearchPayloadVm) {
-    return SortationL2ModuleService.searchSortation(payload);
+    return this.moduleService.externalSearchSortation(payload);
+    // return SortationL2ModuleService.searchSortation(payload);
   }
 
+  @HttpCode(HttpStatus.OK)
   @Post('finish')
   @UseGuards(AuthenticatedGuard, PermissionTokenGuard)
   public async finishManualSortation(@Body() payload: SortationL2ModuleFinishManualPayloadVm) {
-    return SortationL2ModuleService.finishManualSortation(payload);
+    return this.moduleService.externalFinishSortation(payload);
+    // return SortationL2ModuleService.finishManualSortation(payload);
   }
 
   @Post('handover')

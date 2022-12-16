@@ -19,11 +19,11 @@ export class CheckAwbReportService {
     try {
 
       const offset = Number(payload.page - 1) * Number(payload.limit);
-      const url = `${this.baseUrlInternal}/v1/reporting/report`;
+      const url = `${this.baseUrlInternal}/v3/report`;
       const authMeta = AuthService.getAuthData();
       const options = {
         params: {
-          employee: authMeta.userId,
+          employee_id: authMeta.userId,
           report_type: type,
           limit: payload.limit,
           offset,
@@ -103,7 +103,7 @@ export class CheckAwbReportService {
           (
             "acs"."start_time" >= '${moment(payload.startDate).format('YYYY-MM-DD')}'
             AND "acs"."start_time" < '${moment(payload.endDate).format('YYYY-MM-DD')}'
-            AND "acs"."logs" != 0
+            AND "acs"."logs" > 0
           )`;
     if (payload.branchId && payload.branchId !== 0) {
             query = query + ` AND acs.branch_id = '${payload.branchId}' \n`;
@@ -116,25 +116,22 @@ export class CheckAwbReportService {
   }
 
   async generateQueueRequest(params: GenerateQueueOptionPayloadVm, data: GenerateQueueFormDataPayloadVm): Promise<any> {
-    const url = `${this.baseUrlInternal}/v1/reporting/report`;
+    const url = `${this.baseUrlInternal}/v3/report`;
     const options = {
       headers: {
         'accept': 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      params: {
-        employee: params.userId,
+        'Content-Type': 'application/json',
       },
     };
-    const qs = require('querystring');
     const body = {
       query_encoded: data.encodeQuery,
-      filename: data.filename,
-      report_type: data.reportType,
+      filename : data.filename,
+      report_type : data.reportType,
+      employee_id : params.userId,
     };
 
     try {
-      const request = await Axios.post(url, qs.stringify(body), options);
+      const request = await Axios.post(url, JSON.stringify(body), options);
       return { status: request.status, ...request.data };
     } catch (err) {
       throw err.message;

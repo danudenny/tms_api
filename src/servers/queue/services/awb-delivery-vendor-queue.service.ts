@@ -48,7 +48,7 @@ export class AwbDeliveryVendorQueueService {
         const data = job.data;
         const awbItemAttr = await AwbItemAttr.findOne({
           where: {
-            awbItemId: data.awbItemId,
+            awbNumber: data.awbNumber,
             isDeleted: false,
           },
         });
@@ -56,7 +56,7 @@ export class AwbDeliveryVendorQueueService {
         if (awbItemAttr) {
           // NOTE: Insert Data awb history
           const awbHistory = AwbHistory.create({
-            awbItemId: data.awbItemId,
+            awbItemId: awbItemAttr.awbItemId,
             refAwbNumber: awbItemAttr.awbNumber,
             userId: data.userId,
             branchId: data.branchId,
@@ -188,7 +188,7 @@ export class AwbDeliveryVendorQueueService {
 
   // NOTE: ONLY awb status ANT but by vendor
   public static async createJobSendVendor(
-    awbItemId: number,
+    awbNumber: string,
     awbStatusId: number,
     branchId: number,
     userId: number,
@@ -202,7 +202,7 @@ export class AwbDeliveryVendorQueueService {
     const notePublic = `Paket di teruskan ke Partner`;
     // provide data
     const obj = {
-      awbItemId,
+      awbNumber,
       userId,
       branchId,
       awbStatusId,
@@ -220,7 +220,7 @@ export class AwbDeliveryVendorQueueService {
   }
 
   public static async createJobInserTracking(
-    awbItemId: number,
+    awbNumber: string,
     awbStatusId: number,
     noteInternal: string,
     notePublic :string,
@@ -236,7 +236,7 @@ export class AwbDeliveryVendorQueueService {
     codValue : number = 0,
   ){
     const obj = {
-      awbItemId,
+      awbNumber,
       userId,
       branchId,
       awbStatusId,
