@@ -256,7 +256,7 @@ export class LastMileDeliveryOutService {
         // Add Locking setnx redis
         const holdRedis = await RedisService.redlock(
           `hold:scanoutant:${awb.awbItemId}`,
-          10000,
+          20000,
         );
 
         // return result;
