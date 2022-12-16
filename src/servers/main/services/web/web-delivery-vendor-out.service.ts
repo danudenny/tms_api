@@ -130,7 +130,22 @@ export class WebDeliveryVendorOutService {
     }
 
     try {
-      await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes);
+      const holdRedis = await RedisService.lockingWithExpire(
+        `hold:scanoutvendor:${payload.order_vendor_code}`,
+        'locking',
+        60,
+      );
+      
+      if(holdRedis){
+        await VendorLogisticService.sendVendor(awbSendVendor, payload.vendor_id, payload.order_vendor_code, authMeta.userId, permissonPayloadToken, payload.notes);
+        RedisService.del(`hold:scanoutvendor:${payload.order_vendor_code}`);
+      }else{
+        RequestErrorService.throwObj({
+          message: `Server Busy: Surat jalan ${payload.order_vendor_code} sedang di proses.`,
+        });
+      }
+
+      
     } catch (err) {
       RequestErrorService.throwObj({
         message: 'Gagal mengirimkan data ke vendor',
@@ -473,7 +488,10 @@ export class WebDeliveryVendorOutService {
               dataAWB.userId,
               dataAWB.urlPhoto,
               dataAWB.urlPhotoSignature,
-              dataAWB.urlPhotoRetur
+              dataAWB.urlPhotoRetur,
+              dataAWB.orderVendorCode,
+              dataAWB.isCod,
+              dataAWB.codValue
             )
 
             response.status = 'ok';

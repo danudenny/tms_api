@@ -20,6 +20,8 @@ import { FILE_PROVIDER } from '../../../shared/constants/file-provider.constant'
 import { PodWebAttachmentModel } from '../../../shared/models/pod-web-attachment.model';
 import { PodAttachment } from '../../../shared/services/pod-attachment';
 import { AwbCodService } from '../../main/services/cod/awb-cod.service';
+import { DoPodDeliver } from '../../../shared/orm-entity/do-pod-deliver';
+import { DoPodDeliverDetail } from '../../../shared/orm-entity/do-pod-deliver-detail';
 
 export class AwbDeliveryVendorQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-vendor', {
@@ -78,36 +80,84 @@ export class AwbDeliveryVendorQueueService {
 
           if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
             //handle upload photo
-            this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'photo')
-            this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, data.awbItemId, data.awbStatusId, 'signature')
+            this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
+            this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
           }
 
           if(data.awbStatusId == AWB_STATUS.DLV){
-            const awb = await Awb.findOne({
-              where: {
-                awbNumber: awbItemAttr.awbNumber,
-                isDeleted: false,
-              },
-            });
+            if(data.isCod){
+              //check and insert doPodDeliver
+              let doPodDeliverID = null;
+              let doPodDeliverDetailID = null;
 
-            if(awb){
-              if(awb.isCod == true){
-                await AwbCodService.transfer(
-                  {
-                    doPodDeliverDetailId: delivery.doPodDeliverDetailId,
-                    awbNumber: awbItemAttr.awbNumber,
-                    awbItemId: data.awbItemId,
-                    amount: awb.totalCodValue,
-                    method: delivery.codPaymentMethod,
-                    service: delivery.codPaymentService,
-                    noReference: delivery.noReference,
-                    note: delivery.note,
-                  },
-                  data.branchId,
-                  data.userId,
-                  null,
-                );
+              let dataPodDeliver = await DoPodDeliver.findOne({
+                where:{
+                  doPodDeliverCode : data.orderVendorCode,
+                  isDeleted : false
+                }
+              })
+               
+              if(!dataPodDeliver){
+                const doPod = DoPodDeliver.create();
+                const doPodDateTime = moment().toDate();
+                doPod.doPodDeliverCode = data.orderVendorCode;
+                doPod.userIdDriver = data.userId;
+                doPod.doPodDeliverDateTime = doPodDateTime;
+                doPod.doPodDeliverDate = doPodDateTime;
+                doPod.description = null;
+                doPod.branchId = data.branchId;
+                doPod.isPartner = true;
+                doPod.userIdCreated = data.userId;
+                doPod.userIdUpdated = data.userId;
+                await DoPodDeliver.save(doPod);
+                doPodDeliverID = doPod.doPodDeliverId;
+              }else{
+                doPodDeliverID = dataPodDeliver.doPodDeliverId;
               }
+
+              let dataPodDeliverDetail = await DoPodDeliverDetail.findOne({
+                where:{
+                  doPodDeliverId : doPodDeliverID,
+                  awbId : awbItemAttr.awbId,
+                  isDeleted : false
+                }
+              })
+
+              if(dataPodDeliverDetail){
+                doPodDeliverDetailID = dataPodDeliverDetail.doPodDeliverDetailId;
+              }else{
+                //insert datanya
+                const uuidv1 = require('uuid/v1');
+                const uuidFix = uuidv1();
+                const doPodDeliverDetail = DoPodDeliverDetail.create();
+                doPodDeliverDetail.doPodDeliverDetailId = uuidFix;
+                doPodDeliverDetail.doPodDeliverId = doPodDeliverID;
+                doPodDeliverDetail.awbId = awbItemAttr.awbId;
+                doPodDeliverDetail.awbItemId = awbItemAttr.awbItemId;
+                doPodDeliverDetail.awbNumber = awbItemAttr.awbNumber;
+                doPodDeliverDetail.awbStatusIdLast = data.awbStatusId;
+                doPodDeliverDetail.userIdCreated = data.userId;
+                doPodDeliverDetail.userIdUpdated = data.userId;
+
+                await DoPodDeliverDetail.save(doPodDeliverDetail);
+                doPodDeliverDetailID = doPodDeliverDetail.doPodDeliverDetailId;
+              }
+
+              await AwbCodService.transfer(
+                {
+                  doPodDeliverDetailId: doPodDeliverDetailID,
+                  awbNumber: awbItemAttr.awbNumber,
+                  awbItemId: data.awbItemId,
+                  amount: data.codValue,
+                  method: 'cash',
+                  service: null,
+                  noReference: null,
+                  note: null,
+                },
+                data.branchId,
+                data.userId,
+                null,
+              );
             }
           }
 
@@ -180,7 +230,10 @@ export class AwbDeliveryVendorQueueService {
     userId : number,
     urlPhoto : string,
     urlPhotoSignature : string,
-    urlPhotoRetur : string
+    urlPhotoRetur : string,
+    orderVendorCode : string = null,
+    isCod : boolean = false,
+    codValue : number = 0,
   ){
     const obj = {
       awbItemId,
@@ -197,7 +250,10 @@ export class AwbDeliveryVendorQueueService {
       latitude,
       urlPhoto,
       urlPhotoSignature,
-      urlPhotoRetur
+      urlPhotoRetur,
+      orderVendorCode,
+      isCod,
+      codValue
     };
     return AwbDeliveryVendorQueueService.queue.add(obj);
   }

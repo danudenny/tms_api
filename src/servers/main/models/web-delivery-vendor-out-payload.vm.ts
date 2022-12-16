@@ -71,4 +71,13 @@ export class WebDeliveryTrackingVendor{
 
   @ApiModelProperty()
   urlPhotoRetur : string;
+
+  @ApiModelProperty()
+  orderVendorCode : string;
+
+  @ApiModelProperty()
+  isCod : boolean;
+
+  @ApiModelProperty()
+  codValue : number;
 }
