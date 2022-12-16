@@ -322,12 +322,15 @@ export class WebDeliveryVendorOutService {
         response.shipper_phone = dataAwbx.awb_shipper_phone == null || dataAwbx.awb_shipper_phone == "" || dataAwbx.awb_shipper_phone === undefined ? undefined : dataAwbx.awb_shipper_phone;
 
         //pickuprequest - booking merchant
-        response.shipper_name = !response.shipper_name && (dataAwbx.prd_shipper_name == null || dataAwbx.prd_shipper_name == "" || dataAwbx.prd_shipper_name === undefined) ? undefined : dataAwbx.prd_shipper_name;
-        response.shipper_phone = !response.shipper_phone && (dataAwbx.prd_shipper_phone == null || dataAwbx.prd_shipper_phone == "" || dataAwbx.prd_shipper_phone === undefined) ? undefined : dataAwbx.prd_shipper_phone;
+        response.shipper_name = response.shipper_name || (dataAwbx.prd_shipper_name == null || dataAwbx.prd_shipper_name == "" || dataAwbx.prd_shipper_name === undefined) ? response.shipper_name : dataAwbx.prd_shipper_name;
+        response.shipper_phone = response.shipper_phone || (dataAwbx.prd_shipper_phone == null || dataAwbx.prd_shipper_phone == "" || dataAwbx.prd_shipper_phone === undefined) ? response.shipper_phone : dataAwbx.prd_shipper_phone;
 
         //last resort - if both table above empty
-        response.shipper_name = !response.shipper_name && (dataAwbx.shipper_name == null || dataAwbx.shipper_name == "" || dataAwbx.shipper_name === undefined) ? '-' : dataAwbx.shipper_name;
-        response.shipper_phone = !response.shipper_phone && (dataAwbx.shipper_phone == null || dataAwbx.shipper_phone == "" || dataAwbx.shipper_phone === undefined) ? '-' : dataAwbx.shipper_phone;
+        response.shipper_name = response.shipper_name || (dataAwbx.shipper_name == null || dataAwbx.shipper_name == "" || dataAwbx.shipper_name === undefined) ? response.shipper_name : dataAwbx.shipper_name;
+        response.shipper_phone = response.shipper_phone || (dataAwbx.shipper_phone == null || dataAwbx.shipper_phone == "" || dataAwbx.shipper_phone === undefined) ? response.shipper_phone : dataAwbx.shipper_phone;
+
+        response.shipper_name = response.shipper_name ? response.shipper_name : '-';
+        response.shipper_phone = response.shipper_phone ? response.shipper_phone : '-';
 
         response.shipper_email = dataAwbx.shipper_email == null || dataAwbx.shipper_email == "" || dataAwbx.shipper_email === undefined ? '-' : dataAwbx.shipper_email;
         response.shipper_contact = dataAwbx.shipper_contact == null || dataAwbx.shipper_contact == ""  || dataAwbx.shipper_contact === undefined ? '-' : dataAwbx.shipper_contact;
