@@ -519,7 +519,7 @@ export class WebDeliveryVendorOutService {
         }
       } else {
         response.status = 'error';
-        response.message = `Vendor tidak ditemukan.`;
+        response.message = `Data awb tidak ditemukan.`;
       }
 
       response.awbNumber = dataAWB.awbNumber;
