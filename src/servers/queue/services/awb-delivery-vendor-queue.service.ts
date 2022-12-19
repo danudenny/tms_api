@@ -245,8 +245,8 @@ export class AwbDeliveryVendorQueueService {
 
     if(awbStatusId == AWB_STATUS.DLV || awbStatusId == AWB_STATUS.BA){
       //handle upload photo
-      this.uploadPhotoVendor(urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, awbStatusId, 'photo')
-      this.uploadPhotoVendor(urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, awbStatusId, 'signature')
+      await this.uploadPhotoVendor(urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, awbStatusId, 'photo')
+      await this.uploadPhotoVendor(urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, awbStatusId, 'signature')
     }
 
     if(awbStatusId == AWB_STATUS.DLV){
