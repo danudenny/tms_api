@@ -78,88 +78,88 @@ export class AwbDeliveryVendorQueueService {
           });
           await AwbHistory.insert(awbHistory);
 
-          if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
-            //handle upload photo
-            this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
-            this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
-          }
+          // if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
+          //   //handle upload photo
+          //   this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
+          //   this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
+          // }
 
-          if(data.awbStatusId == AWB_STATUS.DLV){
-            if(data.isCod){
-              //check and insert doPodDeliver
-              let doPodDeliverID = null;
-              let doPodDeliverDetailID = null;
+          // if(data.awbStatusId == AWB_STATUS.DLV){
+          //   if(data.isCod){
+          //     //check and insert doPodDeliver
+          //     let doPodDeliverID = null;
+          //     let doPodDeliverDetailID = null;
 
-              let dataPodDeliver = await DoPodDeliver.findOne({
-                where:{
-                  doPodDeliverCode : data.orderVendorCode,
-                  isDeleted : false
-                }
-              })
+          //     let dataPodDeliver = await DoPodDeliver.findOne({
+          //       where:{
+          //         doPodDeliverCode : data.orderVendorCode,
+          //         isDeleted : false
+          //       }
+          //     })
                
-              if(!dataPodDeliver){
-                const doPod = DoPodDeliver.create();
-                const doPodDateTime = moment().toDate();
-                doPod.doPodDeliverCode = data.orderVendorCode;
-                doPod.userIdDriver = data.userId;
-                doPod.doPodDeliverDateTime = doPodDateTime;
-                doPod.doPodDeliverDate = doPodDateTime;
-                doPod.description = null;
-                doPod.branchId = data.branchId;
-                doPod.isPartner = true;
-                doPod.userIdCreated = data.userId;
-                doPod.userIdUpdated = data.userId;
-                await DoPodDeliver.save(doPod);
-                doPodDeliverID = doPod.doPodDeliverId;
-              }else{
-                doPodDeliverID = dataPodDeliver.doPodDeliverId;
-              }
+          //     if(!dataPodDeliver){
+          //       const doPod = DoPodDeliver.create();
+          //       const doPodDateTime = moment().toDate();
+          //       doPod.doPodDeliverCode = data.orderVendorCode;
+          //       doPod.userIdDriver = data.userId;
+          //       doPod.doPodDeliverDateTime = doPodDateTime;
+          //       doPod.doPodDeliverDate = doPodDateTime;
+          //       doPod.description = null;
+          //       doPod.branchId = data.branchId;
+          //       doPod.isPartner = true;
+          //       doPod.userIdCreated = data.userId;
+          //       doPod.userIdUpdated = data.userId;
+          //       await DoPodDeliver.save(doPod);
+          //       doPodDeliverID = doPod.doPodDeliverId;
+          //     }else{
+          //       doPodDeliverID = dataPodDeliver.doPodDeliverId;
+          //     }
 
-              let dataPodDeliverDetail = await DoPodDeliverDetail.findOne({
-                where:{
-                  doPodDeliverId : doPodDeliverID,
-                  awbId : awbItemAttr.awbId,
-                  isDeleted : false
-                }
-              })
+          //     let dataPodDeliverDetail = await DoPodDeliverDetail.findOne({
+          //       where:{
+          //         doPodDeliverId : doPodDeliverID,
+          //         awbId : awbItemAttr.awbId,
+          //         isDeleted : false
+          //       }
+          //     })
 
-              if(dataPodDeliverDetail){
-                doPodDeliverDetailID = dataPodDeliverDetail.doPodDeliverDetailId;
-              }else{
-                //insert datanya
-                const uuidv1 = require('uuid/v1');
-                const uuidFix = uuidv1();
-                const doPodDeliverDetail = DoPodDeliverDetail.create();
-                doPodDeliverDetail.doPodDeliverDetailId = uuidFix;
-                doPodDeliverDetail.doPodDeliverId = doPodDeliverID;
-                doPodDeliverDetail.awbId = awbItemAttr.awbId;
-                doPodDeliverDetail.awbItemId = awbItemAttr.awbItemId;
-                doPodDeliverDetail.awbNumber = awbItemAttr.awbNumber;
-                doPodDeliverDetail.awbStatusIdLast = data.awbStatusId;
-                doPodDeliverDetail.userIdCreated = data.userId;
-                doPodDeliverDetail.userIdUpdated = data.userId;
+          //     if(dataPodDeliverDetail){
+          //       doPodDeliverDetailID = dataPodDeliverDetail.doPodDeliverDetailId;
+          //     }else{
+          //       //insert datanya
+          //       const uuidv1 = require('uuid/v1');
+          //       const uuidFix = uuidv1();
+          //       const doPodDeliverDetail = DoPodDeliverDetail.create();
+          //       doPodDeliverDetail.doPodDeliverDetailId = uuidFix;
+          //       doPodDeliverDetail.doPodDeliverId = doPodDeliverID;
+          //       doPodDeliverDetail.awbId = awbItemAttr.awbId;
+          //       doPodDeliverDetail.awbItemId = awbItemAttr.awbItemId;
+          //       doPodDeliverDetail.awbNumber = awbItemAttr.awbNumber;
+          //       doPodDeliverDetail.awbStatusIdLast = data.awbStatusId;
+          //       doPodDeliverDetail.userIdCreated = data.userId;
+          //       doPodDeliverDetail.userIdUpdated = data.userId;
 
-                await DoPodDeliverDetail.save(doPodDeliverDetail);
-                doPodDeliverDetailID = doPodDeliverDetail.doPodDeliverDetailId;
-              }
+          //       await DoPodDeliverDetail.save(doPodDeliverDetail);
+          //       doPodDeliverDetailID = doPodDeliverDetail.doPodDeliverDetailId;
+          //     }
 
-              await AwbCodService.transfer(
-                {
-                  doPodDeliverDetailId: doPodDeliverDetailID,
-                  awbNumber: awbItemAttr.awbNumber,
-                  awbItemId: awbItemAttr.awbItemId,
-                  amount: data.codValue,
-                  method: 'cash',
-                  service: null,
-                  noReference: null,
-                  note: null,
-                },
-                data.branchId,
-                data.userId,
-                null,
-              );
-            }
-          }
+          //     await AwbCodService.transfer(
+          //       {
+          //         doPodDeliverDetailId: doPodDeliverDetailID,
+          //         awbNumber: awbItemAttr.awbNumber,
+          //         awbItemId: awbItemAttr.awbItemId,
+          //         amount: data.codValue,
+          //         method: 'cash',
+          //         service: null,
+          //         noReference: null,
+          //         note: null,
+          //       },
+          //       data.branchId,
+          //       data.userId,
+          //       null,
+          //     );
+          //   }
+          // }
 
           // try{
           //   VendorLogisticService.sendVendor(awbItemAttr.awbNumber, data.vendorId, data.orderVendorCode, data.userId, data.tokenPayload);
@@ -235,6 +235,97 @@ export class AwbDeliveryVendorQueueService {
     isCod : boolean = false,
     codValue : number = 0,
   ){
+
+    const awbItemAttr = await AwbItemAttr.findOne({
+      where: {
+        awbNumber: awbNumber,
+        isDeleted: false,
+      },
+    });
+
+    if(awbStatusId == AWB_STATUS.DLV || awbStatusId == AWB_STATUS.BA){
+      //handle upload photo
+      this.uploadPhotoVendor(urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, awbStatusId, 'photo')
+      this.uploadPhotoVendor(urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, awbStatusId, 'signature')
+    }
+
+    if(awbStatusId == AWB_STATUS.DLV){
+      if(isCod){
+        //check and insert doPodDeliver
+        let doPodDeliverID = null;
+        let doPodDeliverDetailID = null;
+
+        let dataPodDeliver = await DoPodDeliver.findOne({
+          where:{
+            doPodDeliverCode : orderVendorCode,
+            isDeleted : false
+          }
+        })
+         
+        if(!dataPodDeliver){
+          const doPod = DoPodDeliver.create();
+          const doPodDateTime = moment().toDate();
+          doPod.doPodDeliverCode = orderVendorCode;
+          doPod.userIdDriver = userId;
+          doPod.doPodDeliverDateTime = doPodDateTime;
+          doPod.doPodDeliverDate = doPodDateTime;
+          doPod.description = null;
+          doPod.branchId = branchId;
+          doPod.isPartner = true;
+          doPod.userIdCreated = userId;
+          doPod.userIdUpdated = userId;
+          await DoPodDeliver.save(doPod);
+          doPodDeliverID = doPod.doPodDeliverId;
+        }else{
+          doPodDeliverID = dataPodDeliver.doPodDeliverId;
+        }
+
+        let dataPodDeliverDetail = await DoPodDeliverDetail.findOne({
+          where:{
+            doPodDeliverId : doPodDeliverID,
+            awbId : awbItemAttr.awbId,
+            isDeleted : false
+          }
+        })
+
+        if(dataPodDeliverDetail){
+          doPodDeliverDetailID = dataPodDeliverDetail.doPodDeliverDetailId;
+        }else{
+          //insert datanya
+          const uuidv1 = require('uuid/v1');
+          const uuidFix = uuidv1();
+          const doPodDeliverDetail = DoPodDeliverDetail.create();
+          doPodDeliverDetail.doPodDeliverDetailId = uuidFix;
+          doPodDeliverDetail.doPodDeliverId = doPodDeliverID;
+          doPodDeliverDetail.awbId = awbItemAttr.awbId;
+          doPodDeliverDetail.awbItemId = awbItemAttr.awbItemId;
+          doPodDeliverDetail.awbNumber = awbItemAttr.awbNumber;
+          doPodDeliverDetail.awbStatusIdLast = awbStatusId;
+          doPodDeliverDetail.userIdCreated = userId;
+          doPodDeliverDetail.userIdUpdated = userId;
+
+          await DoPodDeliverDetail.save(doPodDeliverDetail);
+          doPodDeliverDetailID = doPodDeliverDetail.doPodDeliverDetailId;
+        }
+
+        await AwbCodService.transfer(
+          {
+            doPodDeliverDetailId: doPodDeliverDetailID,
+            awbNumber: awbItemAttr.awbNumber,
+            awbItemId: awbItemAttr.awbItemId,
+            amount: codValue,
+            method: 'cash',
+            service: null,
+            noReference: null,
+            note: null,
+          },
+          branchId,
+          userId,
+          null,
+        );
+      }
+    }
+
     const obj = {
       awbNumber,
       userId,
