@@ -163,6 +163,9 @@ export class ScanOutSmdVendorListDetailResponseVm {
 
   @ApiModelProperty()
   total_bag_representative: string;
+
+  @ApiModelProperty()
+  representative_code_list: string;
 }
 
 export class ScanOutSmdVendorListResponseVm extends BaseMetaResponseVm {
