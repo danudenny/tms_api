@@ -156,7 +156,7 @@ export class ScanoutSmdVendorService {
                 const paramDoSmdDetailId = await this.createDoSmdDetail(
                   paramDoSmdId,
                   null,
-                  payload.representative_code,
+                  resultDataRepresentativeChild[i].representative_code,
                   resultDoSmd.doSmdTime,
                   permissonPayload.branchId,
                   null,
@@ -325,7 +325,7 @@ export class ScanoutSmdVendorService {
         where: {
           branchCode: payload.branch_code,
           isDeleted : false,
-          isActive : true
+          isActive : true,
         },
       });
 
@@ -589,7 +589,7 @@ export class ScanoutSmdVendorService {
           br.bag_representative_code = :bagRepresentativeNumber AND
           br.is_deleted = FALSE;
       `;
-      const resultDataBagRepresentative = await RawQueryService.queryWithParams(rawQuery, {
+    const resultDataBagRepresentative = await RawQueryService.queryWithParams(rawQuery, {
         bagRepresentativeNumber : payload.item_number,
       });
 
