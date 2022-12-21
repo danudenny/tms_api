@@ -20,7 +20,7 @@ import { PermissionTokenGuard } from '../../../../../shared/guards/permission-to
 import {
   MobileSyncPayloadVm,
   MobileSyncImagePayloadVm,
-  MobileSyncImageDataPayloadVm,
+  V2MobileSyncImageDataPayloadVm,
 } from '../../../models/mobile-sync-payload.vm';
 import {
   MobileSyncImageResponseVm,
@@ -67,7 +67,7 @@ export class V2MobileSyncController {
   @ApiOkResponse({ type: MobileSyncImageDataResponseVm })
   @Transactional()
   public async syncImageForm(
-    @Body() payload: MobileSyncImageDataPayloadVm,
+    @Body() payload: V2MobileSyncImageDataPayloadVm,
     @UploadedFile() file,
   ) {
     return V2MobileSyncService.syncImageData(payload, file);

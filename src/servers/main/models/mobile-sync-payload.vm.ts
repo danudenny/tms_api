@@ -1,4 +1,4 @@
-import { ApiModelProperty, ApiModelPropertyOptional } from '../../../shared/external/nestjs-swagger';
+import { ApiModelProperty } from '../../../shared/external/nestjs-swagger';
 import { MobileDeliveryVm } from './mobile-delivery.vm';
 
 export class MobileSyncPayloadVm {
@@ -27,4 +27,15 @@ export class MobileSyncImageDataPayloadVm {
 
   @ApiModelProperty()
   imageType: string;
+}
+
+export class V2MobileSyncImageDataPayloadVm {
+  @ApiModelProperty()
+  data: string;
+
+  @ApiModelProperty()
+  imageType: string;
+
+  @ApiModelProperty()
+  awbStatusId: number;
 }

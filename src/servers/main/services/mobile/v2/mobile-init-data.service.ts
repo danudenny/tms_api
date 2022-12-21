@@ -131,18 +131,19 @@ export class V2MobileInitDataService {
       qw.orWhere(p => p.reasonCategory, w => w.equals('pod_cod'));
     });
 
-    if (fromDate) {
-      q.andWhereIsolated(qw => {
-        qw.where(
-          e => e.updatedTime,
-          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-        );
-        qw.orWhere(
-          e => e.createdTime,
-          w => w.greaterThanOrEqual(moment(fromDate).toDate()),
-        );
-      });
-    }
+    // if (fromDate) {
+    //   q.andWhereIsolated(qw => {
+    //     qw.where(
+    //       e => e.updatedTime,
+    //       w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+    //     );
+    //     qw.orWhere(
+    //       e => e.createdTime,
+    //       w => w.greaterThanOrEqual(moment(fromDate).toDate()),
+    //     );
+    //   });
+    // }
+    q.orderBy({ reasonCode: 'ASC' });
     return await q.exec();
   }
 
