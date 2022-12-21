@@ -62,7 +62,6 @@ export class WebDeliveryVendorOutService {
   static async scanVendor(payload: WebDeliveryVendorOutSendPayload): Promise<WebDeliveryVendorOutResponseVm> {
     const result = new WebDeliveryVendorOutResponseVm();
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const permissonPayloadToken = AuthService.getPermissionToken();
     const dataItem = [];
     let awbSendVendor = [];
@@ -83,47 +82,16 @@ export class WebDeliveryVendorOutService {
 
     for (const awbNumber of payload.scanValue) {
       const response = new WebDeliveryVendorOutResponse();
-      if (vendor) {
-        const holdRedis = await RedisService.lockingWithExpire(
-          `hold:scanoutvendor:${awbNumber}`,
-          'locking',
-          60,
-        );
 
-        if (holdRedis) {
-          try {
-            AwbDeliveryVendorQueueService.createJobSendVendor(
-              awbNumber,
-              AWB_STATUS.OUT_BRANCH,
-              permissonPayload.branchId,
-              authMeta.userId,
-              vendor.partnerLogisticName,
-              payload.vendor_id,
-              payload.order_vendor_code,
-              permissonPayloadToken,
-              payload.notes
-            )
-            awbSendVendor.push(awbNumber)
-            response.status = 'ok';
-            response.message = `Resi ${awbNumber} berhasil di proses.`;
-            RedisService.del(`hold:scanoutvendor:${awbNumber}`);
-          } catch (err) {
-            response.status = 'error';
-            response.message = `Gangguan Server: ${err.message}`;
-          }
-        } else {
-          response.status = 'error';
-          response.message = `Server Busy: Resi ${awbNumber} sedang di proses.`;
-        }
+      if (vendor) {
+        awbSendVendor.push(awbNumber)
+        response.status = 'ok';
+        response.message = `Resi ${awbNumber} berhasil di proses.`;
       } else {
-        if (vendor) {
-          response.status = 'error';
-          response.message = `Resi ${awbNumber} tidak ditemukan.`;
-        } else {
-          response.status = 'error';
-          response.message = `Vendor tidak ditemukan.`;
-        }
+        response.status = 'error';
+        response.message = `Vendor tidak ditemukan.`;
       }
+      
       response.awbNumber = awbNumber;
       dataItem.push(response);
     }
