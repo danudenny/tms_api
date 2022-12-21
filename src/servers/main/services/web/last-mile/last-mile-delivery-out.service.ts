@@ -456,7 +456,7 @@ export class LastMileDeliveryOutService {
           const holdRedis = await RedisService.redlock(
             `hold:scanoutant:${awb.awbItemId}`,
             // 'locking',
-            10000,
+            20000,
           );
           if (holdRedis) {
             // #region after scanout
