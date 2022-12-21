@@ -4,6 +4,7 @@ import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { AwbHistory } from '../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
 import { Awb } from '../../../shared/orm-entity/awb';
+import { PickupRequestDetail } from '../../../shared/orm-entity/pickup-request-detail';
 import { AwbStatus } from '../../../shared/orm-entity/awb-status';
 import { DoPodDetail } from '../../../shared/orm-entity/do-pod-detail';
 import { ConfigService } from '../../../shared/services/config.service';
@@ -22,6 +23,7 @@ import { PodAttachment } from '../../../shared/services/pod-attachment';
 import { AwbCodService } from '../../main/services/cod/awb-cod.service';
 import { DoPodDeliver } from '../../../shared/orm-entity/do-pod-deliver';
 import { DoPodDeliverDetail } from '../../../shared/orm-entity/do-pod-deliver-detail';
+import { DoPodDeliverAttachment } from '../../../shared/orm-entity/do_pod_deliver_attachment';
 
 export class AwbDeliveryVendorQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-vendor', {
@@ -78,21 +80,24 @@ export class AwbDeliveryVendorQueueService {
           });
           await AwbHistory.insert(awbHistory);
 
+          let idAttachmentPhoto = null;
+          let idAttachmentSignature = null;
+
           if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
             //handle upload photo
-            this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
-            this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
+            idAttachmentPhoto = await this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
+            idAttachmentSignature = await this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
           }
 
           if(data.awbStatusId == AWB_STATUS.DLV){
-            const awb = await Awb.findOne({
+            const pickupRequestDetail = await PickupRequestDetail.findOne({
               where: {
                 awbNumber: data.awbNumber,
                 isDeleted: false,
               },
             });
 
-            if(awb.isCod == true){
+            if(Number(pickupRequestDetail.codValue) > 0){
               //check and insert doPodDeliver
               let doPodDeliverID = null;
               let doPodDeliverDetailID = null;
@@ -148,6 +153,20 @@ export class AwbDeliveryVendorQueueService {
       
                 await DoPodDeliverDetail.save(doPodDeliverDetail);
                 doPodDeliverDetailID = doPodDeliverDetail.doPodDeliverDetailId;
+
+                const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
+                doPodDeliverAttachment.doPodDeliverDetailId = doPodDeliverDetailID;
+                doPodDeliverAttachment.attachmentTmsId = idAttachmentPhoto;
+                doPodDeliverAttachment.type = 'photo';
+                doPodDeliverAttachment.userIdCreated = data.userId;
+                await DoPodDeliverAttachment.save(doPodDeliverAttachment);
+
+                const doPodDeliverAttachmentSignature = await DoPodDeliverAttachment.create();
+                doPodDeliverAttachmentSignature.doPodDeliverDetailId = doPodDeliverDetailID;
+                doPodDeliverAttachmentSignature.attachmentTmsId = idAttachmentSignature;
+                doPodDeliverAttachmentSignature.type = 'signature';
+                doPodDeliverAttachmentSignature.userIdCreated = data.userId;
+                await DoPodDeliverAttachment.save(doPodDeliverAttachmentSignature);
               }
       
               await AwbCodService.transfer(
@@ -155,7 +174,7 @@ export class AwbDeliveryVendorQueueService {
                   doPodDeliverDetailId: doPodDeliverDetailID,
                   awbNumber: awbItemAttr.awbNumber,
                   awbItemId: awbItemAttr.awbItemId,
-                  amount: awb.totalCodValue,
+                  amount: Number(pickupRequestDetail.codValue),
                   method: 'cash',
                   service: null,
                   noReference: null,
@@ -323,5 +342,6 @@ export class AwbDeliveryVendorQueueService {
         propUpload.userIdUpdated = 1;
         await PodAttachment.upsertPodAttachment(propUpload, true);
       }
+      return saveAttachment.attachmentTmsId;
     }
 }
