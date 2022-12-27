@@ -267,7 +267,7 @@ export class AuthV2Service {
     const employeeName = employee.employeeName;
     let refreshToken = refreshedToken;
 
-    if(employee.isDeleted == true){
+    if(employee.isDeleted == true || employee.statusEmployee == 20){
       RequestErrorService.throwObj({
         message: 'User non aktif, OTP tidak dapat di kirim! Silahkan hubungi IT',
       });
