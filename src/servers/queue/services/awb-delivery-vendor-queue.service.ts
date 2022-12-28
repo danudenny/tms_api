@@ -159,6 +159,7 @@ export class AwbDeliveryVendorQueueService {
                 doPodDeliverAttachment.attachmentTmsId = idAttachmentPhoto;
                 doPodDeliverAttachment.type = 'photo';
                 doPodDeliverAttachment.userIdCreated = data.userId;
+                doPodDeliverAttachment.userIdUpdated = data.userId;
                 await DoPodDeliverAttachment.save(doPodDeliverAttachment);
 
                 const doPodDeliverAttachmentSignature = await DoPodDeliverAttachment.create();
@@ -166,6 +167,7 @@ export class AwbDeliveryVendorQueueService {
                 doPodDeliverAttachmentSignature.attachmentTmsId = idAttachmentSignature;
                 doPodDeliverAttachmentSignature.type = 'signature';
                 doPodDeliverAttachmentSignature.userIdCreated = data.userId;
+                doPodDeliverAttachmentSignature.userIdUpdated = data.userId;
                 await DoPodDeliverAttachment.save(doPodDeliverAttachmentSignature);
               }
       
