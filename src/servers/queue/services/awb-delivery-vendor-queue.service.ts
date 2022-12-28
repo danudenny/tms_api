@@ -92,7 +92,7 @@ export class AwbDeliveryVendorQueueService {
           if(data.awbStatusId == AWB_STATUS.DLV){
             const pickupRequestDetail = await PickupRequestDetail.findOne({
               where: {
-                awbNumber: data.awbNumber,
+                awbNumber: awbItemAttr.awbNumber,
                 isDeleted: false,
               },
             });
