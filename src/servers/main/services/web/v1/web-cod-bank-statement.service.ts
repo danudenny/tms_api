@@ -45,9 +45,10 @@ export class V1WebCodBankStatementService {
     let attachmentId = null;
     const dataError = [];
 
-    const checkSameMethod = await this.validateSamePaymentMethod(payload);
-    if (!checkSameMethod) {
-      throw new BadRequestException('tidak valid/terdapat metode pembayaran yang berbeda');
+    try {
+      this.validateTransactions(payload);
+    } catch (error) {
+      throw error
     }
 
     // validate data
@@ -117,12 +118,13 @@ export class V1WebCodBankStatementService {
         bankStatement.userIdTransfer = authMeta.userId;
         await transactionManager.save(CodBankStatement, bankStatement);
 
+        const masterCodBranchQueryRunner = getConnection().createQueryRunner(
+          'master',
+        );
+
         // looping data transaction and update status and bank statement id [create new table] ??
         for (const transactionId of payload.dataTransactionId) {
           let codBranch: CodTransaction;
-          const masterCodBranchQueryRunner = getConnection().createQueryRunner(
-            'master',
-          );
           try {
             codBranch = await getConnection()
               .createQueryBuilder(CodTransaction, 'ct')
@@ -213,7 +215,7 @@ export class V1WebCodBankStatementService {
     }
   }
 
-  static async validateSamePaymentMethod(payload: WebCodTransferHeadOfficePayloadVm): Promise<boolean> {
+  static async validateTransactions(payload: WebCodTransferHeadOfficePayloadVm) {
     let codTransactions: CodTransaction[];
 
     const masterCodBranchQueryRunner = getConnection().createQueryRunner(
@@ -224,6 +226,11 @@ export class V1WebCodBankStatementService {
       codTransactions = await getConnection()
         .createQueryBuilder(CodTransaction, 'ct')
         .setQueryRunner(masterCodBranchQueryRunner)
+        .select([
+          'ct.codTransactionId',
+          'ct.transactionType',
+          'ct.transactionStatusId',
+        ])
         .where(
           'ct.codTransactionId IN  (:...codTransactionId) AND ct.isDeleted = false',
           { codTransactionId: payload.dataTransactionId },
@@ -239,12 +246,14 @@ export class V1WebCodBankStatementService {
       const firstMethod = codTransactions[0].transactionType.toLowerCase();
       for (const codTransaction of codTransactions) {
         if (codTransaction.transactionType.toLowerCase() != firstMethod) {
-          return false;
+          throw new BadRequestException('tidak valid/terdapat metode pembayaran yang berbeda');
+        }
+
+        if (codTransaction.transactionStatusId == TRANSACTION_STATUS.TRM_PROGRESS) {
+          throw new BadRequestException('Harap pastikan status transaction code sudah terima admin (31000)');
         }
       }
     }
-
-    return true;
   }
 
   static async transactionBranchByBankStatementId(
