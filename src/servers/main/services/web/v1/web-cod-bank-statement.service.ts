@@ -118,12 +118,12 @@ export class V1WebCodBankStatementService {
         bankStatement.userIdTransfer = authMeta.userId;
         await transactionManager.save(CodBankStatement, bankStatement);
 
-        const masterCodBranchQueryRunner = getConnection().createQueryRunner(
-          'master',
-        );
-
         // looping data transaction and update status and bank statement id [create new table] ??
         for (const transactionId of payload.dataTransactionId) {
+          const masterCodBranchQueryRunner = getConnection().createQueryRunner(
+            'master',
+          );
+          
           let codBranch: CodTransaction;
           try {
             codBranch = await getConnection()
