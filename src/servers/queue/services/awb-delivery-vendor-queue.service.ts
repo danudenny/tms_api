@@ -89,7 +89,7 @@ export class AwbDeliveryVendorQueueService {
             idAttachmentSignature = await this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
           }
 
-          if(data.awbStatusId == AWB_STATUS.DLV){
+          if(data.awbStatusId == AWB_STATUS.DLV && data.isCod){
             const pickupRequestDetail = await PickupRequestDetail.findOne({
               where: {
                 refAwbNumber: awbItemAttr.awbNumber,
