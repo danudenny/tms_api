@@ -251,6 +251,8 @@ export class AuthV2Service {
     const newLoginMetadata = this.populateLoginResultMetadataByUser(
       refreshTokenPayload.clientId,
       JSON.parse(userLoginSession),
+      false,
+      refreshToken,
     );
     if (newLoginMetadata) {
       // remove data on redis with refresh token
@@ -259,13 +261,23 @@ export class AuthV2Service {
     return newLoginMetadata;
   }
 
-  async populateLoginResultMetadataByUser(clientId: string, user: User) {
+  async populateLoginResultMetadataByUser(clientId: string, user: User, isFromLogin:boolean = true, refreshedToken:string = null) {
     // get data employee if employee id not null
     const employee = await this.getEmployeeById(user.employeeId);
     const employeeName = employee.employeeName;
+    let refreshToken = refreshedToken;
+
+    if(employee.isDeleted == true || employee.statusEmployee == 20){
+      RequestErrorService.throwObj({
+        message: 'User non aktif, OTP tidak dapat di kirim! Silahkan hubungi IT',
+      });
+    }
 
     const accessToken = this.generateAccessToken(clientId, user, employeeName);
-    const refreshToken = this.generateRefreshToken(clientId, user);
+
+    if(isFromLogin == true){
+      refreshToken = this.generateRefreshToken(clientId, user);
+    }
 
     // Set key to hold the string value and set key to timeout after a given number of seconds
     const expireInSeconds = Math.floor(
