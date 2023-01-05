@@ -254,10 +254,9 @@ export class LastMileDeliveryOutService {
       // NOTE: first must scan in branch
       if (checkValidAwbStatusIdLast.isValid) {
         // Add Locking setnx redis
-        const holdRedis = await RedisService.lockingWithExpire(
+        const holdRedis = await RedisService.redlock(
           `hold:scanoutant:${awb.awbItemId}`,
-          'locking',
-          60,
+          200,
         );
 
         // return result;
@@ -336,7 +335,7 @@ export class LastMileDeliveryOutService {
           }
 
           // remove key holdRedis
-          RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
+          // RedisService.del(`hold:scanoutant:${awb.awbItemId}`);
           // RedisService.del(`hold:doPodDeliverId:${doPodDeliver.doPodDeliverId}`);
         } else {
           response.status = 'error';
