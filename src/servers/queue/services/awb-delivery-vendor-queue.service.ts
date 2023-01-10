@@ -348,7 +348,8 @@ export class AwbDeliveryVendorQueueService {
         }
         return saveAttachment.attachmentTmsId;
       }catch(err){
-        
+        console.log('[AWB-VENDOR]Upload photo vendor error ', err)
+        return null;
       }
     }
 }
