@@ -155,21 +155,26 @@ export class AwbDeliveryVendorQueueService {
                 await DoPodDeliverDetail.save(doPodDeliverDetail);
                 doPodDeliverDetailID = doPodDeliverDetail.doPodDeliverDetailId;
 
-                const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
-                doPodDeliverAttachment.doPodDeliverDetailId = doPodDeliverDetailID;
-                doPodDeliverAttachment.attachmentTmsId = idAttachmentPhoto;
-                doPodDeliverAttachment.type = 'photo';
-                doPodDeliverAttachment.userIdCreated = data.userId;
-                doPodDeliverAttachment.userIdUpdated = data.userId;
-                await DoPodDeliverAttachment.save(doPodDeliverAttachment);
-
-                const doPodDeliverAttachmentSignature = await DoPodDeliverAttachment.create();
-                doPodDeliverAttachmentSignature.doPodDeliverDetailId = doPodDeliverDetailID;
-                doPodDeliverAttachmentSignature.attachmentTmsId = idAttachmentSignature;
-                doPodDeliverAttachmentSignature.type = 'signature';
-                doPodDeliverAttachmentSignature.userIdCreated = data.userId;
-                doPodDeliverAttachmentSignature.userIdUpdated = data.userId;
-                await DoPodDeliverAttachment.save(doPodDeliverAttachmentSignature);
+                if(idAttachmentPhoto){
+                  const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
+                  doPodDeliverAttachment.doPodDeliverDetailId = doPodDeliverDetailID;
+                  doPodDeliverAttachment.attachmentTmsId = idAttachmentPhoto;
+                  doPodDeliverAttachment.type = 'photo';
+                  doPodDeliverAttachment.userIdCreated = data.userId;
+                  doPodDeliverAttachment.userIdUpdated = data.userId;
+                  await DoPodDeliverAttachment.save(doPodDeliverAttachment);
+                }
+                
+                if(idAttachmentSignature){
+                  const doPodDeliverAttachmentSignature = await DoPodDeliverAttachment.create();
+                  doPodDeliverAttachmentSignature.doPodDeliverDetailId = doPodDeliverDetailID;
+                  doPodDeliverAttachmentSignature.attachmentTmsId = idAttachmentSignature;
+                  doPodDeliverAttachmentSignature.type = 'signature';
+                  doPodDeliverAttachmentSignature.userIdCreated = data.userId;
+                  doPodDeliverAttachmentSignature.userIdUpdated = data.userId;
+                  await DoPodDeliverAttachment.save(doPodDeliverAttachmentSignature);
+                }
+                
               }
       
               await AwbCodService.transfer(
