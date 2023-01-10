@@ -296,55 +296,59 @@ export class AwbDeliveryVendorQueueService {
     photoType: string, 
     )
     {
-      //upload for partner | data not save to DB
-      const awsKey = `attachments/${photoType}POD/${awbNumber}`;
-      await AwsS3Service.uploadFromUrlV2( 
-        url,
-        awsKey,
-      );
+      try{
+        //upload for partner | data not save to DB
+        const awsKey = `attachments/${photoType}POD/${awbNumber}`;
+        await AwsS3Service.uploadFromUrlV2( 
+          url,
+          awsKey,
+        );
 
-      //upload for internal pod | data save to DB
-      const pathId = `tms-delivery-${photoType}`;
-      const uuidv1 = require('uuid/v1');
-      const fileName = await uuidv1();
-      const awsKeyInternal = `attachments/${pathId}/${moment().format('Y/M/D')}/${fileName}`;
-      const response = await AwsS3Service.uploadFromUrlV2( 
-        url,
-        awsKeyInternal,
-      );
+        //upload for internal pod | data save to DB
+        const pathId = `tms-delivery-${photoType}`;
+        const uuidv1 = require('uuid/v1');
+        const fileName = await uuidv1();
+        const awsKeyInternal = `attachments/${pathId}/${moment().format('Y/M/D')}/${fileName}`;
+        const response = await AwsS3Service.uploadFromUrlV2( 
+          url,
+          awsKeyInternal,
+        );
 
-      const fileMime = response.res.headers['content-type'];
+        const fileMime = response.res.headers['content-type'];
 
-      let bucketName = null;
-      if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
-        bucketName = ConfigService.get('cloudStorage.cloudBucket');
+        let bucketName = null;
+        if (!bucketName && ConfigService.has('cloudStorage.cloudBucket')) {
+          bucketName = ConfigService.get('cloudStorage.cloudBucket');
+        }
+
+        const attachment = AttachmentTms.create({
+          s3BucketName: bucketName,
+          fileMime,
+          fileProvider: FILE_PROVIDER.AWS_S3,
+          attachmentPath: response.awsKey,
+          attachmentName: fileName,
+          fileName: fileName,
+          url : `https://${bucketName}.s3.amazonaws.com/${awsKeyInternal}`,
+          userIdCreated: 1,
+          userIdUpdated: 1,
+        });
+
+        let saveAttachment = await AttachmentTms.save(attachment);
+
+        if (saveAttachment) {
+          let propUpload = new PodWebAttachmentModel();
+          propUpload.awbNumber = awbNumber;
+          propUpload.awbItemId = awbItemId;
+          propUpload.attachmentTmsId =  saveAttachment.attachmentTmsId;
+          propUpload.awbStatusId = awbStatusId;
+          propUpload.photoType = photoType;
+          propUpload.userIdCreated = 1;
+          propUpload.userIdUpdated = 1;
+          await PodAttachment.upsertPodAttachment(propUpload, true);
+        }
+        return saveAttachment.attachmentTmsId;
+      }catch(err){
+        
       }
-
-      const attachment = AttachmentTms.create({
-        s3BucketName: bucketName,
-        fileMime,
-        fileProvider: FILE_PROVIDER.AWS_S3,
-        attachmentPath: response.awsKey,
-        attachmentName: fileName,
-        fileName: fileName,
-        url : `https://${bucketName}.s3.amazonaws.com/${awsKeyInternal}`,
-        userIdCreated: 1,
-        userIdUpdated: 1,
-      });
-
-      let saveAttachment = await AttachmentTms.save(attachment);
-
-      if (saveAttachment) {
-        let propUpload = new PodWebAttachmentModel();
-        propUpload.awbNumber = awbNumber;
-        propUpload.awbItemId = awbItemId;
-        propUpload.attachmentTmsId =  saveAttachment.attachmentTmsId;
-        propUpload.awbStatusId = awbStatusId;
-        propUpload.photoType = photoType;
-        propUpload.userIdCreated = 1;
-        propUpload.userIdUpdated = 1;
-        await PodAttachment.upsertPodAttachment(propUpload, true);
-      }
-      return saveAttachment.attachmentTmsId;
     }
 }
