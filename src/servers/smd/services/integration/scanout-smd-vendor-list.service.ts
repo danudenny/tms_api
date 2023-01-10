@@ -30,6 +30,7 @@ export class ScanoutSmdVendorListService {
     payload.fieldResolverMap['do_smd_detail_id'] = 't3.do_smd_detail_id';
     payload.fieldResolverMap['branch_name'] = 't4.branch_name';
     payload.fieldResolverMap['total_bag_representative'] = 't1.total_bag_representative';
+    payload.fieldResolverMap['representative_code_list'] = 't3.representative_code_list';
 
     payload.globalSearchFields = [
       {
@@ -64,6 +65,7 @@ export class ScanoutSmdVendorListService {
       ['t1.total_bag', 'total_bag'],
       ['t1.total_bagging', 'total_bagging'],
       ['t1.total_bag_representative', 'total_bag_representative'],
+      ['t3.representative_code_list', 'representative_code_list'],
     );
 
     q.leftJoin(e => e.vendor, 't2', j =>

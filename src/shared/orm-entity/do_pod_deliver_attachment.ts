@@ -31,6 +31,12 @@ export class DoPodDeliverAttachment extends TmsBaseEntity {
   })
   type: string;
 
+  @Column('bigint', {
+    nullable: true,
+    name: 'awb_status_id_last',
+  })
+  awbStatusIdLast: number | null;
+
   @ManyToOne(() => DoPodDeliverDetail)
   @JoinColumn({ name: 'do_pod_deliver_detail_id' })
   doPodDeliverDetail: DoPodDeliverDetail;

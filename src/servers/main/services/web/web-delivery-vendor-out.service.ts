@@ -62,7 +62,6 @@ export class WebDeliveryVendorOutService {
   static async scanVendor(payload: WebDeliveryVendorOutSendPayload): Promise<WebDeliveryVendorOutResponseVm> {
     const result = new WebDeliveryVendorOutResponseVm();
     const authMeta = AuthService.getAuthData();
-    const permissonPayload = AuthService.getPermissionTokenPayload();
     const permissonPayloadToken = AuthService.getPermissionToken();
     const dataItem = [];
     let awbSendVendor = [];
@@ -83,47 +82,16 @@ export class WebDeliveryVendorOutService {
 
     for (const awbNumber of payload.scanValue) {
       const response = new WebDeliveryVendorOutResponse();
-      if (vendor) {
-        const holdRedis = await RedisService.lockingWithExpire(
-          `hold:scanoutvendor:${awbNumber}`,
-          'locking',
-          60,
-        );
 
-        if (holdRedis) {
-          try {
-            AwbDeliveryVendorQueueService.createJobSendVendor(
-              awbNumber,
-              AWB_STATUS.OUT_BRANCH,
-              permissonPayload.branchId,
-              authMeta.userId,
-              vendor.partnerLogisticName,
-              payload.vendor_id,
-              payload.order_vendor_code,
-              permissonPayloadToken,
-              payload.notes
-            )
-            awbSendVendor.push(awbNumber)
-            response.status = 'ok';
-            response.message = `Resi ${awbNumber} berhasil di proses.`;
-            RedisService.del(`hold:scanoutvendor:${awbNumber}`);
-          } catch (err) {
-            response.status = 'error';
-            response.message = `Gangguan Server: ${err.message}`;
-          }
-        } else {
-          response.status = 'error';
-          response.message = `Server Busy: Resi ${awbNumber} sedang di proses.`;
-        }
+      if (vendor) {
+        awbSendVendor.push(awbNumber)
+        response.status = 'ok';
+        response.message = `Resi ${awbNumber} berhasil di proses.`;
       } else {
-        if (vendor) {
-          response.status = 'error';
-          response.message = `Resi ${awbNumber} tidak ditemukan.`;
-        } else {
-          response.status = 'error';
-          response.message = `Vendor tidak ditemukan.`;
-        }
+        response.status = 'error';
+        response.message = `Vendor tidak ditemukan.`;
       }
+      
       response.awbNumber = awbNumber;
       dataItem.push(response);
     }
@@ -330,9 +298,23 @@ export class WebDeliveryVendorOutService {
         response.insurance_value = parseInt(dataAwbx.insurance_value);
         response.cod_flag = parseInt(dataAwbx.cod_flag);
         response.cod_value = parseInt(dataAwbx.cod_value);
-        response.shipper_name = dataAwbx.shipper_name == null || dataAwbx.shipper_name == "" || dataAwbx.shipper_name === undefined ? '-' : dataAwbx.shipper_name;
         response.shipper_address = dataAwbx.shipper_address == null || dataAwbx.shipper_address === undefined || dataAwbx.shipper_address == "" ? '-' : dataAwbx.shipper_address;
-        response.shipper_phone = dataAwbx.shipper_phone == null || dataAwbx.shipper_phone == "" || dataAwbx.shipper_phone === undefined ? '-' : dataAwbx.shipper_phone;
+        
+        //awb - new rds
+        response.shipper_name = dataAwbx.awb_shipper_name == null || dataAwbx.awb_shipper_name == "" || dataAwbx.awb_shipper_name === undefined ? undefined : dataAwbx.awb_shipper_name;
+        response.shipper_phone = dataAwbx.awb_shipper_phone == null || dataAwbx.awb_shipper_phone == "" || dataAwbx.awb_shipper_phone === undefined ? undefined : dataAwbx.awb_shipper_phone;
+
+        //pickuprequest - booking merchant
+        response.shipper_name = response.shipper_name || (dataAwbx.prd_shipper_name == null || dataAwbx.prd_shipper_name == "" || dataAwbx.prd_shipper_name === undefined) ? response.shipper_name : dataAwbx.prd_shipper_name;
+        response.shipper_phone = response.shipper_phone || (dataAwbx.prd_shipper_phone == null || dataAwbx.prd_shipper_phone == "" || dataAwbx.prd_shipper_phone === undefined) ? response.shipper_phone : dataAwbx.prd_shipper_phone;
+
+        //last resort - if both table above empty
+        response.shipper_name = response.shipper_name || (dataAwbx.shipper_name == null || dataAwbx.shipper_name == "" || dataAwbx.shipper_name === undefined) ? response.shipper_name : dataAwbx.shipper_name;
+        response.shipper_phone = response.shipper_phone || (dataAwbx.shipper_phone == null || dataAwbx.shipper_phone == "" || dataAwbx.shipper_phone === undefined) ? response.shipper_phone : dataAwbx.shipper_phone;
+
+        response.shipper_name = response.shipper_name ? response.shipper_name : '-';
+        response.shipper_phone = response.shipper_phone ? response.shipper_phone : '-';
+
         response.shipper_email = dataAwbx.shipper_email == null || dataAwbx.shipper_email == "" || dataAwbx.shipper_email === undefined ? '-' : dataAwbx.shipper_email;
         response.shipper_contact = dataAwbx.shipper_contact == null || dataAwbx.shipper_contact == ""  || dataAwbx.shipper_contact === undefined ? '-' : dataAwbx.shipper_contact;
         response.destination_district_code = dataAwbx.destination_district_code;
@@ -393,7 +375,11 @@ export class WebDeliveryVendorOutService {
         prd.shipper_city as shipper_city,
         prd.recipient_city as receiver_city ,
         prd.recipient_province as receiver_province,
-        prd.shipper_province as shipper_province
+        prd.shipper_province as shipper_province,
+        prd.shipper_name as prd_shipper_name,
+        prd.shipper_phone as prd_shipper_phone, 
+        a.ref_reseller as awb_shipper_name,
+        a.ref_reseller_phone as awb_shipper_phone
       FROM awb a
         INNER JOIN awb_item ai ON a.awb_id = ai.awb_id AND ai.is_deleted = false
         LEFT JOIN package_type pt ON pt.package_type_id = a.package_type_id
