@@ -82,13 +82,14 @@ export class AwbDeliveryVendorQueueService {
 
           let idAttachmentPhoto = null;
           let idAttachmentSignature = null;
-
-          if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
-            //handle upload photo
-            idAttachmentPhoto = await this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
-            idAttachmentSignature = await this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
+          if(data.urlPhoto){
+            if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
+              //handle upload photo
+              idAttachmentPhoto = await this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
+              idAttachmentSignature = await this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
+            }
           }
-
+          
           if(data.awbStatusId == AWB_STATUS.DLV && data.isCod){
             const pickupRequestDetail = await PickupRequestDetail.findOne({
               where: {
