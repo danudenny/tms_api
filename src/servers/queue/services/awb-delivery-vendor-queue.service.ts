@@ -3,6 +3,8 @@ import { getManager } from 'typeorm';
 import { AWB_STATUS } from '../../../shared/constants/awb-status.constant';
 import { AwbHistory } from '../../../shared/orm-entity/awb-history';
 import { AwbItemAttr } from '../../../shared/orm-entity/awb-item-attr';
+import { Awb } from '../../../shared/orm-entity/awb';
+import { PickupRequestDetail } from '../../../shared/orm-entity/pickup-request-detail';
 import { AwbStatus } from '../../../shared/orm-entity/awb-status';
 import { DoPodDetail } from '../../../shared/orm-entity/do-pod-detail';
 import { ConfigService } from '../../../shared/services/config.service';
@@ -18,6 +20,10 @@ import { AttachmentTms } from '../../../shared/orm-entity/attachment-tms';
 import { FILE_PROVIDER } from '../../../shared/constants/file-provider.constant';
 import { PodWebAttachmentModel } from '../../../shared/models/pod-web-attachment.model';
 import { PodAttachment } from '../../../shared/services/pod-attachment';
+import { AwbCodService } from '../../main/services/cod/awb-cod.service';
+import { DoPodDeliver } from '../../../shared/orm-entity/do-pod-deliver';
+import { DoPodDeliverDetail } from '../../../shared/orm-entity/do-pod-deliver-detail';
+import { DoPodDeliverAttachment } from '../../../shared/orm-entity/do_pod_deliver_attachment';
 
 export class AwbDeliveryVendorQueueService {
   public static queue = QueueBullBoard.createQueue.add('awb-vendor', {
@@ -74,10 +80,113 @@ export class AwbDeliveryVendorQueueService {
           });
           await AwbHistory.insert(awbHistory);
 
+          let idAttachmentPhoto = null;
+          let idAttachmentSignature = null;
+
           if(data.awbStatusId == AWB_STATUS.DLV || data.awbStatusId == AWB_STATUS.BA){
             //handle upload photo
-            this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
-            this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
+            idAttachmentPhoto = await this.uploadPhotoVendor(data.urlPhoto, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'photo')
+            idAttachmentSignature = await this.uploadPhotoVendor(data.urlPhotoSignature, awbItemAttr.awbNumber, awbItemAttr.awbItemId, data.awbStatusId, 'signature')
+          }
+
+          if(data.awbStatusId == AWB_STATUS.DLV && data.isCod){
+            const pickupRequestDetail = await PickupRequestDetail.findOne({
+              where: {
+                refAwbNumber: awbItemAttr.awbNumber,
+                isDeleted: false,
+              },
+            });
+
+            if(Number(pickupRequestDetail.codValue) > 0){
+              //check and insert doPodDeliver
+              let doPodDeliverID = null;
+              let doPodDeliverDetailID = null;
+      
+              let dataPodDeliver = await DoPodDeliver.findOne({
+                where:{
+                  doPodDeliverCode : data.orderVendorCode,
+                  isDeleted : false
+                }
+              })
+               
+              if(!dataPodDeliver){
+                const doPod = DoPodDeliver.create();
+                const doPodDateTime = moment().toDate();
+                doPod.doPodDeliverCode = data.orderVendorCode;
+                doPod.userIdDriver = data.userId;
+                doPod.doPodDeliverDateTime = doPodDateTime;
+                doPod.doPodDeliverDate = doPodDateTime;
+                doPod.description = null;
+                doPod.branchId = data.branchId;
+                doPod.isPartner = true;
+                doPod.userIdCreated = data.userId;
+                doPod.userIdUpdated = data.userId;
+                await DoPodDeliver.save(doPod);
+                doPodDeliverID = doPod.doPodDeliverId;
+              }else{
+                doPodDeliverID = dataPodDeliver.doPodDeliverId;
+              }
+      
+              let dataPodDeliverDetail = await DoPodDeliverDetail.findOne({
+                where:{
+                  doPodDeliverId : doPodDeliverID,
+                  awbId : awbItemAttr.awbId,
+                  isDeleted : false
+                }
+              })
+      
+              if(dataPodDeliverDetail){
+                doPodDeliverDetailID = dataPodDeliverDetail.doPodDeliverDetailId;
+              }else{
+                //insert datanya
+                const uuidv1 = require('uuid/v1');
+                const uuidFix = uuidv1();
+                const doPodDeliverDetail = DoPodDeliverDetail.create();
+                doPodDeliverDetail.doPodDeliverDetailId = uuidFix;
+                doPodDeliverDetail.doPodDeliverId = doPodDeliverID;
+                doPodDeliverDetail.awbId = awbItemAttr.awbId;
+                doPodDeliverDetail.awbItemId = awbItemAttr.awbItemId;
+                doPodDeliverDetail.awbNumber = awbItemAttr.awbNumber;
+                doPodDeliverDetail.awbStatusIdLast = data.awbStatusId;
+                doPodDeliverDetail.userIdCreated = data.userId;
+                doPodDeliverDetail.userIdUpdated = data.userId;
+      
+                await DoPodDeliverDetail.save(doPodDeliverDetail);
+                doPodDeliverDetailID = doPodDeliverDetail.doPodDeliverDetailId;
+
+                const doPodDeliverAttachment = await DoPodDeliverAttachment.create();
+                doPodDeliverAttachment.doPodDeliverDetailId = doPodDeliverDetailID;
+                doPodDeliverAttachment.attachmentTmsId = idAttachmentPhoto;
+                doPodDeliverAttachment.type = 'photo';
+                doPodDeliverAttachment.userIdCreated = data.userId;
+                doPodDeliverAttachment.userIdUpdated = data.userId;
+                await DoPodDeliverAttachment.save(doPodDeliverAttachment);
+
+                const doPodDeliverAttachmentSignature = await DoPodDeliverAttachment.create();
+                doPodDeliverAttachmentSignature.doPodDeliverDetailId = doPodDeliverDetailID;
+                doPodDeliverAttachmentSignature.attachmentTmsId = idAttachmentSignature;
+                doPodDeliverAttachmentSignature.type = 'signature';
+                doPodDeliverAttachmentSignature.userIdCreated = data.userId;
+                doPodDeliverAttachmentSignature.userIdUpdated = data.userId;
+                await DoPodDeliverAttachment.save(doPodDeliverAttachmentSignature);
+              }
+      
+              await AwbCodService.transfer(
+                {
+                  doPodDeliverDetailId: doPodDeliverDetailID,
+                  awbNumber: awbItemAttr.awbNumber,
+                  awbItemId: awbItemAttr.awbItemId,
+                  amount: Number(pickupRequestDetail.codValue),
+                  method: 'cash',
+                  service: null,
+                  noReference: null,
+                  note: null,
+                },
+                data.branchId,
+                data.userId,
+                null,
+              );
+            }
           }
 
           // try{
@@ -149,8 +258,12 @@ export class AwbDeliveryVendorQueueService {
     userId : number,
     urlPhoto : string,
     urlPhotoSignature : string,
-    urlPhotoRetur : string
+    urlPhotoRetur : string,
+    orderVendorCode : string = null,
+    isCod : boolean = false,
+    codValue : number = 0,
   ){
+
     const obj = {
       awbNumber,
       userId,
@@ -166,7 +279,10 @@ export class AwbDeliveryVendorQueueService {
       latitude,
       urlPhoto,
       urlPhotoSignature,
-      urlPhotoRetur
+      urlPhotoRetur,
+      orderVendorCode,
+      isCod,
+      codValue
     };
     return AwbDeliveryVendorQueueService.queue.add(obj);
   }
@@ -228,5 +344,6 @@ export class AwbDeliveryVendorQueueService {
         propUpload.userIdUpdated = 1;
         await PodAttachment.upsertPodAttachment(propUpload, true);
       }
+      return saveAttachment.attachmentTmsId;
     }
 }

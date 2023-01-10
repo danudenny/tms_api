@@ -471,7 +471,10 @@ export class WebDeliveryVendorOutService {
               dataAWB.userId,
               dataAWB.urlPhoto,
               dataAWB.urlPhotoSignature,
-              dataAWB.urlPhotoRetur
+              dataAWB.urlPhotoRetur,
+              dataAWB.orderVendorCode,
+              dataAWB.isCod,
+              dataAWB.codValue
             )
 
             response.status = 'ok';
@@ -487,7 +490,7 @@ export class WebDeliveryVendorOutService {
         }
       } else {
         response.status = 'error';
-        response.message = `Vendor tidak ditemukan.`;
+        response.message = `Data awb tidak ditemukan.`;
       }
 
       response.awbNumber = dataAWB.awbNumber;
