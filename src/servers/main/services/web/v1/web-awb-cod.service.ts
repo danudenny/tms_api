@@ -1426,7 +1426,6 @@ export class V1WebAwbCodService {
   ): Promise<WebCodTransactionUpdateResponseVm> {
     const authMeta = AuthService.getAuthData();
 
-    const timestamp = moment().toDate();
     const dataError = [];
     let totalSuccess = 0;
 
@@ -1487,6 +1486,7 @@ export class V1WebAwbCodService {
     }
 
     // TODO: transaction process??
+    const timestamp = moment().toDate();
     try {
       // NOTE: loop data awb and update transaction detail
       await getManager().transaction(async transactionManager => {
@@ -1500,6 +1500,7 @@ export class V1WebAwbCodService {
               },
               {
                 transactionStatusId: TRANSACTION_STATUS.DEFAULT,
+                updatedTime: timestamp,
               },
             );
 
